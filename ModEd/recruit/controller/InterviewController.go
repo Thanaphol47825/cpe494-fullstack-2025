@@ -10,7 +10,7 @@ type InterviewController struct {
 	application *core.ModEdApplication
 }
 
-func NewBackOfficeController() *InterviewController {
+func NewInterviewController() *InterviewController {
 	controller := &InterviewController{}
 	return controller
 }
@@ -22,7 +22,7 @@ func (controller *InterviewController) RenderMain(context *fiber.Ctx) error {
 func (controller *InterviewController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/common/InterviewController",
+		Route:   "/recruit/InterviewController",
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})

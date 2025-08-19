@@ -10,6 +10,11 @@ type CurriculumController struct {
 	application *core.ModEdApplication
 }
 
+func NewCurriculumController() *CurriculumController {
+	controller := &CurriculumController{}
+	return controller
+}
+
 func (controller *CurriculumController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Helloo curriculum")
 }

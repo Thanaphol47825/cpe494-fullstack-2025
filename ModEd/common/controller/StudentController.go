@@ -2,10 +2,8 @@ package controller
 
 import (
 	"ModEd/core"
-	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/hoisie/mustache"
 )
 
 type StudentController struct {
@@ -14,6 +12,11 @@ type StudentController struct {
 
 func (controller *StudentController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello common/Student")
+}
+
+func NewStudentController() *StudentController {
+	controller := &StudentController{}
+	return controller
 }
 
 func (controller *StudentController) GetRoute() []*core.RouteItem {
@@ -26,6 +29,7 @@ func (controller *StudentController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
-func (controller *StudentControllers) SetApplication(application *core.ModEdApplication) {
+func (controller *StudentController) SetApplication(application *core.ModEdApplication) {
+func (controller *StudentController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

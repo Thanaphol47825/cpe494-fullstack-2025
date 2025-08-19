@@ -2,10 +2,7 @@ package controller
 
 import (
 	"ModEd/core"
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/hoisie/mustache"
 )
 
 type InstructorController struct {
@@ -14,6 +11,11 @@ type InstructorController struct {
 
 func (controller *InstructorController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello common/Instructor")
+}
+
+func NewInstructorController() *InstructorController {
+	controller := &InstructorController{}
+	return controller
 }
 
 func (controller *InstructorController) GetRoute() []*core.RouteItem {

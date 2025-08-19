@@ -10,6 +10,11 @@ type ClassMaterialController struct {
 	application *core.ModEdApplication
 }
 
+func NewClassMaterialController() *ClassMaterialController {
+	controller := &ClassMaterialController{}
+	return controller
+}
+
 func (controller *ClassMaterialController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Class Material Main Page")
 }

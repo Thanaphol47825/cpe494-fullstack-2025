@@ -1,12 +1,12 @@
 package project
 
 import (
-	"ModEd/common/controller"
+	"ModEd/project/controller"
 	"ModEd/core"
 
 )
 
 func InitialCommon() {
 	application := core.GetApplication()
-	application.AddController(controller.ProjectController())
+	application.AddController(controller.SeniorProjectController())
 }

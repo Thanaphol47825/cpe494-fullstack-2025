@@ -1,0 +1,29 @@
+{
+  "name": "MODED Environment",
+  "dockerComposeFile": [
+    "docker-compose.yaml"
+  ],
+  // Services operations
+  "service": "moded",
+  "runServices": [
+    "moded",
+    "postgres"
+  ],
+  "shutdownAction": "stopCompose",
+  "postCreateCommand": "",
+  // VS Code extensions and settings
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "usernamehw.errorlens",
+        "aaron-bond.better-comments",
+        "EditorConfig.EditorConfig",
+        "mhutchie.git-graph",
+        "vscode-icons-team.vscode-icons"
+      ]
+    }
+  },
+  // Container internal settings
+  "workspaceFolder": "/workspace",
+  "remoteUser": "root"
+}

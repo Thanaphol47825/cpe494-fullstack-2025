@@ -1,0 +1,25 @@
+services:
+  moded:
+    image: "mcr.microsoft.com/devcontainers/go:1-1.24-bookworm"
+    volumes:
+      - ../:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${HOME}/.gitconfig:/root/.gitconfig
+    environment:
+      - TZ=Asia/Bangkok
+    depends_on:
+      - postgres
+    entrypoint: ["zsh", "-c", "while sleep 1000; do :; done"]
+  postgres:
+    image: postgres:17-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=H@55P@ssw0rd
+      - POSTGRES_DB=moded
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:

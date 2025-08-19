@@ -6,7 +6,7 @@ import (
 
 )
 
-func InitialCommon() {
+func InitialProject() {
 	application := core.GetApplication()
 	application.AddController(controller.SeniorProjectController())
 }

@@ -8,5 +8,6 @@ import (
 func main() {
 	application := core.GetApplication()
 	common.InitialCommon()
+	common.InitialProject()
 	application.Run()
 }

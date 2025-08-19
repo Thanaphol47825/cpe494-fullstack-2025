@@ -2,10 +2,7 @@ package controller
 
 import (
 	"ModEd/core"
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/hoisie/mustache"
 )
 
 type FacultyController struct {
@@ -16,10 +13,15 @@ func (controller *FacultyController) SetApplication(application *core.ModEdAppli
 	controller.application = application
 }
 
+func NewFacultyController() *FacultyController {
+	controller := &FacultyController{}
+	return controller
+}
+
 func (controller *FacultyController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/common/faculty",
+		Route:   "/common/Faculty",
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})

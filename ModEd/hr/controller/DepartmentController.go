@@ -1,9 +1,9 @@
-package hr
+package controller
 
 import (
 	"ModEd/core"
 )
 
-type BackOfficeController struct {
+type DepartmentController struct {
 	application *core.ModEdApplication
 }

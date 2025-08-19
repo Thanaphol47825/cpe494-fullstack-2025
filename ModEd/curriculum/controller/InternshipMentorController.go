@@ -9,7 +9,10 @@ import (
 type InternshipMentorController struct {
 	application *core.ModEdApplication
 }
-
+func NewInternshipMentorController() *InternshipMentorController {
+	controller := &InternshipMentorController{}
+	return controller
+}
 func (controller *InternshipMentorController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Helloo InternshipMentor")
 }

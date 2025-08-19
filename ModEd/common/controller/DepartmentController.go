@@ -25,7 +25,7 @@ func (controller *DepartmentController) GetRoute() []*core.RouteItem {
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})
-	
+
 	return routeList
 }
 

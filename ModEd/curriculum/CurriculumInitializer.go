@@ -11,4 +11,5 @@ func InitialCurriculum() {
 	application.AddController(controller.NewClassMaterialController())
 	application.AddController(controller.NewCoursePlanController())
 	application.AddController(controller.NewCurriculumController())
+	application.AddController(controller.NewCourseController())
 }

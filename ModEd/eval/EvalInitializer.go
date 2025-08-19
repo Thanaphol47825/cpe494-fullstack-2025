@@ -1,12 +1,12 @@
 package eval
 
-import {
+import (
 	"ModEd/core",
-	"ModEd/eval"
+	"ModEd/eval/controller"
 
-}
+)
 
 func InitialEval() {
 	application := core.GetApplication()
-	application.AddController(&eval.Controller.EvalController{})
+	application.AddController(&Controller.EvalController{})
 }

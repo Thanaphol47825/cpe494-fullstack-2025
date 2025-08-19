@@ -28,3 +28,7 @@ func (controller *InternshipAttendanceController) GetRoute() []*core.RouteItem {
 	})
 	return routeList
 }
+
+func (controller *InternshipAttendanceController) SetApplication(application *core.ModEdApplication) {
+	controller.application = application
+}

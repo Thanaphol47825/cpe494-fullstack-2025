@@ -22,7 +22,7 @@ func (controller *ApplicationStatusController) RenderMain(context *fiber.Ctx) er
 func (controller *ApplicationStatusController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/common/ApplicationStatusController",
+		Route:   "/recruit/ApplicationStatusController",
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})

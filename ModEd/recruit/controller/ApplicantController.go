@@ -9,6 +9,11 @@ type ApplicantController struct {
 	application *core.ModEdApplication
 }
 
+func NewApplicantController() *ApplicantController {
+	controller := &ApplicantController{}
+	return controller
+}
+
 func (controller *ApplicantController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello Recruit Applicant")
 }

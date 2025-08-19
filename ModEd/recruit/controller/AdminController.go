@@ -9,6 +9,11 @@ type AdminController struct {
 	application *core.ModEdApplication
 }
 
+func NewAdminController() *AdminController {
+	controller := &AdminController{}
+	return controller
+}
+
 func (controller *AdminController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello Recruit Admin")
 }

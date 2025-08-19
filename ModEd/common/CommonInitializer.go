@@ -7,7 +7,9 @@ import (
 
 func InitialCommon() {
 	application := core.GetApplication()
-	application.AddController(controller.InstructorController())
-	application.AddController(controller.StudentController())
-	application.AddController(controller.BackOfficeController())
+	application.AddController(controller.NewInstructorController())
+	application.AddController(controller.NewStudentController())
+	application.AddController(controller.NewDepartmentController())
+	application.AddController(controller.NewFacultyController())
+	application.AddController(controller.NewBackOfficeController())
 }

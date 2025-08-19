@@ -2,14 +2,16 @@ package controller
 
 import (
 	"ModEd/core"
-	"fmt"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/hoisie/mustache"
 )
 
 type DepartmentController struct {
 	application *core.ModEdApplication
+}
+
+func NewDepartmentController() *DepartmentController {
+	controller := &DepartmentController{}
+	return controller
 }
 
 func (controller *DepartmentController) SetApplication(application *core.ModEdApplication) {
@@ -19,7 +21,7 @@ func (controller *DepartmentController) SetApplication(application *core.ModEdAp
 func (controller *DepartmentController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/common/department",
+		Route:   "/common/Department",
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})
@@ -27,6 +29,6 @@ func (controller *DepartmentController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
-func (controller *FacultyController) RenderMain(context *fiber.Ctx) error {
+func (controller *DepartmentController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello common/Department")
 }

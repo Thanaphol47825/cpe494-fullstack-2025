@@ -10,6 +10,11 @@ type StudentController struct {
 	application *core.ModEdApplication
 }
 
+func NewStudentController() *StudentController {
+	controller := &StudentController{}
+	return controller
+}
+
 func (controller *StudentController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello World")
 }

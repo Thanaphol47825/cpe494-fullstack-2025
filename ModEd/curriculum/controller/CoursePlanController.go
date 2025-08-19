@@ -10,6 +10,11 @@ type CoursePlanController struct {
 	application *core.ModEdApplication
 }
 
+func NewCoursePlanController() *CoursePlanController {
+	controller := &CoursePlanController{}
+	return controller
+}
+
 func (controller *CoursePlanController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello curriculum/CoursePlan")
 }

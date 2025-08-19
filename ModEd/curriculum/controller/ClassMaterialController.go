@@ -6,15 +6,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type ClassMaterialControllerInterface struct {
+type ClassMaterialController struct {
 	application *core.ModEdApplication
 }
 
-func (controller *ClassMaterialControllerInterface) RenderMain(context *fiber.Ctx) error {
+func (controller *ClassMaterialController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Class Material Main Page")
 }
 
-func (controller *ClassMaterialControllerInterface) GetRoute() []*core.RouteItem {
+func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/ClassMaterial",
@@ -24,6 +24,6 @@ func (controller *ClassMaterialControllerInterface) GetRoute() []*core.RouteItem
 	return routeList
 }
 
-func (controller *ClassMaterialControllerInterface) SetApplication(application *core.ModEdApplication) {
+func (controller *ClassMaterialController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

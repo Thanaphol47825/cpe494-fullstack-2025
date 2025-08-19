@@ -15,7 +15,7 @@ func (controller *SeniorProjectController) RenderMain(context *fiber.Ctx) error 
 func (controller *SeniorProjectController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/seniorproject",
+		Route:   "/project/seniorproject",
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})

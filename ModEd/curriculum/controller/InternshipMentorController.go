@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type InternshipMentoController struct {
+type InternshipMentorController struct {
 	application *core.ModEdApplication
 }
 

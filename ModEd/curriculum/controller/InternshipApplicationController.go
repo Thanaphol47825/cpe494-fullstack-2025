@@ -2,6 +2,8 @@ package controller
 
 import (
 	"ModEd/core"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 type InternshipApplicationController struct {
@@ -27,3 +29,6 @@ func (controller *InternshipApplicationController) GetRoute() []*core.RouteItem 
 	return routeList
 }
 
+func (controller *InternshipApplicationController) SetApplication(application *core.ModEdApplication) {
+	controller.application = application
+}

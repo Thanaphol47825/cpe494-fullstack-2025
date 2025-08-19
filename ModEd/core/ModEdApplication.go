@@ -1,0 +1,47 @@
+package core
+
+import (
+	"fmt"
+
+	"github.com/gofiber/fiber/v2"
+)
+
+type ModEdApplication struct {
+	Application *fiber.App
+	port        int
+	RootPath    string
+}
+
+func (application *ModEdApplication) Run() {
+	application.Application.Listen(fmt.Sprintf(":%d", application.port))
+}
+
+func (application *ModEdApplication) AddController(controller BaseController) {
+	routeList := controller.GetRoute()
+	controller.SetApplication(application)
+	for _, route := range routeList {
+		if route.Method == GET {
+			application.Application.Get(route.Route, route.Handler)
+		} else if route.Method == POST {
+			application.Application.Post(route.Route, route.Handler)
+		}
+	}
+}
+
+func (application *ModEdApplication) loadConfig() {
+	application.port = 8080
+	application.RootPath = "/Users/kittipongpiyawanno/Projects/FullStack2569/ModEd/"
+}
+
+// NOTE: Singleton
+var application *ModEdApplication
+
+func GetApplication() *ModEdApplication {
+	if application == nil {
+		application = &ModEdApplication{
+			Application: fiber.New(),
+		}
+		application.loadConfig()
+	}
+	return application
+}

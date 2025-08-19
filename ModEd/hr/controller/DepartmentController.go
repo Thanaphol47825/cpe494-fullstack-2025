@@ -10,6 +10,11 @@ type DepartmentController struct {
 	application *core.ModEdApplication
 }
 
+func NewDepartmentController() *DepartmentController {
+	controller := &DepartmentController{}
+	return controller
+}
+
 func (controller *DepartmentController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello hr/Department")
 }

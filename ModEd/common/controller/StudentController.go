@@ -30,6 +30,5 @@ func (controller *StudentController) GetRoute() []*core.RouteItem {
 }
 
 func (controller *StudentController) SetApplication(application *core.ModEdApplication) {
-func (controller *StudentController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

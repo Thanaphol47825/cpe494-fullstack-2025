@@ -2,10 +2,17 @@ package controller
 
 import (
 	"ModEd/core"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-type SeniorProjectController struct{
+type SeniorProjectController struct {
 	application *core.ModEdApplication
+}
+
+func NewSeniorProjectController() *SeniorProjectController {
+	controller := &SeniorProjectController{}
+	return controller
 }
 
 func (controller *SeniorProjectController) RenderMain(context *fiber.Ctx) error {

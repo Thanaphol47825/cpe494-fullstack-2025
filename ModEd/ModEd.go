@@ -4,6 +4,7 @@ import (
 	"ModEd/common"
 	"ModEd/core"
 	"ModEd/hr"
+	"ModEd/project"
 )
 
 func main() {

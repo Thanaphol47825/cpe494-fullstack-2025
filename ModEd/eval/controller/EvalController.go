@@ -7,7 +7,7 @@ import (
 type EvalController struct {
 	application *core.ModEdApplication
 }
-func (controller *DepartmentController) RenderMain(context *fiber.Ctx) error {
+func (controller *EvalController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello eval")
 }
 func (controller *EvalController) SetApplication(application *core.ModEdApplication) {
@@ -21,3 +21,4 @@ func (controller *EvalController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	return routeList
+}

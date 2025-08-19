@@ -9,6 +9,7 @@ import (
 func main() {
 	application := core.GetApplication()
 	common.InitialCommon()
+	project.InitialProject()
 	hr.InitialCommon()
 	application.Run()
 }

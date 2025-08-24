@@ -19,9 +19,16 @@ func NewClassMaterialController() *ClassMaterialController {
 
 func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/ClassMaterial",
 		Handler: controller.handler.RenderMain,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/ClassMaterial/getClassMaterials",
+		Handler: controller.handler.GetClassMaterials,
 		Method:  core.GET,
 	})
 	return routeList

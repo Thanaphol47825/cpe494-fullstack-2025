@@ -1,0 +1,62 @@
+[
+  {
+    "id":1,
+    "created_at":"2025-05-05 18:07:22.9427742+07:00",
+    "updated_at":"2025-05-05 18:07:22.9427742+07:00",
+    "deleted_at":null,
+    "course_id":1,
+    "week":2,
+    "date":"2025-05-12 18:07:22.9416553+07:00",
+    "instructor_id":101,
+    "topic":"Introduction to Computer Architecture",
+    "description":"Overview of course structure, grading policies, and introduction to basic computer architecture concepts."
+  },
+  {
+    "id":3,
+    "created_at":"2025-05-05 20:37:54.114415+07:00",
+    "updated_at":"2025-05-05 20:37:54.114415+07:00",
+    "deleted_at":null,
+    "course_id":1,
+    "week":2,
+    "date":"2025-05-12 20:37:54.1133255+07:00",
+    "instructor_id":103,
+    "topic":"Concurrency",
+    "description":"Exploration of process scheduling, context switching, and concurrency"
+  },
+  {
+    "id":4,
+    "created_at":"2025-05-06 01:40:10.9316074+07:00",
+    "updated_at":"2025-05-06 01:40:10.9316074+07:00",
+    "deleted_at":null,
+    "course_id":1,
+    "week":2,
+    "date":"2025-05-13 01:40:10.9316074+07:00",
+    "instructor_id":101,
+    "topic":"Stacks and Queues",
+    "description":"Implementation and applications of stacks and queues"
+  },
+  {
+    "id":5,
+    "created_at":"2025-05-05 18:07:22.9427742+07:00",
+    "updated_at":"2025-05-05 18:07:22.9427742+07:00",
+    "deleted_at":null,
+    "course_id":1,
+    "week":1,
+    "date":"2025-05-12 18:07:22.9416553+07:00",
+    "instructor_id":102,
+    "topic":"Computer Architecture",
+    "description":"Overview of course structure, grading policies, and introduction"
+  },
+  {
+    "id":6,
+    "created_at":"2025-05-05 18:07:22.9427742+07:00",
+    "updated_at":"2025-05-05 18:07:22.9427742+07:00",
+    "deleted_at":null,
+    "course_id":1,
+    "week":1,
+    "date":"2025-05-12 18:07:22.9416553+07:00",
+    "instructor_id":102,
+    "topic":"Binary Number System and Logic Gates",
+    "description":"Understanding binary numbers, conversions, and fundamental"
+  }
+]

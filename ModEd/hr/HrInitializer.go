@@ -8,5 +8,5 @@ import (
 func InitialCommon() {
 	application := core.GetApplication()
 	application.AddController(controller.NewStudentController())
-	application.AddController(controller.NewDepartmentController())
+	// application.AddController(controller.NewDepartmentController())
 }

@@ -23,6 +23,7 @@ func NewMigrationManager(DB *gorm.DB) *MigrationManager {
 	// Then come here to replace `nil` with your model here to register
 	migrationMap[MODULE_COMMON] = &CommonMigrationStrategy{}
 	migrationMap[MODULE_RECRUIT] = &RecuitMigrationStrategy{}
+	migrationMap[MODULE_CURRICULUM] = &CurriculumMigrationStrategy{}
 
 	seedDataMap := make(map[string]interface{})
 	models := []interface{}{}

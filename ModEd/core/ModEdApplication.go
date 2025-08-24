@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/joho/godotenv"
 	"gorm.io/gorm"
 )
 
@@ -34,7 +33,6 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 }
 
 func (application *ModEdApplication) loadConfig() {
-	godotenv.Load()
 	application.port = 8080
 	application.RootPath = "/workspace"
 }
@@ -49,7 +47,6 @@ func GetApplication() *ModEdApplication {
 		}
 		application.loadConfig()
 
-		// Set up ConnectPostgres
 		db, err := database.ConnectPostgres()
 		if err != nil {
 			panic(err)

@@ -23,7 +23,7 @@ func (controller *CurriculumController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/Curriculums",
+		Route:   "/curriculum/Curriculum/getCurriculums",
 		Handler: controller.handler.GetCurriculums,
 		Method:  core.GET,
 	})

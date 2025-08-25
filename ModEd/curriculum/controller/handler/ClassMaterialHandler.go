@@ -18,7 +18,7 @@ func (h *ClassMaterialHandler) RenderMain(context *fiber.Ctx) error {
 }
 
 func (h *ClassMaterialHandler) GetClassMaterials(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/classMaterial.json"
+	filePath := "/workspace/ModEd/curriculum/data/curriculum/classMaterial.json"
 
 	classMaterialsMapper, err := utils.CreateMapper[model.ClassMaterial](filePath)
 	if err != nil {

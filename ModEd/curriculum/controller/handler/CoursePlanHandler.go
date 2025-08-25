@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type CoursePlanHandler struct {}
+type CoursePlanHandler struct{}
 
 func NewCoursePlanHandler() *CoursePlanHandler {
 	return &CoursePlanHandler{}
@@ -18,7 +18,7 @@ func (h *CoursePlanHandler) RenderMain(context *fiber.Ctx) error {
 }
 
 func (h *CoursePlanHandler) GetCoursePlan(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/coursePlan.json"
+	filePath := "/workspace/ModEd/curriculum/data/curriculum/coursePlan.json"
 
 	CoursePlansMapper, err := utils.CreateMapper[model.CoursePlan](filePath)
 	if err != nil {

@@ -1,6 +1,6 @@
 [
     {
-        "course_id": 1,
+        "id": 1,
         "name": "Introduction to Programming",
         "description": "Fundamentals of programming concepts using Python. Covers variables, control structures, functions, and basic data structures.",
         "curriculum_id": 1,
@@ -10,7 +10,7 @@
         "updated_at": "2024-01-15T09:00:00Z"
     },
     {
-        "course_id": 2,
+        "id": 2,
         "name": "Data Structures and Algorithms",
         "description": "Advanced data structures including trees, graphs, and hash tables. Algorithm design and analysis techniques.",
         "curriculum_id": 1,
@@ -20,7 +20,7 @@
         "updated_at": "2024-01-16T10:30:00Z"
     },
     {
-        "course_id": 3,
+        "id": 3,
         "name": "Circuit Analysis",
         "description": "Principles of electrical circuit analysis, Kirchhoff's laws, nodal and mesh analysis, and circuit theorems.",
         "curriculum_id": 2,
@@ -30,7 +30,7 @@
         "updated_at": "2024-01-17T11:15:00Z"
     },
     {
-        "course_id": 4,
+        "id": 4,
         "name": "Software Engineering Principles",
         "description": "Software development lifecycle, design patterns, software testing, and project management methodologies.",
         "curriculum_id": 3,
@@ -40,7 +40,7 @@
         "updated_at": "2024-01-18T13:45:00Z"
     },
     {
-        "course_id": 5,
+        "id": 5,
         "name": "Thermodynamics",
         "description": "Laws of thermodynamics, energy transfer, and applications in mechanical engineering systems.",
         "curriculum_id": 4,
@@ -50,7 +50,7 @@
         "updated_at": "2024-01-19T14:30:00Z"
     },
     {
-        "course_id": 6,
+        "id": 6,
         "name": "Advanced Database Systems",
         "description": "Advanced topics in database management systems, including distributed databases, NoSQL, and data warehousing.",
         "curriculum_id": 8,
@@ -60,7 +60,7 @@
         "updated_at": "2024-01-20T09:15:00Z"
     },
     {
-        "course_id": 7,
+        "id": 7,
         "name": "Chemical Process Safety",
         "description": "Analysis and design of safe chemical processes, hazard identification, risk assessment, and safety management.",
         "curriculum_id": 5,
@@ -70,7 +70,7 @@
         "updated_at": "2024-01-21T10:00:00Z"
     },
     {
-        "course_id": 8,
+        "id": 8,
         "name": "Structural Analysis",
         "description": "Analysis of statically determinate and indeterminate structures, influence lines, and structural design principles.",
         "curriculum_id": 6,
@@ -80,7 +80,7 @@
         "updated_at": "2024-01-22T11:30:00Z"
     },
     {
-        "course_id": 9,
+        "id": 9,
         "name": "Machine Learning Fundamentals",
         "description": "Basic concepts in machine learning, supervised and unsupervised learning algorithms, and model evaluation.",
         "curriculum_id": 10,
@@ -90,7 +90,7 @@
         "updated_at": "2024-01-23T13:00:00Z"
     },
     {
-        "course_id": 10,
+        "id": 10,
         "name": "Quality Control Systems",
         "description": "Statistical quality control, process capability analysis, acceptance sampling, and quality management principles.",
         "curriculum_id": 7,

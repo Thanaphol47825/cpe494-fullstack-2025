@@ -18,7 +18,7 @@ func (controller *CourseHandler) RenderMain(context *fiber.Ctx) error {
 }
 
 func (c *CourseHandler) GetCourses(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/Course.json"
+	filePath := "/workspace/ModEd/curriculum/data/curriculum/Course.json"
 	CoursesMapper, err := utils.CreateMapper[model.Course](filePath)
 	if err != nil {
 		return context.JSON(fiber.Map{

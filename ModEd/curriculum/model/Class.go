@@ -7,7 +7,7 @@ import (
 
 type Class struct {
 	core.BaseModel
-	ClassId  uint      `gorm:"not null;uniqueIndex" csv:"class_id" json:"class_id"`
+	// ClassId  uint      `gorm:"not null;uniqueIndex" csv:"class_id" json:"class_id"`
 	CourseId uint      `gorm:"not null" csv:"course_id" json:"course_id"`
 	Course   Course    `gorm:"foreignKey:CourseId;references:ID"`
 	Section  int       `gorm:"not null" csv:"section" json:"section"`

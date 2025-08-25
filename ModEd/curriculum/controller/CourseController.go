@@ -2,12 +2,12 @@ package controller
 
 import (
 	"ModEd/core"
-
-	"github.com/gofiber/fiber/v2"
+	"ModEd/curriculum/controller/handler"
 )
 
 type CourseController struct {
 	application *core.ModEdApplication
+	handler     *handler.CourseHandler
 }
 
 func NewCourseController() *CourseController {
@@ -15,14 +15,16 @@ func NewCourseController() *CourseController {
 	return controller
 }
 
-func (controller *CourseController) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello curriculum/Course")
-}
 func (controller *CourseController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/Course",
-		Handler: controller.RenderMain,
+		Handler: controller.handler.RenderMain,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/Course/GetCourses",
+		Handler: controller.handler.GetCourses,
 		Method:  core.GET,
 	})
 	return routeList

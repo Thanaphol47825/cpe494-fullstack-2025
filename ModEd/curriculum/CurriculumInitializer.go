@@ -7,6 +7,8 @@ import (
 
 func InitialCurriculum() {
 	application := core.GetApplication()
+
+	// Basic Curriculum
 	application.AddController(controller.NewClassController())
 	application.AddController(controller.NewClassMaterialController())
 	application.AddController(controller.NewCoursePlanController())
@@ -19,4 +21,6 @@ func InitialCurriculum() {
 	application.AddController(controller.NewInternshipAttendanceController())
 	application.AddController(controller.NewInternshipMentorController())
 	application.AddController(controller.NewInternshipEvaluationController())
+	application.AddController(controller.NewInternStudentController())
+	application.AddController(controller.NewCompanyController())
 }

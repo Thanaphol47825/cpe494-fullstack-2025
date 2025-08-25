@@ -1,0 +1,24 @@
+[
+  {
+    "advisor_id": 2565160,
+    "advisor":{
+      "instructor_code": "2565160",
+      "first_name": "Alice",
+      "last_name": "Johnson",
+      "email": "alice.johnson@kmutt.ac.th",
+      "start_date": "2020-08-15T00:00:00Z",
+      "department": "Computer Engineering"
+    }
+  },
+  {
+    "advisor_id": 7261943,
+    "advisor":{
+      "instructor_code": "7261943",
+      "first_name": "Bob",
+      "last_name": "Smith",
+      "email": "bob.smith@kmutt.ac.th",
+      "start_date": "2020-08-15T00:00:00Z",
+      "department": "Computer Engineering"
+    }
+  }
+]

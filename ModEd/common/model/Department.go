@@ -14,7 +14,7 @@ type Department struct {
 	Budget      int          `gorm:"default:0" csv:"budget" json:"budget"`
 	Students    []Student    `gorm:"foreignKey:DepartmentID" csv:"students" json:"students"`
 	Instructors []Instructor `gorm:"foreignKey:DepartmentID" csv:"instructors" json:"instructors"`
-	Courses     []Course     `gorm:"foreignKey:DepartmentID" csv:"courses" json:"courses"`
+	// Courses     []Course     `gorm:"foreignKey:DepartmentID" csv:"courses" json:"courses"`
 }
 
 func (Department) TableName() string {
@@ -37,9 +37,9 @@ func (d Department) Validate() error {
 	if len(d.Instructors) == 0 {
 		return errors.New("department must have at least one instructor")
 	}
-	if len(d.Courses) == 0 {
-		return errors.New("department must have at least one course")
-	}
+	// if len(d.Courses) == 0 {
+	// 	return errors.New("department must have at least one course")
+	// }
 	return nil
 }
 

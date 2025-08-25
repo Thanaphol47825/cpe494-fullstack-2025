@@ -13,6 +13,5 @@ func InitialCommon() {
 	application.AddController(controller.NewLeaveInstructorHRController())
 	application.AddController(controller.NewResignationInstructorHRController())
 	application.AddController(controller.NewResignationStudentHRController())
-
-	// application.AddController(controller.NewDepartmentController())
+	application.AddController(controller.NewDepartmentController())
 }

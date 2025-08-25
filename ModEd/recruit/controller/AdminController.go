@@ -2,6 +2,7 @@ package controller
 
 import (
 	"ModEd/core"
+
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -15,7 +16,7 @@ func NewAdminController() *AdminController {
 }
 
 func (controller *AdminController) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello Recruit Admin")
+	return context.SendString("Hello Recruit Admins")
 }
 
 func (controller *AdminController) GetRoute() []*core.RouteItem {

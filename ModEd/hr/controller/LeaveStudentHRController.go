@@ -57,39 +57,32 @@ func (c *LeaveStudentHRController) getByStudentID(studentID string) ([]model.Req
 }
 
 func (c *LeaveStudentHRController) SubmitStudentLeaveRequest(studentID, leaveType, reason, leaveDateStr string) error {
-
 	tm := &util.TransactionManager{DB: c.application.DB}
-
 	return tm.Execute(func(tx *gorm.DB) error {
-		leaveController := NewLeaveStudentHRController()
-
 		requestFactory := model.RequestFactory{}
-
 		params := model.CreateRequestParams{
 			ID:        studentID,
 			LeaveType: leaveType,
 			Reason:    reason,
-			DateStr:   leaveDateStr,
+			DateStr:   leaveDateStr, // expected YYYY-MM-DD
 		}
 
+		// Use RoleStudent
 		reqInterface, err := requestFactory.CreateRequest(model.RoleStudent, model.RequestTypeLeave, params)
-
 		if err != nil {
 			return fmt.Errorf("failed to create leave request using factory: %v", err)
 		}
 
 		req, ok := reqInterface.(*model.RequestLeaveStudent)
-
-		err = req.Validate()
-		if err != nil {
-			return fmt.Errorf("failed to validate leave request: %v", err)
-		}
-
 		if !ok {
 			return fmt.Errorf("factory returned unexpected type for student leave request")
 		}
+		if err := req.Validate(); err != nil {
+			return fmt.Errorf("failed to validate leave request: %v", err)
+		}
 
-		if err := leaveController.insert(req); err != nil {
+		// Insert with tx
+		if err := tx.Create(req).Error; err != nil {
 			return fmt.Errorf("failed to submit leave request within transaction: %v", err)
 		}
 		return nil
@@ -153,13 +146,23 @@ func (ctl *LeaveStudentHRController) HandleGetAllRequests(c *fiber.Ctx) error {
 }
 
 func (ctl *LeaveStudentHRController) HandleSubmitRequest(c *fiber.Ctx) error {
-	var req model.RequestLeaveStudent
-	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	// Accept YYYY-MM-DD as string
+	type submitLeaveDTO struct {
+		StudentCode string `json:"student_code"`
+		LeaveType   string `json:"leave_type"`
+		Reason      string `json:"reason"`
+		LeaveDate   string `json:"leave_date"` // YYYY-MM-DD
 	}
 
-	err := ctl.SubmitStudentLeaveRequest(req.StudentCode, req.LeaveType, req.Reason, req.LeaveDate.Format("2006-01-02"))
-	if err != nil {
+	var dto submitLeaveDTO
+	if err := c.BodyParser(&dto); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if dto.StudentCode == "" || dto.LeaveType == "" || dto.Reason == "" || dto.LeaveDate == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "missing required fields")
+	}
+
+	if err := ctl.SubmitStudentLeaveRequest(dto.StudentCode, dto.LeaveType, dto.Reason, dto.LeaveDate); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{

@@ -17,11 +17,6 @@ func NewStudentController() *StudentController {
 	return &StudentController{}
 }
 
-// ping/health
-func (ctl *StudentController) RenderMain(c *fiber.Ctx) error {
-	return c.SendString("Student HR API is up")
-}
-
 // core.Application จะเรียกเมธอดนี้เพื่อลงทะเบียนเส้นทาง
 // NOTE: core ตอนนี้รองรับแค่ GET/POST -> จึงใช้ POST สำหรับ update/delete ชั่วคราว
 func (ctl *StudentController) GetRoute() []*core.RouteItem {
@@ -33,9 +28,6 @@ func (ctl *StudentController) GetRoute() []*core.RouteItem {
 		// ใช้ POST ชั่วคราวแทน PUT/DELETE
 		{Route: "/hr/students/:code/update", Method: core.POST, Handler: ctl.UpdateStudentByCode},
 		{Route: "/hr/students/:code/delete", Method: core.POST, Handler: ctl.DeleteStudentByCode},
-
-		// endpoint เดิมของคุณ
-		{Route: "/hr/Student", Method: core.GET, Handler: ctl.RenderMain},
 	}
 }
 

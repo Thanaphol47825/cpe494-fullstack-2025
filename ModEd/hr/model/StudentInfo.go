@@ -2,19 +2,17 @@ package model
 
 import (
 	"ModEd/common/model"
-	"ModEd/core"
 	"ModEd/core/validation"
 	"ModEd/hr/util"
 )
 
 type StudentInfo struct {
-	model.Student
-	core.BaseModel
-	Gender      string           `csv:"Gender" json:"Gender"`
-	CitizenID   string           `csv:"CitizenID" json:"CitizenID"`
-	PhoneNumber string           `csv:"PhoneNumber" json:"PhoneNumber" validation:"phone"`
-	AdvisorCode string           `csv:"AdvisorCode" json:"AdvisorCode"`
-	Advisor     model.Instructor `csv:"Advisor" json:"Advisor" gorm:"foreignKey:AdvisorCode;references:InstructorCode"`
+	model.Student `gorm:"embedded"`
+	Gender        string            `csv:"Gender" json:"Gender"`
+	CitizenID     string            `csv:"CitizenID" json:"CitizenID"`
+	PhoneNumber   string            `csv:"PhoneNumber" json:"PhoneNumber" validation:"phone"`
+	AdvisorCode   *string           `csv:"AdvisorCode" json:"AdvisorCode,omitempty"`
+	Advisor       *model.Instructor `csv:"Advisor" json:"Advisor,omitempty" gorm:"foreignKey:AdvisorCode;references:InstructorCode"`
 }
 
 func NewStudentInfo(Stu model.Student, Gender string, CitizenID string, PhoneNumber string, advisorCode string) *StudentInfo {
@@ -23,7 +21,7 @@ func NewStudentInfo(Stu model.Student, Gender string, CitizenID string, PhoneNum
 		Gender:      Gender,
 		CitizenID:   CitizenID,
 		PhoneNumber: PhoneNumber,
-		AdvisorCode: advisorCode,
+		AdvisorCode: &advisorCode,
 	}
 }
 

@@ -8,10 +8,10 @@ import (
 // BaseLeaveRequest holds fields common to Leave requests
 type BaseLeaveRequest struct {
 	core.BaseModel
-	Status    string `gorm:"default:Pending"`
-	LeaveType string
-	Reason    string `gorm:"type:text"`
-	LeaveDate time.Time
+	Status    string    `gorm:"default:Pending"`
+	LeaveType string    `json:"leave_type"`
+	Reason    string    `gorm:"type:text" json:"reason"`
+	LeaveDate time.Time `json:"leave_date"`
 }
 
 // SetStatus implements RequestStatus.

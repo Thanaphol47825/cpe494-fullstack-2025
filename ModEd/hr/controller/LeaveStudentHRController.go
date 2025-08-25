@@ -6,38 +6,42 @@ import (
 	"ModEd/hr/util"
 	"fmt"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type LeaveStudentHRController struct {
-	db *gorm.DB
+	application *core.ModEdApplication
 }
 
-func NewLeaveStudentHRController(db *gorm.DB) *LeaveStudentHRController {
-	db.AutoMigrate(&model.RequestLeaveStudent{})
-	return &LeaveStudentHRController{db: db}
+func NewLeaveStudentHRController() *LeaveStudentHRController {
+	return &LeaveStudentHRController{}
 }
 
 func (c *LeaveStudentHRController) insert(request *model.RequestLeaveStudent) error {
-	return c.db.Create(request).Error
+	return c.application.DB.Create(request).Error
 }
+
 func (c *LeaveStudentHRController) update(request *model.RequestLeaveStudent) error {
-	return c.db.Save(request).Error
+	return c.application.DB.Save(request).Error
 }
+
 func (c *LeaveStudentHRController) delete(request *model.RequestLeaveStudent) error {
-	return c.db.Delete(request).Error
+	return c.application.DB.Delete(request).Error
 }
+
 func (c *LeaveStudentHRController) getAll() ([]*model.RequestLeaveStudent, error) {
 	var requests []*model.RequestLeaveStudent
-	err := c.db.Find(&requests).Error
+	err := c.application.DB.Find(&requests).Error
 	if err != nil {
 		return nil, err
 	}
 	return requests, nil
 }
+
 func (c *LeaveStudentHRController) getByID(id uint) (*model.RequestLeaveStudent, error) {
 	var request model.RequestLeaveStudent
-	err := c.db.First(&request, id).Error
+	err := c.application.DB.First(&request, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +49,7 @@ func (c *LeaveStudentHRController) getByID(id uint) (*model.RequestLeaveStudent,
 }
 func (c *LeaveStudentHRController) getByStudentID(studentID string) ([]model.RequestLeaveStudent, error) {
 	var requests []model.RequestLeaveStudent
-	err := c.db.Where("student_code = ?", studentID).Find(&requests).Error
+	err := c.application.DB.Where("student_code = ?", studentID).Find(&requests).Error
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +58,10 @@ func (c *LeaveStudentHRController) getByStudentID(studentID string) ([]model.Req
 
 func (c *LeaveStudentHRController) SubmitStudentLeaveRequest(studentID, leaveType, reason, leaveDateStr string) error {
 
-	tm := &util.TransactionManager{DB: c.db}
+	tm := &util.TransactionManager{DB: c.application.DB}
 
 	return tm.Execute(func(tx *gorm.DB) error {
-		leaveController := NewLeaveStudentHRController(tx)
+		leaveController := NewLeaveStudentHRController()
 
 		requestFactory := model.RequestFactory{}
 
@@ -104,7 +108,7 @@ func (c *LeaveStudentHRController) ReviewStudentLeaveRequest(requestID, action, 
 		},
 		// save
 		func(r Reviewable) error {
-			return c.db.Save(r).Error
+			return c.application.DB.Save(r).Error
 		},
 	)
 }
@@ -127,4 +131,46 @@ func (c *LeaveStudentHRController) ExportStudentLeaveRequests(filePath string) e
 
 	fmt.Printf("Exported %d student leave requests to %s\n", len(requests), filePath)
 	return nil
+}
+
+// Create Route
+func (ctl *LeaveStudentHRController) GetRoute() []*core.RouteItem {
+	return []*core.RouteItem{
+		{Route: "/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
+		// {Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
+		{Route: "/hr/leave-student-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
+		// {Route: "/hr/leave-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewRequest},
+		// {Route: "/hr/leave-student-requests/export", Method: core.POST, Handler: ctl.HandleExportRequests},
+	}
+}
+
+func (ctl *LeaveStudentHRController) HandleGetAllRequests(c *fiber.Ctx) error {
+	requests, err := ctl.getAll()
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(requests)
+}
+
+func (ctl *LeaveStudentHRController) HandleSubmitRequest(c *fiber.Ctx) error {
+	var req model.RequestLeaveStudent
+	if err := c.BodyParser(&req); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+
+	err := ctl.SubmitStudentLeaveRequest(req.StudentCode, req.LeaveType, req.Reason, req.LeaveDate.Format("2006-01-02"))
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "Leave request submitted successfully",
+	})
+}
+
+func (ctl *LeaveStudentHRController) SetApplication(app *core.ModEdApplication) {
+	ctl.application = app
+	ctl.application.DB = app.DB
+
+	// เผื่อ schema ยังไม่ถูกสร้าง
+	_ = ctl.application.DB.AutoMigrate(&model.RequestLeaveStudent{})
 }

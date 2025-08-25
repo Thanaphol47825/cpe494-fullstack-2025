@@ -28,6 +28,11 @@ func (controller *DepartmentController) GetRoute() []*core.RouteItem {
 		Handler: controller.RenderMain,
 		Method:  core.GET,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/info",
+		Handler: controller.GetInfo,
+		Method:  core.POST,
+	})
 
 	return routeList
 }

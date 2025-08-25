@@ -23,9 +23,9 @@ func (controller *InternshipApplicationHandler) GetInternshipApplication(context
 		})
 	}
 
-	Companies := ApplicationMapper.Deserialize()
+	Applications := ApplicationMapper.Deserialize()
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    Companies,
+		"result":    Applications,
 	})
 }

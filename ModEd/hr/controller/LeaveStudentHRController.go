@@ -5,6 +5,7 @@ import (
 	"ModEd/hr/model"
 	"ModEd/hr/util"
 	"fmt"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -130,10 +131,9 @@ func (c *LeaveStudentHRController) ExportStudentLeaveRequests(filePath string) e
 func (ctl *LeaveStudentHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
-		// {Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
+		{Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-student-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
-		// {Route: "/hr/leave-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewRequest},
-		// {Route: "/hr/leave-student-requests/export", Method: core.POST, Handler: ctl.HandleExportRequests},
+		{Route: "/hr/leave-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewaRequest},
 	}
 }
 
@@ -143,6 +143,21 @@ func (ctl *LeaveStudentHRController) HandleGetAllRequests(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Status(fiber.StatusOK).JSON(requests)
+}
+
+func (ctl *LeaveStudentHRController) HandleGetRequestByID(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request ID")
+	}
+	request, err := ctl.getByID(uint(id))
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	if request == nil {
+		return fiber.NewError(fiber.StatusNotFound, "request not found")
+	}
+	return c.Status(fiber.StatusOK).JSON(request)
 }
 
 func (ctl *LeaveStudentHRController) HandleSubmitRequest(c *fiber.Ctx) error {
@@ -167,6 +182,33 @@ func (ctl *LeaveStudentHRController) HandleSubmitRequest(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Leave request submitted successfully",
+	})
+}
+
+func (ctl *LeaveStudentHRController) HandleReviewRequest(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request ID")
+	}
+
+	type reviewDTO struct {
+		Action string `json:"action"` // "approve" or "reject"
+		Reason string `json:"reason"` // optional
+	}
+
+	var dto reviewDTO
+	if err := c.BodyParser(&dto); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if dto.Action != "approve" && dto.Action != "reject" {
+		return fiber.NewError(fiber.StatusBadRequest, "action must be 'approve' or 'reject'")
+	}
+
+	if err := ctl.ReviewStudentLeaveRequest(strconv.Itoa(id), dto.Action, dto.Reason); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Leave request reviewed successfully",
 	})
 }
 

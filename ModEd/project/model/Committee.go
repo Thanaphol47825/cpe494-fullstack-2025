@@ -5,10 +5,8 @@ import (
 )
 
 type Committee struct {
-    core.BaseModel
-    Name string
-    Email string
-
-    // needs restructuring if we move this to be many to many format
-    Projects []Project
+	gorm.Model
+	InstructorId    uint `gorm:"type:text;not null;index"`
+	SeniorProjectId uint
+	SeniorProject   SeniorProject `gorm:"foreignKey:SeniorProjectId"`
 }

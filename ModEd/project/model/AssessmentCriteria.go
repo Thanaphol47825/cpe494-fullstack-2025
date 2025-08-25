@@ -5,9 +5,6 @@ import (
 )
 
 type AssessmentCriteria struct {
-    core.BaseModel
-
-    Name        string
-    Description string
-    MaxScore    int
+	gorm.Model
+	CriteriaName string `gorm:"not null"`
 }

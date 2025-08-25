@@ -5,12 +5,11 @@ import (
 )
 
 type Assignment struct {
-    core.BaseModel
-    ProjectID uint
-    Title     string
-    Deadline  time.Time
-
-    Progresses []Progress   `gorm:"foreignKey:AssignmentID"`
-    AdvisorScore   Score    `gorm:"foreignKey:AssignmentID"`
-    CommitteeScores []Score `gorm:"foreignKey:AssignmentID"`
+	gorm.Model
+	Name            string     `gorm:"not null"`
+	Description     string     `gorm:"not null"`
+	SubmissionDate  *time.Time `gorm:"type:date"`
+	DueDate         time.Time  `gorm:"type:date;not null"`
+	SeniorProjectId uint
+	SeniorProject   SeniorProject `gorm:"foreignKey:SeniorProjectId"`
 }

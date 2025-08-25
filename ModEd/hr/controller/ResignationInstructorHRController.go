@@ -5,116 +5,152 @@ import (
 	"ModEd/hr/model"
 	"ModEd/hr/util"
 	"fmt"
+	"strconv"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type ResignationInstructorHRController struct {
-	db *gorm.DB
+	application *core.ModEdApplication
 }
 
-func NewResignationInstructorHRController(db *gorm.DB) *ResignationInstructorHRController {
-	db.AutoMigrate(&model.RequestResignationInstructor{})
-	return &ResignationInstructorHRController{db: db}
+func NewResignationInstructorHRController() *ResignationInstructorHRController {
+	return &ResignationInstructorHRController{}
 }
 
-// Use the passed db object (which will be 'tx' in the transaction context)
-func (c *ResignationInstructorHRController) insert(request *model.RequestResignationInstructor) error {
-	return c.db.Create(request).Error
-}
+// ---------- low-level ops ----------
 
+func (c *ResignationInstructorHRController) insert(req *model.RequestResignationInstructor) error {
+	return c.application.DB.Create(req).Error
+}
+func (c *ResignationInstructorHRController) getAll(limit, offset int) ([]model.RequestResignationInstructor, error) {
+	var rows []model.RequestResignationInstructor
+	tx := c.application.DB
+	if limit > 0 {
+		tx = tx.Limit(limit)
+	}
+	if offset > 0 {
+		tx = tx.Offset(offset)
+	}
+	err := tx.Order("id DESC").Find(&rows).Error
+	return rows, err
+}
 func (c *ResignationInstructorHRController) getByID(id uint) (*model.RequestResignationInstructor, error) {
-	var request model.RequestResignationInstructor
-	err := c.db.First(&request, id).Error
-	if err != nil {
+	var row model.RequestResignationInstructor
+	if err := c.application.DB.First(&row, id).Error; err != nil {
 		return nil, err
 	}
-	return &request, nil
+	return &row, nil
 }
 
-func (c *ResignationInstructorHRController) getAll() ([]*model.RequestResignationInstructor, error) {
-	var requests []*model.RequestResignationInstructor
-	err := c.db.Find(&requests).Error
-	return requests, err
-}
+// ---------- domain ops ----------
 
-func (c *ResignationInstructorHRController) getByInstructorID(id string) (*model.RequestResignationInstructor, error) {
-	var req model.RequestResignationInstructor
-	if err := c.db.Where("id = ?", id).First(&req).Error; err != nil {
-		return nil, err
-	}
-	return &req, nil
-}
-
-func (c *ResignationInstructorHRController) update(req *model.RequestResignationInstructor) error {
-	return c.db.Save(req).Error
-}
-
-func (c *ResignationInstructorHRController) SubmitResignationInstructor(instructorID string, reason string) error {
-	tm := &util.TransactionManager{DB: c.db}
+func (c *ResignationInstructorHRController) SubmitResignationInstructor(instructorID, reason string) error {
+	tm := &util.TransactionManager{DB: c.application.DB}
 	return tm.Execute(func(tx *gorm.DB) error {
-
-		instructorController := NewResignationInstructorHRController(tx)
-
-		requestFactory := model.RequestFactory{}
-
 		params := model.CreateRequestParams{
 			ID:     instructorID,
 			Reason: reason,
 		}
-
-		reqInterface, err := requestFactory.CreateRequest(model.RoleInstructor, model.RequestTypeResignation, params)
+		reqIface, err := (model.RequestFactory{}).CreateRequest(model.RoleInstructor, model.RequestTypeResignation, params)
 		if err != nil {
-			return fmt.Errorf("failed to create resignation request using factory: %v", err)
+			return fmt.Errorf("failed to create resignation request using factory: %w", err)
 		}
+		req := reqIface.(*model.RequestResignationInstructor) // safe by factory path
 
-		req, ok := reqInterface.(*model.RequestResignationInstructor)
-		if !ok {
-			return fmt.Errorf("factory returned unexpected type for instructor resignation request")
+		// NOTE: ถ้าโมเดลคุณมีเมธอด Validate() ของตัวเองอยู่แล้ว ค่อยเปิดใช้บรรทัดด้านล่าง
+		// if err := req.Validate(); err != nil { return fmt.Errorf("validate: %w", err) }
+
+		if err := tx.Create(req).Error; err != nil {
+			return fmt.Errorf("failed to insert resignation request: %w", err)
 		}
-
-		if err := instructorController.insert(req); err != nil {
-			return fmt.Errorf("failed to insert resignation request within transaction: %v", err)
-		}
-
 		return nil
 	})
 }
 
-func (c *ResignationInstructorHRController) ReviewInstructorResignRequest(requestID, action, reason string,
-) error {
+func (c *ResignationInstructorHRController) ReviewInstructorResignRequest(requestID, action, reason string) error {
 	return ReviewRequest(
 		requestID,
 		action,
 		reason,
-		// fetch
 		func(id uint) (Reviewable, error) {
 			return c.getByID(id)
 		},
-		// save
 		func(r Reviewable) error {
-			return c.db.Save(r).Error
+			return c.application.DB.Save(r).Error
 		},
 	)
 }
 
-func (c *ResignationInstructorHRController) ExportInstructorResignRequests(filePath string) error {
-	resignationInstructors, err := c.getAll()
+// ---------- HTTP (Fiber) ----------
+
+func (ctl *ResignationInstructorHRController) GetRoute() []*core.RouteItem {
+	return []*core.RouteItem{
+		{Route: "/hr/resignation-instructor-requests", Method: core.GET, Handler: ctl.HandleList},
+		{Route: "/hr/resignation-instructor-requests/:id", Method: core.GET, Handler: ctl.HandleGetByID},
+		{Route: "/hr/resignation-instructor-requests", Method: core.POST, Handler: ctl.HandleCreate},
+		{Route: "/hr/resignation-instructor-requests/:id/review", Method: core.POST, Handler: ctl.HandleReview},
+
+		// health (ถ้าอยากมี)
+		// {Route: "/hr/ResignationInstructor", Method: core.GET, Handler: func(c *fiber.Ctx) error { return c.SendString("Resignation Instructor API is up") }},
+	}
+}
+
+func (ctl *ResignationInstructorHRController) HandleList(c *fiber.Ctx) error {
+	rows, err := ctl.getAll(c.QueryInt("limit"), c.QueryInt("offset"))
 	if err != nil {
-		return fmt.Errorf("failed to retrieve resignation requests: %w", err)
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(rows)
+}
+
+func (ctl *ResignationInstructorHRController) HandleGetByID(c *fiber.Ctx) error {
+	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+	row, err := ctl.getByID(uint(id64))
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(row)
+}
+
+func (ctl *ResignationInstructorHRController) HandleCreate(c *fiber.Ctx) error {
+	var body struct {
+		InstructorCode string `json:"InstructorCode"`
+		Reason         string `json:"Reason"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if body.InstructorCode == "" || body.Reason == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "InstructorCode and Reason are required")
 	}
 
-	mapper, err := core.CreateMapper[model.RequestResignationInstructor](filePath)
-	if err != nil {
-		return fmt.Errorf("failed to create resignation instructor mapper: %w", err)
+	if err := ctl.SubmitResignationInstructor(body.InstructorCode, body.Reason); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "resignation submitted"})
+}
 
-	err = mapper.Serialize(resignationInstructors)
-	if err != nil {
-		return fmt.Errorf("failed to serialize resignation instructor: %w", err)
+func (ctl *ResignationInstructorHRController) HandleReview(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var body struct {
+		Action string `json:"action"` // "approve" | "reject"
+		Reason string `json:"reason"` // ใช้เมื่อ reject
 	}
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if err := ctl.ReviewInstructorResignRequest(id, body.Action, body.Reason); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "updated"})
+}
 
-	fmt.Printf("Exported %d resignation instructor requests to %s\n", len(resignationInstructors), filePath)
-
-	return nil
+func (ctl *ResignationInstructorHRController) SetApplication(app *core.ModEdApplication) {
+	ctl.application = app
+	_ = ctl.application.DB.AutoMigrate(&model.RequestResignationInstructor{})
 }

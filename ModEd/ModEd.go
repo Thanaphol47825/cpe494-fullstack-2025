@@ -6,6 +6,7 @@ import (
 	"ModEd/core/database"
 	"ModEd/core/migration"
 	"ModEd/curriculum"
+	"ModEd/eval"
 	"ModEd/hr"
 	"ModEd/project"
 
@@ -27,5 +28,6 @@ func main() {
 	curriculum.InitialCurriculum()
 	project.InitialProject()
 	hr.InitialCommon()
+	eval.InitialEval()
 	application.Run()
 }

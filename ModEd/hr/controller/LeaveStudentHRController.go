@@ -72,7 +72,7 @@ func (c *LeaveStudentHRController) SubmitStudentLeaveRequest(studentID, leaveTyp
 			DateStr:   leaveDateStr,
 		}
 
-		reqInterface, err := requestFactory.CreateRequest(model.RoleInstructor, model.RequestTypeLeave, params)
+		reqInterface, err := requestFactory.CreateRequest(model.RoleStudent, model.RequestTypeLeave, params)
 
 		if err != nil {
 			return fmt.Errorf("failed to create leave request using factory: %v", err)

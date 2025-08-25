@@ -5,117 +5,112 @@ import (
 	"ModEd/hr/model"
 	"ModEd/hr/util"
 	"fmt"
+	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type LeaveInstructorHRController struct {
-	db *gorm.DB
+	application *core.ModEdApplication
 }
 
-func NewLeaveInstructorHRController(db *gorm.DB) *LeaveInstructorHRController {
-	db.AutoMigrate(&model.RequestLeaveInstructor{})
-	return &LeaveInstructorHRController{db: db}
+func NewLeaveInstructorHRController() *LeaveInstructorHRController {
+	return &LeaveInstructorHRController{}
 }
 
-func (c *LeaveInstructorHRController) insert(request *model.RequestLeaveInstructor) error {
-	return c.db.Create(request).Error
+func (c *LeaveInstructorHRController) insert(r *model.RequestLeaveInstructor) error {
+	return c.application.DB.Create(r).Error
 }
-func (c *LeaveInstructorHRController) update(request *model.RequestLeaveInstructor) error {
-	return c.db.Save(request).Error
+func (c *LeaveInstructorHRController) update(r *model.RequestLeaveInstructor) error {
+	return c.application.DB.Save(r).Error
 }
-func (c *LeaveInstructorHRController) delete(request *model.RequestLeaveInstructor) error {
-	return c.db.Delete(request).Error
+func (c *LeaveInstructorHRController) delete(r *model.RequestLeaveInstructor) error {
+	return c.application.DB.Delete(r).Error
 }
+
 func (c *LeaveInstructorHRController) getAll() ([]*model.RequestLeaveInstructor, error) {
-	var requests []*model.RequestLeaveInstructor
-	err := c.db.Find(&requests).Error
-	if err != nil {
-		return nil, err
-	}
-	return requests, nil
+	var rs []*model.RequestLeaveInstructor
+	return rs, c.application.DB.Find(&rs).Error
 }
 func (c *LeaveInstructorHRController) getByID(id uint) (*model.RequestLeaveInstructor, error) {
-	var request model.RequestLeaveInstructor
-	err := c.db.First(&request, id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &request, nil
-}
-func (c *LeaveInstructorHRController) getByInstructorID(instructorID string) ([]model.RequestLeaveInstructor, error) {
-	var requests []model.RequestLeaveInstructor
-	err := c.db.Where("instructor_code = ?", instructorID).Find(&requests).Error
-	if err != nil {
-		return nil, err
-	}
-	return requests, nil
+	var r model.RequestLeaveInstructor
+	return &r, c.application.DB.First(&r, id).Error
 }
 
-func (c *LeaveInstructorHRController) SubmitInstructorLeaveRequest(instructorID, leaveType, reason, leaveDateStr string) error {
-	tm := &util.TransactionManager{DB: c.db}
+func (c *LeaveInstructorHRController) SubmitInstructorLeaveRequest(instructorID, leaveType, reason, dateStr string) error {
+	tm := &util.TransactionManager{DB: c.application.DB}
 	return tm.Execute(func(tx *gorm.DB) error {
-
-		leaveController := NewLeaveInstructorHRController(tx)
-
-		requestFactory := model.RequestFactory{}
-
 		params := model.CreateRequestParams{
 			ID:        instructorID,
 			LeaveType: leaveType,
 			Reason:    reason,
-			DateStr:   leaveDateStr,
+			DateStr:   dateStr, // YYYY-MM-DD
 		}
-
-		reqInterface, err := requestFactory.CreateRequest(model.RoleInstructor, model.RequestTypeLeave, params)
+		reqInterface, err := (model.RequestFactory{}).CreateRequest(model.RoleInstructor, model.RequestTypeLeave, params)
 		if err != nil {
 			return fmt.Errorf("failed to create leave request using factory: %w", err)
 		}
+		req := reqInterface.(*model.RequestLeaveInstructor) // safe by factory path
 
-		req, ok := reqInterface.(*model.RequestLeaveInstructor)
-		if !ok {
-			return fmt.Errorf("factory returned unexpected type for instructor leave request, got %T", reqInterface)
+		if err := req.Validate(); err != nil {
+			return fmt.Errorf("failed to validate: %w", err)
 		}
-
-		if err := leaveController.insert(req); err != nil {
-			return fmt.Errorf("failed to submit leave request within transaction: %w", err)
+		if err := tx.Create(req).Error; err != nil {
+			return fmt.Errorf("failed to insert: %w", err)
 		}
-
 		return nil
 	})
 }
 
-func (c *LeaveInstructorHRController) ReviewInstructorLeaveRequest(requestID, action, reason string,
-) error {
-	return ReviewRequest(
-		requestID,
-		action,
-		reason,
-		func(id uint) (Reviewable, error) {
-			return c.getByID(id)
-		},
-		func(r Reviewable) error {
-			return c.db.Save(r).Error
-		},
-	)
+// -------- HTTP --------
+
+func (ctl *LeaveInstructorHRController) GetRoute() []*core.RouteItem {
+	return []*core.RouteItem{
+		{Route: "/hr/leave-instructor-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
+		{Route: "/hr/leave-instructor-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
+	}
 }
 
-func (c *LeaveInstructorHRController) ExportInstructorLeaveRequests(filePath string) error {
-	requests, err := c.getAll()
+func (ctl *LeaveInstructorHRController) HandleGetAllRequests(c *fiber.Ctx) error {
+	rs, err := ctl.getAll()
 	if err != nil {
-		return fmt.Errorf("failed to retrieve instructor leave requests: %w", err)
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(rs)
+}
+
+func (ctl *LeaveInstructorHRController) HandleSubmitRequest(c *fiber.Ctx) error {
+	// รับได้ทั้ง 2 รูปแบบ: LeaveDate (RFC3339) หรือ DateStr (YYYY-MM-DD)
+	var body struct {
+		InstructorCode string     `json:"InstructorCode"`
+		LeaveType      string     `json:"LeaveType"`
+		Reason         string     `json:"Reason"`
+		LeaveDate      *time.Time `json:"LeaveDate"` // optional
+		DateStr        string     `json:"DateStr"`   // optional
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
 	}
 
-	mapper, err := core.CreateMapper[model.RequestLeaveInstructor](filePath)
-	if err != nil {
-		return fmt.Errorf("failed to create instructor leave request mapper: %w", err)
+	// สร้าง dateStr แบบกันตาย
+	dateStr := body.DateStr
+	if dateStr == "" && body.LeaveDate != nil {
+		dateStr = body.LeaveDate.Format("2006-01-02")
 	}
 
-	err = mapper.Serialize(requests)
-	if err != nil {
-		return fmt.Errorf("failed to serialize instructor leave requests: %w", err)
+	// ตรวจค่าว่างให้ครบก่อนส่งเข้า factory (จะได้ไม่เจอ 500)
+	if body.InstructorCode == "" || body.LeaveType == "" || body.Reason == "" || dateStr == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "InstructorCode, LeaveType, Reason, and LeaveDate/DateStr are required")
 	}
 
-	fmt.Printf("Exported %d instructor leave requests to %s\n", len(requests), filePath)
-	return nil
+	if err := ctl.SubmitInstructorLeaveRequest(body.InstructorCode, body.LeaveType, body.Reason, dateStr); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Leave request submitted successfully"})
+}
+
+func (ctl *LeaveInstructorHRController) SetApplication(app *core.ModEdApplication) {
+	ctl.application = app
+	_ = ctl.application.DB.AutoMigrate(&model.RequestLeaveInstructor{})
 }

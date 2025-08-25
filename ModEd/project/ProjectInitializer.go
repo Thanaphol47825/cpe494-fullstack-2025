@@ -1,11 +1,11 @@
 package project
 
 import (
-	"ModEd/core"
-	"ModEd/project/controller"
+    "ModEd/project/controller"
+    "ModEd/core"
 )
 
 func InitialProject() {
-	application := core.GetApplication()
-	application.AddController(controller.NewSeniorProjectController())
+    application := core.GetApplication()
+    application.AddController(controller.NewSeniorProjectController())
 }

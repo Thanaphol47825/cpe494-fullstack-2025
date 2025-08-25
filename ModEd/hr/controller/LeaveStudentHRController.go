@@ -133,7 +133,7 @@ func (ctl *LeaveStudentHRController) GetRoute() []*core.RouteItem {
 		{Route: "/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
 		{Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-student-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
-		{Route: "/hr/leave-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewaRequest},
+		{Route: "/hr/leave-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewRequest},
 	}
 }
 

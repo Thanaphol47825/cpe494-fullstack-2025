@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"ModEd/core"
 	"ModEd/curriculum/model"
-	"ModEd/curriculum/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,8 +14,8 @@ func (controller *CompanyHandler) RenderMain(context *fiber.Ctx) error {
 }
 
 func (controller *CompanyHandler) GetCompany(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/company.json"
-	CompanyMapper, err := utils.CreateMapper[model.Company](filePath)
+	filePath := "/workspace/ModEd/curriculum/data/internship/company.json"
+	CompanyMapper, err := core.CreateMapper[model.Company](filePath)
 	if err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,

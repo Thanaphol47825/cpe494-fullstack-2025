@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"ModEd/core"
 	"ModEd/curriculum/model"
-	"ModEd/curriculum/utils"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -14,8 +14,8 @@ func (controller *InternshipMentorHandler) RenderMain(context *fiber.Ctx) error 
 }
 
 func (controller *InternshipMentorHandler) GetInternshipMentor(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/internshipMentor.json"
-	InternshipMentorMapper, err := utils.CreateMapper[model.InternshipMentor](filePath)
+	filePath := "/workspace/ModEd/curriculum/data/internship/internshipMentor.json"
+	InternshipMentorMapper, err := core.CreateMapper[model.InternshipMentor](filePath)
 	if err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,

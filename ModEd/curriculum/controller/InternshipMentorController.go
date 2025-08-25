@@ -2,7 +2,7 @@ package controller
 
 import (
 	"ModEd/core"
-	"ModEd/curriculum/controller/handler"
+	"ModEd/curriculum/handler"
 
 	"github.com/gofiber/fiber/v2"
 )

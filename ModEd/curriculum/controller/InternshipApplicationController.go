@@ -19,7 +19,7 @@ func (controller *InternshipApplicationController) GetRoute() []*core.RouteItem 
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/InternshipApplication",
-		Handler: controller.handler.RenderMain,
+		Handler: controller.handler.GetInternshipApplication,
 		Method:  core.GET,
 	})
 	return routeList

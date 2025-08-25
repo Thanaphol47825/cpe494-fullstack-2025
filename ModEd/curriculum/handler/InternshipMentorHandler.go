@@ -14,7 +14,7 @@ func (controller *InternshipMentorHandler) RenderMain(context *fiber.Ctx) error 
 }
 
 func (controller *InternshipMentorHandler) GetInternshipMentor(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/internship/internshipMentor.json"
+	filePath := "/workspace/ModEd/curriculum/data/internship/Mentor.csv"
 	InternshipMentorMapper, err := core.CreateMapper[model.InternshipMentor](filePath)
 	if err != nil {
 		return context.JSON(fiber.Map{

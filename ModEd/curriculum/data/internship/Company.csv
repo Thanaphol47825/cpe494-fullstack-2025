@@ -1,11 +1,11 @@
-CompanyId,CompanyName
-1,Alpha Tech
-2,Beta Solutions
-3,Gamma Innovations
-4,Delta Systems
-5,Epsilon Networks
-6,Zeta Analytics
-7,Theta Robotics
-8,Iota Security
-9,Kappa Designs
-10,Lambda Consulting
+CompanyId,CompanyName, CompanyAddress
+1,123 Alpha Road, Bangkok
+2,456 Beta Avenue, Chiang Mai
+3,789 Gamma Street, Khon Kaen
+4,101 Delta Blvd, Phuket
+5,202 Epsilon Lane, Pattaya
+6,303 Zeta Drive, Hat Yai
+7,404 Theta Crescent, Nakhon Ratchasima
+8,505 Iota Place, Udon Thani
+9,606 Kappa Square, Surat Thani
+10,707 Lambda Park, Rayong

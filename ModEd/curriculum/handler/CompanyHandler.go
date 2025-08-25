@@ -14,7 +14,7 @@ func (controller *CompanyHandler) RenderMain(context *fiber.Ctx) error {
 }
 
 func (controller *CompanyHandler) GetCompany(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/internship/company.json"
+	filePath := "/workspace/ModEd/curriculum/data/internship/company.csv"
 	CompanyMapper, err := core.CreateMapper[model.Company](filePath)
 	if err != nil {
 		return context.JSON(fiber.Map{

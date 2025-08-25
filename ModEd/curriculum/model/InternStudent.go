@@ -8,7 +8,7 @@ import (
 
 type InternStudent struct {
 	core.BaseModel
-	InternStatus InternStatus        `gorm:"type:varchar(20)"`
+	InternStatus InternStatus        `gorm:"type:varchar(20)" csv:"intern_status"`
 	StudentCode  string              `gorm:"type:varchar(255);not null;unique" csv:"student_code"`
 	Student      commonModel.Student `gorm:"foreignKey:StudentCode;references:StudentCode"`
 }

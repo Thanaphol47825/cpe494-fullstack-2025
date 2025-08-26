@@ -1,7 +1,5 @@
 package model
 
-// Wrote by MEP-0001
-
 import (
 	"errors"
 	"time"

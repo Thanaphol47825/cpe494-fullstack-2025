@@ -15,7 +15,6 @@ type Curriculum struct {
 	Department   model.Department  `gorm:"foreignKey:DepartmentId;references:ID" csv:"-" json:"-"`
 	ProgramType  model.ProgramType `gorm:"type:int;not null" csv:"program_type" json:"program_type"`
 	CourseList   []Course          `gorm:"foreignKey:CurriculumId;references:ID"`
-	*core.SerializableRecord
 }
 
 func (Curriculum) TableName() string {

@@ -23,7 +23,3 @@ type Project struct{
 func (p Project) GetID() uint {
 	return p.ID
 }
-
-// ====================
-// Stakeholders
-// ====================

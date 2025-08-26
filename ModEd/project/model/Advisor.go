@@ -10,5 +10,5 @@ type Advisor struct {
 	IsPrimary       bool `gorm:"not null"`
 	SeniorProjectId uint
 	InstructorId    uint
-	SeniorProject   SeniorProject `gorm:"foreignKey:SeniorProjectId"`
+	Project         Project `gorm:"foreignKey:ProjectId"`
 }

@@ -6,7 +6,7 @@ import (
 
 type Assessment struct {
 	gorm.Model
-	SeniorProjectId        uint                     `gorm:"not null;index"`
-	SeniorProject          SeniorProject            `gorm:"foreignKey:SeniorProjectId"`
+	ProjectId        uint               `gorm:"not null;index"`
+	Project          Project            `gorm:"foreignKey:ProjectId"`
 	AssessmentCriteriaLink []AssessmentCriteriaLink `gorm:"foreignKey:AssessmentId"`
 }

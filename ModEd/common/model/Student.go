@@ -1,7 +1,5 @@
 package model
 
-// Wrote by MEP-0001
-
 import (
 	"errors"
 	"time"
@@ -10,6 +8,7 @@ import (
 
 	"gorm.io/gorm"
 )
+
 
 type Student struct {
 	core.BaseModel

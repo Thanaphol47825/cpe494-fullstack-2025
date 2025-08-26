@@ -1,0 +1,8 @@
+[
+  {"name": "Computer Engineering", "budget": 1000000, "faculty": "Engineering"},
+  {"name": "Mechanical Engineering", "budget": 800000, "faculty": "Engineering"},
+  {"name": "Chemistry", "budget": 600000, "faculty": "Science"},
+  {"name": "Physics", "budget": 700000, "faculty": "Science"},
+  {"name": "Marketing", "budget": 500000, "faculty": "Business"},
+  {"name": "Finance", "budget": 550000, "faculty": "Business"}
+]

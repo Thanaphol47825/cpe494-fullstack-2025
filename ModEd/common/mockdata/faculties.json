@@ -1,0 +1,6 @@
+[
+  {"name": "Engineering", "budget": 5000000},
+  {"name": "Science", "budget": 4000000},  
+  {"name": "Business", "budget": 3000000},
+  {"name": "Arts", "budget": 2000000}
+]

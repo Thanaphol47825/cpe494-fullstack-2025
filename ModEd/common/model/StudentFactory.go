@@ -1,22 +1,19 @@
 package model
 
-// Wrote by MEP-0001
-
 type StudentInterface interface {
 	Validate() error
 }
 
 func NewStudentByProgram(st ProgramType) StudentInterface {
-	switch st {
-	case REGULAR:
+	if st == REGULAR {
 		student := RegularStudent{}
 		student.Program = REGULAR
 		return &student
-	case INTERNATIONAL:
+	} else if st == INTERNATIONAL {
 		student := InternationalStudent{}
 		student.Program = INTERNATIONAL
 		return &student
-	default:
+	} else {
 		student := Student{}
 		student.Program = st
 		return &student

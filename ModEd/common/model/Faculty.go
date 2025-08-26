@@ -9,8 +9,8 @@ import (
 
 type Faculty struct {
 	core.BaseModel
-	Name        string       `gorm:"not null;unique" csv:"name" json:"name"`
-	Departments []Department `gorm:"foreignKey:FacultyID" csv:"departments" json:"departments"`
+	Name   string `gorm:"not null;unique" csv:"name" json:"name"`
+	Budget int    `gorm:"default:0" csv:"budget" json:"budget"`
 }
 
 func (Faculty) TableName() string {
@@ -21,8 +21,8 @@ func (f Faculty) Validate() error {
 	if f.Name == "" {
 		return errors.New("faculty name is required")
 	}
-	if len(f.Departments) == 0 {
-		return errors.New("faculty must have at least one department")
+	if f.Budget < 0 {
+		return errors.New("budget cannot be negative")
 	}
 	return nil
 }

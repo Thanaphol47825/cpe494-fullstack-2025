@@ -12,6 +12,10 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 		&model.Class{},
 		&model.ClassMaterial{},
 		&model.CoursePlan{},
+		&model.Advisor{},
+		&model.Company{},
+		&model.InternshipReport{},
+		&model.InternshipResultEvaluation{},
 	}
 }
 

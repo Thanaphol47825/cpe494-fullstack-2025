@@ -15,7 +15,6 @@ type CoursePlan struct {
 	// Instructor   common.Instructor `gorm:"-" json:"instructor"`
 	Topic       string `gorm:"type:varchar(255);not null" json:"topic"`
 	Description string `gorm:"type:varchar(255);not null" json:"description"`
-	*core.SerializableRecord
 }
 
 func (CoursePlan) TableName() string {

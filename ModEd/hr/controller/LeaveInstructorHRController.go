@@ -75,39 +75,55 @@ func (ctl *LeaveInstructorHRController) GetRoute() []*core.RouteItem {
 func (ctl *LeaveInstructorHRController) HandleGetAllRequests(c *fiber.Ctx) error {
 	rs, err := ctl.getAll()
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
 	}
-	return c.Status(fiber.StatusOK).JSON(rs)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    rs,
+	})
 }
 
 func (ctl *LeaveInstructorHRController) HandleSubmitRequest(c *fiber.Ctx) error {
-	// รับได้ทั้ง 2 รูปแบบ: LeaveDate (RFC3339) หรือ DateStr (YYYY-MM-DD)
 	var body struct {
 		InstructorCode string     `json:"InstructorCode"`
 		LeaveType      string     `json:"LeaveType"`
 		Reason         string     `json:"Reason"`
-		LeaveDate      *time.Time `json:"LeaveDate"` // optional
-		DateStr        string     `json:"DateStr"`   // optional
+		LeaveDate      *time.Time `json:"LeaveDate"`
+		DateStr        string     `json:"DateStr"`
 	}
 	if err := c.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
 	}
 
-	// สร้าง dateStr แบบกันตาย
 	dateStr := body.DateStr
 	if dateStr == "" && body.LeaveDate != nil {
 		dateStr = body.LeaveDate.Format("2006-01-02")
 	}
 
-	// ตรวจค่าว่างให้ครบก่อนส่งเข้า factory (จะได้ไม่เจอ 500)
 	if body.InstructorCode == "" || body.LeaveType == "" || body.Reason == "" || dateStr == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "InstructorCode, LeaveType, Reason, and LeaveDate/DateStr are required")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "InstructorCode, LeaveType, Reason, and LeaveDate/DateStr are required"},
+		})
 	}
 
 	if err := ctl.SubmitInstructorLeaveRequest(body.InstructorCode, body.LeaveType, body.Reason, dateStr); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Leave request submitted successfully"})
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    fiber.Map{"message": "Leave request submitted successfully"},
+	})
 }
 
 func (ctl *LeaveInstructorHRController) SetApplication(app *core.ModEdApplication) {

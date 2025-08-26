@@ -1,7 +1,8 @@
 package model
 
 import (
-	"gorm.io/gorm"
+	"ModEd/core"
+    "time"
 )
 
 type Presentation struct {

@@ -73,12 +73,6 @@ func (controller *StudentController) DeleteStudent(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{"message": "Student deleted"})
 }
 
-func (controller *StudentController) GetInfo(context *fiber.Ctx) error {
-	student := &model.Student{}
-	/// TODO convert model object to JSON
-	return context.JSON(student)
-}
-
 func NewStudentController() *StudentController {
 	controller := &StudentController{}
 	return controller

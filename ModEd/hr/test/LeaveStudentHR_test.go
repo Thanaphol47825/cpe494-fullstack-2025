@@ -150,7 +150,7 @@ func TestHandleEditRequest(t *testing.T) {
 	})
 
 	dto := map[string]string{
-		"student_code": "65070501001",
+		"student_code": "65070501004",
 		"leave_type":   string(model.LeaveTypeVacation),
 		"reason":       "family",
 		"leave_date":   "2025-08-22",
@@ -164,7 +164,7 @@ func TestHandleEditRequest(t *testing.T) {
 	if err := db.First(&after, id).Error; err != nil {
 		t.Fatalf("fetch after: %v", err)
 	}
-	if after.StudentCode != "65070501001" || after.LeaveType != model.LeaveTypeVacation || after.Reason != "family" {
+	if after.StudentCode != "65070501004" || after.LeaveType != model.LeaveTypeVacation || after.Reason != "family" {
 		t.Fatalf("update failed: %+v", after)
 	}
 	if after.LeaveDate.Format("2006-01-02") != "2025-08-22" {

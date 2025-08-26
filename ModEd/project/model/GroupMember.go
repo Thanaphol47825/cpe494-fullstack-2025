@@ -1,7 +1,7 @@
 package model
 
 import (
-	"gorm.io/gorm"
+	"ModEd/core"
 )
 
 type GroupMember struct {

@@ -1,0 +1,6 @@
+TurninDate,ApprovalUniversityStatus,ApprovalCompanyStatus,CompanyId,StudentCode
+2025-08-01T00:00:00Z,Approved,Approved,1,S1001
+2025-08-03T00:00:00Z,Pending,Approved,2,S1002
+2025-08-05T00:00:00Z,Rejected,Pending,3,S1003
+2025-08-07T00:00:00Z,Approved,Rejected,4,S1004
+2025-08-09T00:00:00Z,Pending,Pending,5,S1005

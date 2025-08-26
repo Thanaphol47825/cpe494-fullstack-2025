@@ -1,15 +1,18 @@
 package core
 
 import (
+	"ModEd/core/database"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 type ModEdApplication struct {
 	Application *fiber.App
 	port        int
 	RootPath    string
+	DB          *gorm.DB
 }
 
 func (application *ModEdApplication) Run() {
@@ -20,9 +23,10 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 	routeList := controller.GetRoute()
 	controller.SetApplication(application)
 	for _, route := range routeList {
-		if route.Method == GET {
+		switch route.Method {
+		case GET:
 			application.Application.Get(route.Route, route.Handler)
-		} else if route.Method == POST {
+		case POST:
 			application.Application.Post(route.Route, route.Handler)
 		}
 	}
@@ -30,7 +34,7 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 
 func (application *ModEdApplication) loadConfig() {
 	application.port = 8080
-	application.RootPath = "/Users/kittipongpiyawanno/Projects/FullStack2569/ModEd/"
+	application.RootPath = "/workspace"
 }
 
 // NOTE: Singleton
@@ -42,6 +46,12 @@ func GetApplication() *ModEdApplication {
 			Application: fiber.New(),
 		}
 		application.loadConfig()
+
+		db, err := database.ConnectPostgres()
+		if err != nil {
+			panic(err)
+		}
+		application.DB = db
 	}
 	return application
 }

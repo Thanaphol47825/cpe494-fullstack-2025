@@ -1,0 +1,41 @@
+*.log
+
+# for macOS user
+.DS_Store
+
+# for IntelliJ IDEA user
+.idea/
+*.iml
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+*.coverprofile
+profile.cov
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# env file
+.env
+
+# Editor/IDE
+# .idea/
+# .vscode/
+mise.toml
+OOAD2568/
+ModEd/common/util/Route_test.go

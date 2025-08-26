@@ -1,0 +1,6 @@
+[
+  {"instructor_code": "T001", "first_name": "Dr.", "last_name": "Smith", "email": "dr.smith@university.edu", "start_date": "2020-01-15T00:00:00Z", "department": "Computer Engineering"},
+  {"instructor_code": "T002", "first_name": "Prof.", "last_name": "Johnson", "email": "prof.johnson@university.edu", "start_date": "2019-08-20T00:00:00Z", "department": "Mechanical Engineering"},
+  {"instructor_code": "T003", "first_name": "Dr.", "last_name": "Wilson", "email": "dr.wilson@university.edu", "start_date": "2021-03-10T00:00:00Z", "department": "Chemistry"},
+  {"instructor_code": "T004", "first_name": "Prof.", "last_name": "Davis", "email": "prof.davis@university.edu", "start_date": "2018-09-05T00:00:00Z", "department": "Physics"}
+]

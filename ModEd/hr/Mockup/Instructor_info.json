@@ -1,0 +1,15 @@
+{
+  "instructor_code": "INS002",
+  "first_name": "Bob",
+  "last_name": "Teacher",
+  "email": "bob@example.com",
+  "start_date": "2021-01-01T00:00:00Z",
+  "department": "CPE",
+
+  "Gender": "M",
+  "CitizenID": "1103700000002",
+  "PhoneNumber": "0812222222",
+  "Salary": 55000,
+  "AcademicPosition": 1,
+  "DepartmentPosition": 1
+}

@@ -1,0 +1,16 @@
+{
+  "student_code": "65070501006",
+  "first_name": "Jarukit",
+  "last_name": "Pan-Iam",
+  "email": "jarukit@example.com",
+  "start_date": "2024-08-01T00:00:00Z",
+  "birth_date": "2004-01-15T00:00:00Z",
+
+  "program": 0,            
+  "status": null,          
+
+  "Gender": "M",
+  "CitizenID": "1103701234567",
+  "PhoneNumber": "0812345678",
+  "AdvisorCode": "INS001"
+}

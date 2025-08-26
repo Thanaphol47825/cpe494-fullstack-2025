@@ -10,11 +10,6 @@ type SeniorProjectController struct {
 	application *core.ModEdApplication
 }
 
-func NewSeniorProjectController() *SeniorProjectController {
-	controller := &SeniorProjectController{}
-	return controller
-}
-
 func (controller *SeniorProjectController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("hello yuil")
 }
@@ -27,11 +22,16 @@ func (controller *SeniorProjectController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	/*routeList = append(routeList, &core.RouteItem{
-	// 	Route:   "/info",
-	// 	Handler: controller.GetInfo,
-	// 	Method:  core.POST,
+	     Route:   "/info",
+	     Handler: controller.GetInfo,
+	     Method:  core.POST,
 	})*/
 	return routeList
+}
+
+func NewSeniorProjectController() *SeniorProjectController {
+	controller := &SeniorProjectController{}
+	return controller
 }
 
 func (controller *SeniorProjectController) SetApplication(application *core.ModEdApplication) {

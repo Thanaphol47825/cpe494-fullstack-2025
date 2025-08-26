@@ -3,8 +3,6 @@ services:
     image: "mcr.microsoft.com/devcontainers/go:1-1.24-bookworm"
     volumes:
       - ../:/workspace
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${HOME}/.gitconfig:/root/.gitconfig
     environment:
       - TZ=Asia/Bangkok
     depends_on:

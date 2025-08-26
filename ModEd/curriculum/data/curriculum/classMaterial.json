@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "created_at": "2025-05-06 01:37:11.5858938+07:00",
+    "updated_at": "2025-05-06 01:37:11.5858938+07:00",
+    "deleted_at": null,
+    "class_id": 1,
+    "file_name": "Week1_Syllabus.pdf",
+    "file_path": "/materials/class_1/Week1_Syllabus.pdf"
+  },
+  {
+    "id": 2,
+    "created_at": "2025-05-06 01:38:28.7977127+07:00",
+    "updated_at": "2025-05-06 01:38:28.7977127+07:00",
+    "deleted_at": null,
+    "class_id": 1,
+    "file_name": "Week1_IntroSlides.pptx",
+    "file_path": "/materials/class_1/Week1_IntroSlides.pptx"
+  },
+  {
+    "id": 3,
+    "created_at": "2025-05-06 01:38:28.7977127+07:00",
+    "updated_at": "2025-05-06 01:38:28.7977127+07:00",
+    "deleted_at": null,
+    "class_id": 2,
+    "file_name": "Week2_LogicGates.pptx",
+    "file_path": "/materials/class_2/Week2_LogicGates.pptx"
+  },
+  {
+    "id": 4,
+    "created_at": "2025-05-06 01:38:28.7977127+07:00",
+    "updated_at": "2025-05-06 01:38:28.7977127+07:00",
+    "deleted_at": null,
+    "class_id": 2,
+    "file_name": "Week2_Readings.pdf",
+    "file_path": "/materials/class_2/Week2_Readings.pdf"
+  },
+  {
+    "id": 5,
+    "created_at": "2025-05-06 01:38:28.7977127+07:00",
+    "updated_at": "2025-05-06 01:38:28.7977127+07:00",
+    "deleted_at": null,
+    "class_id": 3,
+    "file_name": "Week3_ConcurrencyNotes.pdf",
+    "file_path": "/materials/class_3/Week3_ConcurrencyNotes.pdf"
+  }
+]

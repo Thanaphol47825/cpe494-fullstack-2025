@@ -2,29 +2,36 @@ package controller
 
 import (
 	"ModEd/core"
-
-	"github.com/gofiber/fiber/v2"
+	"ModEd/curriculum/handler"
 )
 
 type InternshipAttendanceController struct {
 	application *core.ModEdApplication
+	handler     *handler.InternshipAttendanceHandler
 }
 
 func NewInternshipAttendanceController() *InternshipAttendanceController {
-	controller := &InternshipAttendanceController{}
+	controller := &InternshipAttendanceController{
+		handler: handler.NewInternshipAttendanceHandler(),
+	}
 	return controller
-}
-
-func (controller *InternshipAttendanceController) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello curriculum/InternshipAttendance")
 }
 
 func (controller *InternshipAttendanceController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/InternshipAttendance",
-		Handler: controller.RenderMain,
+		Handler: controller.handler.RenderMain,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipAttendance/GetInternshipAttendances",
+		Handler: controller.handler.GetInternshipAttendances,
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *InternshipAttendanceController) SetApplication(application *core.ModEdApplication) {
+	controller.application = application
 }

@@ -1,8 +1,8 @@
 ## Weekly Progress 
 
-### 26/08/2025
+### Curriculum Module (Basic Curriculum)
 
-#### Curriculum Module (Basic Curriculum)
+#### 26/08/2025
 
 - Reviewed and updated basic curriculum controllers:
 	- `ClassController.go`
@@ -23,3 +23,7 @@
 	- `class.json`, `classMaterial.json`, `course.json`, `coursePlan.json`, `curriculum.json`
 - Add curriculum utilities in `utils/mapper.go`
 - Migrate Model into db
+
+#### 02/09/2025
+
+- Update Model Relation

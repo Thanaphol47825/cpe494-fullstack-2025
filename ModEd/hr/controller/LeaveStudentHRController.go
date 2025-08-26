@@ -49,14 +49,6 @@ func (c *LeaveStudentHRController) getByID(id uint) (*model.RequestLeaveStudent,
 	}
 	return &request, nil
 }
-func (c *LeaveStudentHRController) getByStudentID(studentID string) ([]model.RequestLeaveStudent, error) {
-	var requests []model.RequestLeaveStudent
-	err := c.application.DB.Where("student_code = ?", studentID).Find(&requests).Error
-	if err != nil {
-		return nil, err
-	}
-	return requests, nil
-}
 
 func (c *LeaveStudentHRController) SubmitStudentLeaveRequest(studentID, leaveType, reason, leaveDateStr string) error {
 	tm := &util.TransactionManager{DB: c.application.DB}

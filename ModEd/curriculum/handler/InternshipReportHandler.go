@@ -7,7 +7,6 @@ import (
 )
 
 type InternshipReportHandler struct {
-	application *core.ModEdApplication
 }
 
 func NewInternshipReportHandler() *InternshipReportHandler {

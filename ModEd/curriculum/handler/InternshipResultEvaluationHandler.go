@@ -6,9 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type InternshipResultEvaluationHandler struct {
-	application *core.ModEdApplication
-}
+type InternshipResultEvaluationHandler struct {}
 
 func NewInternshipResultEvaluationHandler() *InternshipResultEvaluationHandler {
 	return &InternshipResultEvaluationHandler{}

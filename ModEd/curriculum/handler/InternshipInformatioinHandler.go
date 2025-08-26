@@ -20,7 +20,7 @@ func (handler *InternshipInformationHandler) RenderMain(context *fiber.Ctx) erro
 
 func (handler *InternshipInformationHandler) GetInternshipInformations(context *fiber.Ctx) error {
 	filepath := "/workspace/ModEd/curriculum/data/curriculum/Information.csv"
-	informationMapper, err := core.CreateMapper[string](filepath + "InternshipInformation.json")
+	informationMapper, err := core.CreateMapper[string](filepath)
 	if err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,

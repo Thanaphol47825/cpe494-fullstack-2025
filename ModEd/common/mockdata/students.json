@@ -1,0 +1,24 @@
+[
+  {
+    "student_code": "65070005",
+    "first_name": "Sarah",
+    "last_name": "Connor", 
+    "email": "sarah.connor@university.edu",
+    "start_date": "2024-08-26T00:00:00Z",
+    "birth_date": "2000-01-15T00:00:00Z",
+    "program": 0,
+    "department": "Computer Engineering",
+    "status": 0
+  },
+  {
+    "student_code": "65070006",
+    "first_name": "Kyle",
+    "last_name": "Reese",
+    "email": "kyle.reese@university.edu", 
+    "start_date": "2024-08-26T00:00:00Z",
+    "birth_date": "1999-12-08T00:00:00Z",
+    "program": 0,
+    "department": "Mechanical Engineering",
+    "status": 0
+  }
+]

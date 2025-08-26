@@ -6,6 +6,7 @@ import (
 	"ModEd/hr/util"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -127,13 +128,71 @@ func (c *LeaveStudentHRController) ExportStudentLeaveRequests(filePath string) e
 	return nil
 }
 
+func (c *LeaveStudentHRController) EditStudentLeaveRequest(requestID int, studentID, leaveType, reason, leaveDateStr string) error {
+	tm := &util.TransactionManager{DB: c.application.DB}
+	return tm.Execute(func(tx *gorm.DB) error {
+		request, err := c.getByID(uint(requestID))
+		if err != nil {
+			return fmt.Errorf("failed to fetch leave request: %v", err)
+		}
+		if request == nil {
+			return fmt.Errorf("leave request not found")
+		}
+		parsedDate, err := time.Parse("2006-01-02", leaveDateStr)
+		if err != nil {
+			return fmt.Errorf("failed to parse leave date: %v", err)
+		}
+		if request.Status != "Pending" {
+			return fmt.Errorf("only pending requests can be edited")
+		}
+
+		// Update fields
+		request.StudentCode = studentID
+		request.LeaveType = model.LeaveType(leaveType)
+		request.Reason = reason
+		request.LeaveDate = parsedDate
+
+		// Validate
+		if err := request.Validate(); err != nil {
+			return fmt.Errorf("failed to validate leave request: %v", err)
+		}
+
+		// Save changes
+		if err := tx.Save(request).Error; err != nil {
+			return fmt.Errorf("failed to update leave request within transaction: %v", err)
+		}
+		return nil
+	})
+}
+
+func (c *LeaveStudentHRController) DeleteStudentLeaveRequest(requestID int) error {
+	tm := &util.TransactionManager{DB: c.application.DB}
+	return tm.Execute(func(tx *gorm.DB) error {
+		request, err := c.getByID(uint(requestID))
+		if err != nil {
+			return fmt.Errorf("failed to fetch leave request: %v", err)
+		}
+		if request == nil {
+			return fmt.Errorf("leave request not found")
+		}
+
+		// Delete request
+		if err := tx.Delete(request).Error; err != nil {
+			return fmt.Errorf("failed to delete leave request within transaction: %v", err)
+		}
+		return nil
+	})
+}
+
 // Create Route
 func (ctl *LeaveStudentHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
 		{Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-student-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
+		{Route: "/hr/leave-student-requests/:id/edit", Method: core.POST, Handler: ctl.HandleEditRequest},
 		{Route: "/hr/leave-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewRequest},
+		{Route: "/hr/leave-student-requests/:id/delete", Method: core.POST, Handler: ctl.HandleDeleteRequest},
 	}
 }
 
@@ -176,12 +235,45 @@ func (ctl *LeaveStudentHRController) HandleSubmitRequest(c *fiber.Ctx) error {
 	if dto.StudentCode == "" || dto.LeaveType == "" || dto.Reason == "" || dto.LeaveDate == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "missing required fields")
 	}
-
+	if !model.LeaveType(dto.LeaveType).IsValid() {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid leave type")
+	}
 	if err := ctl.SubmitStudentLeaveRequest(dto.StudentCode, dto.LeaveType, dto.Reason, dto.LeaveDate); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Leave request submitted successfully",
+	})
+}
+
+func (ctl *LeaveStudentHRController) HandleEditRequest(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request ID")
+	}
+
+	type editDTO struct {
+		StudentCode string `json:"student_code"`
+		LeaveType   string `json:"leave_type"`
+		Reason      string `json:"reason"`
+		LeaveDate   string `json:"leave_date"` // YYYY-MM-DD
+	}
+
+	var dto editDTO
+	if err := c.BodyParser(&dto); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if dto.StudentCode == "" || dto.LeaveType == "" || dto.Reason == "" || dto.LeaveDate == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "missing required fields")
+	}
+	if !model.LeaveType(dto.LeaveType).IsValid() {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid leave type")
+	}
+	if err := ctl.EditStudentLeaveRequest(id, dto.StudentCode, dto.LeaveType, dto.Reason, dto.LeaveDate); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Leave request edited successfully",
 	})
 }
 
@@ -209,6 +301,19 @@ func (ctl *LeaveStudentHRController) HandleReviewRequest(c *fiber.Ctx) error {
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Leave request reviewed successfully",
+	})
+}
+
+func (ctl *LeaveStudentHRController) HandleDeleteRequest(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request ID")
+	}
+	if err := ctl.DeleteStudentLeaveRequest(id); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Leave request deleted successfully",
 	})
 }
 

@@ -47,7 +47,7 @@ func createStudentLeaveRequest(params CreateRequestParams) (interface{}, error) 
 	return &RequestLeaveStudent{
 		BaseLeaveRequest: BaseLeaveRequest{
 			Status:    "Pending",
-			LeaveType: params.LeaveType,
+			LeaveType: LeaveType(params.LeaveType),
 			Reason:    params.Reason,
 			LeaveDate: t,
 		},
@@ -85,7 +85,7 @@ func createInstructorLeaveRequest(params CreateRequestParams) (interface{}, erro
 	return &RequestLeaveInstructor{
 		BaseLeaveRequest: BaseLeaveRequest{
 			Status:    "Pending",
-			LeaveType: params.LeaveType,
+			LeaveType: LeaveType(params.LeaveType),
 			Reason:    params.Reason,
 			LeaveDate: t,
 		},

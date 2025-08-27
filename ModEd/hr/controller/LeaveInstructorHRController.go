@@ -69,6 +69,9 @@ func (ctl *LeaveInstructorHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/leave-instructor-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
 		{Route: "/hr/leave-instructor-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
+
+		{Route: "/hr/leave-instructor-requests/update", Method: core.POST, Handler: ctl.HandleUpdateRequest},
+		{Route: "/hr/leave-instructor-requests/delete", Method: core.POST, Handler: ctl.HandleDeleteRequest},
 	}
 }
 
@@ -123,6 +126,99 @@ func (ctl *LeaveInstructorHRController) HandleSubmitRequest(c *fiber.Ctx) error 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    fiber.Map{"message": "Leave request submitted successfully"},
+	})
+}
+func (ctl *LeaveInstructorHRController) HandleUpdateRequest(c *fiber.Ctx) error {
+	var body struct {
+		ID        uint   `json:"id"`
+		Status    string `json:"status"`
+		Reason    string `json:"reason"`
+		LeaveType string `json:"leave_type"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
+	}
+	if body.ID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "id is required"},
+		})
+	}
+
+	// หาเรคคอร์ด
+	req, err := ctl.getByID(body.ID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 404, "message": "record not found"},
+		})
+	}
+
+	// อัปเดตเฉพาะฟิลด์ที่ส่งมา
+	if body.Status != "" {
+		req.Status = body.Status
+	}
+	if body.Reason != "" {
+		req.Reason = body.Reason
+	}
+	if body.LeaveType != "" {
+		req.LeaveType = model.LeaveType(body.LeaveType)
+	}
+
+	// บันทึก
+	if err := ctl.update(req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    req,
+	})
+}
+
+func (ctl *LeaveInstructorHRController) HandleDeleteRequest(c *fiber.Ctx) error {
+	var body struct {
+		ID uint `json:"id"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
+	}
+	if body.ID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "id is required"},
+		})
+	}
+
+	// หาเรคคอร์ด
+	req, err := ctl.getByID(body.ID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 404, "message": "record not found"},
+		})
+	}
+
+	// ลบ
+	if err := ctl.delete(req); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    fiber.Map{"message": "deleted successfully"},
 	})
 }
 

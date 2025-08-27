@@ -9,7 +9,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
 type Student struct {
 	core.BaseModel
 	StudentCode string         `gorm:"not null;unique" csv:"student_code" json:"student_code"`
@@ -21,6 +20,14 @@ type Student struct {
 	Program     ProgramType    `csv:"program" json:"program"`
 	Department  string         `csv:"department" json:"department"`
 	Status      *StudentStatus `csv:"status" json:"status"`
+
+	Gender      *string `csv:"Gender" json:"Gender,omitempty"`
+	CitizenID   *string `csv:"CitizenID" json:"CitizenID,omitempty"`
+	PhoneNumber *string `csv:"PhoneNumber" json:"PhoneNumber,omitempty"`
+	AdvisorCode *string `csv:"AdvisorCode" json:"AdvisorCode,omitempty"`
+
+	// FK → Instructor.InstructorCode
+	Advisor *Instructor `json:"Advisor,omitempty" gorm:"foreignKey:AdvisorCode;references:InstructorCode"`
 }
 
 func (Student) TableName() string {

@@ -17,6 +17,13 @@ type Instructor struct {
 	Email          string     `gorm:"not null" csv:"email" json:"email"`
 	StartDate      *time.Time `csv:"start_date" json:"start_date"`
 	Department     *string    `csv:"department" json:"department"`
+
+	Gender             *string  `json:"Gender"             csv:"gender"`
+	CitizenID          *string  `json:"CitizenID"          csv:"citizen_id"`
+	PhoneNumber        *string  `json:"PhoneNumber"        csv:"phone_number"`
+	Salary             *float64 `json:"Salary"             csv:"salary"`
+	AcademicPosition   *int     `json:"AcademicPosition"   csv:"academic_position"`   // 0=NONE,1=ASSISTANT_PROF,2=ASSOCIATE_PROF,3=PROFESSOR
+	DepartmentPosition *int     `json:"DepartmentPosition" csv:"department_position"` // 0=NONE,1=HEAD,2=DEPUTY,3=SECRETARY
 }
 
 func (Instructor) TableName() string {

@@ -10,8 +10,11 @@ type CompanyController struct {
 	handler     *handler.CompanyHandler
 }
 
-func NewCompanyController() *CompanyController {
-	controller := &CompanyController{}
+func NewCompanyController(app *core.ModEdApplication) *CompanyController {
+	controller := &CompanyController{
+		application: app,
+		handler:     &handler.CompanyHandler{DB: app.DB},
+	}
 	return controller
 }
 
@@ -21,6 +24,11 @@ func (controller *CompanyController) GetRoute() []*core.RouteItem {
 		Route:   "/curriculum/Company",
 		Handler: controller.handler.GetCompany,
 		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/createCompany",
+		Handler: controller.handler.CreateCompany,
+		Method:  core.POST,
 	})
 	return routeList
 }

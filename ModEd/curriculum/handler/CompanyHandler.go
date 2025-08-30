@@ -3,6 +3,7 @@ package handler
 import (
 	"ModEd/core"
 	"ModEd/curriculum/model"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -108,5 +109,32 @@ func (controller *CompanyHandler) UpdateCompanyByID(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    company,
+	})
+}
+
+func (controller *CompanyHandler) DeleteCompanyByID(context *fiber.Ctx) error {
+	id := context.Params("id")
+	fmt.Println(id)
+
+	var company model.Company
+
+	if err := controller.DB.First(&company, id).Error; err != nil {
+		fmt.Print(err)
+		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "company not found",
+		})
+	}
+
+	if err := controller.DB.Delete(&company, id).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to delete company",
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    "successfully deleted company",
 	})
 }

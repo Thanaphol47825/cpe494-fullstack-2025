@@ -16,7 +16,7 @@ func (controller *CompanyHandler) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello curriculum/Company")
 }
 
-func (controller *CompanyHandler) GetCompany(context *fiber.Ctx) error {
+func (controller *CompanyHandler) GetAllCompany(context *fiber.Ctx) error {
 	filePath := "/workspace/ModEd/curriculum/data/internship/company.csv"
 	CompanyMapper, err := core.CreateMapper[model.Company](filePath)
 	if err != nil {
@@ -53,5 +53,23 @@ func (controller *CompanyHandler) CreateCompany(context *fiber.Ctx) error {
 	return context.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    newCompany,
+	})
+}
+
+func (controller *CompanyHandler) GetCompanyByID(context *fiber.Ctx) error {
+	id := context.Params("id")
+
+	var company model.Company
+
+	if err := controller.DB.First(&company, id).Error; err != nil {
+		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "company not found",
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    company,
 	})
 }

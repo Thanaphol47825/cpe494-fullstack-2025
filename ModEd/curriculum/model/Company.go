@@ -8,3 +8,7 @@ type Company struct {
 	CompanyName    string `gorm:"type:varchar(255)" json:"company_name" csv:"CompanyName"`
 	CompanyAddress string `gorm:"type:varchar(255)" json:"company_address" csv:"CompanyAddress"`
 }
+
+func (Company) TableName() string {
+	return "companies"
+}

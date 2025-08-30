@@ -35,6 +35,16 @@ func (controller *CompanyController) GetRoute() []*core.RouteItem {
 		Handler: controller.handler.GetCompanyByID,
 		Method:  core.GET,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/updateCompany/:id",
+		Handler: controller.handler.UpdateCompanyByID,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/deleteCompany/:id",
+		Handler: controller.handler.DeleteCompanyByID,
+		Method:  core.POST,
+	})
 	return routeList
 }
 

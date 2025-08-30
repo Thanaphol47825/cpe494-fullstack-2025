@@ -1,4 +1,10 @@
 {
-  "StudentCode": "65070501006",
-  "Reason": "moving to another university"
+  "CREATE": {
+    "StudentCode": "65070501006",
+    "Reason": "moving to another university"
+  },
+  "REVIEW": {
+    "action": "reject",
+    "reason": "required supporting documents were incomplete"
+  }
 }

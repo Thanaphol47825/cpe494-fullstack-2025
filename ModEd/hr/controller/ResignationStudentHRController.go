@@ -19,10 +19,12 @@ func NewResignationStudentHRController() *ResignationStudentHRController {
 	return &ResignationStudentHRController{}
 }
 
-// ---------- low-level ops ----------
-
 func (c *ResignationStudentHRController) insert(req *model.RequestResignationStudent) error {
 	return c.application.DB.Create(req).Error
+}
+
+func (c *ResignationStudentHRController) delete(req *model.RequestResignationStudent) error {
+	return c.application.DB.Delete(req).Error
 }
 
 func (c *ResignationStudentHRController) getAll(limit, offset int) ([]model.RequestResignationStudent, error) {
@@ -46,11 +48,10 @@ func (c *ResignationStudentHRController) getByID(id uint) (*model.RequestResigna
 	return &row, nil
 }
 
-// ---------- domain ops ----------
-
-func (c *ResignationStudentHRController) SubmitResignationStudent(studentID, reason string) error {
+func (c *ResignationStudentHRController) SubmitResignationStudent(studentID, reason string) (*model.RequestResignationStudent, error) {
 	tm := &util.TransactionManager{DB: c.application.DB}
-	return tm.Execute(func(tx *gorm.DB) error {
+	var row *model.RequestResignationStudent
+	err := tm.Execute(func(tx *gorm.DB) error {
 		params := model.CreateRequestParams{
 			ID:     studentID,
 			Reason: reason,
@@ -59,17 +60,18 @@ func (c *ResignationStudentHRController) SubmitResignationStudent(studentID, rea
 		if err != nil {
 			return fmt.Errorf("failed to create resignation request using factory: %w", err)
 		}
-		req := reqIface.(*model.RequestResignationStudent) // safe by factory path
+		req := reqIface.(*model.RequestResignationStudent)
 
-		// โมเดลนี้มี Validate() แล้ว
 		if err := req.Validate(); err != nil {
 			return fmt.Errorf("failed to validate resignation request: %w", err)
 		}
 		if err := tx.Create(req).Error; err != nil {
 			return fmt.Errorf("failed to insert resignation request: %w", err)
 		}
+		row = req
 		return nil
 	})
+	return row, err
 }
 
 func (c *ResignationStudentHRController) ReviewStudentResignRequest(requestID, action, reason string) error {
@@ -86,35 +88,49 @@ func (c *ResignationStudentHRController) ReviewStudentResignRequest(requestID, a
 	)
 }
 
-// ---------- HTTP (Fiber) ----------
-
 func (ctl *ResignationStudentHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/resignation-student-requests", Method: core.GET, Handler: ctl.HandleList},
 		{Route: "/hr/resignation-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetByID},
 		{Route: "/hr/resignation-student-requests", Method: core.POST, Handler: ctl.HandleCreate},
 		{Route: "/hr/resignation-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReview},
+		{Route: "/hr/resignation-student-requests/:id/delete", Method: core.POST, Handler: ctl.HandleDelete},
 	}
 }
 
 func (ctl *ResignationStudentHRController) HandleList(c *fiber.Ctx) error {
 	rows, err := ctl.getAll(c.QueryInt("limit"), c.QueryInt("offset"))
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
 	}
-	return c.Status(fiber.StatusOK).JSON(rows)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    rows,
+	})
 }
 
 func (ctl *ResignationStudentHRController) HandleGetByID(c *fiber.Ctx) error {
 	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid id"},
+		})
 	}
 	row, err := ctl.getByID(uint(id64))
 	if err != nil {
-		return fiber.NewError(fiber.StatusNotFound, err.Error())
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 404, "message": err.Error()},
+		})
 	}
-	return c.Status(fiber.StatusOK).JSON(row)
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    row,
+	})
 }
 
 func (ctl *ResignationStudentHRController) HandleCreate(c *fiber.Ctx) error {
@@ -123,15 +139,28 @@ func (ctl *ResignationStudentHRController) HandleCreate(c *fiber.Ctx) error {
 		Reason      string `json:"Reason"`
 	}
 	if err := c.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
 	}
 	if body.StudentCode == "" || body.Reason == "" {
-		return fiber.NewError(fiber.StatusBadRequest, "StudentCode and Reason are required")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "StudentCode and Reason are required"},
+		})
 	}
-	if err := ctl.SubmitResignationStudent(body.StudentCode, body.Reason); err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	row, err := ctl.SubmitResignationStudent(body.StudentCode, body.Reason)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
 	}
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "resignation submitted"})
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    row,
+	})
 }
 
 func (ctl *ResignationStudentHRController) HandleReview(c *fiber.Ctx) error {
@@ -141,13 +170,67 @@ func (ctl *ResignationStudentHRController) HandleReview(c *fiber.Ctx) error {
 		Reason string `json:"reason"` // ใช้เมื่อ reject
 	}
 	if err := c.BodyParser(&body); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
 	}
 	if err := ctl.ReviewStudentResignRequest(id, body.Action, body.Reason); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": err.Error()},
+		})
 	}
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "updated"})
+	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid id"},
+		})
+	}
+	row, err := ctl.getByID(uint(id64))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 404, "message": err.Error()},
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    row,
+	})
 }
+
+func (ctl *ResignationStudentHRController) HandleDelete(c *fiber.Ctx) error {
+	id64, _ := strconv.ParseUint(c.Params("id"), 10, 64)
+	if c.Params("id") == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "id is required"},
+		})
+	}
+
+	row, err := ctl.getByID(uint(id64))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 404, "message": "record not found"},
+		})
+	}
+
+	if err := ctl.delete(row); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    row,
+	})
+}
+
 
 func (ctl *ResignationStudentHRController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app

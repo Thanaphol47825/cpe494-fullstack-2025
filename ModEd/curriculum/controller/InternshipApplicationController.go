@@ -22,6 +22,11 @@ func (controller *InternshipApplicationController) GetRoute() []*core.RouteItem 
 		Handler: controller.handler.GetInternshipApplication,
 		Method:  core.GET,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CreateInternshipApplication",
+		Handler: controller.handler.CreateInternshipApplication,
+		Method:  core.POST,
+	})
 	return routeList
 }
 

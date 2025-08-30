@@ -10,8 +10,11 @@ type InternStudentController struct {
 	handler     *handler.InternStudentHandler
 }
 
-func NewInternStudentController() *InternStudentController {
-	controller := &InternStudentController{}
+func NewInternStudentController(app *core.ModEdApplication) *InternStudentController {
+	controller := &InternStudentController{
+		application: app,
+		handler:     &handler.InternStudentHandler{DB: app.DB},
+	}
 	return controller
 }
 
@@ -21,6 +24,21 @@ func (controller *InternStudentController) GetRoute() []*core.RouteItem {
 		Route:   "/curriculum/InternStudent",
 		Handler: controller.handler.GetInternStudent,
 		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CreateInternStudent",
+		Handler: controller.handler.CreateInternStudent,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/UpdateInternStudent/:id",
+		Handler: controller.handler.UpdateInternStudent,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/DeleteInternStudent/:id",
+		Handler: controller.handler.DeleteInternStudent,
+		Method:  core.POST,
 	})
 	return routeList
 }

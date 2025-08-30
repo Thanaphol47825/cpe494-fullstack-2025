@@ -2,6 +2,7 @@ package handler
 
 import (
 	"ModEd/core"
+	"ModEd/curriculum/model"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -18,7 +19,7 @@ func (handler *InternshipResultEvaluationHandler) RenderMain(context *fiber.Ctx)
 
 func (handler *InternshipResultEvaluationHandler) GetInternshipResultEvaluation(context *fiber.Ctx) error {
 	filepath := "/workspace/ModEd/curriculum/data/curriculum/ResultEvaluation.csv"
-	resultEvaluationMapper, err := core.CreateMapper[string](filepath)
+	resultEvaluationMapper, err := core.CreateMapper[model.InternshipResultEvaluation](filepath)
 	if err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,

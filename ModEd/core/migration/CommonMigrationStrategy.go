@@ -16,6 +16,10 @@ func (s *CommonMigrationStrategy) GetModels() []interface{} {
 	}
 }
 
-func (s *CommonMigrationStrategy) GetSeedPath() []interface{} {
-	return nil
+func (s *CommonMigrationStrategy) GetSeedPath() []SeedPath {
+	return []SeedPath{
+		{Path: "data/common/DepartmentList.csv", Model: &model.Department{}},
+		{Path: "data/common/FacultyList.csv", Model: &model.Faculty{}},
+		{Path: "data/common/InstructorList.csv", Model: &model.Instructor{}},
+	}
 }

@@ -102,3 +102,44 @@ func (m *MigrationManager) LoadSeedData() error {
 
 	return nil
 }
+
+func (m *MigrationManager) AddSeedData(path string, model interface{}) *MigrationManager {
+	m.seedDatas[path] = model
+
+	return m
+}
+
+func (m *MigrationManager) ResetDB() error {
+	err := m.DropAllTables()
+	if err != nil {
+		return err
+	}
+
+	err = m.MigrateToDB()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MigrationManager) ResetAndLoadDB() error {
+	err := m.ResetDB()
+	if err != nil {
+		return err
+	}
+
+	err = m.
+		// AddSeedData("data/asset/Category.csv", &[]model.Category{}).
+		// AddSeedData("data/asset/BorrowInstrument.csv", &[]model.BorrowInstrument{}).
+		// AddSeedData("data/asset/InstrumentList.csv", &[]model.Instrument{}).
+		// AddSeedData("data/asset/InstrumentLog.csv", &[]model.InstrumentLog{}).
+		// AddSeedData("data/asset/SupplyList.csv", &[]model.Supply{}).
+		// AddSeedData("data/asset/SupplyLog.csv", &[]model.SupplyLog{}).
+		LoadSeedData()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

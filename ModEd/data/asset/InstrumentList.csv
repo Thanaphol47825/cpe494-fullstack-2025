@@ -1,0 +1,11 @@
+ID,InstrumentLabel,InstrumentCode,Description,InstrumentStatus,RoomID,Location,CategoryID,Cost,InstrumentSerialID,BudgetYear,BudgetSource,InstrumentBrand,InstrumentModel,DeletedAt
+1,Digital Oscilloscope,67DH01,A chinese oscilloscope,Available,CPE1119,Cabinet 14,1,44990.00,SN123456,2024,University Budget,RIGOL,DHO802,
+2,Digital Oscilloscope,67DH02,A chinese oscilloscope,Available,CPE1119,Cabinet 14,1,44990.00,SN789012,2024,Government Grant,RIGOL,DHO802,
+3,Digital Oscilloscope,67DH03,A chinese oscilloscope,Available,CPE1119,Cabinet 14,1,44990.00,SN345678,2024,Department Funding,RIGOL,DHO802,
+4,Multimeter,67DM01,A chinese multimeter,Available,CPE1119,Cabinet Spider-man,1,25690.00,SN901234,2024,Industry Grant,RIGOL,DM858E,
+5,Multimeter,67DM02,A chinese multimeter,Broken,CPE1119,Cabinet Spider-man,1,25690.00,SN567890,2023,Government Budget,RIGOL,DM858E,
+6,Multimeter,67DM03,A chinese multimeter,Broken,CPE1119,Cabinet Spider-man,1,25690.00,SN678901,2024,University Grant,RIGOL,DM858E,
+7,Power Supply,67PS01,A chinese power supply,Available,CPE1119,Cabinet 6,2,18990.00,SN890123,2024,Industry Collaboration,METRIX,MPS-3264,
+8,Power Supply,67PS02,A chinese power supply,Available,CPE1119,Cabinet 6,2,18990.00,SN123890,2024,Private Donation,METRIX,MPS-3264,
+9,Function Generator,67DG01,A chinese function generator,Available,CPE1119,Cabinet Jesse,2,32690.00,SN456789,2024,Research Grant,RIGOL,DG852 Pro,
+10,Function Generator,67DG02,A chinese function generator,Available,CPE1119,Cabinet Jesse,2,32690.00,SN234567,2024,University Funding,RIGOL,DG852 Pro,

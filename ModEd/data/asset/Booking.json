@@ -1,0 +1,132 @@
+[
+  {
+    "time_table_id": 1,
+    "time_table": {
+      "start_date": "2025-05-10T08:00:00Z",
+      "end_date": "2025-05-10T10:00:00Z",
+      "room_id": 1,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 101,
+    "user_role": "Student",
+    "event_name": "Physics Lecture"
+  },
+  {
+    "time_table_id": 2,
+    "time_table": {
+      "start_date": "2025-05-10T10:00:00Z",
+      "end_date": "2025-05-10T12:00:00Z",
+      "room_id": 2,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 102,
+    "user_role": "Student",
+    "event_name": "Calculus Class"
+  },
+  {
+    "time_table_id": 3,
+    "time_table": {
+      "start_date": "2025-05-10T12:00:00Z",
+      "end_date": "2025-05-10T14:00:00Z",
+      "room_id": 3,
+      "is_available": false,
+      "booking_type": null
+    },
+    "user_id": null,
+    "user_role": null,
+    "event_name": null
+  },
+  {
+    "time_table_id": 4,
+    "time_table": {
+      "start_date": "2025-05-10T14:00:00Z",
+      "end_date": "2025-05-10T16:00:00Z",
+      "room_id": 4,
+      "is_available": true,
+      "booking_type": "permanent"
+    },
+    "user_id": 103,
+    "user_role": "Advisor",
+    "event_name": "Meeting with Students"
+  },
+  {
+    "time_table_id": 5,
+    "time_table": {
+      "start_date": "2025-05-10T16:00:00Z",
+      "end_date": "2025-05-10T18:00:00Z",
+      "room_id": 5,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 104,
+    "user_role": "Advisor",
+    "event_name": "Computer Science Seminar"
+  },
+  {
+    "time_table_id": 6,
+    "time_table": {
+      "start_date": "2025-05-10T18:00:00Z",
+      "end_date": "2025-05-10T20:00:00Z",
+      "room_id": 6,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 105,
+    "user_role": "Student",
+    "event_name": "SE Group Practice"
+  },
+  {
+    "time_table_id": 7,
+    "time_table": {
+      "start_date": "2025-05-10T20:00:00Z",
+      "end_date": "2025-05-10T22:00:00Z",
+      "room_id": 7,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 106,
+    "user_role": "Student",
+    "event_name": "Project Discussion"
+  },
+  {
+    "time_table_id": 8,
+    "time_table": {
+      "start_date": "2025-05-10T22:00:00Z",
+      "end_date": "2025-05-10T23:59:00Z",
+      "room_id": 8,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 107,
+    "user_role": "Advisor",
+    "event_name": "MBA Business Strategy"
+  },
+  {
+    "time_table_id": 9,
+    "time_table": {
+      "start_date": "2025-05-10T23:59:00Z",
+      "end_date": "2025-05-11T00:00:00Z",
+      "room_id": 9,
+      "is_available": false,
+      "booking_type": null
+    },
+    "user_id": null,
+    "user_role": null,
+    "event_name": null
+  },
+  {
+    "time_table_id": 10,
+    "time_table": {
+      "start_date": "2025-05-11T00:00:00Z",
+      "end_date": "2025-05-11T01:00:00Z",
+      "room_id": 10,
+      "is_available": true,
+      "booking_type": "temporary"
+    },
+    "user_id": 108,
+    "user_role": "Admin",
+    "event_name": "Executive Board Meeting"
+  }
+]

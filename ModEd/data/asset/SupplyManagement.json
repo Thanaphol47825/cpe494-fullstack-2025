@@ -1,0 +1,42 @@
+[
+  {
+    "room_id": 1,
+    "supply_id": 1
+  },
+  {
+    "room_id": 2,
+    "supply_id": 2
+  },
+  {
+    "room_id": 3,
+    "supply_id": 3
+  },
+  {
+    "room_id": 4,
+    "supply_id": 4
+  },
+  {
+    "room_id": 5,
+    "supply_id": 5
+  },
+  {
+    "room_id": 6,
+    "supply_id": 6
+  },
+  {
+    "room_id": 7,
+    "supply_id": 7
+  },
+  {
+    "room_id": 8,
+    "supply_id": 8
+  },
+  {
+    "room_id": 9,
+    "supply_id": 9
+  },
+  {
+    "room_id": 10,
+    "supply_id": 10
+  }
+]

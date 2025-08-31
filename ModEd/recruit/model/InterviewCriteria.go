@@ -1,11 +1,13 @@
 // MEP-1003 Student Recruitment
 package model
 
-import "ModEd/common/model"
+import (
+	"ModEd/common/model"
+	"ModEd/core"
+)
 
 type InterviewCriteria struct {
-	InterviewCriteriaID uint `gorm:"primaryKey" csv:"interview_criteria_id" json:"interview_criteria_id"`
-
+	core.BaseModel
 	ApplicationRoundsID uint             `csv:"application_rounds_id" json:"application_rounds_id"`
 	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:RoundID"`
 
@@ -19,7 +21,7 @@ type InterviewCriteria struct {
 }
 
 func (i *InterviewCriteria) GetID() uint {
-	return i.InterviewCriteriaID
+	return i.BaseModel.GetID()
 }
 func (i *InterviewCriteria) FromCSV(csvData string) error {
 	return nil

@@ -1,14 +1,16 @@
 // MEP-1003 Student Recruitment
 package model
 
+import "ModEd/core"
+
 type Admin struct {
-	AdminID  uint   `gorm:"primaryKey" csv:"admin_id"`
+	core.BaseModel
 	Username string `csv:"username"`
 	Password string `csv:"password"`
 }
 
 func (i *Admin) GetID() uint {
-	return i.AdminID
+	return i.BaseModel.GetID()
 }
 func (i *Admin) FromCSV(csvData string) error {
 	return nil

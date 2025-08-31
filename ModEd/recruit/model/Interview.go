@@ -3,12 +3,13 @@ package model
 
 import (
 	"ModEd/common/model"
+	"ModEd/core"
 	"encoding/json"
 	"time"
 )
 
 type Interview struct {
-	InterviewID          uint              `gorm:"primaryKey"`
+	core.BaseModel
 	InstructorID         uint              `gorm:"not null"` // Foreign key referencing Instructor
 	Instructor           *model.Instructor `gorm:"foreignKey:InstructorID;references:InstructorCode"`
 	ApplicationReportID  uint              `gorm:"not null"` // Foreign key referencing ApplicationReport
@@ -21,7 +22,7 @@ type Interview struct {
 }
 
 func (i *Interview) GetID() uint {
-	return i.InterviewID
+	return i.BaseModel.GetID()
 }
 func (i *Interview) FromCSV(csvData string) error {
 	return nil

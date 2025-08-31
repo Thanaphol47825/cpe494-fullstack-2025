@@ -1,10 +1,13 @@
 // MEP-1003 Student Recruitment
 package model
 
-import "ModEd/common/model"
+import (
+	"ModEd/common/model"
+	"ModEd/core"
+)
 
 type ApplicationReport struct {
-	ApplicationReportID uint `gorm:"primaryKey"`
+	core.BaseModel
 
 	ApplicantID uint
 	Applicant   Applicant `gorm:"foreignKey:ApplicantID;references:ApplicantID"`

@@ -2,12 +2,13 @@
 package model
 
 import (
+	"ModEd/core"
 	"encoding/json"
 	"time"
 )
 
 type Applicant struct {
-	ApplicantID        uint      `gorm:"primaryKey" json:"applicant_id" csv:"applicant_id"`
+	core.BaseModel
 	FirstName          string    `gorm:"not null" json:"first_name" csv:"first_name"`
 	LastName           string    `gorm:"not null" json:"last_name" csv:"last_name"`
 	Email              string    `gorm:"not null" json:"email" csv:"email"`
@@ -36,7 +37,7 @@ type Applicant struct {
 }
 
 func (i *Applicant) GetID() uint {
-	return i.ApplicantID
+	return i.BaseModel.GetID()
 }
 func (i *Applicant) FromCSV(csvData string) error {
 	return nil

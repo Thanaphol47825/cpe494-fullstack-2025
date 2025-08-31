@@ -1,0 +1,24 @@
+[
+    {
+        "id": 1,
+        "seniorproject_id": 101,
+        "instructor_id": 301,
+        "created_at": "2023-09-01T08:00:00Z",
+        "updated_at": "2023-09-01T08:00:00Z"
+    },
+    {
+        "id": 2,
+        "seniorproject_id": 102,
+        "instructor_id": 302,
+        "created_at": "2023-09-01T08:00:00Z",
+        "updated_at": "2023-09-01T08:00:00Z"
+    },
+    {
+        "id": 3,
+        "seniorproject_id": 103,
+        "instructor_id": 303,
+        "created_at": "2023-09-01T08:00:00Z",
+        "updated_at": "2023-09-01T08:00:00Z"
+    }
+
+]

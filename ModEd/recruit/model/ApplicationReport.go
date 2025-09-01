@@ -10,10 +10,10 @@ type ApplicationReport struct {
 	core.BaseModel
 
 	ApplicantID uint
-	Applicant   Applicant `gorm:"foreignKey:ApplicantID;references:ApplicantID"`
+	Applicant   Applicant `gorm:"foreignKey:ApplicantID;references:ID"`
 
 	ApplicationRoundsID uint
-	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:RoundID"`
+	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:ID"`
 
 	FacultyID uint
 	Faculty   *model.Faculty `gorm:"foreignKey:FacultyID;references:ID"`

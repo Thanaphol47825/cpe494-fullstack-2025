@@ -11,9 +11,9 @@ import (
 type Interview struct {
 	core.BaseModel
 	InstructorID         uint              `gorm:"not null"` // Foreign key referencing Instructor
-	Instructor           *model.Instructor `gorm:"foreignKey:InstructorID;references:InstructorCode"`
+	Instructor           *model.Instructor `gorm:"foreignKey:InstructorID;references:ID"`
 	ApplicationReportID  uint              `gorm:"not null"` // Foreign key referencing ApplicationReport
-	ApplicationReport    ApplicationReport `gorm:"foreignKey:ApplicationReportID;references:ApplicationReportID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	ApplicationReport    ApplicationReport `gorm:"foreignKey:ApplicationReportID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	ScheduledAppointment time.Time
 	CriteriaScores       string
 	TotalScore           float64

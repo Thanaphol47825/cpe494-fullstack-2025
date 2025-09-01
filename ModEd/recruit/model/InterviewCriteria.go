@@ -9,7 +9,7 @@ import (
 type InterviewCriteria struct {
 	core.BaseModel
 	ApplicationRoundsID uint             `csv:"application_rounds_id" json:"application_rounds_id"`
-	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:RoundID"`
+	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:ID"`
 
 	FacultyID uint           `csv:"faculty_id" json:"faculty_id"`
 	Faculty   *model.Faculty `gorm:"foreignKey:FacultyID;references:ID"`

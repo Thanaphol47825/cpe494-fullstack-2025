@@ -9,7 +9,7 @@ import (
 	"ModEd/eval"
 	"ModEd/hr"
 	"ModEd/project"
-
+	"ModEd/recruit"
 	"github.com/joho/godotenv"
 )
 
@@ -29,5 +29,6 @@ func main() {
 	project.InitialProject()
 	hr.InitialCommon()
 	eval.InitialEval()
+	recruit.InitialRecruit()
 	application.Run()
 }

@@ -18,12 +18,7 @@ import (
 	"gorm.io/gorm"
 )
 
-/********** helpers **********/
-
-type apiResp[T any] struct {
-	IsSuccess bool `json:"isSuccess"`
-	Result    T    `json:"result"`
-}
+// ---------- helpers ----------
 
 func setupInstructorApp(t *testing.T) (*fiber.App, *controller.LeaveInstructorHRController, *gorm.DB) {
 	t.Helper()
@@ -74,7 +69,7 @@ func performInstr(app *fiber.App, method, url string, body any) (*http.Response,
 	return resp, b, nil
 }
 
-/********** tests **********/
+// ---------- tests ----------
 
 func TestInstructor_Create(t *testing.T) {
 	app, _, _ := setupInstructorApp(t)
@@ -94,7 +89,6 @@ func TestInstructor_Create(t *testing.T) {
 func TestInstructor_Read(t *testing.T) {
 	app, _, db := setupInstructorApp(t)
 
-	// seed record
 	db.Create(&model.RequestLeaveInstructor{
 		BaseLeaveRequest: model.BaseLeaveRequest{
 			Status:    "Pending",
@@ -109,7 +103,11 @@ func TestInstructor_Read(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("read failed: %d %s", resp.StatusCode, string(body))
 	}
-	var gotAll apiResp[[]model.RequestLeaveInstructor]
+
+	var gotAll struct {
+		IsSuccess bool                           `json:"isSuccess"`
+		Result    []model.RequestLeaveInstructor `json:"result"`
+	}
 	if err := json.Unmarshal(body, &gotAll); err != nil {
 		t.Fatalf("unmarshal read: %v", err)
 	}
@@ -121,7 +119,6 @@ func TestInstructor_Read(t *testing.T) {
 func TestInstructor_Update(t *testing.T) {
 	app, _, db := setupInstructorApp(t)
 
-	// seed record
 	rec := &model.RequestLeaveInstructor{
 		BaseLeaveRequest: model.BaseLeaveRequest{
 			Status:    "Pending",
@@ -148,7 +145,6 @@ func TestInstructor_Update(t *testing.T) {
 func TestInstructor_Delete(t *testing.T) {
 	app, _, db := setupInstructorApp(t)
 
-	// seed record
 	rec := &model.RequestLeaveInstructor{
 		BaseLeaveRequest: model.BaseLeaveRequest{
 			Status:    "Pending",
@@ -166,7 +162,6 @@ func TestInstructor_Delete(t *testing.T) {
 		t.Fatalf("delete failed: %d %s", resp.StatusCode, string(body))
 	}
 
-	// ตรวจสอบจริง ๆ ว่าหาย
 	var cnt int64
 	db.Model(&model.RequestLeaveInstructor{}).Where("id = ?", rec.ID).Count(&cnt)
 	if cnt != 0 {

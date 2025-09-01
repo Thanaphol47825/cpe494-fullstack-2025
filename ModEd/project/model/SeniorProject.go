@@ -1,3 +1,4 @@
+// Kritsanaphong Thaworana 65070503403
 package model
 
 import (
@@ -5,19 +6,36 @@ import (
     
 )
 
+//  SeniorProject represents the senior project table in the database
+
 type SeniorProject struct{
-    core.BaseModel // custom wrapper on top of gorm.model (adding serializable)
+    core.BaseModel // ID, CreatedAt, UpdatedAt, DeletedAt
 
-    Members []GroupMember 		`gorm:"foreignKey:ProjectId"` // 1:N students
-    AdvisorAjarn Advisor 			`gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-    Committees []Committee		`gorm:"foreignKey:ProjectId"` // 1:N (should be M:N technically)
-    Assignments []Assignment	`gorm:"foreignKey:ProjectId"` // 1:N
-    Presentations []Presentation `gorm:"foreignKey:ProjectId"` // 1:N
-    Report []Report				`gorm:"foreignKey:ProjectId"` // 1:N
+    // Field from csv
+    GroupName string                `gorm:"size:255;not null" json:"GroupName" csv:"GroupName"`
 
-    Assessment Assessment		`gorm:"foreignKey:ProjectId"` // 1:1
+    // Advisor (1:1 via FK)
+    AdvisorAjarn Advisor            `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+    
+    //  Relationships (From OOAD)
+    // Keep 1:N only if the child models have ProjectID
+    Members []GroupMember           `gorm:"foreignKey:ProjectId"` 
+    Committees []Committee          `gorm:"foreignKey:ProjectId"` // 1:N (should be M:N technically)
+    Assignments []Assignment        `gorm:"foreignKey:ProjectId"` 
+    Presentations []Presentation    `gorm:"foreignKey:ProjectId"` 
+    Report []Report                 `gorm:"foreignKey:ProjectId"` 
+    
+    // Assessment (1:1). In Assessment model, set: ProjectID uint `gorm:"uniqueIndex"`
+    Assessment *Assessment          `gorm:"foreignKey:ProjectId"` // 1:1
+    
 }
 
+// Require by app
 func (p SeniorProject) GetID() uint {
 	return p.ID
+}
+
+// Require by gorm
+func (p SeniorProject) GetTableName() string {
+    return "SeniorProjects"
 }

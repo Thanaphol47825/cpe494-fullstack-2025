@@ -58,7 +58,7 @@ func TestStudentController(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		payload := map[string]any{
-			"student_code": fmt.Sprintf("STU%v", time.Now().UnixNano()),
+			"student_code": fmt.Sprintf("65%v", time.Now().UnixNano()),
 			"first_name":   "John",
 			"last_name":    "Doe",
 			"email":        fmt.Sprintf("john%v@example.com", time.Now().UnixNano()),

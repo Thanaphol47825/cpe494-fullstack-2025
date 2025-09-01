@@ -25,7 +25,7 @@ func setupApplicationReportApp(t *testing.T) (*fiber.App, *gorm.DB) {
 
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
-		dsn = "host=localhost user=user password=H@55P@ssw0rd dbname=moded port=5432 sslmode=disable"
+		dsn = "host= user= password= dbname= port="
 		fmt.Printf("Using DSN: %s\n", dsn)
 	}
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})

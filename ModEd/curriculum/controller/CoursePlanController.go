@@ -40,14 +40,14 @@ func (controller *CoursePlanController) GetRoute() []*core.RouteItem {
 		Method:  core.POST,
 	})
 	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CoursePlan/updateCoursePlan/:id",
+		Handler: controller.handler.UpdateCoursePlan,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/CoursePlan/deleteCoursePlan/:id",
 		Handler: controller.handler.DeleteCoursePlan,
 		Method:  core.GET,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route: "/curriculum/CoursePlan/updateCoursePlan/:id",
-		Handler: controller.handler.UpdateCoursePlan,
-		Method: core.POST,
 	})
 	return routeList
 }

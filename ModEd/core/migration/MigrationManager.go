@@ -24,7 +24,7 @@ func NewMigrationManager(DB *gorm.DB) *MigrationManager {
 	migrationMap[MODULE_COMMON] = &CommonMigrationStrategy{}
 	migrationMap[MODULE_RECRUIT] = &RecuitMigrationStrategy{}
 	migrationMap[MODULE_CURRICULUM] = &CurriculumMigrationStrategy{}
-
+	migrationMap[MODULE_EVAL] = &EvalMigrationStrategy{}
 	seedDataMap := make(map[string]interface{})
 	models := []interface{}{}
 	// Migrate all modules at once

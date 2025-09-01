@@ -1,10 +1,10 @@
 package migration
 
+// Wrote By : MEP-0001
+
 import (
 	"ModEd/utils/deserializer"
 	"fmt"
-
-	"errors"
 
 	"gorm.io/gorm"
 )
@@ -12,25 +12,31 @@ import (
 type MigrationManager struct {
 	DB                   *gorm.DB
 	models               []interface{}
-	seedDatas            map[string]interface{}
+	seedPaths            []SeedPath
 	migrationStrategyMap map[ModuleOptionEnum]MigrationStrategy
 }
 
 func NewMigrationManager(DB *gorm.DB) *MigrationManager {
 	migrationMap := make(map[ModuleOptionEnum]MigrationStrategy)
 
-	// To use the core migration module you need to create your own migration strategy
-	// Then come here to replace `nil` with your model here to register
+	// Register migration strategies for each module
 	migrationMap[MODULE_COMMON] = &CommonMigrationStrategy{}
 	migrationMap[MODULE_RECRUIT] = &RecuitMigrationStrategy{}
 	migrationMap[MODULE_CURRICULUM] = &CurriculumMigrationStrategy{}
 	migrationMap[MODULE_EVAL] = &EvalMigrationStrategy{}
-	seedDataMap := make(map[string]interface{})
+
+	// Initialize models and seed paths array
+	var seedPaths []SeedPath
 	models := []interface{}{}
-	// Migrate all modules at once
+
+	// Process all registered modules
 	for module := range migrationMap {
-		if migrationMap[module] != nil {
-			models = append(models, migrationMap[module].GetModels()...)
+		if strategy := migrationMap[module]; strategy != nil {
+			// Collect all models for migration
+			models = append(models, strategy.GetModels()...)
+
+			// Collect seed paths for each module
+			seedPaths = append(seedPaths, strategy.GetSeedPath()...)
 		}
 	}
 
@@ -38,11 +44,11 @@ func NewMigrationManager(DB *gorm.DB) *MigrationManager {
 		DB:                   DB,
 		migrationStrategyMap: migrationMap,
 		models:               models,
-		seedDatas:            seedDataMap,
+		seedPaths:            seedPaths,
 	}
 }
 
-func (m *MigrationManager) MigrateToDB() error {
+func (m *MigrationManager) migrateToDB() error {
 	var modelsToMigrate []interface{}
 	for i := range m.models {
 		if m.DB.Migrator().HasTable(m.models[i]) {
@@ -51,6 +57,7 @@ func (m *MigrationManager) MigrateToDB() error {
 
 		modelsToMigrate = append(modelsToMigrate, m.models[i])
 	}
+	fmt.Printf("Migrating %d new models to the database...\n", len(modelsToMigrate))
 
 	if err := m.DB.AutoMigrate(modelsToMigrate...); err != nil {
 		return fmt.Errorf("failed to migrate to db: %w", err)
@@ -59,54 +66,39 @@ func (m *MigrationManager) MigrateToDB() error {
 }
 
 func (m *MigrationManager) DropAllTables() error {
-
 	if m.DB == nil {
-		return errors.New("db not initialize")
+		return fmt.Errorf("database connection is nil")
 	}
 
 	err := m.DB.Migrator().DropTable(m.models...)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to drop tables: %w", err)
 	}
 	return nil
 }
 
 func (m *MigrationManager) LoadSeedData() error {
-	for path, md := range m.seedDatas {
-		fmt.Println("Loading seed data from path:", path)
-
-		fd, err := deserializer.NewFileDeserializer(path)
+	for _, seedPath := range m.seedPaths {
+		fd, err := deserializer.NewFileDeserializer(seedPath.Path)
 		if err != nil {
-			fmt.Printf("Error creating deserializer for %s: %v\n", path, err)
+			fmt.Printf("Error creating deserializer for %s: %v\n", seedPath.Path, err)
 			return err
 		}
 
-		fmt.Printf("FileDeserializer: %+v\n", fd)
-
-		err = fd.Deserialize(md)
+		err = fd.Deserialize(seedPath.Model)
 		if err != nil {
-			fmt.Printf("Error deserializing %s: %v\n", path, err)
+			fmt.Printf("Error deserializing %s: %v\n", seedPath.Path, err)
 			return err
 		}
 
-		fmt.Printf("Deserialized data for %s: %+v\n", path, md)
-
-		result := m.DB.Create(md)
+		result := m.DB.Create(seedPath.Model)
 		if result.Error != nil {
-			fmt.Printf("Error creating records from %s: %v\n", path, result.Error)
+			fmt.Printf("Error creating records from %s: %v\n", seedPath.Path, result.Error)
 			return result.Error
 		}
-
-		fmt.Printf("Successfully loaded data from %s: %d rows affected\n", path, result.RowsAffected)
 	}
 
 	return nil
-}
-
-func (m *MigrationManager) AddSeedData(path string, model interface{}) *MigrationManager {
-	m.seedDatas[path] = model
-
-	return m
 }
 
 func (m *MigrationManager) ResetDB() error {
@@ -114,12 +106,10 @@ func (m *MigrationManager) ResetDB() error {
 	if err != nil {
 		return err
 	}
-
-	err = m.MigrateToDB()
+	err = m.migrateToDB()
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -129,14 +119,8 @@ func (m *MigrationManager) ResetAndLoadDB() error {
 		return err
 	}
 
-	err = m.
-		// AddSeedData("data/asset/Category.csv", &[]model.Category{}).
-		// AddSeedData("data/asset/BorrowInstrument.csv", &[]model.BorrowInstrument{}).
-		// AddSeedData("data/asset/InstrumentList.csv", &[]model.Instrument{}).
-		// AddSeedData("data/asset/InstrumentLog.csv", &[]model.InstrumentLog{}).
-		// AddSeedData("data/asset/SupplyList.csv", &[]model.Supply{}).
-		// AddSeedData("data/asset/SupplyLog.csv", &[]model.SupplyLog{}).
-		LoadSeedData()
+	// Load seed data directly since paths are already initialized
+	err = m.LoadSeedData()
 	if err != nil {
 		return err
 	}

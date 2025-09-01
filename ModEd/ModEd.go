@@ -10,6 +10,9 @@ import (
 	"ModEd/hr"
 	"ModEd/project"
 	"ModEd/recruit"
+	"flag"
+	"fmt"
+
 	"github.com/joho/godotenv"
 )
 
@@ -20,8 +23,26 @@ func main() {
 		panic(err)
 	}
 
+	optionFlag := flag.String("option", "nothing here", "Reset database")
+
+	flag.Parse()
+
 	migrationManager := migration.NewMigrationManager(db)
-	migrationManager.MigrateToDB()
+
+	switch *optionFlag {
+	case "reset":
+		fmt.Println("Reset database and load seed data")
+		err = migrationManager.ResetAndLoadDB()
+	case "blank":
+		fmt.Println("Reset database without loading seed data")
+		err = migrationManager.ResetDB()
+	default:
+		fmt.Println("No option selected, running application only")
+	}
+
+	if err != nil {
+		panic(err)
+	}
 
 	application := core.GetApplication()
 	common.InitialCommon()

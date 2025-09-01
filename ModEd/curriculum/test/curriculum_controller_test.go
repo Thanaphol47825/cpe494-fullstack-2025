@@ -17,7 +17,7 @@ func TestInstructorController(t *testing.T) {
 			"department_id": 1,
 			"program_type":  0,
 		}
-		utils.RequestTest(t, http.MethodPost, "/curriculum/Curriculum/postCurriculum", payload)
+		utils.RequestTest(t, http.MethodPost, "/curriculum/Curriculum/createCurriculum", payload)
 	})
 
 	t.Run("get all", func(t *testing.T) {

@@ -1,0 +1,4 @@
+title,description,due_date,start_date,max_score,instructor_id,course_id,is_released,is_active
+"Introduction to course","Answer the questions","2025-09-08T12:00:00Z","2025-09-01T12:00:00Z",100,1,101,true,true
+"Midterm Project","Complete the midterm project report","2025-10-01T12:00:00Z","2025-09-15T12:00:00Z",100,2,102,false,true
+"Final Exam","Answer all final exam questions","2025-12-10T12:00:00Z","2025-12-01T12:00:00Z",100,1,101,false,false

@@ -12,8 +12,7 @@ type ApplicantController struct {
 }
 
 func NewApplicantController() *ApplicantController {
-	controller := &ApplicantController{}
-	return controller
+	return &ApplicantController{}
 }
 
 func (controller *ApplicantController) SetApplication(application *core.ModEdApplication) {
@@ -60,30 +59,39 @@ func (controller *ApplicantController) CreateApplicant(context *fiber.Ctx) error
 	applicant := new(model.Applicant)
 
 	if err := context.BodyParser(applicant); err != nil {
-		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "cannot parse JSON",
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "cannot parse JSON",
 		})
 	}
 
 	if err := controller.application.DB.Create(applicant).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
 		})
 	}
 
-	return context.Status(fiber.StatusCreated).JSON(applicant)
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    applicant,
+	})
 }
 
 func (controller *ApplicantController) GetAllApplicants(context *fiber.Ctx) error {
 	var applicants []*model.Applicant
 
 	if err := controller.application.DB.Find(&applicants).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
 		})
 	}
 
-	return context.JSON(applicants)
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    applicants,
+	})
 }
 
 func (controller *ApplicantController) GetApplicantByID(context *fiber.Ctx) error {
@@ -91,43 +99,54 @@ func (controller *ApplicantController) GetApplicantByID(context *fiber.Ctx) erro
 	var applicant model.Applicant
 
 	if err := controller.application.DB.First(&applicant, id).Error; err != nil {
-		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "Applicant not found",
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Applicant not found",
 		})
 	}
 
-	return context.JSON(applicant)
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    applicant,
+	})
 }
 
 func (controller *ApplicantController) UpdateApplicant(context *fiber.Ctx) error {
 	applicant := new(model.Applicant)
 
 	if err := context.BodyParser(applicant); err != nil {
-		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "cannot parse JSON",
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "cannot parse JSON",
 		})
 	}
 
 	if err := controller.application.DB.Save(applicant).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
 		})
 	}
 
-	return context.JSON(applicant)
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    applicant,
+	})
 }
 
 func (controller *ApplicantController) DeleteApplicant(context *fiber.Ctx) error {
 	id := context.Params("id")
 
 	if err := controller.application.DB.Delete(&model.Applicant{}, id).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
 		})
 	}
 
 	return context.JSON(fiber.Map{
-		"message": "Applicant deleted successfully",
+		"isSuccess": true,
+		"result":    "Applicant deleted successfully",
 	})
 }
 

@@ -10,15 +10,6 @@ import (
 	"time"
 )
 
-type apiResp struct {
-	IsSuccess bool            `json:"isSuccess"`
-	Result    json.RawMessage `json:"result"`
-	Error     *struct {
-		Code    int    `json:"code"`
-		Message string `json:"message"`
-	} `json:"error"`
-}
-
 func baseURL() string {
 	if v := os.Getenv("BASE_URL"); v != "" {
 		return v
@@ -26,7 +17,7 @@ func baseURL() string {
 	return "http://localhost:8080"
 }
 
-func req(t *testing.T, method, path string, body any) *apiResp {
+func req(t *testing.T, method, path string, body any) map[string]any {
 	t.Helper()
 	var buf *bytes.Reader
 	if body != nil {
@@ -43,16 +34,23 @@ func req(t *testing.T, method, path string, body any) *apiResp {
 		t.Fatal(err)
 	}
 	r.Header.Set("Content-Type", "application/json")
+
 	res, err := http.DefaultClient.Do(r)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer res.Body.Close()
-	var out apiResp
+
+	var out map[string]any
 	if err := json.NewDecoder(res.Body).Decode(&out); err != nil {
 		t.Fatal(err)
 	}
-	return &out
+	return out
+}
+
+func isSuccess(resp map[string]any) bool {
+	ok, _ := resp["isSuccess"].(bool)
+	return ok
 }
 
 func TestInstructorController(t *testing.T) {
@@ -61,8 +59,8 @@ func TestInstructorController(t *testing.T) {
 
 	t.Run("health", func(t *testing.T) {
 		health := req(t, http.MethodGet, "/hr/Instructor", nil)
-		if !health.IsSuccess {
-			t.Fatalf("health failed: %+v", health.Error)
+		if !isSuccess(health) {
+			t.Fatalf("health failed: %+v", health["error"])
 		}
 	})
 
@@ -81,15 +79,15 @@ func TestInstructorController(t *testing.T) {
 			"DepartmentPosition": 1,
 		}
 		created := req(t, http.MethodPost, "/hr/instructors", createPayload)
-		if !created.IsSuccess {
-			t.Fatalf("create failed: %+v", created.Error)
+		if !isSuccess(created) {
+			t.Fatalf("create failed: %+v", created["error"])
 		}
 	})
 
 	t.Run("get", func(t *testing.T) {
 		got := req(t, http.MethodGet, "/hr/instructors/"+code, nil)
-		if !got.IsSuccess {
-			t.Fatalf("get failed: %+v", got.Error)
+		if !isSuccess(got) {
+			t.Fatalf("get failed: %+v", got["error"])
 		}
 	})
 
@@ -106,15 +104,15 @@ func TestInstructorController(t *testing.T) {
 			"DepartmentPosition": "head",
 		}
 		updated := req(t, http.MethodPost, "/hr/instructors/"+code+"/update", updatePayload)
-		if !updated.IsSuccess {
-			t.Fatalf("update failed: %+v", updated.Error)
+		if !isSuccess(updated) {
+			t.Fatalf("update failed: %+v", updated["error"])
 		}
 	})
 
 	t.Run("delete", func(t *testing.T) {
 		deleted := req(t, http.MethodPost, "/hr/instructors/"+code+"/delete", nil)
-		if !deleted.IsSuccess {
-			t.Fatalf("delete failed: %+v", deleted.Error)
+		if !isSuccess(deleted) {
+			t.Fatalf("delete failed: %+v", deleted["error"])
 		}
 	})
 }

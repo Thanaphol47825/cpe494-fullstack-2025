@@ -28,7 +28,7 @@ func (ctl *StudentController) GetRoute() []*core.RouteItem {
 		{Route: "/hr/students", Method: core.POST, Handler: ctl.CreateStudent},
 		{Route: "/hr/students/:code/update", Method: core.POST, Handler: ctl.UpdateStudentByCode},
 		{Route: "/hr/students/:code/delete", Method: core.POST, Handler: ctl.DeleteStudentByCode},
-		{Route: "/hr/students/id/:id/delete", Method: core.POST, Handler: ctl.DeleteStudentByID}, // 👈 new
+		{Route: "/hr/students/id/:id/delete", Method: core.POST, Handler: ctl.DeleteStudentByID},
 	}
 }
 
@@ -36,8 +36,6 @@ func (ctl *StudentController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&cmodel.Student{})
 }
-
-// ---------- Handlers ----------
 
 func (ctl *StudentController) ListStudents(c *fiber.Ctx) error {
 	var students []cmodel.Student
@@ -67,17 +65,85 @@ func (ctl *StudentController) GetStudentByCode(c *fiber.Ctx) error {
 }
 
 func (ctl *StudentController) CreateStudent(c *fiber.Ctx) error {
-	var payload cmodel.Student
-	if err := c.BodyParser(&payload); err != nil {
+	type reqBody struct {
+		StudentCode string  `json:"student_code"`
+		FirstName   string  `json:"first_name"`
+		LastName    string  `json:"last_name"`
+		Email       string  `json:"email"`
+		Department  string  `json:"department"`
+		StartDate   *string `json:"start_date"`
+		BirthDate   *string `json:"birth_date"`
+		Program     *int    `json:"program"`
+		Status      *int    `json:"status"`
+		Gender      *string `json:"Gender"`
+		CitizenID   *string `json:"CitizenID"`
+		PhoneNumber *string `json:"PhoneNumber"`
+		AdvisorCode *string `json:"AdvisorCode"`
+	}
+	var in reqBody
+	if err := c.BodyParser(&in); err != nil {
 		return writeErr(c, http.StatusBadRequest, err.Error())
 	}
-	if err := payload.Validate(); err != nil {
+
+	var start time.Time
+	var birth time.Time
+	var err error
+
+	if in.StartDate != nil && *in.StartDate != "" {
+		start, err = parseTimeFlexible(*in.StartDate)
+		if err != nil {
+			return writeErr(c, http.StatusBadRequest, err.Error())
+		}
+	} else {
+		start = time.Time{}
+	}
+
+	if in.BirthDate != nil && *in.BirthDate != "" {
+		birth, err = parseTimeFlexible(*in.BirthDate)
+		if err != nil {
+			return writeErr(c, http.StatusBadRequest, err.Error())
+		}
+	} else {
+		birth = time.Time{}
+	}
+
+	out := cmodel.Student{
+		StudentCode: in.StudentCode,
+		FirstName:   in.FirstName,
+		LastName:    in.LastName,
+		Email:       in.Email,
+		StartDate:   start,
+		BirthDate:   birth,
+		Department:  in.Department,
+	}
+
+	if in.Program != nil {
+		out.Program = cmodel.ProgramType(*in.Program)
+	}
+	if in.Status != nil {
+		st := cmodel.StudentStatus(*in.Status)
+		out.Status = &st
+	}
+	if in.Gender != nil {
+		out.Gender = in.Gender
+	}
+	if in.CitizenID != nil {
+		out.CitizenID = in.CitizenID
+	}
+	if in.PhoneNumber != nil {
+		out.PhoneNumber = in.PhoneNumber
+	}
+	if in.AdvisorCode != nil {
+		out.AdvisorCode = in.AdvisorCode
+	}
+
+	if err := out.Validate(); err != nil {
 		return writeErr(c, http.StatusBadRequest, err.Error())
 	}
-	if err := ctl.application.DB.Create(&payload).Error; err != nil {
+	if err := ctl.application.DB.Create(&out).Error; err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())
 	}
-	return writeOK(c, http.StatusCreated, payload)
+	return writeOK(c, http.StatusCreated, out)
 }
 
 func (ctl *StudentController) UpdateStudentByCode(c *fiber.Ctx) error {
@@ -97,13 +163,10 @@ func (ctl *StudentController) UpdateStudentByCode(c *fiber.Ctx) error {
 		LastName    *string `json:"last_name"`
 		Email       *string `json:"email"`
 		Department  *string `json:"department"`
-
-		StartDate *string `json:"start_date"`
-		BirthDate *string `json:"birth_date"`
-
-		Program *int `json:"program"`
-		Status  *int `json:"status"`
-
+		StartDate   *string `json:"start_date"`
+		BirthDate   *string `json:"birth_date"`
+		Program     *int    `json:"program"`
+		Status      *int    `json:"status"`
 		Gender      *string `json:"Gender"`
 		CitizenID   *string `json:"CitizenID"`
 		PhoneNumber *string `json:"PhoneNumber"`
@@ -150,13 +213,9 @@ func (ctl *StudentController) UpdateStudentByCode(c *fiber.Ctx) error {
 		exist.Program = cmodel.ProgramType(*in.Program)
 	}
 	if in.Status != nil {
-		if in.Status == nil {
-		} else {
-			st := cmodel.StudentStatus(*in.Status)
-			exist.Status = &st
-		}
+		st := cmodel.StudentStatus(*in.Status)
+		exist.Status = &st
 	}
-
 	if in.Gender != nil {
 		exist.Gender = in.Gender
 	}
@@ -181,8 +240,7 @@ func (ctl *StudentController) UpdateStudentByCode(c *fiber.Ctx) error {
 
 func (ctl *StudentController) DeleteStudentByCode(c *fiber.Ctx) error {
 	code := c.Params("code")
-	if err := ctl.application.DB.Where("student_code = ?", code).
-		Delete(&cmodel.Student{}).Error; err != nil {
+	if err := ctl.application.DB.Where("student_code = ?", code).Delete(&cmodel.Student{}).Error; err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())
 	}
 	return writeOK(c, http.StatusOK, fiber.Map{"deleted": true, "student_code": code})
@@ -194,12 +252,12 @@ func (ctl *StudentController) DeleteStudentByID(c *fiber.Ctx) error {
 	if err != nil || id == 0 {
 		return writeErr(c, http.StatusBadRequest, "invalid id")
 	}
-	if err := ctl.application.DB.Where("id = ?", id).
-		Delete(&cmodel.Student{}).Error; err != nil {
+	if err := ctl.application.DB.Where("id = ?", id).Delete(&cmodel.Student{}).Error; err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())
 	}
 	return writeOK(c, http.StatusOK, fiber.Map{"deleted": true, "id": id})
 }
+
 func parseTimeFlexible(s string) (time.Time, error) {
 	if t, err := time.Parse("2006-01-02", s); err == nil {
 		return t, nil

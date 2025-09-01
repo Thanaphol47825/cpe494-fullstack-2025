@@ -11,19 +11,40 @@ type InternshipResultEvaluationController struct {
 }
 
 func NewInternshipResultEvaluationController() *InternshipResultEvaluationController {
-	controller := &InternshipResultEvaluationController{
-		handler: handler.NewInternshipResultEvaluationHandler(),
+	return &InternshipResultEvaluationController{
+		handler: &handler.InternshipResultEvaluationHandler{},
 	}
-	return controller
 }
 
 func (controller *InternshipResultEvaluationController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/InternshipResultEvaluation",
-		Handler: controller.handler.RenderMain,
+		Handler: controller.handler.GetAllInternshipResultEvaluation, 
 		Method:  core.GET,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CreateInternshipResultEvaluation",
+		Handler: controller.handler.CreateInternshipResultEvaluation,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipResultEvaluation/:id",
+		Handler: controller.handler.GetInternshipResultEvaluationByID, 
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/UpdateInternshipResultEvaluation/:id",
+		Handler: controller.handler.UpdateInternshipResultEvaluationByID, 
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/DeleteInternshipResultEvaluation/:id",
+		Handler: controller.handler.DeleteInternshipResultEvaluationByID, 
+		Method:  core.POST,
+	})
+
 	return routeList
 }
 

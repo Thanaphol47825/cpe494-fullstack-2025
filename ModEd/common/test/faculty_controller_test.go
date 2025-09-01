@@ -12,8 +12,8 @@ func TestFacultyController(t *testing.T) {
 	// CREATE
 	t.Run("create", func(t *testing.T) {
 		payload := map[string]any{
-			"name":        "Testttt123",
-			"description": "Test Faculty",
+			"name": "TestFaculty",
+			"budget": 1000000,
 		}
 		created := req(t, http.MethodPost, "/common/faculties", payload)
 		if !isSuccess(created) {
@@ -33,8 +33,8 @@ func TestFacultyController(t *testing.T) {
 	// UPDATE
 	t.Run("update", func(t *testing.T) {
 		updatePayload := map[string]any{
-			"name":        "Updated Faculty",
-			"description": "Updated description",
+			"name": "Updated Faculty",
+			"budget": 1500000,
 		}
 		updated := req(t, http.MethodPost, "/common/faculties/"+facultyID, updatePayload)
 		if !isSuccess(updated) {

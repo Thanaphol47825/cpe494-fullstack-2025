@@ -58,11 +58,15 @@ func TestStudentController(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		payload := map[string]any{
-			"name":         "John Doe",
-			"age":          20,
+			"student_code": fmt.Sprintf("STU%v", time.Now().UnixNano()),
+			"first_name":   "John",
+			"last_name":    "Doe",
 			"email":        fmt.Sprintf("john%v@example.com", time.Now().UnixNano()),
-			"intern_id":    1,
+			"department":   "Computer Engineering",
+			"program":      1,
 			"advisor_code": "A001",
+			"start_date":   time.Now().Format(time.RFC3339),
+			"birth_date":   "2000-01-01T00:00:00Z",
 		}
 		created := req(t, http.MethodPost, "/common/students", payload)
 		if !isSuccess(created) {
@@ -80,9 +84,10 @@ func TestStudentController(t *testing.T) {
 
 	t.Run("update", func(t *testing.T) {
 		updatePayload := map[string]any{
-			"name":  "John Updated",
-			"age":   21,
-			"email": "john.updated@example.com",
+			"first_name": "John Updated",
+			"last_name":  "Doe Updated",
+			"email":      "john.updated@example.com",
+			"department": "Software Engineering",
 		}
 		updated := req(t, http.MethodPost, "/common/students/"+studentID, updatePayload)
 		if !isSuccess(updated) {

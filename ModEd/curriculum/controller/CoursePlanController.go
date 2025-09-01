@@ -4,6 +4,7 @@ import (
 	"ModEd/core"
 	"ModEd/curriculum/controller/handler"
 )
+
 type CoursePlanController struct {
 	application *core.ModEdApplication
 	handler     *handler.CoursePlanHandler
@@ -11,7 +12,7 @@ type CoursePlanController struct {
 
 func NewCoursePlanController() *CoursePlanController {
 	controller := &CoursePlanController{
-		handler: handler.NewCoursePlanHandler(),}
+		handler: handler.NewCoursePlanHandler()}
 	return controller
 }
 
@@ -24,13 +25,34 @@ func (controller *CoursePlanController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/CoursePlan/getCoursePlan",
-		Handler: controller.handler.GetCoursePlan,
+		Route:   "/curriculum/CoursePlan/getCoursePlans",
+		Handler: controller.handler.GetCoursePlans,
 		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CoursePlan/getCoursePlan/:id",
+		Handler: controller.handler.GetCoursePlanById,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CoursePlan/createCoursePlan",
+		Handler: controller.handler.CreateCoursePlan,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CoursePlan/deleteCoursePlan/:id",
+		Handler: controller.handler.DeleteCoursePlan,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route: "/curriculum/CoursePlan/updateCoursePlan/:id",
+		Handler: controller.handler.UpdateCoursePlan,
+		Method: core.POST,
 	})
 	return routeList
 }
 
 func (controller *CoursePlanController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
+	controller.handler.DB = application.DB
 }

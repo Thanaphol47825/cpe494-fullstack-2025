@@ -2,38 +2,45 @@ package controller
 
 import (
 	"ModEd/core"
-	"ModEd/project/model"
-
-	"github.com/gofiber/fiber/v2"
+	"ModEd/project/controller/handler"
 )
 
 type AdvisorController struct {
 	application *core.ModEdApplication
+	handler     *handler.AdvisorHandler
 }
 
-func (controller *AdvisorController) GetAllAdvisorsHandler(c *fiber.Ctx) error {
-	var advisors []*model.Advisor
-	result := controller.application.DB.Find(&advisors)
-	if result.Error != nil {
-		return c.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+func NewAdvisorController() *AdvisorController {
+	return &AdvisorController{
+		handler: handler.NewAdvisorHandler(),
 	}
-	return c.JSON(advisors)
 }
 
 func (controller *AdvisorController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/project/advisors",
-		Handler: controller.GetAllAdvisorsHandler,
+		Route:   "/project/advisors/:id",
+		Handler: controller.handler.GetAdvisorByID,
 		Method:  core.GET,
 	})
-	return routeList
-}
 
-func NewAdvisorController() *AdvisorController {
-	return &AdvisorController{}
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/project/advisors/update",
+		Handler: controller.handler.UpdateAdvisor,
+		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/project/advisors/delete/:id",
+		Handler: controller.handler.DeleteAdvisor,
+		Method:  core.GET,
+	})
+
+	return routeList
 }
 
 func (controller *AdvisorController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
+	controller.handler.DB = application.DB
 }

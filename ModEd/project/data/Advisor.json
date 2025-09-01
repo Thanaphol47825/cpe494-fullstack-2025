@@ -1,0 +1,47 @@
+[
+  {
+    "ID": 1,
+    "CreatedAt": "2023-08-01T10:00:00Z",
+    "UpdatedAt": "2023-08-01T10:00:00Z",
+    "DeletedAt": null,
+    "seniorProjectId": 101,
+    "instructorId": 201,
+    "isPrimary": true
+  },
+  {
+    "ID": 2,
+    "CreatedAt": "2023-08-02T11:15:00Z",
+    "UpdatedAt": "2023-08-02T11:15:00Z",
+    "DeletedAt": null,
+    "seniorProjectId": 102,
+    "instructorId": 202,
+    "isPrimary": false
+  },
+  {
+    "ID": 3,
+    "CreatedAt": "2023-08-03T09:30:00Z",
+    "UpdatedAt": "2023-08-03T09:30:00Z",
+    "DeletedAt": null,
+    "seniorProjectId": 103,
+    "instructorId": 203,
+    "isPrimary": true
+  },
+  {
+    "ID": 4,
+    "CreatedAt": "2023-08-04T14:45:00Z",
+    "UpdatedAt": "2023-08-04T14:45:00Z",
+    "DeletedAt": null,
+    "seniorProjectId": 104,
+    "instructorId": 204,
+    "isPrimary": false
+  },
+  {
+    "ID": 5,
+    "CreatedAt": "2023-08-05T16:20:00Z",
+    "UpdatedAt": "2023-08-05T16:20:00Z",
+    "DeletedAt": null,
+    "seniorProjectId": 105,
+    "instructorId": 205,
+    "isPrimary": true
+  }
+]

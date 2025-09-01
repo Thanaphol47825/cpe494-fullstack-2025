@@ -18,32 +18,55 @@ func (controller *StudentController) GetAllStudents(context *fiber.Ctx) error {
 	var students []model.Student
 	result := controller.application.DB.Find(&students)
 	if result.Error != nil {
-		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+		return context.Status(500).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     result.Error.Error(),
+		})
 	}
-	return context.JSON(students)
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    students,
+	})
 }
 
 func (controller *StudentController) GetStudent(context *fiber.Ctx) error {
 	id := context.Params("id")
 	var student model.Student
 	result := controller.application.DB.First(&student, id)
+
 	if result.Error != nil {
-		return context.Status(404).JSON(fiber.Map{"error": "Student not found"})
+		return context.Status(404).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "Student not found",
+		})
 	}
-	return context.JSON(student)
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    student,
+	})
 }
 
 func (controller *StudentController) CreateStudent(context *fiber.Ctx) error {
 	var student model.Student
 	if err := context.BodyParser(&student); err != nil {
-		return context.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
+		return context.Status(400).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "Invalid JSON",
+		})
 	}
 
 	result := controller.application.DB.Create(&student)
 	if result.Error != nil {
-		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+		return context.Status(500).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     result.Error.Error(),
+		})
 	}
-	return context.Status(201).JSON(student)
+
+	return context.Status(201).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    student,
+	})
 }
 
 func (controller *StudentController) UpdateStudent(context *fiber.Ctx) error {
@@ -51,26 +74,42 @@ func (controller *StudentController) UpdateStudent(context *fiber.Ctx) error {
 	var student model.Student
 
 	if err := controller.application.DB.First(&student, id).Error; err != nil {
-		return context.Status(404).JSON(fiber.Map{"error": "Student not found"})
+		return context.Status(400).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "Student not found",
+		})
 	}
 
 	if err := context.BodyParser(&student); err != nil {
-		return context.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
+		return context.Status(400).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "Invalid JSON",
+		})
 	}
 
 	studentID, _ := strconv.Atoi(id)
 	student.ID = uint(studentID)
 	controller.application.DB.Save(&student)
-	return context.JSON(student)
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    student,
+	})
 }
 
 func (controller *StudentController) DeleteStudent(context *fiber.Ctx) error {
 	id := context.Params("id")
 	result := controller.application.DB.Delete(&model.Student{}, id)
 	if result.Error != nil {
-		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+		return context.Status(500).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     result.Error.Error(),
+		})
 	}
-	return context.JSON(fiber.Map{"message": "Student deleted"})
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    fmt.Sprintf("Student %s deleted", id),
+	})
 }
 
 func NewStudentController() *StudentController {
@@ -81,18 +120,30 @@ func NewStudentController() *StudentController {
 func (controller *StudentController) ImportJSON(context *fiber.Ctx) error {
 	filePath := context.Query("file")
 	if filePath == "" {
-		return context.Status(400).JSON(fiber.Map{"error": "file parameter required"})
+		return context.Status(400).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "file parameter required",
+		})
 	}
 
 	err := util.ImportStudentsFromJSON(filePath, controller.application)
 	if err != nil {
-		return context.Status(500).JSON(fiber.Map{"error": err.Error()})
+		return context.Status(400).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "file parameter required",
+		})
 	}
-	return context.JSON(fiber.Map{"message": "Students imported successfully from JSON"})
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    "Students imported successfully from JSON",
+	})
 }
 
 func (controller *StudentController) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello common/Student")
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    "Hello common/Student",
+	})
 }
 
 func (controller *StudentController) GetInfo(context *fiber.Ctx) error {

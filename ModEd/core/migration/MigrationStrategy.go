@@ -1,6 +1,6 @@
 package migration
 
-// Wrote By : MEP-1010, MEP-1012
+// Wrote By : MEP-0001
 
 type SeedPath struct {
 	Path  string

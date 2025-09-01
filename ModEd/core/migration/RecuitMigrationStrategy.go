@@ -17,12 +17,5 @@ func (s *RecuitMigrationStrategy) GetModels() []interface{} {
 }
 
 func (s *RecuitMigrationStrategy) GetSeedPath() []SeedPath {
-	return []SeedPath{
-		{Path: "data/common/DepartmentList.csv", Model: &model.Admin{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.Applicant{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.ApplicationRound{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.InterviewCriteria{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.Interview{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.ApplicationReport{}},
-	}
+	return []SeedPath{}
 }

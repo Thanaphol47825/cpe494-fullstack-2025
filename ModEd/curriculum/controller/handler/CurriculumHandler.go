@@ -20,25 +20,25 @@ func (h *CurriculumHandler) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Helloo curriculum")
 }
 
-func (c *CurriculumHandler) CreateCurriculum(context *fiber.Ctx) error {
+func (h *CurriculumHandler) CreateCurriculum(context *fiber.Ctx) error {
 	var payload *model.Curriculum
 	if err := context.BodyParser(&payload); err != nil {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
-	if err := c.DB.Create(payload).Error; err != nil {
+	if err := h.DB.Create(payload).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "",
+			"result":    "failed to create curriculum",
 		})
 	}
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    "",
+		"result":    "success",
 	})
 }
 
-func (c *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
+func (h *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 	id, err := context.ParamsInt("id")
 	if err != nil {
 		return context.JSON(fiber.Map{
@@ -48,7 +48,7 @@ func (c *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 	}
 
 	var result model.Curriculum
-	if err := c.DB.Preload("CourseList").Where("id = ?", id).First(&result).Error; err != nil {
+	if err := h.DB.Preload("CourseList").Where("id = ?", id).First(&result).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculum",
@@ -62,7 +62,7 @@ func (c *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 }
 
 // Read all
-func (c *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
+func (h *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
 	// filePath := "/workspace/ModEd/curriculum/data/curriculum.json"
 	// curriculumsMapper, err := utils.CreateMapper[model.Curriculum](filePath)
 	// if err != nil {
@@ -75,7 +75,7 @@ func (c *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
 	// curriculums := curriculumsMapper.Deserialize()
 
 	var curriculums []model.Curriculum
-	if err := c.DB.Preload("CourseList").Find(&curriculums).Error; err != nil {
+	if err := h.DB.Preload("CourseList").Find(&curriculums).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculums",
@@ -89,13 +89,13 @@ func (c *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
 }
 
 // Update
-func (c *CurriculumHandler) UpdateCurriculum(context *fiber.Ctx) error {
+func (h *CurriculumHandler) UpdateCurriculum(context *fiber.Ctx) error {
 	var payload *model.Curriculum
 	if err := context.BodyParser(&payload); err != nil {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	result := c.DB.Model(payload).Where("id = ?", payload.ID).Updates(payload)
+	result := h.DB.Model(payload).Where("id = ?", payload.ID).Updates(payload)
 	if result.RowsAffected == 0 {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -105,12 +105,12 @@ func (c *CurriculumHandler) UpdateCurriculum(context *fiber.Ctx) error {
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    "",
+		"result":    "success",
 	})
 }
 
 // Delete
-func (c *CurriculumHandler) DeleteCurriculum(context *fiber.Ctx) error {
+func (h *CurriculumHandler) DeleteCurriculum(context *fiber.Ctx) error {
 	id, err := context.ParamsInt("id")
 	if err != nil {
 		return context.JSON(fiber.Map{
@@ -119,7 +119,7 @@ func (c *CurriculumHandler) DeleteCurriculum(context *fiber.Ctx) error {
 		})
 	}
 
-	result := c.DB.Where("id = ?", id).Delete(&model.Curriculum{})
+	result := h.DB.Where("id = ?", id).Delete(&model.Curriculum{})
 	if result.RowsAffected == 0 {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -128,7 +128,7 @@ func (c *CurriculumHandler) DeleteCurriculum(context *fiber.Ctx) error {
 	}
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    "",
+		"result":    "success",
 	})
 }
 

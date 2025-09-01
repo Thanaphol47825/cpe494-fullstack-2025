@@ -37,7 +37,7 @@ func (controller *CurriculumController) GetRoute() []*core.RouteItem {
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/Curriculum/deleteCurriculum/:id",
 		Handler: controller.handler.DeleteCurriculum,
-		Method:  core.POST,
+		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/Curriculum/getCurriculums",

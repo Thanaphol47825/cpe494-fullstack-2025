@@ -14,7 +14,7 @@ type Course struct {
 	Optional     bool         `gorm:"not null" csv:"optional" json:"optional" validate:"required"`
 	CourseStatus CourseStatus `gorm:"type:int;not null" csv:"course_status" json:"course_status"`
 	ClassList    []Class      `gorm:"foreignKey:CourseId;references:ID" csv:"-" json:"-"`
-	// Prerequisite []Course     `gorm:"many2many:course_prerequisites;joinForeignKey:CourseId;joinReferences:PrerequisiteId" csv:"-" json:"-"`
+	Prerequisite []Course     `gorm:"many2many:course_prerequisites;joinForeignKey:CourseId;joinReferences:PrerequisiteId" csv:"-" json:"-"`
 }
 
 func (Course) TableName() string {

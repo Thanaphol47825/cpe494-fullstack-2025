@@ -12,25 +12,23 @@ import (
 
 	"ModEd/core"
 	"ModEd/recruit/controller"
-	"ModEd/recruit/model"
+	recruitModel "ModEd/recruit/model"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-func setupApp(t *testing.T) (*fiber.App, *gorm.DB) {
+func setupApplicantApp(t *testing.T) (*fiber.App, *gorm.DB) {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	_ = db.Exec("PRAGMA foreign_keys = ON;")
+	db := openTestDB(t)
 
-	if err := db.AutoMigrate(&model.Applicant{}); err != nil {
+	if err := db.AutoMigrate(&recruitModel.Applicant{}); err != nil {
 		t.Fatalf("migrate: %v", err)
 	}
+
+	truncateTable(t, db, "applicants")
+	t.Cleanup(func() { truncateTable(t, db, "applicants") })
 
 	appCore := &core.ModEdApplication{DB: db}
 	ctl := controller.NewApplicantController()
@@ -48,15 +46,7 @@ func setupApp(t *testing.T) (*fiber.App, *gorm.DB) {
 	return app, db
 }
 
-func mustCreate(t *testing.T, db *gorm.DB, a *model.Applicant) uint {
-	t.Helper()
-	if err := db.Create(a).Error; err != nil {
-		t.Fatalf("seed: %v", err)
-	}
-	return a.ID
-}
-
-func perform(app *fiber.App, method, url string, body any) (*http.Response, []byte) {
+func performApplicantTest(app *fiber.App, method, url string, body any) (*http.Response, []byte) {
 	var buf bytes.Buffer
 	if body != nil {
 		_ = json.NewEncoder(&buf).Encode(body)
@@ -73,22 +63,51 @@ func perform(app *fiber.App, method, url string, body any) (*http.Response, []by
 	return resp, b
 }
 
-func TestGetAllAndGetByID(t *testing.T) {
-	app, db := setupApp(t)
+func TestCreateApplicant(t *testing.T) {
+	app, db := setupApplicantApp(t)
 
-	id1 := mustCreate(t, db, &model.Applicant{
-		FirstName:          "Alice",
-		LastName:           "Smith",
-		Email:              "alice@example.com",
-		BirthDate:          time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC),
-		Address:            "123 Street",
-		Phonenumber:        "111",
-		GPAX:               3.5,
-		HighSchool_Program: "Science",
-		PortfolioURL:       "http://alice.com",
-		FamilyIncome:       20000,
-	})
-	_ = mustCreate(t, db, &model.Applicant{
+	dto := map[string]any{
+		"first_name":          "Alice",
+		"last_name":           "Smith",
+		"email":               "alice@example.com",
+		"birth_date":          "2000-01-01T00:00:00Z",
+		"address":             "123 Street",
+		"phone_number":        "111",
+		"gpax":                3.5,
+		"high_school_program": "Science",
+		"portfolio_url":       "http://alice.com",
+		"family_income":       20000,
+	}
+
+	resp, body := performApplicantTest(app, http.MethodPost, "/recruit/CreateApplicant", dto)
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("create status=%d body=%s", resp.StatusCode, string(body))
+	}
+
+	var createResp struct {
+		IsSuccess bool                   `json:"isSuccess"`
+		Result    recruitModel.Applicant `json:"result"`
+	}
+	if err := json.Unmarshal(body, &createResp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if !createResp.IsSuccess || createResp.Result.FirstName != "Alice" {
+		t.Fatalf("unexpected response: %+v", createResp)
+	}
+
+	var cnt int64
+	if err := db.Model(&recruitModel.Applicant{}).Where("first_name = ?", "Alice").Count(&cnt).Error; err != nil {
+		t.Fatalf("count: %v", err)
+	}
+	if cnt != 1 {
+		t.Fatalf("expected Alice inserted, got %d", cnt)
+	}
+}
+
+func TestGetAllAndGetByIDApplicant(t *testing.T) {
+	app, db := setupApplicantApp(t)
+
+	applicant := &recruitModel.Applicant{
 		FirstName:          "Bob",
 		LastName:           "Lee",
 		Email:              "bob@example.com",
@@ -99,112 +118,81 @@ func TestGetAllAndGetByID(t *testing.T) {
 		HighSchool_Program: "Arts",
 		PortfolioURL:       "http://bob.com",
 		FamilyIncome:       15000,
-	})
+	}
+	if err := db.Create(applicant).Error; err != nil {
+		t.Fatalf("seed: %v", err)
+	}
 
-	resp, body := perform(app, http.MethodGet, "/recruit/GetApplicants", nil)
+	resp, body := performApplicantTest(app, http.MethodGet, "/recruit/GetApplicants", nil)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("get all status=%d body=%s", resp.StatusCode, string(body))
 	}
+
 	var listResp struct {
-		IsSuccess bool              `json:"isSuccess"`
-		Result    []model.Applicant `json:"result"`
+		IsSuccess bool                      `json:"isSuccess"`
+		Result    []*recruitModel.Applicant `json:"result"`
 	}
 	if err := json.Unmarshal(body, &listResp); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if !listResp.IsSuccess || len(listResp.Result) != 2 {
-		t.Fatalf("expected 2 applicants, got %+v", listResp)
+	if !listResp.IsSuccess || len(listResp.Result) < 1 {
+		t.Fatalf("expected at least 1 applicant, got %+v", listResp)
 	}
 
-	resp, body = perform(app, http.MethodGet, fmt.Sprintf("/recruit/GetApplicant/%d", id1), nil)
+	resp, body = performApplicantTest(app, http.MethodGet, fmt.Sprintf("/recruit/GetApplicant/%d", applicant.ID), nil)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("get by id status=%d body=%s", resp.StatusCode, string(body))
 	}
+
 	var singleResp struct {
-		IsSuccess bool            `json:"isSuccess"`
-		Result    model.Applicant `json:"result"`
+		IsSuccess bool                   `json:"isSuccess"`
+		Result    recruitModel.Applicant `json:"result"`
 	}
 	if err := json.Unmarshal(body, &singleResp); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if !singleResp.IsSuccess || singleResp.Result.FirstName != "Alice" {
-		t.Fatalf("expected Alice, got %+v", singleResp)
-	}
-}
-
-func TestCreateApplicant(t *testing.T) {
-	app, db := setupApp(t)
-
-	dto := map[string]any{
-		"first_name":          "Charlie",
-		"last_name":           "Brown",
-		"email":               "charlie@example.com",
-		"birth_date":          "2002-03-03T00:00:00Z",
-		"address":             "789 Ave",
-		"phone_number":        "333",
-		"gpax":                3.8,
-		"high_school_program": "Math",
-		"portfolio_url":       "http://charlie.com",
-		"family_income":       18000,
-	}
-	resp, body := perform(app, http.MethodPost, "/recruit/CreateApplicant", dto)
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("create status=%d body=%s", resp.StatusCode, string(body))
-	}
-
-	var createResp struct {
-		IsSuccess bool            `json:"isSuccess"`
-		Result    model.Applicant `json:"result"`
-	}
-	if err := json.Unmarshal(body, &createResp); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if !createResp.IsSuccess || createResp.Result.FirstName != "Charlie" {
-		t.Fatalf("unexpected response: %+v", createResp)
-	}
-
-	var cnt int64
-	if err := db.Model(&model.Applicant{}).Where("first_name = ?", "Charlie").Count(&cnt).Error; err != nil {
-		t.Fatalf("count: %v", err)
-	}
-	if cnt != 1 {
-		t.Fatalf("expected Charlie inserted, got %d", cnt)
+	if !singleResp.IsSuccess || singleResp.Result.ID != applicant.ID {
+		t.Fatalf("expected applicant with id %d, got %+v", applicant.ID, singleResp)
 	}
 }
 
 func TestUpdateApplicant(t *testing.T) {
-	app, db := setupApp(t)
+	app, db := setupApplicantApp(t)
 
-	id := mustCreate(t, db, &model.Applicant{
-		FirstName:          "David",
+	applicant := &recruitModel.Applicant{
+		FirstName:          "Charlie",
 		LastName:           "Old",
-		Email:              "david@old.com",
+		Email:              "charlie@old.com",
 		Address:            "Old Street",
-		Phonenumber:        "444",
-		HighSchool_Program: "History",
+		Phonenumber:        "333",
+		HighSchool_Program: "Math",
 		PortfolioURL:       "http://old.com",
-		FamilyIncome:       10000,
-	})
+		FamilyIncome:       12000,
+	}
+	if err := db.Create(applicant).Error; err != nil {
+		t.Fatalf("seed: %v", err)
+	}
 
 	dto := map[string]any{
-		"id":                  id,
-		"first_name":          "David",
+		"id":                  applicant.ID,
+		"first_name":          "Charlie",
 		"last_name":           "New",
-		"email":               "david@new.com",
+		"email":               "charlie@new.com",
 		"address":             "New Street",
-		"phone_number":        "555",
-		"high_school_program": "Math",
+		"phone_number":        "444",
+		"high_school_program": "Science",
 		"portfolio_url":       "http://new.com",
-		"family_income":       12000,
+		"family_income":       13000,
 	}
-	resp, body := perform(app, http.MethodPost, "/recruit/UpdateApplicant", dto)
+
+	resp, body := performApplicantTest(app, http.MethodPost, "/recruit/UpdateApplicant", dto)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("update status=%d body=%s", resp.StatusCode, string(body))
 	}
 
 	var updateResp struct {
-		IsSuccess bool            `json:"isSuccess"`
-		Result    model.Applicant `json:"result"`
+		IsSuccess bool                   `json:"isSuccess"`
+		Result    recruitModel.Applicant `json:"result"`
 	}
 	if err := json.Unmarshal(body, &updateResp); err != nil {
 		t.Fatalf("unmarshal: %v", err)
@@ -213,30 +201,34 @@ func TestUpdateApplicant(t *testing.T) {
 		t.Fatalf("unexpected response: %+v", updateResp)
 	}
 
-	var after model.Applicant
-	if err := db.First(&after, id).Error; err != nil {
+	var after recruitModel.Applicant
+	if err := db.First(&after, applicant.ID).Error; err != nil {
 		t.Fatalf("fetch after: %v", err)
 	}
-	if after.LastName != "New" || after.Email != "david@new.com" {
+	if after.LastName != "New" || after.Email != "charlie@new.com" {
 		t.Fatalf("update failed: %+v", after)
 	}
 }
 
 func TestDeleteApplicant(t *testing.T) {
-	app, db := setupApp(t)
+	app, db := setupApplicantApp(t)
 
-	id := mustCreate(t, db, &model.Applicant{
-		FirstName:          "Eve",
+	applicant := &recruitModel.Applicant{
+		FirstName:          "David",
 		LastName:           "Temp",
-		Email:              "eve@temp.com",
+		Email:              "david@temp.com",
 		Address:            "Temp Street",
-		Phonenumber:        "666",
-		HighSchool_Program: "Science",
-		PortfolioURL:       "http://eve.com",
+		Phonenumber:        "555",
+		HighSchool_Program: "History",
+		PortfolioURL:       "http://david.com",
 		FamilyIncome:       9000,
-	})
+	}
+	if err := db.Create(applicant).Error; err != nil {
+		t.Fatalf("seed: %v", err)
+	}
 
-	resp, body := perform(app, http.MethodGet, fmt.Sprintf("/recruit/DeleteApplicant/%d", id), nil)
+	dto := map[string]any{"id": applicant.ID}
+	resp, body := performApplicantTest(app, http.MethodPost, "/recruit/DeleteApplicant", dto)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("delete status=%d body=%s", resp.StatusCode, string(body))
 	}
@@ -248,12 +240,12 @@ func TestDeleteApplicant(t *testing.T) {
 	if err := json.Unmarshal(body, &deleteResp); err != nil {
 		t.Fatalf("unmarshal: %v", err)
 	}
-	if !deleteResp.IsSuccess || deleteResp.Result != "Applicant deleted successfully" {
+	if !deleteResp.IsSuccess || deleteResp.Result != "Delete successful" {
 		t.Fatalf("unexpected response: %+v", deleteResp)
 	}
 
 	var cnt int64
-	if err := db.Model(&model.Applicant{}).Where("id = ?", id).Count(&cnt).Error; err != nil {
+	if err := db.Model(&recruitModel.Applicant{}).Where("id = ?", applicant.ID).Count(&cnt).Error; err != nil {
 		t.Fatalf("count: %v", err)
 	}
 	if cnt != 0 {

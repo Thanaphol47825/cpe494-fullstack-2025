@@ -41,9 +41,9 @@ func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/DeleteApplicant/:id",
+		Route:   "/recruit/DeleteApplicant",
 		Handler: controller.DeleteApplicant,
-		Method:  core.GET,
+		Method:  core.POST,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
@@ -121,6 +121,14 @@ func (controller *ApplicantController) UpdateApplicant(context *fiber.Ctx) error
 		})
 	}
 
+	var existing model.Applicant
+	if err := controller.application.DB.First(&existing, applicant.ID).Error; err != nil {
+		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Applicant not found",
+		})
+	}
+
 	if err := controller.application.DB.Save(applicant).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -134,19 +142,30 @@ func (controller *ApplicantController) UpdateApplicant(context *fiber.Ctx) error
 	})
 }
 
-func (controller *ApplicantController) DeleteApplicant(context *fiber.Ctx) error {
-	id := context.Params("id")
+func (controller *ApplicantController) DeleteApplicant(c *fiber.Ctx) error {
+	var payload struct {
+		ID uint `json:"id"`
+	}
 
-	if err := controller.application.DB.Delete(&model.Applicant{}, id).Error; err != nil {
-		return context.JSON(fiber.Map{
+	if err := c.BodyParser(&payload); err != nil || payload.ID == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "invalid id",
+		})
+	}
+
+	if err := controller.application.DB.
+		Where("id = ?", payload.ID).
+		Delete(&model.Applicant{}).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    "Applicant deleted successfully",
+		"result": "Delete successful",
 	})
 }
 

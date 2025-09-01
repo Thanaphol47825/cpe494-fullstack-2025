@@ -62,7 +62,7 @@ func performAdminTest(app *fiber.App, method, url string, body any) (*http.Respo
 	return resp, b
 }
 
-func TestAdmin_Create(t *testing.T) {
+func TestAdminCreate(t *testing.T) {
 	app, db := setupAdminApp(t)
 
 	dto := map[string]any{
@@ -92,7 +92,7 @@ func TestAdmin_Create(t *testing.T) {
 	}
 }
 
-func TestAdmin_GetAll_And_GetByID(t *testing.T) {
+func TestAdminGetAllAndGetByID(t *testing.T) {
 	app, db := setupAdminApp(t)
 
 	a1 := &recruitModel.Admin{Username: "bob", Password: "p1"}
@@ -129,7 +129,7 @@ func TestAdmin_GetAll_And_GetByID(t *testing.T) {
 	}
 }
 
-func TestAdmin_Update(t *testing.T) {
+func TestAdminUpdate(t *testing.T) {
 	app, db := setupAdminApp(t)
 
 	seed := &recruitModel.Admin{Username: "david", Password: "old"}
@@ -142,7 +142,7 @@ func TestAdmin_Update(t *testing.T) {
 		"Username": "david",
 		"Password": "newpass",
 	}
-	resp, body := performAdminTest(app, http.MethodPost, "/recruit/UpdateAdmi", dto)
+	resp, body := performAdminTest(app, http.MethodPost, "/recruit/UpdateAdmin", dto)
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("update status=%d body=%s", resp.StatusCode, string(body))
 	}
@@ -163,7 +163,7 @@ func TestAdmin_Update(t *testing.T) {
 	}
 }
 
-func TestAdmin_Delete(t *testing.T) {
+func TestAdminDelete(t *testing.T) {
 	app, db := setupAdminApp(t)
 
 	seed := &recruitModel.Admin{Username: "eve", Password: "tmp"}

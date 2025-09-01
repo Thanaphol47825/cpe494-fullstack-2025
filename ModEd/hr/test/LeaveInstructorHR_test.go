@@ -71,7 +71,7 @@ func performInstr(app *fiber.App, method, url string, body any) (*http.Response,
 
 // ---------- tests ----------
 
-func TestInstructor_Create(t *testing.T) {
+func TestLeaveInstructor_Create(t *testing.T) {
 	app, _, _ := setupInstructorApp(t)
 
 	dto := map[string]any{
@@ -86,7 +86,7 @@ func TestInstructor_Create(t *testing.T) {
 	}
 }
 
-func TestInstructor_Read(t *testing.T) {
+func TestLeaveInstructor_Read(t *testing.T) {
 	app, _, db := setupInstructorApp(t)
 
 	db.Create(&model.RequestLeaveInstructor{
@@ -116,7 +116,7 @@ func TestInstructor_Read(t *testing.T) {
 	}
 }
 
-func TestInstructor_Update(t *testing.T) {
+func TestLeaveInstructor_Update(t *testing.T) {
 	app, _, db := setupInstructorApp(t)
 
 	rec := &model.RequestLeaveInstructor{
@@ -142,7 +142,7 @@ func TestInstructor_Update(t *testing.T) {
 	}
 }
 
-func TestInstructor_Delete(t *testing.T) {
+func TestLeaveInstructor_Delete(t *testing.T) {
 	app, _, db := setupInstructorApp(t)
 
 	rec := &model.RequestLeaveInstructor{

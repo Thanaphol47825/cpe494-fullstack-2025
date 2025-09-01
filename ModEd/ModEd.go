@@ -8,7 +8,6 @@ import (
 	"ModEd/curriculum"
 	"ModEd/eval"
 	"ModEd/hr"
-	"ModEd/project"
 
 	"github.com/joho/godotenv"
 )
@@ -26,7 +25,7 @@ func main() {
 	application := core.GetApplication()
 	common.InitialCommon()
 	curriculum.InitialCurriculum()
-	project.InitialProject()
+	//project.InitialProject()
 	hr.InitialCommon()
 	eval.InitialEval()
 	application.Run()

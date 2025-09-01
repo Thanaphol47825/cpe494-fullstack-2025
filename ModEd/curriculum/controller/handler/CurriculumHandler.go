@@ -63,17 +63,6 @@ func (h *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 
 // Read all
 func (h *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
-	// filePath := "/workspace/ModEd/curriculum/data/curriculum.json"
-	// curriculumsMapper, err := utils.CreateMapper[model.Curriculum](filePath)
-	// if err != nil {
-	// 	return context.JSON(fiber.Map{
-	// 		"isSuccess": false,
-	// 		"result":    "failed to get curriculums",
-	// 	})
-	// }
-
-	// curriculums := curriculumsMapper.Deserialize()
-
 	var curriculums []model.Curriculum
 	if err := h.DB.Preload("CourseList").Find(&curriculums).Error; err != nil {
 		return context.JSON(fiber.Map{

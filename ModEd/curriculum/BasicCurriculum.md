@@ -27,3 +27,8 @@
 #### 02/09/2025
 
 - Update Model Relation
+- Implement CRUD in controller and handler
+
+- TODO : Each member should create a view file of their own model. The view file must contain form which is user use to insert and create a new record.
+
+#### 02/09/2025

@@ -80,20 +80,12 @@ func (h *CoursePlanHandler) GetCoursePlans(context *fiber.Ctx) error {
 }
 
 func (h *CoursePlanHandler) UpdateCoursePlan(context *fiber.Ctx) error {
-	id, err := context.ParamsInt("id")
-	if err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "invalid id",
-		})
-	}
-
 	var payload *model.CoursePlan
 	if err := context.BodyParser(&payload); err != nil {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	var result = h.DB.Model(payload).Where("id = ?", id).Updates(payload)
+	var result = h.DB.Model(payload).Where("id = ?", payload.ID).Updates(payload)
 	if err := result.Error; err != nil {
 		return context.JSON(
 			fiber.Map{

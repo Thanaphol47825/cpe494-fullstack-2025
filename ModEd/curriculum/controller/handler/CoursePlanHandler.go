@@ -2,6 +2,7 @@ package handler
 
 import (
 	"ModEd/curriculum/model"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -89,10 +90,10 @@ func (h *CoursePlanHandler) UpdateCoursePlan(context *fiber.Ctx) error {
 
 	var payload *model.CoursePlan
 	if err := context.BodyParser(&payload); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	var result = h.DB.Model(&model.CoursePlan{}).Where("id = ?", id).Updates(payload)
+	var result = h.DB.Model(payload).Where("id = ?", id).Updates(payload)
 	if err := result.Error; err != nil {
 		return context.JSON(
 			fiber.Map{
@@ -104,7 +105,7 @@ func (h *CoursePlanHandler) UpdateCoursePlan(context *fiber.Ctx) error {
 	return context.JSON(
 		fiber.Map{
 			"isSuccess": true,
-			"result":    result,
+			"result":    payload,
 		})
 }
 

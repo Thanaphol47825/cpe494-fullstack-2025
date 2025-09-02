@@ -75,9 +75,9 @@ func (c *LeaveStudentHRController) SubmitStudentLeaveRequest(studentID, leaveTyp
 			return fmt.Errorf("failed to validate leave request: %v", err)
 		}
 
-		// Insert with tx
-		if err := tx.Create(req).Error; err != nil {
-			return fmt.Errorf("failed to submit leave request within transaction: %v", err)
+		// Use the insert method
+		if err := c.insert(req); err != nil {
+			return fmt.Errorf("failed to submit leave request: %v", err)
 		}
 		return nil
 	})
@@ -149,9 +149,9 @@ func (c *LeaveStudentHRController) EditStudentLeaveRequest(requestID int, studen
 			return fmt.Errorf("failed to validate leave request: %v", err)
 		}
 
-		// Save changes
-		if err := tx.Save(request).Error; err != nil {
-			return fmt.Errorf("failed to update leave request within transaction: %v", err)
+		// Use the update method
+		if err := c.update(request); err != nil {
+			return fmt.Errorf("failed to update leave request: %v", err)
 		}
 		return nil
 	})
@@ -168,9 +168,9 @@ func (c *LeaveStudentHRController) DeleteStudentLeaveRequest(requestID int) erro
 			return fmt.Errorf("leave request not found")
 		}
 
-		// Delete request
-		if err := tx.Delete(request).Error; err != nil {
-			return fmt.Errorf("failed to delete leave request within transaction: %v", err)
+		// Use the delete method
+		if err := c.delete(request); err != nil {
+			return fmt.Errorf("failed to delete leave request: %v", err)
 		}
 		return nil
 	})

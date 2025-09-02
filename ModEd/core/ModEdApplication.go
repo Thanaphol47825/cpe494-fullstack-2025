@@ -12,6 +12,7 @@ type ModEdApplication struct {
 	Application *fiber.App
 	port        int
 	RootPath    string
+	RootURL     string
 	DB          *gorm.DB
 }
 

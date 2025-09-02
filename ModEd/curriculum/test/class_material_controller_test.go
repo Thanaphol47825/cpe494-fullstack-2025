@@ -19,7 +19,7 @@ func TestClassMaterialController(t *testing.T) {
 	})
 
 	t.Run("get all", func(t *testing.T) {
-		utils.RequestTest(t, http.MethodGet, "/curriculum/Curriculum/getCurriculums", nil)
+		utils.RequestTest(t, http.MethodGet, "/curriculum/ClassMaterial/getClassMaterials", nil)
 	})
 
 	t.Run("get by id", func(t *testing.T) {

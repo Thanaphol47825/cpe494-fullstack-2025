@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"gorm.io/gorm"
 )
 
@@ -65,6 +66,10 @@ func GetApplication() *ModEdApplication {
 		application = &ModEdApplication{
 			Application: fiber.New(),
 		}
+		application.Application.Use(logger.New(logger.Config{
+			Format: "${time} | Method: ${method} | Path: ${path} | status: ${status}\n",
+		}))
+
 		application.loadConfig()
 		application.setConfigStaticServe()
 

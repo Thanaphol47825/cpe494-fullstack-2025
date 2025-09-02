@@ -1,0 +1,6 @@
+app:
+  domain: 'http://localhost'
+  port: 8080
+
+database:
+  dsn: 'host=postgres user=user password=H@55P@ssw0rd dbname=moded port=5432'

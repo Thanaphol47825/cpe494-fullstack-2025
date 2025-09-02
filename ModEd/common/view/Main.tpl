@@ -8,7 +8,7 @@
 			let badHeader = document.getElementById("BadID");
 			let modules = document.getElementsByClassName("moduleList");
 		</script>
-		<script src="{{ RootURL }}common/share/js/Main.js"></script>
+		<script src="{{ RootURL }}/common/static/js/demo.js"></script>
 		<style>
 			h1{
 				font-weight: bold;

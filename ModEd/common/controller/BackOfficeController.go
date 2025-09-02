@@ -4,6 +4,7 @@ package controller
 import (
 	"ModEd/core"
 	"fmt"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -19,7 +20,7 @@ func NewBackOfficeController() *BackOfficeController {
 }
 
 func (controller *BackOfficeController) RenderMain(context *fiber.Ctx) error {
-	path := fmt.Sprintf("%s/common/view/Main.tpl", controller.application.RootPath)
+	path := filepath.Join(controller.application.RootPath, "common", "view", "main.tpl")
 	template, _ := mustache.ParseFile(path)
 	rendered := template.Render(map[string]string{
 		"title":   "ModEd BackOffice",

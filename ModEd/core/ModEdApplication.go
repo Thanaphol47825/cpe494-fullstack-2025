@@ -1,19 +1,23 @@
 package core
 
 import (
+	"ModEd/core/config"
 	"ModEd/core/database"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
 type ModEdApplication struct {
-	Application *fiber.App
-	port        int
-	RootPath    string
-	RootURL     string
-	DB          *gorm.DB
+	Configuration config.EnvConfiguration
+	Application   *fiber.App
+	port          int
+	RootPath      string
+	RootURL       string
+	DB            *gorm.DB
 }
 
 func (application *ModEdApplication) Run() {
@@ -34,8 +38,23 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 }
 
 func (application *ModEdApplication) loadConfig() {
-	application.port = 8080
-	application.RootPath = "/workspace"
+	application.Configuration = config.LoadConfig()
+	if RootPath, err := os.Getwd(); err == nil {
+		application.RootPath = filepath.Clean(RootPath)
+	} else {
+		panic(err)
+	}
+	application.RootURL = fmt.Sprintf("%s:%d", application.Configuration.App.Domain, application.Configuration.App.Port)
+	application.port = application.Configuration.App.Port
+}
+
+func (application *ModEdApplication) setConfigStaticServe() {
+	application.Application.Static("/common/static", filepath.Join(application.RootPath, "common", "static"))
+	application.Application.Static("/curriculum/static", filepath.Join(application.RootPath, "curriculum", "static"))
+	application.Application.Static("/eval/static", filepath.Join(application.RootPath, "eval", "static"))
+	application.Application.Static("/hr/static", filepath.Join(application.RootPath, "hr", "static"))
+	application.Application.Static("/project/static", filepath.Join(application.RootPath, "project", "static"))
+	application.Application.Static("/recruit/static", filepath.Join(application.RootPath, "recruit", "static"))
 }
 
 // NOTE: Singleton
@@ -47,8 +66,9 @@ func GetApplication() *ModEdApplication {
 			Application: fiber.New(),
 		}
 		application.loadConfig()
+		application.setConfigStaticServe()
 
-		db, err := database.ConnectPostgres()
+		db, err := database.ConnectPostgres(application.Configuration.Database.Dsn)
 		if err != nil {
 			panic(err)
 		}

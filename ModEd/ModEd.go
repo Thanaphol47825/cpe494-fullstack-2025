@@ -1,6 +1,8 @@
 package main
 
 import (
+	"ModEd/core/config"
+
 	"ModEd/common"
 	"ModEd/core"
 	"ModEd/core/database"
@@ -12,13 +14,11 @@ import (
 	"ModEd/recruit"
 	"flag"
 	"fmt"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
-	godotenv.Load()
-	db, err := database.ConnectPostgres()
+	configValue := config.LoadConfig()
+	db, err := database.ConnectPostgres(configValue.Database.Dsn)
 	if err != nil {
 		panic(err)
 	}

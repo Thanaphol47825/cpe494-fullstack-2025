@@ -19,6 +19,7 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 		&model.InternshipMentor{},
 		&model.InternStudent{},
 		&model.InternshipAttendance{},
+		&model.InternshipCriteria{},
 	}
 }
 

@@ -19,25 +19,3 @@ type InterviewCriteria struct {
 
 	PassingScore float64 `csv:"passing_score" json:"passing_score"`
 }
-
-func (i *InterviewCriteria) GetID() uint {
-	return i.BaseModel.GetID()
-}
-func (i *InterviewCriteria) FromCSV(csvData string) error {
-	return nil
-}
-func (i *InterviewCriteria) ToCSVRow() string {
-	return ""
-}
-func (i *InterviewCriteria) FromJSON(jsonData string) error {
-	return nil
-}
-func (i *InterviewCriteria) ToJSON() string {
-	return ""
-}
-func (i *InterviewCriteria) Validate() error {
-	return nil
-}
-func (i *InterviewCriteria) ToString() string {
-	return ""
-}

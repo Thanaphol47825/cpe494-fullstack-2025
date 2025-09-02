@@ -21,28 +21,6 @@ type Interview struct {
 	InterviewStatus      ApplicationStatus `gorm:"type:varchar(20)"`
 }
 
-func (i *Interview) GetID() uint {
-	return i.BaseModel.GetID()
-}
-func (i *Interview) FromCSV(csvData string) error {
-	return nil
-}
-func (i *Interview) ToCSVRow() string {
-	return ""
-}
-func (i *Interview) FromJSON(jsonData string) error {
-	return nil
-}
-func (i *Interview) ToJSON() string {
-	return ""
-}
-func (i *Interview) Validate() error {
-	return nil
-}
-func (i *Interview) ToString() string {
-	return ""
-}
-
 func (i *Interview) SetCriteriaScores(scores map[string]float64) error {
 	jsonData, err := json.Marshal(scores)
 	if err != nil {

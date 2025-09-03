@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<title>{{ title}}</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 		<script>
 			let a = 10;
 			console.log(a);
@@ -25,7 +26,10 @@
 		<link href="{{ RootURL }}common/share/css/Main.css" >
 	</head>
 	<body>
-		<h1 id="BadID">ModEd BackOffice</h1>
+    <h1 class="text-3xl font-bold underline">
+      ModEd BackOffice
+    </h1>
+		<h1 id="BadID">BasId</h1>
 		<ul>
 			<li class="moduleList">Module Common</li>
 			<li class="moduleList">Module HR</li>

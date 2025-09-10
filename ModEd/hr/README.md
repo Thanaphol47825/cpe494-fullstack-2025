@@ -7,4 +7,8 @@ Run all tests
 Run specific test
 ` go test ./hr/test -run {TestName} -v `
 
+# FORM
+- Add Instructors
+` /hr/instructors/create `
+
 You can run this command in path /workspace/ModEd no need to `cd` to hr folder

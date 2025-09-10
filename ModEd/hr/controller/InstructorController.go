@@ -8,7 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
+
+	"github.com/hoisie/mustache"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -24,15 +27,34 @@ func (ctl *InstructorController) RenderMain(c *fiber.Ctx) error {
 	return writeOK(c, http.StatusOK, fiber.Map{"message": "Instructor HR API is up"})
 }
 
+func (ctl *InstructorController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "Instructor.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return writeErr(c, http.StatusInternalServerError, err.Error())
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Instructor",
+		"RootURL": ctl.application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
+}
+
 func (ctl *InstructorController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
+
+		{Route: "/hr/instructors/create", Method: core.GET, Handler: ctl.RenderCreateForm},
+
 		{Route: "/hr/instructors", Method: core.GET, Handler: ctl.List},
-		{Route: "/hr/instructors/:code", Method: core.GET, Handler: ctl.GetByCode},
 		{Route: "/hr/instructors", Method: core.POST, Handler: ctl.Create},
+
 		{Route: "/hr/instructors/:code/update", Method: core.POST, Handler: ctl.UpdateByCode},
 		{Route: "/hr/instructors/:code/delete", Method: core.POST, Handler: ctl.DeleteByCode},
+		{Route: "/hr/instructors/:code", Method: core.GET, Handler: ctl.GetByCode},
 		{Route: "/hr/instructors/id/:id/delete", Method: core.POST, Handler: ctl.DeleteByID},
-		{Route: "/hr/Instructor", Method: core.GET, Handler: ctl.RenderMain},
+
+		{Route: "/hr/Instructor", Method: core.GET, Handler: ctl.RenderMain}, // ของเดิม
 	}
 }
 

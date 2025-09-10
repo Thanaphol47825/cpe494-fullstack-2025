@@ -58,10 +58,8 @@
           <label class="block text-sm font-medium mb-1">Program</label>
           <select name="program" class="w-full rounded-xl border border-gray-300 px-3 py-2">
             <option value="">— Select —</option>
-            <option value="0">Unknown</option>
-            <option value="1">Undergraduate</option>
-            <option value="2">Master</option>
-            <option value="3">PhD</option>
+            <option value="0">Regular</option>
+            <option value="1">International</option>
           </select>
         </div>
 

@@ -11,4 +11,6 @@ Run specific test
 - Add Instructors
 ` /hr/instructors/create `
 
+- Add Student
+` /hr/students/create `
 You can run this command in path /workspace/ModEd no need to `cd` to hr folder

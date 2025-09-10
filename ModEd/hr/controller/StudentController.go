@@ -11,23 +11,43 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
+
+	"path/filepath"
+
+	"github.com/hoisie/mustache"
 )
 
 type StudentController struct {
 	application *core.ModEdApplication
 }
 
+func (ctl *StudentController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "Student.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return writeErr(c, http.StatusInternalServerError, err.Error())
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Student",
+		"RootURL": ctl.application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
+}
 func NewStudentController() *StudentController {
 	return &StudentController{}
 }
 
 func (ctl *StudentController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
+		{Route: "/hr/students/create", Method: core.GET, Handler: ctl.RenderCreateForm},
+
 		{Route: "/hr/students", Method: core.GET, Handler: ctl.ListStudents},
-		{Route: "/hr/students/:code", Method: core.GET, Handler: ctl.GetStudentByCode},
 		{Route: "/hr/students", Method: core.POST, Handler: ctl.CreateStudent},
+
 		{Route: "/hr/students/:code/update", Method: core.POST, Handler: ctl.UpdateStudentByCode},
 		{Route: "/hr/students/:code/delete", Method: core.POST, Handler: ctl.DeleteStudentByCode},
+		{Route: "/hr/students/:code", Method: core.GET, Handler: ctl.GetStudentByCode},
 		{Route: "/hr/students/id/:id/delete", Method: core.POST, Handler: ctl.DeleteStudentByID},
 	}
 }

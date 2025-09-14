@@ -1,12 +1,136 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Demo</title>
+  <title>Create Assignment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      padding: 30px;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; color: #333; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+    input[type="text"], input[type="number"], input[type="datetime-local"] {
+      width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc;
+      border-radius: 5px; box-sizing: border-box;
+    }
+    input[type="submit"], button {
+      width: 100%; padding: 12px; background-color: #4CAF50; color: white;
+      border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 5px;
+    }
+    input[type="submit"]:hover, button:hover { background-color: #45a049; }
+    #result, #allAssignments {
+      margin-top: 15px; padding: 10px; background: #f9f9f9;
+      border: 1px solid #ddd; border-radius: 5px; white-space: pre-wrap; font-family: monospace;
+    }
+  </style>
 </head>
 <body>
-  <h1>Static Serve</h1>
-  <script src="http://localhost:8080/eval/static/js/demo.js"></script>
+  <div class="container">
+    <h1>Create New Assignment</h1>
+
+    <form id="assignmentForm">
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required />
+
+      <label for="description">Description:</label>
+      <input type="text" id="description" name="description" />
+
+      <label for="dueDate">Due Date:</label>
+      <input type="datetime-local" id="dueDate" name="dueDate" />
+
+      <label for="startDate">Start Date:</label>
+      <input type="datetime-local" id="startDate" name="startDate" />
+
+      <label for="maxScore">Max Score:</label>
+      <input type="number" id="maxScore" name="maxScore" value="100" />
+
+      <input type="submit" value="Create Assignment" />
+    </form>
+
+    <button id="loadAllBtn">Load All Assignments</button>
+
+    <h3>Latest Result:</h3>
+    <div id="result"></div>
+
+    <h3>All Assignments:</h3>
+    <div id="allAssignments"></div>
+  </div>
+
+  <script>
+    const API_BASE = "http://100.76.219.70:8080/eval/assignment";
+
+    async function fetchJSON(url, options = {}) {
+      try {
+        const res = await fetch(url, options);
+        return await res.json();
+      } catch (err) {
+        return { isSuccess: false, result: err.message };
+      }
+    }
+
+    // แปลง datetime-local เป็น RFC3339 สำหรับ Go
+    function formatToRFC3339(dtLocal) {
+      if (!dtLocal) return null;
+      return dtLocal + ":00Z"; // "2025-09-10T12:00" -> "2025-09-10T12:00:00Z"
+    }
+
+    async function loadAllAssignments() {
+      const data = await fetchJSON(`${API_BASE}/getAll`);
+      const container = document.getElementById('allAssignments');
+      if (data.isSuccess && Array.isArray(data.result)) {
+        let text = "";
+        data.result.forEach(a => {
+          const title = a.title || a.Title;       // รองรับ JSON key ต่างกัน
+          const description = a.description || a.Description;
+          const id = a.id || a.ID;
+          text += `ID: ${id}, Title: ${title}, Description: ${description}\n`;
+        });
+        container.textContent = text || "No assignments found.";
+      } else {
+        container.textContent = "Error loading assignments: " + JSON.stringify(data.result);
+      }
+    }
+
+    document.getElementById('assignmentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const payload = {
+        title: document.getElementById('name').value,
+        description: document.getElementById('description').value,
+        dueDate: formatToRFC3339(document.getElementById('dueDate').value),
+        startDate: formatToRFC3339(document.getElementById('startDate').value),
+        maxScore: Number(document.getElementById('maxScore').value),
+        instructorId: 1,
+        courseId: 101,
+        isReleased: true,
+        isActive: true
+      };
+
+      const data = await fetchJSON(`${API_BASE}/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+      await loadAllAssignments(); // refresh list after creation
+      document.getElementById('assignmentForm').reset();
+    });
+
+    document.getElementById('loadAllBtn').addEventListener('click', loadAllAssignments);
+
+    // Load all assignments on page load
+    loadAllAssignments();
+  </script>
 </body>
 </html>

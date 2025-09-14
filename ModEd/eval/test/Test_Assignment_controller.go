@@ -12,7 +12,6 @@ import (
 const baseURL = "http://127.0.0.1:8080/eval/assignment"
 
 func main() {
-	// 1️⃣ Create Assignment
 	createData := map[string]interface{}{
 		"title":        "Go Test Assignment",
 		"description":  "Test assignment using Go",
@@ -42,7 +41,6 @@ func main() {
 	}
 	id := strconv.Itoa(int(idFloat))
 
-	// 2️⃣ Get all assignments
 	fmt.Println("\nGetting all assignments...")
 	var allResp struct {
 		IsSuccess bool                     `json:"isSuccess"`
@@ -53,7 +51,6 @@ func main() {
 	}
 	fmt.Printf("All assignments: %+v\n", allResp.Result)
 
-	// 3️⃣ Get assignment by ID
 	fmt.Printf("\nGetting assignment by ID %s...\n", id)
 	var singleResp struct {
 		IsSuccess bool                   `json:"isSuccess"`
@@ -64,9 +61,9 @@ func main() {
 	}
 	fmt.Printf("Assignment: %+v\n", singleResp.Result)
 
-	// 4️⃣ Update assignment
+
 	updateData := map[string]interface{}{
-		"ID":          int(idFloat), // แปลงเป็น number ตาม struct
+		"ID":          int(idFloat), 
 		"title":       "Updated Go Test Assignment",
 		"description": "Updated description",
 	}
@@ -80,7 +77,6 @@ func main() {
 	}
 	fmt.Printf("Updated: %+v\n", updatedResp.Result)
 
-	// 5️⃣ Delete assignment
 	fmt.Printf("\nDeleting assignment ID %s...\n", id)
 	var deletedResp struct {
 		IsSuccess bool   `json:"isSuccess"`
@@ -91,7 +87,7 @@ func main() {
 	}
 	fmt.Printf("Deleted: %+v\n", deletedResp.Result)
 
-	// 6️⃣ Verify deletion
+
 	fmt.Println("\nGetting all assignments after deletion...")
 	if err := getJSON(baseURL+"/getAll", &allResp); err != nil {
 		panic(err)

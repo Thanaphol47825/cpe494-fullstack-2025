@@ -5,10 +5,13 @@ import (
 	"ModEd/hr/model"
 	"ModEd/hr/util"
 	"fmt"
+	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
@@ -176,9 +179,24 @@ func (c *LeaveStudentHRController) DeleteStudentLeaveRequest(requestID int) erro
 	})
 }
 
+func (ctl *LeaveStudentHRController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "StudentLeave.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return writeErr(c, http.StatusInternalServerError, err.Error())
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Student Leave Request",
+		"RootURL": ctl.application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
+}
+
 // Create Route
 func (ctl *LeaveStudentHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
+		{Route: "/hr/leave-student-requests/create", Method: core.GET, Handler: ctl.RenderCreateForm},
 		{Route: "/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
 		{Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-student-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},

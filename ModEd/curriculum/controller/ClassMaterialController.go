@@ -22,18 +22,18 @@ func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/ClassMaterial",
-		Handler: controller.handler.RenderMain,
+		Handler: controller.handler.RenderCreateClassMaterial,
 		Method:  core.GET,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/ClassMaterial/createClassMaterial",
+		Route:   "/curriculum/ClassMaterial/createClassMaterial",
 		Handler: controller.handler.CreateClassMaterial,
 		Method:  core.POST,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/ClassMaterial/getClassMaterial/:id",
+		Route:   "/curriculum/ClassMaterial/getClassMaterial/:id",
 		Handler: controller.handler.GetClassMaterialById,
 		Method:  core.GET,
 	})
@@ -45,13 +45,13 @@ func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/ClassMaterial/updateClassMaterial/",
+		Route:   "/curriculum/ClassMaterial/updateClassMaterial/",
 		Handler: controller.handler.UpdateClassMaterial,
 		Method:  core.POST,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/ClassMaterial/deleteClassMaterial/:id",
+		Route:   "/curriculum/ClassMaterial/deleteClassMaterial/:id",
 		Handler: controller.handler.DeleteClassMaterial,
 		Method:  core.GET,
 	})
@@ -61,5 +61,5 @@ func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 
 func (controller *ClassMaterialController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
-	controller.handler.DB = application.DB
+	controller.handler.Application = application
 }

@@ -19,7 +19,7 @@ func NewClassController() *ClassController {
 func (controller *ClassController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/Class/createClass",
+		Route:   "/curriculum/Class",
 		Handler: controller.handler.RenderClassForm,
 		Method:  core.GET,
 	})

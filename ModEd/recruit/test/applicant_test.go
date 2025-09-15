@@ -108,16 +108,16 @@ func TestGetAllAndGetByIDApplicant(t *testing.T) {
 	app, db := setupApplicantApp(t)
 
 	applicant := &recruitModel.Applicant{
-		FirstName:          "Bob",
-		LastName:           "Lee",
-		Email:              "bob@example.com",
-		BirthDate:          time.Date(2001, 2, 2, 0, 0, 0, 0, time.UTC),
-		Address:            "456 Road",
-		Phonenumber:        "222",
-		GPAX:               3.2,
-		HighSchool_Program: "Arts",
-		PortfolioURL:       "http://bob.com",
-		FamilyIncome:       15000,
+		FirstName:         "Bob",
+		LastName:          "Lee",
+		Email:             "bob@example.com",
+		BirthDate:         time.Date(2001, 2, 2, 0, 0, 0, 0, time.UTC),
+		Address:           "456 Road",
+		Phonenumber:       "222",
+		GPAX:              3.2,
+		HighSchoolProgram: "Arts",
+		PortfolioURL:      "http://bob.com",
+		FamilyIncome:      15000,
 	}
 	if err := db.Create(applicant).Error; err != nil {
 		t.Fatalf("seed: %v", err)
@@ -160,14 +160,14 @@ func TestUpdateApplicant(t *testing.T) {
 	app, db := setupApplicantApp(t)
 
 	applicant := &recruitModel.Applicant{
-		FirstName:          "Charlie",
-		LastName:           "Old",
-		Email:              "charlie@old.com",
-		Address:            "Old Street",
-		Phonenumber:        "333",
-		HighSchool_Program: "Math",
-		PortfolioURL:       "http://old.com",
-		FamilyIncome:       12000,
+		FirstName:         "Charlie",
+		LastName:          "Old",
+		Email:             "charlie@old.com",
+		Address:           "Old Street",
+		Phonenumber:       "333",
+		HighSchoolProgram: "Math",
+		PortfolioURL:      "http://old.com",
+		FamilyIncome:      12000,
 	}
 	if err := db.Create(applicant).Error; err != nil {
 		t.Fatalf("seed: %v", err)
@@ -214,14 +214,14 @@ func TestDeleteApplicant(t *testing.T) {
 	app, db := setupApplicantApp(t)
 
 	applicant := &recruitModel.Applicant{
-		FirstName:          "David",
-		LastName:           "Temp",
-		Email:              "david@temp.com",
-		Address:            "Temp Street",
-		Phonenumber:        "555",
-		HighSchool_Program: "History",
-		PortfolioURL:       "http://david.com",
-		FamilyIncome:       9000,
+		FirstName:         "David",
+		LastName:          "Temp",
+		Email:             "david@temp.com",
+		Address:           "Temp Street",
+		Phonenumber:       "555",
+		HighSchoolProgram: "History",
+		PortfolioURL:      "http://david.com",
+		FamilyIncome:      9000,
 	}
 	if err := db.Create(applicant).Error; err != nil {
 		t.Fatalf("seed: %v", err)

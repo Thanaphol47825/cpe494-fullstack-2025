@@ -3,8 +3,11 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"net/http"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type ApplicationRoundController struct {
@@ -19,6 +22,20 @@ func (controller *ApplicationRoundController) SetApplication(application *core.M
 	controller.application = application
 }
 
+func (ctl *ApplicationRoundController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(ctl.application.RootPath, "recruit", "view", "ApplicationRound.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return c.Status(http.StatusInternalServerError).SendString(err.Error())
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Application Round",
+		"RootURL": ctl.application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
+}
+
 func (controller *ApplicationRoundController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 
@@ -26,6 +43,12 @@ func (controller *ApplicationRoundController) GetRoute() []*core.RouteItem {
 		Route:   "/recruit/CreateApplicationRound",
 		Handler: controller.CreateApplicationRound,
 		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/RenderApplicationRoundForm",
+		Handler: controller.RenderCreateForm,
+		Method:  core.GET,
 	})
 
 	routeList = append(routeList, &core.RouteItem{

@@ -5,8 +5,8 @@ import (
 	"ModEd/recruit/model"
 	"path/filepath"
 
-	"github.com/cbroglie/mustache"
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type ApplicantController struct {
@@ -24,19 +24,10 @@ func (controller *ApplicantController) SetApplication(application *core.ModEdApp
 func (controller *ApplicantController) RenderCreateForm(c *fiber.Ctx) error {
 	path := filepath.Join(controller.application.RootPath, "recruit", "view", "CreateApplicant.tpl")
 
-	tmpl, err := mustache.ParseFile(path)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-	}
-
-	rendered, err := tmpl.Render(map[string]any{
+	rendered := mustache.RenderFile(path, map[string]any{
 		"title":   "Create Applicant",
 		"RootURL": controller.application.RootURL,
 	})
-
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-	}
 
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return c.SendString(rendered)

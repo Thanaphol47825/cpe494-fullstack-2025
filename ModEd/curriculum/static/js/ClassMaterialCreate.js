@@ -32,8 +32,8 @@
                 option.value = item.ID;
 
                 let formattedSchedule = "";
-                if (item.schedule) {
-                    const d = new Date(item.schedule);
+                if (item.Schedule) {
+                    const d = new Date(item.Schedule);
                     const yyyy = d.getFullYear();
                     const mm = String(d.getMonth() + 1).padStart(2, '0');
                     const dd = String(d.getDate()).padStart(2, '0');

@@ -1,22 +1,37 @@
 package handler
 
 import (
+	"ModEd/core"
 	"ModEd/curriculum/model"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"github.com/hoisie/mustache"
 )
 
 type ClassHandler struct {
-	DB *gorm.DB
+	Application *core.ModEdApplication
 }
 
 func NewClassHandler() *ClassHandler {
 	return &ClassHandler{}
 }
 
-func (h *ClassHandler) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello curriculum/Class")
+func (h *ClassHandler) RenderClassForm(c *fiber.Ctx) error {
+	path := filepath.Join(h.Application.RootPath, "curriculum", "view", "Class.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return c.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "failed to load template",
+		})
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Curriculum",
+		"RootURL": h.Application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
 }
 
 func (h *ClassHandler) CreateClass(context *fiber.Ctx) error {
@@ -25,7 +40,7 @@ func (h *ClassHandler) CreateClass(context *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := h.DB.Create(payload).Error; err != nil {
+	if err := h.Application.DB.Create(payload).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    err.Error(),
@@ -41,7 +56,7 @@ func (h *ClassHandler) CreateClass(context *fiber.Ctx) error {
 func (h *ClassHandler) GetClassById(context *fiber.Ctx) error {
 	id := context.Params("id")
 	var class model.Class
-	if err := h.DB.First(&class, id).Error; err != nil {
+	if err := h.Application.DB.Preload("Course").First(&class, id).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "invalid id",
@@ -55,7 +70,7 @@ func (h *ClassHandler) GetClassById(context *fiber.Ctx) error {
 
 func (h *ClassHandler) GetClasses(context *fiber.Ctx) error {
 	var classes []model.Class
-	if err := h.DB.Find(&classes).Error; err != nil {
+	if err := h.Application.DB.Preload("Course").Find(&classes).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    err.Error(),
@@ -73,7 +88,7 @@ func (h *ClassHandler) UpdateClass(context *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := h.DB.Save(payload).Error; err != nil {
+	if err := h.Application.DB.Save(payload).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to update class material",
@@ -95,7 +110,7 @@ func (h *ClassHandler) DeleteClass(context *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.DB.Delete(&model.Class{}, id).Error; err != nil {
+	if err := h.Application.DB.Delete(&model.Class{}, id).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to delete class",

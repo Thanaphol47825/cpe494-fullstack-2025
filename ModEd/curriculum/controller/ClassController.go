@@ -19,8 +19,8 @@ func NewClassController() *ClassController {
 func (controller *ClassController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/Class",
-		Handler: controller.handler.RenderMain,
+		Route:   "/curriculum/Class/createClass",
+		Handler: controller.handler.RenderClassForm,
 		Method:  core.GET,
 	})
 
@@ -59,5 +59,5 @@ func (controller *ClassController) GetRoute() []*core.RouteItem {
 
 func (controller *ClassController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
-	controller.handler.DB = application.DB
+	controller.handler.Application = application
 }

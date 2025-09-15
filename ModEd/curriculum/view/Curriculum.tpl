@@ -38,8 +38,8 @@
           <label class="text-sm font-medium mb-1">Department</label>
           <select name="Department" class="w-full rounded-md border border-gray-300 px-3 py-2">
             <option value="">Please Select</option>
-            <option value=0>Machanical Engineering</option>
-            <option value=1>Computer Engineering</option>
+            <option value=1>Mechanical Engineering</option>
+            <option value=2>Computer Engineering</option>
           </select>
         </div>
 
@@ -60,6 +60,6 @@
 
   </div>
 
-  <script src="{{ RootURL }}/curriculum/static/js/CurriculumCreate.js" defer></script>
+  <script src="{{ RootURL }}/curriculum/static/js/CurriculumCreate.js"></script>
 </body>
 </html>

@@ -17,22 +17,22 @@
                 <form
                     id="classMaterialForm"
                     method="post"
-                    action="{{ RootURL }}/curriculum/ClassMaterial"
-                    class="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    action="{{ RootURL }}/curriculum/ClassMaterial/createClassMaterial"
+                    class="flex flex-col gap-6"
                 >
                     <div>
-                        <label class="block text-sm font-medium mb-1">Title <span class="text-red-500">*</span></label>
-                        <input name="title" type="text" required class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Class Material Title" />
+                        <label class="block text-sm font-medium mb-1"> <span class="text-red-500">Class</span></label>
+                        <div id="classSelectContainer"></div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium mb-1">Description</label>
-                        <textarea name="description" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Class Material Description"></textarea>
+                        <label class="block text-sm font-medium mb-1">File Name</label>
+                        <input required name="FileName" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Class Material File Name" />
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium mb-1">File URL</label>
-                        <input name="file_url" type="url" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://example.com/material.pdf" />
+                        <label class="block text-sm font-medium mb-1">File Path</label>
+                        <input required name="FilePath" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="/path/to/your/file" />
                     </div>
 
                     <div class="md:col-span-2">
@@ -43,5 +43,5 @@
         </div>
 
     </body>
-
+    <script src="{{ RootURL }}/curriculum/static/js/ClassMaterialCreate.js?v=1" defer></script>
 </html>

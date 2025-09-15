@@ -19,10 +19,8 @@
           class="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           <div>
-            <label class="block text-sm font-medium mb-1">Course ID <span class="text-red-500">*</span></label>
-            <input name="CourseId" type="number" min="1" required
-              class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="e.g. 101" />
+            <label class="block text-sm font-medium mb-1">Course<span class="text-red-500">*</span></label>
+            <div id="CourseSelectContainer"></div>
           </div>
 
           <div>

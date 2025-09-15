@@ -6,13 +6,30 @@ import (
 	"ModEd/hr/util"
 	"fmt"
 	"strconv"
+	"path/filepath"
+	"net/http"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
 type ResignationStudentHRController struct {
 	application *core.ModEdApplication
+}
+
+func (ctl *ResignationStudentHRController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "ResignationStudent.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return writeErr(c, http.StatusInternalServerError, err.Error())
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Request",
+		"RootURL": ctl.application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
 }
 
 func NewResignationStudentHRController() *ResignationStudentHRController {
@@ -90,6 +107,7 @@ func (c *ResignationStudentHRController) ReviewStudentResignRequest(requestID, a
 
 func (ctl *ResignationStudentHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
+		{Route: "/hr/resignation-student-requests/create", Method: core.GET, Handler: ctl.RenderCreateForm},
 		{Route: "/hr/resignation-student-requests", Method: core.GET, Handler: ctl.HandleList},
 		{Route: "/hr/resignation-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetByID},
 		{Route: "/hr/resignation-student-requests", Method: core.POST, Handler: ctl.HandleCreate},

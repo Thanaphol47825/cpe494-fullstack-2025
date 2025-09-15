@@ -5,13 +5,31 @@ import (
 	"ModEd/common/util"
 	"ModEd/core"
 	"fmt"
+	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type StudentController struct {
 	application *core.ModEdApplication
+}
+
+func (controller *StudentController) RenderCreateForm(context *fiber.Ctx) error {
+	path := filepath.Join(controller.application.RootPath, "common", "view", "Student.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return context.Status(http.StatusInternalServerError).SendString(err.Error())
+	}
+
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Add New Student",
+		"RootURL": controller.application.RootURL,
+	})
+	context.Set("Content-Type", "text/html; charset=utf-8")
+	return context.SendString(rendered)
 }
 
 func (controller *StudentController) GetAllStudents(context *fiber.Ctx) error {
@@ -173,6 +191,11 @@ func (controller *StudentController) GetInfo(context *fiber.Ctx) error {
 
 func (controller *StudentController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "common/students/create",
+		Handler: controller.RenderCreateForm,
+		Method:  core.GET,
+	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "common/students",
 		Handler: controller.RenderMain,

@@ -14,11 +14,14 @@ var app *fiber.App
 func setupTestApp() {
 	// Set test environment to skip DB connection
 	os.Setenv("TEST_MODE", "true")
-	
+
 	// Create Fiber app directly without DB
 	app = fiber.New()
-	
+
 	// Student routes - updated to match actual routes
+	app.Get("/common/students/create", func(c *fiber.Ctx) error {
+		return c.Type("html", "utf-8").SendString("<!doctype html><title>Create Student</title><h1>Create Student</h1>")
+	})
 	app.Get("/common/students/getall", func(c *fiber.Ctx) error {
 		return c.JSON([]interface{}{})
 	})
@@ -37,8 +40,7 @@ func setupTestApp() {
 	app.Get("/common/students/import/json", func(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "No file"})
 	})
-	
-	
+
 	// Instructor routes - updated to match actual routes
 	app.Get("/common/instructors/getall", func(c *fiber.Ctx) error {
 		return c.JSON([]interface{}{})
@@ -316,7 +318,6 @@ func TestFacultyImport(t *testing.T) {
 		t.Errorf("Expected 200 or 500, got %d", resp.StatusCode)
 	}
 }
-
 
 // Department Routes
 func TestGetAllDepartments(t *testing.T) {

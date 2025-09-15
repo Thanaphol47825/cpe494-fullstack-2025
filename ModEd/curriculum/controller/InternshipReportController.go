@@ -11,50 +11,53 @@ type InternshipReportController struct {
 }
 
 func NewInternshipReportController() *InternshipReportController {
-	controller := &InternshipReportController{
+	return &InternshipReportController{
 		handler: &handler.InternshipReportHandler{},
 	}
-	return controller
 }
 
 func (controller *InternshipReportController) GetRoute() []*core.RouteItem {
-	routeList := []*core.RouteItem{}
-	routeList = append(routeList, &core.RouteItem{
+	r := []*core.RouteItem{}
+
+	// ⚠️ static route มาก่อน เพื่อไม่ชนกับ :id
+	r = append(r, &core.RouteItem{
+		Route:   "/curriculum/InternshipReport/create",
+		Handler: controller.handler.RenderCreateForm,
+		Method:  core.GET,
+	})
+
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/InternshipReport",
-		Handler: controller.handler.GetAllInternshipReport, 
+		Handler: controller.handler.GetAllInternshipReport,
 		Method:  core.GET,
 	})
-	routeList = append(routeList, &core.RouteItem{
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/CreateInternshipReport",
-		Handler: controller.handler.CreateInternshipReport, 
+		Handler: controller.handler.CreateInternshipReport,
 		Method:  core.POST,
 	})
-	routeList = append(routeList, &core.RouteItem{
+
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/InternshipReport/:id",
-		Handler: controller.handler.GetInternshipReportByID, 
+		Handler: controller.handler.GetInternshipReportByID,
 		Method:  core.GET,
 	})
-	routeList = append(routeList, &core.RouteItem{
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/UpdateInternshipReport/:id",
-		Handler: controller.handler.UpdateInternshipReportByID, 
+		Handler: controller.handler.UpdateInternshipReportByID,
 		Method:  core.POST,
 	})
-	routeList = append(routeList, &core.RouteItem{
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/DeleteInternshipReport/:id",
-		Handler: controller.handler.DeleteInternshipReportByID, 
+		Handler: controller.handler.DeleteInternshipReportByID,
 		Method:  core.POST,
 	})
 
-	routeList = append(routeList, &core.RouteItem{
-    Route:   "/curriculum/InternshipReport/create",
-    Handler: controller.handler.RenderCreateForm,
-    Method:  core.GET,
-  })
-
-	return routeList
+	return r
 }
 
-func (controller *InternshipReportController) SetApplication(application *core.ModEdApplication) {
-	controller.application = application
-	controller.handler.DB = application.DB
+func (controller *InternshipReportController) SetApplication(app *core.ModEdApplication) {
+	controller.application = app
+	controller.handler.DB = app.DB
+	controller.handler.SetApplication(app) // ← ส่ง app เข้า handler ผ่าน setter
 }

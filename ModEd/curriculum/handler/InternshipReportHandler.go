@@ -3,136 +3,137 @@ package handler
 import (
 	"ModEd/core"
 	"ModEd/curriculum/model"
+	"net/url"
+	"path/filepath"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
 type InternshipReportHandler struct {
-	DB *gorm.DB
+	DB  *gorm.DB
+	app *core.ModEdApplication 
+}
+
+func (h *InternshipReportHandler) SetApplication(app *core.ModEdApplication) { h.app = app }
+
+func (h *InternshipReportHandler) RenderMain(c *fiber.Ctx) error {
+	return c.SendString("Hello curriculum/InternshipReport")
 }
 
 func (h *InternshipReportHandler) RenderCreateForm(c *fiber.Ctx) error {
-  return c.Render("InternshipRepot", fiber.Map{
-    "Title": "Create Internship Report",
-  })
-}
+	success := c.Query("success") == "1"
+	errMsg := c.Query("error")
 
-func (controller *InternshipReportHandler) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello curriculum/InternshipReport")
-}
-
-func (controller *InternshipReportHandler) GetAllInternshipReport(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/internship/Report.csv"
-	reportMapper, err := core.CreateMapper[model.InternshipReport](filePath)
+	tplPath := filepath.Join(h.app.RootPath, "curriculum", "view", "InternshipReport.tpl")
+	tpl, err := mustache.ParseFile(tplPath)
 	if err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "failed to get internship report",
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false, "error": "failed to parse template",
 		})
 	}
 
-	reports := reportMapper.Deserialize()
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    reports,
+	html := tpl.Render(map[string]any{
+		"title":   "Create Internship Report",
+		"RootURL": h.app.RootURL,
+		"success": success,
+		"error":   errMsg,
 	})
+
+	c.Set("Content-Type", "text/html")
+	return c.SendString(html)
 }
 
-func (controller *InternshipReportHandler) CreateInternshipReport(context *fiber.Ctx) error {
-	var newReport model.InternshipReport
+// ---------- CRUD (ใช้ DB ล้วน) ----------
 
-	if err := context.BodyParser(&newReport); err != nil {
-		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "invalid request body",
+func (h *InternshipReportHandler) GetAllInternshipReport(c *fiber.Ctx) error {
+	var reports []model.InternshipReport
+	if err := h.DB.Find(&reports).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false, "error": "failed to fetch internship reports",
 		})
 	}
-
-	if err := controller.DB.Create(&newReport).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "failed to create internship report",
-		})
-	}
-
-	return context.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    newReport,
-	})
+	return c.JSON(fiber.Map{"isSuccess": true, "result": reports})
 }
 
-func (controller *InternshipReportHandler) GetInternshipReportByID(context *fiber.Ctx) error {
-	id := context.Params("id")
+func (h *InternshipReportHandler) CreateInternshipReport(c *fiber.Ctx) error {
+	var in model.InternshipReport
+	if err := c.BodyParser(&in); err != nil {
+		return c.Redirect("/curriculum/InternshipReport/create?error="+url.QueryEscape("invalid request body"), fiber.StatusSeeOther)
+	}
+	if in.ReportScore == 0 {
+		if v := c.FormValue("ReportScore"); v != "" {
+			if n, err := strconv.Atoi(v); err == nil {
+				in.ReportScore = n
+			}
+		}
+	}
+
+	if in.ReportScore < 0 || in.ReportScore > 100 {
+		return c.Redirect("/curriculum/InternshipReport/create?error="+url.QueryEscape("ReportScore must be 0-100"), fiber.StatusSeeOther)
+	}
+
+	if err := h.DB.Create(&in).Error; err != nil {
+		return c.Redirect("/curriculum/InternshipReport/create?error="+url.QueryEscape("failed to create internship report"), fiber.StatusSeeOther)
+	}
+
+	// PRG: POST → Redirect
+	return c.Redirect("/curriculum/InternshipReport/create?success=1", fiber.StatusSeeOther)
+}
+
+func (h *InternshipReportHandler) GetInternshipReportByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var report model.InternshipReport
+	if err := h.DB.First(&report, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false, "error": "internship report not found",
+		})
+	}
+	return c.JSON(fiber.Map{"isSuccess": true, "result": report})
+}
+
+func (h *InternshipReportHandler) UpdateInternshipReportByID(c *fiber.Ctx) error {
+	id := c.Params("id")
 
 	var report model.InternshipReport
-	if err := controller.DB.First(&report, id).Error; err != nil {
-		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "internship report not found",
+	if err := h.DB.First(&report, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false, "error": "internship report not found",
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    report,
-	})
+	var in model.InternshipReport
+	if err := c.BodyParser(&in); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false, "error": "invalid request body",
+		})
+	}
+
+	if in.ReportScore < 0 || in.ReportScore > 100 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false, "error": "ReportScore must be 0-100",
+		})
+	}
+
+	report.ReportScore = in.ReportScore
+
+	if err := h.DB.Save(&report).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false, "error": "failed to update internship report",
+		})
+	}
+
+	return c.JSON(fiber.Map{"isSuccess": true, "result": report})
 }
 
-func (controller *InternshipReportHandler) UpdateInternshipReportByID(context *fiber.Ctx) error {
-	id := context.Params("id")
-
-	var report model.InternshipReport
-	if err := controller.DB.First(&report, id).Error; err != nil {
-		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "internship report not found",
+func (h *InternshipReportHandler) DeleteInternshipReportByID(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := h.DB.Delete(&model.InternshipReport{}, id).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false, "error": "failed to delete internship report",
 		})
 	}
-
-	var updateReport model.InternshipReport
-	if err := context.BodyParser(&updateReport); err != nil {
-		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "invalid request body",
-		})
-	}
-
-	report.ReportScore = updateReport.ReportScore
-
-	if err := controller.DB.Save(&report).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "failed to update internship report",
-		})
-	}
-
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    report,
-	})
-}
-
-func (controller *InternshipReportHandler) DeleteInternshipReportByID(context *fiber.Ctx) error {
-	id := context.Params("id")
-
-	var report model.InternshipReport
-	if err := controller.DB.First(&report, id).Error; err != nil {
-		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "internship report not found",
-		})
-	}
-
-	if err := controller.DB.Delete(&report, id).Error; err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"isSuccess": false,
-			"error":     "failed to delete internship report",
-		})
-	}
-
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    "successfully deleted internship report",
-	})
+	return c.JSON(fiber.Map{"isSuccess": true, "result": "successfully deleted internship report"})
 }

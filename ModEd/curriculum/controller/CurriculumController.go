@@ -19,11 +19,13 @@ func NewCurriculumController() *CurriculumController {
 
 func (controller *CurriculumController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/Curriculum",
-		Handler: controller.handler.RenderMain,
+		Handler: controller.handler.RenderCreateForm,
 		Method:  core.GET,
 	})
+
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/Curriculum/createCurriculum",
 		Handler: controller.handler.CreateCurriculum,
@@ -54,5 +56,5 @@ func (controller *CurriculumController) GetRoute() []*core.RouteItem {
 
 func (controller *CurriculumController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
-	controller.handler.DB = application.DB
+	controller.handler.Application = application
 }

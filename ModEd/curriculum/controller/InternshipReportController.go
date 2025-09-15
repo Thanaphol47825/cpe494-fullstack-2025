@@ -44,9 +44,17 @@ func (controller *InternshipReportController) GetRoute() []*core.RouteItem {
 		Handler: controller.handler.DeleteInternshipReportByID, 
 		Method:  core.POST,
 	})
+
+	routeList = append(routeList, &core.RouteItem{
+    Route:   "/curriculum/InternshipReport/create",
+    Handler: controller.handler.RenderCreateForm,
+    Method:  core.GET,
+  })
+
 	return routeList
 }
 
 func (controller *InternshipReportController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
+	controller.handler.DB = application.DB
 }

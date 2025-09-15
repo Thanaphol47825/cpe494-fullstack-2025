@@ -12,6 +12,12 @@ type InternshipReportHandler struct {
 	DB *gorm.DB
 }
 
+func (h *InternshipReportHandler) RenderCreateForm(c *fiber.Ctx) error {
+  return c.Render("InternshipRepot", fiber.Map{
+    "Title": "Create Internship Report",
+  })
+}
+
 func (controller *InternshipReportHandler) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello curriculum/InternshipReport")
 }

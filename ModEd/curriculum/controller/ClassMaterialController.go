@@ -21,7 +21,7 @@ func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/ClassMaterial",
+		Route:   "/curriculum/ClassMaterial/createClassMaterial",
 		Handler: controller.handler.RenderCreateClassMaterial,
 		Method:  core.GET,
 	})

@@ -1,23 +1,41 @@
 package handler
 
 import (
+	"ModEd/core"
 	"ModEd/curriculum/model"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
+	"github.com/hoisie/mustache"
+	// "gorm.io/gorm"
 )
 
 type CoursePlanHandler struct {
-	DB *gorm.DB
+	// DB *gorm.DB
+	Application *core.ModEdApplication
 }
 
 func NewCoursePlanHandler() *CoursePlanHandler {
 	return &CoursePlanHandler{}
 }
 
-func (h *CoursePlanHandler) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Course Plan Main Page")
+// func (h *CoursePlanHandler) RenderMain(context *fiber.Ctx) error {
+// 	return context.SendString("Course Plan Main Page")
+// }
+
+func (h *CoursePlanHandler) RenderCreateCoursePlan(c *fiber.Ctx) error {
+	path := filepath.Join(h.Application.RootPath, "curriculum", "view", "CoursePlan.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return c.SendStatus(http.StatusInternalServerError)
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Create Course Plan",
+		"RootURL": h.Application.RootURL,
+	})
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
 }
 
 func (h *CoursePlanHandler) CreateCoursePlan(context *fiber.Ctx) error {
@@ -26,7 +44,7 @@ func (h *CoursePlanHandler) CreateCoursePlan(context *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := h.DB.Create(&payload).Error; err != nil {
+	if err := h.Application.DB.Create(&payload).Error; err != nil {
 		return context.JSON(
 			fiber.Map{
 				"isSuccess": false,
@@ -51,7 +69,7 @@ func (h *CoursePlanHandler) GetCoursePlanById(context *fiber.Ctx) error {
 	}
 
 	var result model.CoursePlan
-	if err := h.DB.Where("id = ?", id).First(&result).Error; err != nil {
+	if err := h.Application.DB.Where("id = ?", id).First(&result).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculum",
@@ -66,7 +84,7 @@ func (h *CoursePlanHandler) GetCoursePlanById(context *fiber.Ctx) error {
 
 func (h *CoursePlanHandler) GetCoursePlans(context *fiber.Ctx) error {
 	var coursePlans []model.CoursePlan
-	if err := h.DB.Find(&coursePlans).Error; err != nil {
+	if err := h.Application.DB.Find(&coursePlans).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get course plans",
@@ -85,7 +103,7 @@ func (h *CoursePlanHandler) UpdateCoursePlan(context *fiber.Ctx) error {
 		return fiber.NewError(http.StatusBadRequest, err.Error())
 	}
 
-	var result = h.DB.Model(payload).Where("id = ?", payload.ID).Updates(payload)
+	var result = h.Application.DB.Model(payload).Where("id = ?", payload.ID).Updates(payload)
 	if err := result.Error; err != nil {
 		return context.JSON(
 			fiber.Map{
@@ -110,7 +128,7 @@ func (h *CoursePlanHandler) DeleteCoursePlan(context *fiber.Ctx) error {
 		})
 	}
 
-	if err := h.DB.Delete(&model.CoursePlan{}, id).Error; err != nil {
+	if err := h.Application.DB.Delete(&model.CoursePlan{}, id).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to delete course plan",

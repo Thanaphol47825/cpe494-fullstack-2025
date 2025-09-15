@@ -21,7 +21,7 @@ func (controller *CoursePlanController) GetRoute() []*core.RouteItem {
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/CoursePlan",
-		Handler: controller.handler.RenderMain,
+		Handler: controller.handler.RenderCreateCoursePlan,
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
@@ -54,5 +54,5 @@ func (controller *CoursePlanController) GetRoute() []*core.RouteItem {
 
 func (controller *CoursePlanController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
-	controller.handler.DB = application.DB
+	controller.handler.Application = application
 }

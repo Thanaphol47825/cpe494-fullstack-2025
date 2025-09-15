@@ -36,17 +36,13 @@
 
         <div>
           <label class="text-sm font-medium mb-1">Department</label>
-          <select name="Department" class="w-full rounded-md border border-gray-300 px-3 py-2">
-            <option value="">Please Select</option>
-            <option value=1>Mechanical Engineering</option>
-            <option value=2>Computer Engineering</option>
-          </select>
+          <div id="departmentSelectContainer"></div>
         </div>
 
         <div>
           <label class="text-sm font-medium mb-1">ProgramType</label>
           <select name="ProgramType" class="w-full rounded-md border border-gray-300 px-3 py-2">
-            <option value="">Please Select</option>
+            <option value="">-- Select a program type --</option>
             <option value=0>Regular</option>
             <option value=1>International</option>
           </select>
@@ -60,6 +56,6 @@
 
   </div>
 
-  <script src="{{ RootURL }}/curriculum/static/js/CurriculumCreate.js"></script>
+  <script src="{{ RootURL }}/curriculum/static/js/CurriculumCreate.js" defer></script>
 </body>
 </html>

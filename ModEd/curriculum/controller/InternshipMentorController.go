@@ -12,8 +12,11 @@ type InternshipMentorController struct {
 	handler     *handler.InternshipMentorHandler
 }
 
-func NewInternshipMentorController() *InternshipMentorController {
-	controller := &InternshipMentorController{}
+func NewInternshipMentorController(app *core.ModEdApplication) *InternshipMentorController {
+	controller := &InternshipMentorController{
+		application: app,
+		handler:     handler.NewInternshipMentorHandler(app),
+	}
 	return controller
 }
 func (controller *InternshipMentorController) RenderMain(context *fiber.Ctx) error {
@@ -22,10 +25,40 @@ func (controller *InternshipMentorController) RenderMain(context *fiber.Ctx) err
 
 func (controller *InternshipMentorController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/InternshipMentor",
+		Route:   "/curriculum/InternshipMentorRenderMain",
+		Handler: controller.RenderMain,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipMentor/:id?",
 		Handler: controller.handler.GetInternshipMentor,
 		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CreateInternshipMentor",
+		Handler: controller.handler.CreateInternshipMentor,
+		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CreateInternshipMentorRender",
+		Handler: controller.handler.CreateInternshipMentorRender,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/UpdateInternshipMentor/:id",
+		Handler: controller.handler.UpdateInternshipMentor,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/DeleteInternshipMentor/:id",
+		Handler: controller.handler.DeleteInternshipMentor,
+		Method:  core.POST,
 	})
 	return routeList
 }

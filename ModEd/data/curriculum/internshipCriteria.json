@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Attendance",
+    "description": "Student attends regularly and on time.",
+    "score": 10,
+    "internship_application_id": 1
+  },
+  {
+    "title": "Work Quality",
+    "description": "Delivers high quality work and meets expectations.",
+    "score": 20,
+    "internship_application_id": 1
+  },
+  {
+    "title": "Teamwork",
+    "description": "Collaborates well with others.",
+    "score": 15,
+    "internship_application_id": 2
+  },
+  {
+    "title": "Initiative",
+    "description": "Shows initiative and willingness to learn.",
+    "score": 10,
+    "internship_application_id": 2
+    }
+]

@@ -19,5 +19,6 @@ func (s *CommonMigrationStrategy) GetModels() []interface{} {
 func (s *CommonMigrationStrategy) GetSeedPath() []SeedPath {
 	return []SeedPath{
 		{Path: "data/common/FacultyList.csv", Model: &[]model.Faculty{}},
+		{Path: "data/common/TestStudent.json", Model: &[]model.Student{}},
 	}
 }

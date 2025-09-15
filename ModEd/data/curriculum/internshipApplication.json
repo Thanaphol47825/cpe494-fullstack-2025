@@ -1,0 +1,17 @@
+[
+  {
+    "turnin_date": "2025-06-01T09:00:00Z",
+    "approval_university_status": "APPROVED",
+    "approval_company_status": "PENDING",
+    "company_id": 1,
+    "student_code": "65070509999"
+  },
+  {
+    "turnin_date": "2025-06-02T10:30:00Z",
+    "approval_university_status": "APPROVED",
+    "approval_company_status": "APPROVED",
+    "company_id": 1,
+    "student_code": "65070509999"
+  }
+  
+]

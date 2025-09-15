@@ -14,27 +14,28 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 		&model.CoursePlan{},
 		&model.Advisor{},
 		&model.Company{},
-		&model.InternshipReport{},
+		// &model.InternshipReport{},
 		// &model.InternshipResultEvaluation{},
 		&model.InternshipMentor{},
 		&model.InternStudent{},
-		&model.InternshipAttendance{},
-		&model.InternshipCriteria{},
+		// &model.InternshipAttendance{},
+		// &model.InternshipCriteria{},
 	}
 }
 
 func (s *CurriculumMigrationStrategy) GetSeedPath() []SeedPath {
 	return []SeedPath{
-		{Path: "data/common/DepartmentList.csv", Model: &model.Curriculum{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.Course{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.Class{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.ClassMaterial{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.CoursePlan{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.Advisor{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.Company{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.InternshipReport{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.InternshipMentor{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.InternStudent{}},
-		{Path: "data/common/DepartmentList.csv", Model: &model.InternshipAttendance{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.Curriculum{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.Course{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.Class{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.ClassMaterial{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.CoursePlan{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.Advisor{}},
+		{Path: "data/curriculum/company.json", Model: &[]model.Company{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipReport{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipMentor{}},
+		{Path: "data/curriculum/internStudent.json", Model: &[]model.InternStudent{}},
+		{Path: "data/curriculum/internshipMentor.json", Model: &[]model.InternshipMentor{}},
+		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipAttendance{}},
 	}
 }

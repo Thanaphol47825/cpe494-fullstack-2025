@@ -1,0 +1,22 @@
+[
+  {
+    "student_code": "S10012",
+    "company_id": 1,
+    "internship_mentor_id": 1
+  },
+  {
+    "student_code": "S10013",
+    "company_id": 2,
+    "internship_mentor_id": 2
+  },
+  {
+    "student_code": "S10014",
+    "company_id": 1,
+    "internship_mentor_id": 3
+  },
+  {
+    "student_code": "S10015",
+    "company_id": 3,
+    "internship_mentor_id": 1
+  }
+]

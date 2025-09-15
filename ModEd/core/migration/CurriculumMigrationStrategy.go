@@ -31,18 +31,11 @@ func (s *CurriculumMigrationStrategy) GetSeedPath() []SeedPath {
 		// {Path: "data/common/DepartmentList.csv", Model: &model.ClassMaterial{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.CoursePlan{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.Advisor{}},
-<<<<<<< HEAD
 		{Path: "data/curriculum/company.json", Model: &[]model.Company{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipReport{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipMentor{}},
 		{Path: "data/curriculum/internStudent.json", Model: &[]model.InternStudent{}},
 		{Path: "data/curriculum/internshipMentor.json", Model: &[]model.InternshipMentor{}},
-=======
-		{Path: "data/curriculum/Company.csv", Model: &[]model.Company{}},
-		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipReport{}},
-		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipMentor{}},
-		{Path: "data/curriculum/InternStudent.json", Model: &[]model.InternStudent{}},
->>>>>>> f38feb4fcd132231a98f58e2950a3eaa5fc13a7d
 		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipAttendance{}},
 	}
 }

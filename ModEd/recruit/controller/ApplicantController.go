@@ -3,7 +3,9 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"path/filepath"
 
+	"github.com/cbroglie/mustache"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,8 +21,35 @@ func (controller *ApplicantController) SetApplication(application *core.ModEdApp
 	controller.application = application
 }
 
+func (controller *ApplicantController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(controller.application.RootPath, "recruit", "view", "CreateApplicant.tpl")
+
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	rendered, err := tmpl.Render(map[string]any{
+		"title":   "Create Applicant",
+		"RootURL": controller.application.RootURL,
+	})
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+	}
+
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
+}
+
 func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/CreateApplicantForm",
+		Handler: controller.RenderCreateForm,
+		Method:  core.GET,
+	})
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/CreateApplicant",
@@ -50,6 +79,12 @@ func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 		Route:   "/recruit/UpdateApplicant",
 		Handler: controller.UpdateApplicant,
 		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetApplicantsFromFile",
+		Handler: controller.GetApplicantsFromFile,
+		Method:  core.GET,
 	})
 
 	return routeList
@@ -165,7 +200,7 @@ func (controller *ApplicantController) DeleteApplicant(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"isSuccess": true,
-		"result": "Delete successful",
+		"result":    "Delete successful",
 	})
 }
 
@@ -177,4 +212,27 @@ func (controller *ApplicantController) ReadApplicantsFromFile(filePath string) (
 
 	applicants := mapper.Deserialize()
 	return applicants, nil
+}
+
+func (controller *ApplicantController) GetApplicantsFromFile(context *fiber.Ctx) error {
+	filePath := context.Query("path")
+	if filePath == "" {
+		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "file path is required",
+		})
+	}
+
+	applicants, err := controller.ReadApplicantsFromFile(filePath)
+	if err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    applicants,
+	})
 }

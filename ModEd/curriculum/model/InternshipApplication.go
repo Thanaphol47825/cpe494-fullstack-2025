@@ -14,5 +14,5 @@ type InternshipApplication struct {
 	CompanyId                uint           `gorm:"not null" csv:"company_id" json:"company_id"`
 	Company                  Company        `gorm:"foreignKey:CompanyId;references:ID"`
 	StudentCode              string         `gorm:"type:varchar(255);not null" csv:"student_code" json:"student_code"`
-	Student                  InternStudent  `gorm:"foreignKey:StudentCode;references:StudentCode"`
+	// Student                  InternStudent  `gorm:"foreignKey:StudentCode;references:StudentCode"`
 }

@@ -62,4 +62,5 @@ func (controller *InternshipCriteriaController) GetRoute() []*core.RouteItem {
 func (controller *InternshipCriteriaController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 	controller.handler.DB = application.DB
+	controller.handler.Application = application
 }

@@ -6,12 +6,8 @@ type InternshipCriteria struct {
 	core.BaseModel
 	Title                   string                `gorm:"type:varchar(255);not null"`
 	Description             string                `gorm:"type:varchar(255);not null"`
-	Score                   uint                  `gorm:"not null"`
-	InternshipApplicationId uint                  `gorm:"not null"`
+	Score                   uint                  `gorm:"type:int;not null"`
+	InternshipApplicationId uint                  `gorm:"not null" csv:"internship_application_id" json:"internship_application_id"`
 	InternshipApplication   InternshipApplication `gorm:"foreignKey:InternshipApplicationId;references:ID"`
-	*core.SerializableRecord
-}
-
-func (InternshipCriteria) TableName() string {
-	return "internship_criteria"
+	// *core.SerializableRecord
 }

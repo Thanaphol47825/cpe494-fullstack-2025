@@ -81,90 +81,75 @@ func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
-func (controller *ApplicantController) CreateApplicant(context *fiber.Ctx) error {
+func (controller *ApplicantController) CreateApplicant(c *fiber.Ctx) error {
 	applicant := new(model.Applicant)
-
-	if err := context.BodyParser(applicant); err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "cannot parse JSON",
+	if err := c.BodyParser(applicant); err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Cannot parse JSON",
 		})
 	}
 
 	if err := controller.application.DB.Create(applicant).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    applicant,
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: applicant,
 	})
 }
 
-func (controller *ApplicantController) GetAllApplicants(context *fiber.Ctx) error {
+func (controller *ApplicantController) GetAllApplicants(c *fiber.Ctx) error {
 	var applicants []*model.Applicant
-
 	if err := controller.application.DB.Find(&applicants).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    applicants,
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: applicants,
 	})
 }
 
-func (controller *ApplicantController) GetApplicantByID(context *fiber.Ctx) error {
-	id := context.Params("id")
+func (controller *ApplicantController) GetApplicantByID(c *fiber.Ctx) error {
+	id := c.Params("id")
 	var applicant model.Applicant
-
 	if err := controller.application.DB.First(&applicant, id).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "Applicant not found",
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusNotFound, Message: "Applicant not found",
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    applicant,
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: applicant,
 	})
 }
 
-func (controller *ApplicantController) UpdateApplicant(context *fiber.Ctx) error {
+func (controller *ApplicantController) UpdateApplicant(c *fiber.Ctx) error {
 	applicant := new(model.Applicant)
-
-	if err := context.BodyParser(applicant); err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "cannot parse JSON",
+	if err := c.BodyParser(applicant); err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Cannot parse JSON",
 		})
 	}
 
 	var existing model.Applicant
 	if err := controller.application.DB.First(&existing, applicant.ID).Error; err != nil {
-		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "Applicant not found",
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusNotFound, Message: "Applicant not found",
 		})
 	}
 
 	if err := controller.application.DB.Save(applicant).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    applicant,
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: applicant,
 	})
 }
 
@@ -172,26 +157,20 @@ func (controller *ApplicantController) DeleteApplicant(c *fiber.Ctx) error {
 	var payload struct {
 		ID uint `json:"id"`
 	}
-
 	if err := c.BodyParser(&payload); err != nil || payload.ID == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "invalid id",
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Invalid ID",
 		})
 	}
 
-	if err := controller.application.DB.
-		Where("id = ?", payload.ID).
-		Delete(&model.Applicant{}).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+	if err := controller.application.DB.Where("id = ?", payload.ID).Delete(&model.Applicant{}).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    "Delete successful",
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Message: "Delete successful",
 	})
 }
 
@@ -200,30 +179,25 @@ func (controller *ApplicantController) ReadApplicantsFromFile(filePath string) (
 	if err != nil {
 		return nil, err
 	}
-
-	applicants := mapper.Deserialize()
-	return applicants, nil
+	return mapper.Deserialize(), nil
 }
 
-func (controller *ApplicantController) GetApplicantsFromFile(context *fiber.Ctx) error {
-	filePath := context.Query("path")
+func (controller *ApplicantController) GetApplicantsFromFile(c *fiber.Ctx) error {
+	filePath := c.Query("path")
 	if filePath == "" {
-		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "file path is required",
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "File path is required",
 		})
 	}
 
 	applicants, err := controller.ReadApplicantsFromFile(filePath)
 	if err != nil {
-		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    applicants,
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: applicants,
 	})
 }

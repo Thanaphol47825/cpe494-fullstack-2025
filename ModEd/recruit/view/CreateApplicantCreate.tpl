@@ -130,6 +130,6 @@
     <div id="resultBox" class="hidden mt-6 rounded-xl border bg-white p-4 text-sm"></div>
   </div>
 
-  <script src="{{ RootURL }}/recruit/static/js/CreateApplicant.js" defer></script>
+  <script src="{{ RootURL }}/recruit/static/js/ApplicantCreate.js" defer></script>
 </body>
 </html>

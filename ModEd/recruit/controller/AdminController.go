@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
@@ -28,8 +29,26 @@ func (controller *AdminController) SetApplication(application *core.ModEdApplica
 	controller.application = application
 }
 
+func (controller *AdminController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(controller.application.RootPath, "recruit", "view", "AdminCreate.tpl")
+
+	rendered := mustache.RenderFile(path, map[string]any{
+		"title":   "Create Admin",
+		"RootURL": controller.application.RootURL,
+	})
+
+	c.Set("Content-Type", "text/html; charset=utf-8")
+	return c.SendString(rendered)
+}
+
 func (controller *AdminController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/CreateAdminForm",
+		Handler: controller.RenderCreateForm,
+		Method:  core.GET,
+	})
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/Admin",

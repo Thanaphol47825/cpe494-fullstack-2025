@@ -22,7 +22,7 @@ func (controller *ApplicantController) SetApplication(application *core.ModEdApp
 }
 
 func (controller *ApplicantController) RenderCreateForm(c *fiber.Ctx) error {
-	path := filepath.Join(controller.application.RootPath, "recruit", "view", "CreateApplicant.tpl")
+	path := filepath.Join(controller.application.RootPath, "recruit", "view", "ApplicantCreate.tpl")
 
 	rendered := mustache.RenderFile(path, map[string]any{
 		"title":   "Create Applicant",

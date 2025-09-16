@@ -23,7 +23,7 @@ func (controller *ApplicationRoundController) SetApplication(application *core.M
 }
 
 func (ctl *ApplicationRoundController) RenderCreateForm(c *fiber.Ctx) error {
-	path := filepath.Join(ctl.application.RootPath, "recruit", "view", "ApplicationRound.tpl")
+	path := filepath.Join(ctl.application.RootPath, "recruit", "view", "ApplicationRoundCreate.tpl")
 	tmpl, err := mustache.ParseFile(path)
 	if err != nil {
 		return c.Status(http.StatusInternalServerError).SendString(err.Error())

@@ -55,7 +55,7 @@
         </section>
 
     </div>
-    <script src="{{ RootURL }}/recruit/static/js/InterviewCriteria.js" defer></script>
+    <script src="{{ RootURL }}/recruit/static/js/InterviewCriteriaCreate.js" defer></script>
 </body>
 
 </html>

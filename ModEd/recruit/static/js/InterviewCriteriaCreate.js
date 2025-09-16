@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // === ส่วนของ Form ===
   const form = document.getElementById('createCriteriaForm');
   
   if (form) {
@@ -54,7 +53,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // === ส่วนของปุ่ม Add Criteria ===
   const addCriteriaBtn = document.getElementById('addCriteriaBtn');
   if (addCriteriaBtn) {
     addCriteriaBtn.addEventListener('click', async function () {

@@ -189,7 +189,7 @@ func (controller *InterviewCriteriaController) RenderInterviewCriteriaForm(conte
 }
 
 func (controller *InterviewCriteriaController) RenderCreateInterviewCriteriaForm(context *fiber.Ctx) error {
-	path := filepath.Join(controller.application.RootPath, "recruit", "view", "CreateInterviewCriteria.tpl")
+	path := filepath.Join(controller.application.RootPath, "recruit", "view", "InterviewCriteriaCreate.tpl")
 	tmpl, err := mustache.ParseFile(path)
 	if err != nil {
 		return context.Status(http.StatusInternalServerError).SendString(err.Error())

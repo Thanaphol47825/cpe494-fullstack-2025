@@ -44,7 +44,7 @@ func (h *CoursePlanHandler) CreateCoursePlan(context *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	if err := h.Application.DB.Create(&payload).Error; err != nil {
+	if err := h.Application.DB.Create(payload).Error; err != nil {
 		return context.JSON(
 			fiber.Map{
 				"isSuccess": false,

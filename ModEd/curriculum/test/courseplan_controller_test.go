@@ -12,11 +12,11 @@ func TestCoursePlanController(t *testing.T) {
 	delId := 10
 	t.Run("create", func(t *testing.T) {
 		payload := map[string]any{
-			"week": 3,
-			"date": "2025-05-12T18:07:22.9416553+07:00",    
-			"course_id":1,
-			"topic": "Introduction to Computer Architecture",
-			"description": "Overview of course structure, grading policies, and introduction to basic computer architecture concepts.",
+			"Week": 3,
+			"Date": "2025-05-12T18:07:22.9416553+07:00",    
+			"CourseId":1,
+			"Topic": "Introduction to Computer Architecture",
+			"Description": "Overview of course structure, grading policies, and introduction to basic computer architecture concepts.",
 		}
 		utils.RequestTest(t, http.MethodPost, "/curriculum/CoursePlan/createCoursePlan", payload)
 	})

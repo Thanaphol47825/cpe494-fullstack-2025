@@ -51,5 +51,5 @@ func (controller *InternshipAttendanceController) GetRoute() []*core.RouteItem {
 
 func (controller *InternshipAttendanceController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
-	controller.handler.DB = application.DB
+	controller.handler.Application = application
 }

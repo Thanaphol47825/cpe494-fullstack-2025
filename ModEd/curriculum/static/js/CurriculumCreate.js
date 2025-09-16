@@ -16,7 +16,7 @@
 
             // Create select element
             const select = document.createElement("select");
-            select.name = "Department";
+            select.name = "DepartmentId";
             select.className = "w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500";
 
             // Add default not-selected option
@@ -59,15 +59,16 @@
                 Name: formData.get('Name'),
                 StartYear: parseInt(formData.get('StartYear')),
                 EndYear: parseInt(formData.get('EndYear')),
-                DepartmentId: parseInt(formData.get('Department')),
+                DepartmentId: parseInt(formData.get('DepartmentId')),
                 ProgramType: parseInt(formData.get('ProgramType')),
             };
 
+            console.log(payload);
             if (!payload.DepartmentId) {
                 alert("Please select a department.");
                 return;
             }
-            if (!payload.ProgramType) {
+            if (payload.ProgramType == NaN) {
                 alert("Please select a program type.");
                 return;
             }

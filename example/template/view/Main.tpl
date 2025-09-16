@@ -4,6 +4,9 @@
 		<script src="{{ RootURL }}static/js/TemplateEngine.js"></script>
 		<script src="{{ RootURL }}static/js/mustache.min.js"></script>
 		<script src="{{ RootURL }}static/js/DOMObject.js"></script>
+
+		<script src="{{ RootURL }}static/js/HRApplication.js"></script>
+
 		<script>
 			let RootURL = "{{ RootURL }}";
 			let engine = new TemplateEngine();

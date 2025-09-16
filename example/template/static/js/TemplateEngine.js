@@ -25,7 +25,13 @@ class TemplateEngine{
 		}));
 		this.form.append(this.input.name);
 		this.form.append(this.create(this.template.Submit));
-		this.form.addEventListener("submit", this.submit)
+		this.form.addEventListener("submit", this.submit);
+		let button = this.create('<a href="#" id="HRButton">HR Module</a>');
+		let hr = new HRApplication(this);
+		button.onclick = () => {
+			return hr.render();
+		}
+		this.mainContainer.append(button);
 	}
 
 	create(code){

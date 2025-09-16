@@ -5,9 +5,11 @@ import (
 	"ModEd/common/util"
 	"ModEd/core"
 	"fmt"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type DepartmentController struct {
@@ -96,7 +98,14 @@ func (controller *DepartmentController) SetApplication(application *core.ModEdAp
 }
 
 func (controller *DepartmentController) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello common/Department")
+	path := filepath.Join(controller.application.RootPath, "common", "view", "Department.tpl")
+	template, _ := mustache.ParseFile(path)
+	rendered := template.Render(map[string]string{
+		"title":   "ModEd Department Form",
+		"RootURL": controller.application.RootURL,
+	})
+	context.Set("Content-Type", "text/html")
+	return context.SendString(rendered)
 }
 
 func (controller *DepartmentController) GetInfo(context *fiber.Ctx) error {

@@ -5,9 +5,11 @@ import (
 	"ModEd/common/util"
 	"ModEd/core"
 	"fmt"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type FacultyController struct {
@@ -137,7 +139,14 @@ func NewFacultyController() *FacultyController {
 }
 
 func (controller *FacultyController) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello common/Faculty")
+	path := filepath.Join(controller.application.RootPath, "common", "view", "Faculty.tpl")
+	template, _ := mustache.ParseFile(path)
+	rendered := template.Render(map[string]string{
+		"title":   "ModEd Faculty Form",
+		"RootURL": controller.application.RootURL,
+	})
+	context.Set("Content-Type", "text/html")
+	return context.SendString(rendered)
 }
 
 func (controller *FacultyController) GetInfo(context *fiber.Ctx) error {

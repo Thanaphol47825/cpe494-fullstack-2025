@@ -50,12 +50,19 @@ func (application *ModEdApplication) loadConfig() {
 }
 
 func (application *ModEdApplication) setConfigStaticServe() {
-	application.Application.Static("/common/static", filepath.Join(application.RootPath, "common", "static"))
-	application.Application.Static("/curriculum/static", filepath.Join(application.RootPath, "curriculum", "static"))
-	application.Application.Static("/eval/static", filepath.Join(application.RootPath, "eval", "static"))
-	application.Application.Static("/hr/static", filepath.Join(application.RootPath, "hr", "static"))
-	application.Application.Static("/project/static", filepath.Join(application.RootPath, "project", "static"))
-	application.Application.Static("/recruit/static", filepath.Join(application.RootPath, "recruit", "static"))
+	// Automatically find all subfolders named 'static' and serve their contents
+	filepath.Walk(application.RootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && info.Name() == "static" {
+			parent := filepath.Base(filepath.Dir(path))
+			// Serve at /<parent>/static
+			urlPath := "/" + parent + "/static"
+			application.Application.Static(urlPath, path)
+		}
+		return nil
+	})
 }
 
 // NOTE: Singleton

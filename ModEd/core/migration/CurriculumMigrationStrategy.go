@@ -14,12 +14,14 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 		&model.CoursePlan{},
 		&model.Advisor{},
 		&model.Company{},
+		&model.InternshipApplication{},
 		&model.InternshipReport{},
-		// &model.InternshipResultEvaluation{},
+		&model.InternshipResultEvaluation{},
 		// &model.InternshipMentor{},
 		&model.InternStudent{},
-		// &model.InternshipAttendance{},
-		// &model.InternshipCriteria{},
+		&model.InternshipAttendance{},
+		&model.InternshipCriteria{},
+		&model.SupervisorReview{},
 	}
 }
 
@@ -37,5 +39,7 @@ func (s *CurriculumMigrationStrategy) GetSeedPath() []SeedPath {
 		{Path: "data/curriculum/internStudent.json", Model: &[]model.InternStudent{}},
 		{Path: "data/curriculum/internshipMentor.json", Model: &[]model.InternshipMentor{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipAttendance{}},
+		{Path: "data/curriculum/internshipApplication.json", Model: &[]model.InternshipApplication{}},
+		{Path: "data/curriculum/internshipCriteria.json", Model: &[]model.InternshipCriteria{}},
 	}
 }

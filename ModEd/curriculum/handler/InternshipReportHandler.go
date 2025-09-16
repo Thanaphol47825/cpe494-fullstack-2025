@@ -14,7 +14,7 @@ import (
 
 type InternshipReportHandler struct {
 	DB  *gorm.DB
-	app *core.ModEdApplication 
+	app *core.ModEdApplication
 }
 
 func (h *InternshipReportHandler) SetApplication(app *core.ModEdApplication) { h.app = app }
@@ -45,8 +45,6 @@ func (h *InternshipReportHandler) RenderCreateForm(c *fiber.Ctx) error {
 	c.Set("Content-Type", "text/html")
 	return c.SendString(html)
 }
-
-// ---------- CRUD (ใช้ DB ล้วน) ----------
 
 func (h *InternshipReportHandler) GetAllInternshipReport(c *fiber.Ctx) error {
 	var reports []model.InternshipReport
@@ -79,7 +77,6 @@ func (h *InternshipReportHandler) CreateInternshipReport(c *fiber.Ctx) error {
 		return c.Redirect("/curriculum/InternshipReport/create?error="+url.QueryEscape("failed to create internship report"), fiber.StatusSeeOther)
 	}
 
-	// PRG: POST → Redirect
 	return c.Redirect("/curriculum/InternshipReport/create?success=1", fiber.StatusSeeOther)
 }
 

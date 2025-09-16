@@ -19,7 +19,6 @@ func NewInternshipReportController() *InternshipReportController {
 func (controller *InternshipReportController) GetRoute() []*core.RouteItem {
 	r := []*core.RouteItem{}
 
-	// ⚠️ static route มาก่อน เพื่อไม่ชนกับ :id
 	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/InternshipReport/create",
 		Handler: controller.handler.RenderCreateForm,
@@ -59,5 +58,5 @@ func (controller *InternshipReportController) GetRoute() []*core.RouteItem {
 func (controller *InternshipReportController) SetApplication(app *core.ModEdApplication) {
 	controller.application = app
 	controller.handler.DB = app.DB
-	controller.handler.SetApplication(app) // ← ส่ง app เข้า handler ผ่าน setter
+	controller.handler.SetApplication(app)
 }

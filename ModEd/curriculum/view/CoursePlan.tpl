@@ -21,8 +21,8 @@
                     class="grid grid-cols-1 md:grid-cols-2 gap-4"
                 >
                     <div>
-                        <label class="block text-sm font-medium mb-1">Course Id<span class="text-red-500">*</span></label>
-                        <input type="number" name="course_id" min="0" required class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Enter a course id" />
+                      <label class="block text-sm font-medium mb-1">Course<span class="text-red-500">*</span></label>
+                      <div id="CourseSelectContainer"></div>
                     </div>
 
                     <div>
@@ -52,6 +52,7 @@
             </section>
         </div>
 
+        <script src="{{ RootURL }}/curriculum/static/js/CoursePlanCreate.js?v=1" defer></script>
     </body>
 
 </html>

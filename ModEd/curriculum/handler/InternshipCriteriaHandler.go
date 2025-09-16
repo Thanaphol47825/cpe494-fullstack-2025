@@ -1,23 +1,38 @@
 package handler
 
 import (
+	"ModEd/core"
 	"ModEd/curriculum/model"
+	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
 type InternshipCriteriaHandler struct {
-	DB *gorm.DB
+	DB          *gorm.DB
+	Application *core.ModEdApplication
 }
 
 func NewInternshipCriteriaHandler() *InternshipCriteriaHandler {
 	return &InternshipCriteriaHandler{}
 }
 
-func (controller *InternshipCriteriaHandler) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello curriculum/InternshipCriteria")
+func (c *InternshipCriteriaHandler) RenderMain(context *fiber.Ctx) error {
+	path := filepath.Join(c.Application.RootPath, "curriculum", "view", "InternshipCriteria.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return context.SendStatus(http.StatusInternalServerError)
+	}
+	rendered := tmpl.Render(map[string]any{
+		"title":   "Internship Criteria Management",
+		"RootURL": c.Application.RootURL,
+	})
+	context.Set("Content-Type", "text/html; charset=utf-8")
+	return context.SendString(rendered)
 }
 
 func (c *InternshipCriteriaHandler) GetInternshipCriterias(context *fiber.Ctx) error {

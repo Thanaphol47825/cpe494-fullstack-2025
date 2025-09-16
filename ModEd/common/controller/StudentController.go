@@ -5,7 +5,6 @@ import (
 	"ModEd/common/util"
 	"ModEd/core"
 	"fmt"
-	"net/http"
 	"path/filepath"
 	"strconv"
 

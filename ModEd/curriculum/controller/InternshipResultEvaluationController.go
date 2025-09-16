@@ -17,37 +17,51 @@ func NewInternshipResultEvaluationController() *InternshipResultEvaluationContro
 }
 
 func (controller *InternshipResultEvaluationController) GetRoute() []*core.RouteItem {
-	routeList := []*core.RouteItem{}
+	r := []*core.RouteItem{}
 
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/InternshipResultEvaluation",
-		Handler: controller.handler.GetAllInternshipResultEvaluation, 
+	// Form (static) มาก่อนเสมอ กันชน :id
+	r = append(r, &core.RouteItem{
+		Route:   "/curriculum/InternshipResultEvaluation/create",
+		Handler: controller.handler.RenderCreateForm,
 		Method:  core.GET,
 	})
-	routeList = append(routeList, &core.RouteItem{
+
+	// List
+	r = append(r, &core.RouteItem{
+		Route:   "/curriculum/InternshipResultEvaluation",
+		Handler: controller.handler.GetAllInternshipResultEvaluation,
+		Method:  core.GET,
+	})
+
+	// Create
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/CreateInternshipResultEvaluation",
 		Handler: controller.handler.CreateInternshipResultEvaluation,
 		Method:  core.POST,
 	})
-	routeList = append(routeList, &core.RouteItem{
+
+	// Read / Update / Delete by id
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/InternshipResultEvaluation/:id",
-		Handler: controller.handler.GetInternshipResultEvaluationByID, 
+		Handler: controller.handler.GetInternshipResultEvaluationByID,
 		Method:  core.GET,
 	})
-	routeList = append(routeList, &core.RouteItem{
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/UpdateInternshipResultEvaluation/:id",
-		Handler: controller.handler.UpdateInternshipResultEvaluationByID, 
+		Handler: controller.handler.UpdateInternshipResultEvaluationByID,
 		Method:  core.POST,
 	})
-	routeList = append(routeList, &core.RouteItem{
+	r = append(r, &core.RouteItem{
 		Route:   "/curriculum/DeleteInternshipResultEvaluation/:id",
-		Handler: controller.handler.DeleteInternshipResultEvaluationByID, 
+		Handler: controller.handler.DeleteInternshipResultEvaluationByID,
 		Method:  core.POST,
 	})
 
-	return routeList
+	return r
 }
 
-func (controller *InternshipResultEvaluationController) SetApplication(application *core.ModEdApplication) {
-	controller.application = application
+func (controller *InternshipResultEvaluationController) SetApplication(app *core.ModEdApplication) {
+	controller.application = app
+	controller.handler.DB = app.DB
+	controller.handler.SetApplication(app) // ส่ง app ให้ handler ใช้ RootPath/RootURL
 }

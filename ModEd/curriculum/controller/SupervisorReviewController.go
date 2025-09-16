@@ -26,8 +26,32 @@ func (controller *SupervisorReviewController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/SupervisorReview/GetSupervisorReviews",
+		Route:   "/curriculum/SupervisorReview/GetAllSupervisorReviews",
 		Handler: controller.handler.GetSupervisorReviews,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/SupervisorReview/:id",
+		Handler: controller.handler.GetSupervisorReviewByID,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/SupervisorReview/create",
+		Handler: controller.handler.CreateSupervisorReview,
+		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/SupervisorReview/update/:id",
+		Handler: controller.handler.UpdateSupervisorReviewByID,
+		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/SupervisorReview/delete/:id",
+		Handler: controller.handler.DeleteSupervisorReviewByID,
 		Method:  core.GET,
 	})
 	return routeList
@@ -35,4 +59,5 @@ func (controller *SupervisorReviewController) GetRoute() []*core.RouteItem {
 
 func (controller *SupervisorReviewController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
+	controller.handler.DB = application.DB
 }

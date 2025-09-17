@@ -1,0 +1,32 @@
+[
+  {
+    "label": "Common Module",
+    "className": "CommonApplication",
+    "script": "/common/static/js/CommonApplication.js"
+  },
+  {
+    "label": "Curriculum Module",
+    "className": "CurriculumApplication",
+    "script": "/curriculum/static/js/CurriculumApplication.js"
+  },
+  {
+    "label": "Eval Module",
+    "className": "EvalApplication",
+    "script": "/eval/static/js/EvalApplication.js"
+  },
+  {
+    "label": "Hr Module",
+    "className": "HrApplication",
+    "script": "/hr/static/js/HrApplication.js"
+  },
+  {
+    "label": "Project Module",
+    "className": "ProjectApplication",
+    "script": "/project/static/js/ProjectApplication.js"
+  },
+  {
+    "label": "Recruit Module",
+    "className": "RecruitApplication",
+    "script": "/recruit/static/js/RecruitApplication.js"
+  }
+]

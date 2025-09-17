@@ -3,12 +3,15 @@ package core
 import (
 	"ModEd/core/config"
 	"ModEd/core/database"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
@@ -65,6 +68,39 @@ func (application *ModEdApplication) setConfigStaticServe() {
 	})
 }
 
+func (application *ModEdApplication) setSPAServe() {
+	application.Application.Get("/", func(context *fiber.Ctx) error {
+		path := filepath.Join(application.RootPath, "core", "view", "Main.tpl")
+		tmpl, _ := mustache.ParseFile(path)
+
+		file, err := os.ReadFile(filepath.Join(application.RootPath, "modules.json"))
+		if err != nil {
+			log.Fatalf("Error reading modules.json: %v", err)
+		}
+
+		var moduleList []struct {
+			Label     string `json:"label"`
+			ClassName string `json:"className"`
+			Script    string `json:"script"`
+		}
+		if err := json.Unmarshal(file, &moduleList); err != nil {
+			log.Fatalf("Error unmarshalling modules.json: %v", err)
+		}
+		modulesJSON, err := json.Marshal(moduleList)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		rendered := tmpl.Render(map[string]any{
+			"title":   "ModEd",
+			"RootURL": application.RootURL,
+			"modules": string(modulesJSON),
+		})
+		context.Set("Content-Type", "text/html; charset=utf-8")
+		return context.SendString(rendered)
+	})
+}
+
 // NOTE: Singleton
 var application *ModEdApplication
 
@@ -79,6 +115,7 @@ func GetApplication() *ModEdApplication {
 
 		application.loadConfig()
 		application.setConfigStaticServe()
+		application.setSPAServe()
 
 		db, err := database.ConnectPostgres(application.Configuration.Database.Dsn)
 		if err != nil {

@@ -8,7 +8,7 @@ class CurriculumApplication {
     // { label: "create course", script: "/curriculum/static/js/CourseCreate.js", className: "CourseCreate" },
     // { label: "create class", script: "/curriculum/static/js/ClassCreate.js", className: "ClassCreate" },
     // { label: "create class material", script: "/curriculum/static/js/ClassMaterialCreate.js", className: "ClassMaterialCreate" },
-    // { label: "create course plan", script: "/curriculum/static/js/CoursePlanCreate.js", className: "CoursePlanCreate" },
+    { label: "create course plan", script: "/curriculum/static/js/CoursePlanCreate.js", className: "CoursePlanCreate" },
   ]
   async render() {
     this.application.mainContainer.innerHTML = ""

@@ -4,7 +4,12 @@ class InternshipApplication {
     }
 
     models = [
-        { label: "create internship criteria", script: "/curriculum/static/js/InternshipCriteriaCreate.js", className: "InternshipCriteriaCreate" },
+        { label: "internship application", script: "/curriculum/static/js/InternshipApplicationCreate.js", className: "InternshipApplicationCreate" },
+        { label: "internship report", script: "/curriculum/static/js/InternshipReportCreate.js", className: "InternshipReportCreate" },
+        { label: "internship evaluation", script: "/curriculum/static/js/InternshipEvaluationCreate.js", className: "InternshipEvaluationCreate" },
+        { label: "internship mentor", script: "/curriculum/static/js/InternshipMentorCreate.js", className: "InternshipMentorCreate" },
+        { label: "internship attendance", script: "/curriculum/static/js/InternshipAttendanceCreate.js", className: "InternshipAttendanceCreate" },
+        { label: "internship criteria", script: "/curriculum/static/js/InternshipCriteriaCreate.js", className: "InternshipCriteriaCreate" },
     ]
 
     async render() {

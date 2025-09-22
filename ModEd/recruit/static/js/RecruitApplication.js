@@ -8,6 +8,11 @@ class RecruitApplication {
         className: "ApplicantCreate",
         script: "/recruit/static/js/ApplicantCreate.js",
       },
+      {
+      label: "Create Application Round",
+      className: "ApplicationRoundCreate",
+      script: "/recruit/static/js/ApplicationRoundCreate.js",
+      },
 
     ];
   }

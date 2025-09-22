@@ -45,6 +45,16 @@ class HrApplication {
           }
           return () => new window.HrStudentLeaveCreateFeature(this.templateEngine, this.rootURL);
         }
+      },
+      'resignation-instructor-request/create': {
+        title: 'Instructor Resignation Request',
+        // Lazy loader for the feature script
+        load: async () => {
+        if (!window.HrInstructorResignationFormFeature) {
+          await this.templateEngine.fetchModule('/hr/static/js/features/InstructorResignationForm.js');
+          }
+          return () => new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL);
+        }
       }
       // In the future: add more features like 'student/create', 'instructor/resign', etc.
     };

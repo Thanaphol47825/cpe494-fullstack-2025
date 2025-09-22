@@ -67,30 +67,34 @@
 </head>
 <body>
     <h1>Internship Attendance</h1>
-    <form method="POST" action="/curriculum/CreateInternshipAttendance">
-        <label for="Date">Date:</label>
-        <input type="date" id="Date" name="Date" required><br>
+    <form method="POST" action="/curriculum/InternshipAttendance/CreateInternshipAttendance">
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required><br>
 
-        <label for="CheckInTime">Check-In Time:</label>
-        <input type="time" id="CheckInTime" name="CheckInTime" required><br>
+        <label for="check_in_time">Check-In Time:</label>
+        <input type="time" id="check_in_time" name="check_in_time" required><br>
 
-        <label for="CheckOutTime">Check-Out Time:</label>
-        <input type="time" id="CheckOutTime" name="CheckOutTime" required><br>
+        <label for="check_out_time">Check-Out Time:</label>
+        <input type="time" id="check_out_time" name="check_out_time" required><br>
 
-        <label for="CheckInStatus">Check-In Status:</label>
-        <input type="text" id="CheckInStatus" name="CheckInStatus" value="Auto-generated" readonly><br>
+        <label for="check_in_status">Check-In Status:</label>
+        <select id="check_in_status" name="check_in_status">
+            <option value="true">On Time</option>
+            <option value="false">Late</option>
+        </select><br>
 
-        <label for="AssingWork">Assigned Work:</label>
-        <select id="AssingWork" name="AssingWork">
+        <label for="assing_work">Assigned Work:</label>
+        <select id="assing_work" name="assing_work">
             <option value="none">None</option>
             <option value="pending">Pending</option>
             <option value="completed">Completed</option>
         </select><br>
 
-        <label for="StudentInfoID">Student Info ID:</label>
-        <input type="number" id="StudentInfoID" name="StudentInfoID" value="Auto-generated" readonly><br>
+        <label for="student_info_id">Student Info ID:</label>
+        <input type="number" id="student_info_id" name="student_info_id" placeholder="Enter Student Info ID" required><br>
 
         <button type="submit">Check in</button>
     </form>
+
 </body>
 </html>

@@ -1,10 +1,39 @@
-(() => {
-    const ROOT = window.__ROOT_URL__ || "";
-    const form = document.getElementById("classMaterialForm");
+class ClassMaterialCreate {
+    constructor(application) {
+        this.application = application;
+    }
 
-    const getClasses = async () => {
+    classMaterialTemplate = `
+    <form
+        id="classMaterialForm"
+        method="post"
+        action="{{ RootURL }}/curriculum/ClassMaterial/createClassMaterial"
+        class="flex flex-col gap-6"
+    >
+        <div>
+            <label class="block text-sm font-medium mb-1"> <span class="text-red-500">Class</span></label>
+            <div id="classSelectContainer"></div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium mb-1">File Name</label>
+            <input required name="FileName" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Class Material File Name" />
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium mb-1">File Path</label>
+            <input required name="FilePath" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="/path/to/your/file" />
+        </div>
+
+        <div class="md:col-span-2">
+            <button type="submit" class="w-full bg-indigo-600 text-white rounded-xl px-4 py-2 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Save Class Material</button>
+        </div>
+    </form>
+    `
+
+    getClasses = async () => {
         try {
-            const res = await fetch(`${ROOT}/curriculum/Class/getClasses`, {
+            const res = await fetch(`${RootURL}/curriculum/Class/getClasses`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
@@ -42,7 +71,7 @@
                     formattedSchedule = `${yyyy}-${mm}-${dd} | ${hh}:${min}`;
                 }
 
-                option.textContent = item.Course.name + " - " + formattedSchedule;
+                option.textContent = item.Course.Name + " - " + formattedSchedule;
                 select.appendChild(option);
             });
             return select;
@@ -52,9 +81,9 @@
         }
     }
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
+    handleSubmit = async (e) => {
+        e.preventDefault(); // prevent default form submission
+        const formData = new FormData(this.form);
         const payload = Object.fromEntries(formData.entries());
 
         if (!payload.ClassId) {
@@ -64,7 +93,7 @@
         payload.ClassId = parseInt(payload.ClassId);
 
         try {
-            const res = await fetch(form.action, {
+            const res = await fetch(this.form.action, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -72,7 +101,8 @@
             const data = await res.json();
             if (data.isSuccess) {
                 alert("Class Material saved!");
-                form.reset();
+                this.form.reset();
+                this.form.ClassId.value = "";
             } else {
                 alert("Error: " + (data.result || "Failed to save"));
             }
@@ -81,16 +111,22 @@
         }
     };
 
-    // Example usage: render select into a div with id="classSelectContainer"
-    document.addEventListener("DOMContentLoaded", async () => {
-        const container = document.getElementById("classSelectContainer");
-        if (container) {
-            const select = await getClasses();
-            container.appendChild(select);
-        }
+    render = async () => {
+        // clear application container
+        this.application.mainContainer.innerHTML = "";
 
-        if (form) {
-            form.addEventListener("submit", handleSubmit);
-        }
-    });
-})();
+        const renderedTemplate = Mustache.render(this.classMaterialTemplate, {
+            RootURL: RootURL
+        });
+
+        let formContainer = this.application.create(renderedTemplate)
+        this.application.mainContainer.append(formContainer)
+
+        this.options = await this.getClasses();
+        this.selectContainer = document.getElementById("classSelectContainer");
+        this.selectContainer.appendChild(this.options);
+        
+        this.form = document.getElementById("classMaterialForm");
+        this.form.addEventListener("submit", this.handleSubmit);
+    }
+}

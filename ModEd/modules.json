@@ -10,6 +10,11 @@
     "script": "/curriculum/static/js/CurriculumApplication.js"
   },
   {
+    "label": "Internship Module",
+    "className": "InternshipApplication",
+    "script": "/curriculum/static/js/InternshipApplication.js"
+  },
+  {
     "label": "Eval Module",
     "className": "EvalApplication",
     "script": "/eval/static/js/EvalApplication.js"

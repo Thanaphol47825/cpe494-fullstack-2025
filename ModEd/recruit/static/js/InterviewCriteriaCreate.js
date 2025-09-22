@@ -5,29 +5,69 @@ class InterviewCriteriaCreate {
     this.RootURL = window.__ROOT_URL__ || "";
   }
 
-  async render() {
-    const formTpl = `
-      <h2>Create Interview Criteria</h2>
-      <form id="createCriteriaForm" class="grid grid-cols-1 gap-4">
-        {{#fields}}
-        <div>
-          <label class="block text-sm font-medium mb-1">{{label}}</label>
-          <input name="{{name}}" type="{{type}}" value="{{value}}" required
-                 class="w-full rounded-xl border border-gray-300 px-3 py-2" />
-        </div>
-        {{/fields}}
+async render() {
+    console.log("InterviewCriteriaCreate: render()");
 
-        <div class="flex items-center gap-3 pt-2">
-          <button id="submitCreateCriteria" type="submit"
-            class="inline-flex items-center rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-700">Save</button>
-          <button type="reset"
-            class="inline-flex items-center rounded-xl border px-4 py-2 font-medium hover:bg-gray-50">Reset</button>
-          <button id="addCriteriaBtn" type="button"
-            class="inline-flex items-center rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-700">Add config</button>
-          <span id="formMessage" class="text-sm text-gray-600"></span>
+    if (!document.querySelector('script[src*="cdn.tailwindcss.com"]')) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.tailwindcss.com";
+      document.head.appendChild(script);
+    }
+
+    const formTpl = `
+      <div class="max-w-4xl mx-auto py-10 px-4">
+        <header class="mb-6">
+          <h1 class="text-3xl font-bold tracking-tight text-gray-800">
+            Create Interview Criteria
+          </h1>
+          <p class="text-sm text-gray-500">
+            เพิ่มการตั้งค่าเกณฑ์การสัมภาษณ์สำหรับการรับสมัคร
+          </p>
+        </header>
+        
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <form id="createCriteriaForm" class="grid grid-cols-1 gap-4">
+            {{#fields}}
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">{{label}}</label>
+              <input name="{{name}}" type="{{type}}" value="{{value}}" required
+                     class="w-full rounded-lg border border-gray-300 px-3 py-2 bg-white text-gray-800 
+                            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 
+                            transition" />
+            </div>
+            {{/fields}}
+
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 pt-4 border-t border-gray-100">
+              <div class="flex gap-2 flex-1">
+                <button id="submitCreateCriteria" type="submit"
+                  class="flex-1 inline-flex justify-center items-center rounded-lg bg-indigo-600 text-white 
+                         px-4 py-2 text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 
+                         focus:ring-indigo-400 transition">
+                  Save Criteria
+                </button>
+                <button type="reset"
+                  class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2 text-sm 
+                         text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 
+                         transition">
+                  Reset
+                </button>
+              </div>
+              
+              <div class="flex items-center gap-3">
+                <button id="addCriteriaBtn" type="button"
+                  class="inline-flex items-center rounded-lg border border-indigo-200 text-indigo-700 
+                         px-3 py-2 text-sm hover:bg-indigo-50 focus:outline-none focus:ring-2 
+                         focus:ring-indigo-400 transition">
+                  Add Config
+                </button>
+                <span id="formMessage" class="text-sm text-gray-500 min-w-[120px]"></span>
+              </div>
+            </div>
+          </form>
+
+          <pre id="resultBox" class="hidden mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm text-gray-700 overflow-auto max-h-64"></pre>
         </div>
-      </form>
-      <pre id="resultBox" class="hidden mt-6 rounded-xl border p-4 text-sm"></pre>
+      </div>
     `;
 
     const fields = [
@@ -45,7 +85,7 @@ class InterviewCriteriaCreate {
 
     const addBtn = document.getElementById("addCriteriaBtn");
     if (addBtn) addBtn.addEventListener("click", (e) => this.addConfig(e));
-  }
+}
 
   async submit(e) {
     e.preventDefault();

@@ -5,6 +5,7 @@
   <script src="{{ RootURL }}/core/static/js/TemplateEngine.js"></script>
   <script src="{{ RootURL }}/core/static/js/mustache.min.js"></script>
   <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
+  <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
 
   <script>
     let RootURL = "{{ RootURL }}";

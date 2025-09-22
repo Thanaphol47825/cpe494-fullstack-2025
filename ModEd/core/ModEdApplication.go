@@ -82,6 +82,7 @@ func (application *ModEdApplication) setSPAServe() {
 			Label     string `json:"label"`
 			ClassName string `json:"className"`
 			Script    string `json:"script"`
+			BaseRoute string `json:"baseRoute"`
 		}
 		if err := json.Unmarshal(file, &moduleList); err != nil {
 			log.Fatalf("Error unmarshalling modules.json: %v", err)

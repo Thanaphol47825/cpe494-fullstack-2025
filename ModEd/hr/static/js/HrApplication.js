@@ -28,7 +28,7 @@ class HrApplication {
           return () => new window.HrStudentFormFeature(this.templateEngine, this.rootURL);
         }
       },
-      'resignation-student-request': {
+      'resignation-student-request/create': {
         title: 'Add Resignation Request for Student',
         load: async () => {
           if (!window.HrResignationStudentFormFeature) {

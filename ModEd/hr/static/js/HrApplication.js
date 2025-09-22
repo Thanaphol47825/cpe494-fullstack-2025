@@ -31,14 +31,14 @@ class HrApplication {
       // In the future: add more features like 'student/create', 'instructor/resign', etc.
     };
 
-    console.log('✅ HrApplication initialized with Core Template Engine');
+    console.log('HrApplication initialized with Core Template Engine');
   }
 
   // 🚀 Main render method - เรียกจาก Core TemplateEngine
   async render() {
     console.log("🎯 Loading HR Module (orchestrator)");
     if (!this.templateEngine || !this.templateEngine.mainContainer) {
-      console.error("❌ Template engine or main container not found");
+      console.error("Template engine or main container not found");
       return false;
     }
 
@@ -96,7 +96,7 @@ class HrApplication {
   async navigateTo(id) {
     const featureMeta = this.features[id];
     if (!featureMeta) {
-      console.error(`❌ Unknown HR feature: ${id}`);
+      console.error(`Unknown HR feature: ${id}`);
       return false;
     }
 
@@ -105,7 +105,7 @@ class HrApplication {
       const feature = getInstance();
       return await feature.render();
     } catch (err) {
-      console.error(`❌ Failed to load/render HR feature '${id}'`, err);
+      console.error(`Failed to load/render HR feature '${id}'`, err);
       return false;
     }
   }
@@ -115,5 +115,3 @@ class HrApplication {
 if (typeof window !== 'undefined') {
   window.HrApplication = HrApplication;
 }
-
-console.log("📦 HrApplication loaded - Ready for Core Template Engine integration");

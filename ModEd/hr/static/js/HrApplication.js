@@ -27,6 +27,15 @@ class HrApplication {
           }
           return () => new window.HrStudentFormFeature(this.templateEngine, this.rootURL);
         }
+      },
+      'resignation-student-request': {
+        title: 'Add Resignation Request for Student',
+        load: async () => {
+          if (!window.HrResignationStudentFormFeature) {
+            await this.templateEngine.fetchModule('/hr/static/js/features/ResignationStudentForm.js');
+          }
+          return () => new window.HrResignationStudentFormFeature(this.templateEngine, this.rootURL);
+        }
       }
       // In the future: add more features like 'student/create', 'instructor/resign', etc.
     };

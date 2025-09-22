@@ -10,10 +10,16 @@ class InternshipCriteriaCreate {
     async render() {
         console.log("Create Internship Criteria Form");
         console.log(this.application);
-        
+
+        if (!document.querySelector('script[src*="tailwindcss"]') && !document.querySelector('link[href*="tailwind"]')) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4";
+            document.head.appendChild(script);
+        }
+
         // Load initial data
         await this.loadCriteria();
-        
+
         this.application.mainContainer.innerHTML = `
             <div class="container mx-auto p-6 max-w-7xl">
                 <!-- Form Section -->
@@ -201,11 +207,10 @@ class InternshipCriteriaCreate {
         for (let i = startPage; i <= endPage; i++) {
             paginationHTML += `
                 <button onclick="internshipCriteriaCreate.goToPage(${i})" 
-                    class="px-3 py-1 text-sm border rounded-md transition-colors duration-200 ${
-                        i === this.currentPage 
-                            ? 'bg-blue-600 text-white border-blue-600' 
-                            : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }">
+                    class="px-3 py-1 text-sm border rounded-md transition-colors duration-200 ${i === this.currentPage
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                }">
                     ${i}
                 </button>
             `;
@@ -268,7 +273,7 @@ class InternshipCriteriaCreate {
         try {
             // Mock API call - replace with actual endpoint
             console.log('Creating criteria:', data);
-            
+
             // Add to local data (simulate successful creation)
             const newItem = {
                 id: this.criteria.length + 1,
@@ -279,13 +284,13 @@ class InternshipCriteriaCreate {
 
             // Reset form
             document.getElementById('criteriaForm').reset();
-            
+
             // Refresh table
             this.refreshTable();
-            
+
             // Show success message
             this.showMessage('Criteria created successfully!', 'success');
-            
+
         } catch (error) {
             console.error('Error creating criteria:', error);
             this.showMessage('Error creating criteria. Please try again.', 'error');
@@ -311,7 +316,7 @@ class InternshipCriteriaCreate {
             document.getElementById('description').value = criteria.description;
             document.getElementById('score').value = criteria.score;
             document.getElementById('internshipApplicationId').value = criteria.internshipApplicationId;
-            
+
             // Scroll to form
             document.getElementById('criteriaForm').scrollIntoView({ behavior: 'smooth' });
         }
@@ -321,13 +326,13 @@ class InternshipCriteriaCreate {
         if (confirm('Are you sure you want to delete this criteria?')) {
             this.criteria = this.criteria.filter(c => c.id !== id);
             this.totalItems = this.criteria.length;
-            
+
             // Adjust current page if necessary
             const totalPages = this.getTotalPages();
             if (this.currentPage > totalPages && totalPages > 0) {
                 this.currentPage = totalPages;
             }
-            
+
             this.refreshTable();
             this.showMessage('Criteria deleted successfully!', 'success');
         }
@@ -336,13 +341,12 @@ class InternshipCriteriaCreate {
     showMessage(message, type) {
         // Create and show a toast message
         const toast = document.createElement('div');
-        toast.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 ${
-            type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-        }`;
+        toast.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
         toast.textContent = message;
-        
+
         document.body.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.remove();
         }, 3000);

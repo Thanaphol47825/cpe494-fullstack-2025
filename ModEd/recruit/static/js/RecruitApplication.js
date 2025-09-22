@@ -26,26 +26,59 @@ class RecruitApplication {
     ];
   }
 
+  async ensureTailwind() {
+    if (!document.querySelector('script[src*="cdn.tailwindcss.com"]')) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.tailwindcss.com";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+  }
+
   async render() {
-    console.log("Do something with RecruitApplication.");
-    this.application.mainContainer.innerHTML = "<h2>Overwritten with RecruitApplication</h2>";
+    console.log("RecruitApplication: render()");
+
+    await this.ensureTailwind();
+
+    this.application.mainContainer.innerHTML = `
+      <div class="max-w-4xl mx-auto py-10 px-4">
+        <header class="mb-6">
+          <h1 class="text-3xl font-bold tracking-tight text-gray-800">
+            Recruit Module
+          </h1>
+          <p class="text-sm text-gray-500">
+            Choose an action below to manage recruitment.
+          </p>
+        </header>
+        <div id="RecruitButtons" class="flex flex-wrap gap-3"></div>
+      </div>
+    `;
+
+    const buttonContainer = this.application.mainContainer.querySelector("#RecruitButtons");
 
     for (const module of this.subModules) {
-
       await this.application.fetchModule(module.script);
 
-      let button = this.application.create(`
-        <a href="#" id="${module.label}">${module.label}</a>
+      const button = this.application.create(`
+        <button id="${module.label}" 
+          class="rounded-lg bg-indigo-600 px-4 py-2 text-white 
+                 hover:bg-indigo-700 focus:outline-none focus:ring-2 
+                 focus:ring-indigo-400 transition">
+          ${module.label}
+        </button>
       `);
 
-      let moduleEngine = eval(`new ${module.className}(this.application)`);
+      const moduleEngine = eval(`new ${module.className}(this.application)`);
 
       button.onclick = (e) => {
         e.preventDefault();
         return moduleEngine.render();
       };
 
-      this.application.mainContainer.append(button);
+      buttonContainer.appendChild(button);
     }
   }
 }

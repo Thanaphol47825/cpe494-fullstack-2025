@@ -7,6 +7,12 @@ class InternshipAttendanceCreate {
         console.log("Create Internship Attendance Form");
         console.log(this.application);
 
+        if (!document.querySelector('script[src*="tailwindcss"]') && !document.querySelector('link[href*="tailwind"]')) {
+            const script = document.createElement('script');
+            script.src = "https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4";
+            document.head.appendChild(script);
+        }
+
         this.application.mainContainer.innerHTML = `
             <div class="bg-gray-100 min-h-screen py-8">
                 <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">

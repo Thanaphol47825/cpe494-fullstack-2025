@@ -31,9 +31,6 @@ class HrApplication {
       // In the future: add more features like 'student/create', 'instructor/resign', etc.
     };
 
-    // Optional: handle hash routing within HR module
-    window.addEventListener('hashchange', () => this.#route());
-
     console.log('✅ HrApplication initialized with Core Template Engine');
   }
 

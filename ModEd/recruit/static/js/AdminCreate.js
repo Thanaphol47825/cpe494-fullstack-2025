@@ -1,23 +1,51 @@
-(() => {
-  const form = document.getElementById("adminForm");
-  const statusEl = document.getElementById("formStatus");
-  const resultBox = document.getElementById("resultBox");
-  const ROOT = window.__ROOT_URL__ || "";
+class AdminCreate {
+  constructor(application) {
+    this.application = application;
+  }
 
-  const safeText = (x) =>
-    typeof x === "string" ? x : (() => { try { return JSON.stringify(x); } catch { return String(x); } })();
+  async render() {
+    console.log("AdminCreate: render()");
+    this.application.mainContainer.innerHTML = "<h2>Create Admin</h2>";
 
-  async function handleSubmit(e) {
+    const formTpl = `
+      <form id="adminForm" class="space-y-4">
+        <p>
+          <label class="block text-sm font-medium">Username</label>
+          <input name="username" type="text"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+        </p>
+        <p>
+          <label class="block text-sm font-medium">Password</label>
+          <input name="password" type="password"
+                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required />
+        </p>
+        <p>
+          <input type="submit" value="Save Admin"
+                 class="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"/>
+        </p>
+        <p id="formStatus" class="text-sm text-gray-600"></p>
+        <div id="resultBox" class="hidden mt-6 rounded-xl border p-4 text-sm"></div>
+      </form>
+    `;
+
+    this.application.mainContainer.insertAdjacentHTML("beforeend", formTpl);
+
+    document
+      .getElementById("adminForm")
+      .addEventListener("submit", (e) => this.submit(e));
+  }
+
+  async submit(e) {
     e.preventDefault();
-    statusEl.textContent = "";
-    resultBox.classList.add("hidden");
-    resultBox.classList.remove("border-red-200", "bg-red-50");
-
+    const form = e.target;
     const fd = new FormData(form);
     const payload = {
       username: fd.get("username")?.trim(),
       password: fd.get("password")?.trim(),
     };
+
+    const statusEl = document.getElementById("formStatus");
+    const resultBox = document.getElementById("resultBox");
 
     if (!payload.username || !payload.password) {
       statusEl.textContent = "โปรดกรอก Username และ Password ให้ครบถ้วน";
@@ -29,7 +57,7 @@
       statusEl.textContent = "Saving…";
       statusEl.className = "text-sm text-gray-500";
 
-      const res = await fetch(`${ROOT}/recruit/CreateAdmin`, {
+      const res = await fetch(`${RootURL}/recruit/CreateAdmin`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -43,20 +71,17 @@
 
       statusEl.textContent = "สร้างแอดมินสำเร็จ";
       statusEl.className = "text-sm text-green-600";
-      resultBox.innerHTML = `
-        <div><strong>Created Admin:</strong> ${data?.username || ""}</div>
-        <pre class="mt-2 overflow-auto text-xs bg-gray-50 p-3 rounded-lg border">${JSON.stringify({ ...data, password: "***" }, null, 2)}</pre>
-      `;
-      resultBox.classList.remove("hidden");
+
       form.reset();
     } catch (err) {
       statusEl.textContent = err.message || "สร้างแอดมินไม่สำเร็จ";
       statusEl.className = "text-sm text-red-600";
-      resultBox.innerHTML = `<div class="text-red-700"><strong>Error:</strong> ${safeText(err.message || err)}</div>`;
+
+      resultBox.innerHTML = `<div class="text-red-700"><strong>Error:</strong> ${safeText(
+        err.message || err
+      )}</div>`;
       resultBox.classList.remove("hidden");
       resultBox.classList.add("border-red-200", "bg-red-50");
     }
   }
-
-  if (form) form.addEventListener("submit", handleSubmit);
-})();
+}

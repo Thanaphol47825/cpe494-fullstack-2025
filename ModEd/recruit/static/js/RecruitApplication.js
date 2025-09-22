@@ -4,14 +4,19 @@ class RecruitApplication {
 
     this.subModules = [
       {
+        label: "Create Admin",
+        className: "AdminCreate",
+        script: "/recruit/static/js/AdminCreate.js",
+      },
+      {
         label: "Create Applicant",
         className: "ApplicantCreate",
         script: "/recruit/static/js/ApplicantCreate.js",
       },
       {
-      label: "Create Application Round",
-      className: "ApplicationRoundCreate",
-      script: "/recruit/static/js/ApplicationRoundCreate.js",
+        label: "Create Application Round",
+        className: "ApplicationRoundCreate",
+        script: "/recruit/static/js/ApplicationRoundCreate.js",
       },
 
     ];

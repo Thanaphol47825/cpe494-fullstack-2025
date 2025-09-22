@@ -18,7 +18,11 @@ class RecruitApplication {
         className: "ApplicationRoundCreate",
         script: "/recruit/static/js/ApplicationRoundCreate.js",
       },
-
+      {
+        label: "Create Interview Criteria",
+        className: "InterviewCriteriaCreate",
+        script: "/recruit/static/js/InterviewCriteriaCreate.js",
+      }
     ];
   }
 

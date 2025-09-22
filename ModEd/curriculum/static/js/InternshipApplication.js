@@ -7,6 +7,7 @@ class InternshipApplication {
         // { label: "internship application", script: "/curriculum/static/js/InternshipApplicationCreate.js", className: "InternshipApplicationCreate" },
         // { label: "internship report", script: "/curriculum/static/js/InternshipReportCreate.js", className: "InternshipReportCreate" },
         // { label: "internship evaluation", script: "/curriculum/static/js/InternshipEvaluationCreate.js", className: "InternshipEvaluationCreate" },
+        { label: "company", script: "/curriculum/static/js/CompanyCreate.js", className: "CompanyCreate" },
         { label: "internship mentor", script: "/curriculum/static/js/InternshipMentorCreate.js", className: "InternshipMentorCreate" },
         { label: "internship attendance", script: "/curriculum/static/js/internshipAttendanceCreate.js", className: "InternshipAttendanceCreate" },
         { label: "internship criteria", script: "/curriculum/static/js/InternshipCriteriaCreate.js", className: "InternshipCriteriaCreate" },

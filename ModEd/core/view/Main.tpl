@@ -21,6 +21,8 @@
 <body>
   <h1>{{ title }}</h1>
   <div id="MainContainer"></div>
+  <div>{{{adminForm}}} {{{formHTML}}} {{{tableHTML}}}</div>
+
 </body>
 
 </html>

@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+    "strings"
 )
 
 type FieldMeta struct {
@@ -60,10 +61,26 @@ func GenTableFromModels(models interface{}) string {
 		return "<table><tr><td>No data</td></tr></table>"
 	}
 
-	elemType := val.Index(0).Interface()
-	fields := GetModelMetadata(elemType)
+	indirect := func(v reflect.Value) reflect.Value {
+		for v.IsValid() && v.Kind() == reflect.Pointer {
+			if v.IsNil() {
+				return reflect.Zero(v.Type().Elem())
+			}
+			v = v.Elem()
+		}
+		return v
+	}
 
-	html := "<table border='1'>\n<tr>"
+	first := indirect(val.Index(0))
+	if !first.IsValid() || first.Kind() != reflect.Struct {
+		return "<table><tr><td>Slice elements must be struct or *struct</td></tr></table>"
+	}
+
+	fields := GetModelMetadata(first.Interface())
+
+	var b strings.Builder
+	b.WriteString("<table border='1'>\n<tr>")
+
 	for _, f := range fields {
 		if f.Name == "BaseModel" {
 			continue
@@ -72,23 +89,34 @@ func GenTableFromModels(models interface{}) string {
 		if label == "" {
 			label = f.Name
 		}
-		html += fmt.Sprintf("<th>%s</th>", label)
+		fmt.Fprintf(&b, "<th>%s</th>", label)
 	}
-	html += "</tr>\n"
+	b.WriteString("</tr>\n")
 
 	for i := 0; i < val.Len(); i++ {
-		row := val.Index(i)
-		html += "<tr>"
+		row := indirect(val.Index(i)) 
+		b.WriteString("<tr>")
 		for _, f := range fields {
 			if f.Name == "BaseModel" {
 				continue
 			}
-			fieldVal := row.FieldByName(f.Name)
-			html += fmt.Sprintf("<td>%v</td>", fieldVal.Interface())
+
+			var cell any = ""
+			if row.IsValid() && row.Kind() == reflect.Struct {
+				fv := row.FieldByName(f.Name)
+				if fv.IsValid() {
+					fv = indirect(fv)
+					if fv.IsValid() && fv.CanInterface() {
+						cell = fv.Interface()
+					}
+				}
+			}
+			fmt.Fprintf(&b, "<td>%v</td>", cell)
 		}
-		html += "</tr>\n"
+		b.WriteString("</tr>\n")
 	}
-	html += "</table>"
-	// fmt.Println(html)
-	return html
+
+	b.WriteString("</table>")
+	return b.String()
 }
+

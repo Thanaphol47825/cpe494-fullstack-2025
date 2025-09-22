@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
+	"ModEd/core/demo"
 )
 
 type ModEdApplication struct {
@@ -92,10 +93,31 @@ func (application *ModEdApplication) setSPAServe() {
 			log.Fatal(err)
 		}
 
+		// demo gentable
+		mapper := CSVMapper[demo.Field]{Path: "/workspace/ModEd/core/demo/field.csv"}
+    	fields := mapper.Deserialize() 
+
+    	tableHTML := GenTableFromModels(fields)
+		//
+
+		// demo genform
+		action := "{{ RootURL }}/test/testGenForm"
+		class := ""
+		formHTML := GenFormFromModel(demo.Field{}, "UserForm", "POST", action, class)
+
+		adminForm := GenFormFromModel(demo.Admin{}, "AdminForm", "POST", action, class)
+		//
+
+
 		rendered := tmpl.Render(map[string]any{
 			"title":   "ModEd",
 			"RootURL": application.RootURL,
 			"modules": string(modulesJSON),
+			// demo genform, table
+			"formHTML":  formHTML, 
+			"adminForm": adminForm,
+			"tableHTML": tableHTML, 
+			//
 		})
 		context.Set("Content-Type", "text/html; charset=utf-8")
 		return context.SendString(rendered)

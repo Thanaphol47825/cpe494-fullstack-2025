@@ -1,6 +1,3 @@
-// 📍 File: /common/static/js/CommonApplication.js
-// Orchestrates Common module features using the core template engine
-
 class CommonApplication {
   constructor(templateEngine) {
     this.templateEngine = templateEngine;
@@ -12,36 +9,60 @@ class CommonApplication {
         title: "Add Student",
         load: async () => {
           if (!window.CommonStudentFormFeature) {
-            await this.templateEngine.fetchModule("/common/static/js/features/StudentForm.js");
+            await this.templateEngine.fetchModule(
+              "/common/static/js/features/StudentForm.js"
+            );
           }
-          return () => new window.CommonStudentFormFeature(this.templateEngine, this.rootURL);
+          return () =>
+            new window.CommonStudentFormFeature(
+              this.templateEngine,
+              this.rootURL
+            );
         },
       },
       "instructor/create": {
         title: "Add Instructor",
         load: async () => {
           if (!window.CommonInstructorFormFeature) {
-            await this.templateEngine.fetchModule("/common/static/js/features/InstructorForm.js");
+            await this.templateEngine.fetchModule(
+              "/common/static/js/features/InstructorForm.js"
+            );
           }
-          return () => new window.CommonInstructorFormFeature(this.templateEngine, this.rootURL);
+          return () =>
+            new window.CommonInstructorFormFeature(
+              this.templateEngine,
+              this.rootURL
+            );
         },
       },
       "department/create": {
         title: "Add Department",
         load: async () => {
           if (!window.CommonDepartmentFormFeature) {
-            await this.templateEngine.fetchModule("/common/static/js/features/DepartmentForm.js");
+            await this.templateEngine.fetchModule(
+              "/common/static/js/features/DepartmentForm.js"
+            );
           }
-          return () => new window.CommonDepartmentFormFeature(this.templateEngine, this.rootURL);
+          return () =>
+            new window.CommonDepartmentFormFeature(
+              this.templateEngine,
+              this.rootURL
+            );
         },
       },
       "faculty/create": {
         title: "Add Faculty",
         load: async () => {
           if (!window.CommonFacultyFormFeature) {
-            await this.templateEngine.fetchModule("/common/static/js/features/FacultyForm.js");
+            await this.templateEngine.fetchModule(
+              "/common/static/js/features/FacultyForm.js"
+            );
           }
-          return () => new window.CommonFacultyFormFeature(this.templateEngine, this.rootURL);
+          return () =>
+            new window.CommonFacultyFormFeature(
+              this.templateEngine,
+              this.rootURL
+            );
         },
       },
     };

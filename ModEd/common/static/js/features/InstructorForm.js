@@ -17,11 +17,8 @@ class CommonInstructorFormFeature {
         <button id="commonBackToMain" class="text-blue-700 hover:text-blue-900">← Back to Common Menu</button>
         <div>
           <h2 class="text-2xl font-bold">Add Instructor</h2>
-          <p class="text-sm text-gray-600">Create a new instructor record without reloading the page.</p>
         </div>
         <form id="commonInstructorForm" class="space-y-4">
-          <fieldset class="space-y-3">
-            <legend class="font-semibold text-gray-700">Required Information</legend>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label class="block text-sm">Instructor Code *
                 <input name="instructor_code" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="INS001" />
@@ -36,10 +33,6 @@ class CommonInstructorFormFeature {
                 <input name="last_name" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Last name" />
               </label>
             </div>
-          </fieldset>
-
-          <fieldset class="space-y-3">
-            <legend class="font-semibold text-gray-700">Optional Information</legend>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <label class="block text-sm">Department
                 <input name="department" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Department" />
@@ -48,7 +41,6 @@ class CommonInstructorFormFeature {
                 <input name="start_date" type="date" class="mt-1 w-full rounded-md border px-3 py-2" />
               </label>
             </div>
-          </fieldset>
 
           <div class="flex items-center gap-3 pt-2">
             <button type="submit" class="rounded-md bg-green-700 px-4 py-2 text-white hover:bg-green-800">Create Instructor</button>

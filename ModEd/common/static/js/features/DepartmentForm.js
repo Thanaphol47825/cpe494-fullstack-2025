@@ -17,7 +17,6 @@ class CommonDepartmentFormFeature {
         <button id="commonBackToMain" class="text-blue-700 hover:text-blue-900">← Back to Common Menu</button>
         <div>
           <h2 class="text-2xl font-bold">Add Department</h2>
-          <p class="text-sm text-gray-600">Capture department details and stay on the same page.</p>
         </div>
         <form id="commonDepartmentForm" class="space-y-4">
           <label class="block text-sm">Department Name *

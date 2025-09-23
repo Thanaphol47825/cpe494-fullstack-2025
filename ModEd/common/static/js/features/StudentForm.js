@@ -1,6 +1,3 @@
-// 📍 File: /common/static/js/features/StudentForm.js
-// Feature module for creating Common students via the core template engine
-
 class CommonStudentFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;

@@ -17,8 +17,20 @@ class InternshipCriteriaCreate {
             document.head.appendChild(script);
         }
 
-        // Load initial data
-        await this.loadCriteria();
+        await this.fetchCriteria();
+
+        await this.fetchInternshipApplications();
+
+        let applicationOptions = '<option value="">Select Application</option>';
+        if (Array.isArray(this.applications) && this.applications.length > 0) {
+            applicationOptions += this.applications.map(app => {
+                const id = app.ID !== undefined ? app.ID : app.id;
+                const title = app.Title || app.title || `Application #${id}`;
+                return `<option value="${id}">${title}</option>`;
+            }).join('');
+        } else {
+            applicationOptions += '<option disabled>No applications found</option>';
+        }
 
         this.application.mainContainer.innerHTML = `
             <div class="container mx-auto p-6 max-w-7xl">
@@ -65,10 +77,7 @@ class InternshipCriteriaCreate {
                             </label>
                             <select id="internshipApplicationId" name="internshipApplicationId" required
                                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="">Select Application</option>
-                                <option value="1">Application #1</option>
-                                <option value="2">Application #2</option>
-                                <option value="3">Application #3</option>
+                                ${applicationOptions}
                             </select>
                         </div>
 
@@ -145,18 +154,37 @@ class InternshipCriteriaCreate {
         this.attachEventListeners();
     }
 
-    async loadCriteria() {
-        // Mock data - replace with actual API call
-        this.criteria = [
-            { id: 1, title: "Communication Skills", description: "Ability to communicate effectively with team members", score: 85, internshipApplicationId: 1 },
-            { id: 2, title: "Technical Proficiency", description: "Demonstrates strong technical skills", score: 92, internshipApplicationId: 1 },
-            { id: 3, title: "Work Ethic", description: "Shows dedication and commitment", score: 88, internshipApplicationId: 2 },
-            { id: 4, title: "Problem Solving", description: "Ability to identify and solve problems", score: 90, internshipApplicationId: 2 },
-            { id: 5, title: "Teamwork", description: "Collaborates effectively with colleagues", score: 87, internshipApplicationId: 3 },
-            { id: 6, title: "Leadership", description: "Demonstrates leadership qualities", score: 89, internshipApplicationId: 1 },
-            { id: 7, title: "Adaptability", description: "Adapts well to changing environments", score: 91, internshipApplicationId: 2 }
-        ];
-        this.totalItems = this.criteria.length;
+    async fetchInternshipApplications() {
+        try {
+            const response = await fetch('/curriculum/InternshipApplication');
+            const data = await response.json();
+            if (data.isSuccess && Array.isArray(data.result)) {
+                this.applications = data.result;
+            } else {
+                this.applications = [];
+            }
+        } catch (error) {
+            console.error('Error fetching internship applications:', error);
+        }
+    }
+
+    async fetchCriteria() {
+        try {
+            const response = await fetch('/curriculum/InternshipCriteria/getall');
+            const data = await response.json();
+            if (data.isSuccess && Array.isArray(data.result)) {
+                this.criteria = data.result;
+                this.totalItems = this.criteria.length;
+            } else {
+                this.criteria = [];
+                this.totalItems = 0;
+                this.showMessage('Failed to load criteria from server.', 'error');
+            }
+        } catch (error) {
+            this.criteria = [];
+            this.totalItems = 0;
+            this.showMessage('Error loading criteria. Please try again.', 'error');
+        }
     }
 
     renderTableRows() {
@@ -176,18 +204,18 @@ class InternshipCriteriaCreate {
 
         return currentItems.map(item => `
             <tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.id}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.title}</td>
-                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title="${item.description}">${item.description}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.ID || item.id}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.title || item.Title || ''}</td>
+                <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" title="${item.description || item.Description || ''}">${item.description || item.Description || ''}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${this.getScoreColor(item.score)}">
-                        ${item.score}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${this.getScoreColor(item.score || item.Score)}">
+                        ${item.score || item.Score}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.internshipApplicationId}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.internship_application_id || item.InternshipApplicationId}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                    <button onclick="this.editCriteria(${item.id})" class="text-blue-600 hover:text-blue-900">Edit</button>
-                    <button onclick="this.deleteCriteria(${item.id})" class="text-red-600 hover:text-red-900">Delete</button>
+                    <button onclick="this.editCriteria(${item.ID || item.id})" class="text-blue-600 hover:text-blue-900">Edit</button>
+                    <button onclick="this.deleteCriteria(${item.ID || item.id})" class="text-red-600 hover:text-red-900">Delete</button>
                 </td>
             </tr>
         `).join('');
@@ -218,13 +246,6 @@ class InternshipCriteriaCreate {
         return paginationHTML;
     }
 
-    getScoreColor(score) {
-        if (score >= 90) return 'bg-green-100 text-green-800';
-        if (score >= 80) return 'bg-yellow-100 text-yellow-800';
-        if (score >= 70) return 'bg-orange-100 text-orange-800';
-        return 'bg-red-100 text-red-800';
-    }
-
     getTotalPages() {
         return Math.ceil(this.totalItems / this.itemsPerPage);
     }
@@ -233,6 +254,13 @@ class InternshipCriteriaCreate {
         const startIndex = (this.currentPage - 1) * this.itemsPerPage + 1;
         const endIndex = Math.min(this.currentPage * this.itemsPerPage, this.totalItems);
         return `${startIndex}-${endIndex} of ${this.totalItems}`;
+    }
+
+    getScoreColor(score) {
+        if (score >= 90) return 'bg-green-100 text-green-800';
+        if (score >= 80) return 'bg-yellow-100 text-yellow-800';
+        if (score >= 70) return 'bg-orange-100 text-orange-800';
+        return 'bg-red-100 text-red-800';
     }
 
     attachEventListeners() {
@@ -263,37 +291,45 @@ class InternshipCriteriaCreate {
 
     async handleSubmit() {
         const formData = new FormData(document.getElementById('criteriaForm'));
+        const internshipApplicationId = formData.get('internshipApplicationId');
+        if (!internshipApplicationId) {
+            this.showMessage('Please select an Internship Application.', 'error');
+            return;
+        }
         const data = {
             title: formData.get('title'),
             description: formData.get('description'),
             score: parseInt(formData.get('score')),
-            internshipApplicationId: parseInt(formData.get('internshipApplicationId'))
+            internship_application_id: parseInt(internshipApplicationId)
         };
 
         try {
-            // Mock API call - replace with actual endpoint
-            console.log('Creating criteria:', data);
-
-            // Add to local data (simulate successful creation)
-            const newItem = {
-                id: this.criteria.length + 1,
-                ...data
-            };
-            this.criteria.push(newItem);
-            this.totalItems = this.criteria.length;
-
-            // Reset form
-            document.getElementById('criteriaForm').reset();
-
-            // Refresh table
-            this.refreshTable();
-
-            // Show success message
-            this.showMessage('Criteria created successfully!', 'success');
-
+            let url = '/curriculum/InternshipCriteria/create';
+            let method = 'POST';
+            // If editing, update instead of create
+            if (this.editingId) {
+                url = `/curriculum/InternshipCriteria/update/${this.editingId}`;
+            }
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            });
+            const result = await response.json();
+            if (result.isSuccess) {
+                document.getElementById('criteriaForm').reset();
+                this.editingId = null;
+                await this.fetchCriteria();
+                this.refreshTable();
+                this.showMessage(this.editingId ? 'Criteria updated successfully!' : 'Criteria created successfully!', 'success');
+            } else {
+                this.showMessage(result.error || 'Failed to save criteria.', 'error');
+            }
         } catch (error) {
-            console.error('Error creating criteria:', error);
-            this.showMessage('Error creating criteria. Please try again.', 'error');
+            console.error('Error saving criteria:', error);
+            this.showMessage('Error saving criteria. Please try again.', 'error');
         }
     }
 
@@ -304,37 +340,37 @@ class InternshipCriteriaCreate {
 
     refreshTable() {
         document.getElementById('criteriaTableBody').innerHTML = this.renderTableRows();
-        // Update pagination
         this.render();
     }
 
-    editCriteria(id) {
-        const criteria = this.criteria.find(c => c.id === id);
+    async editCriteria(id) {
+        const criteria = this.criteria.find(c => c.ID === id || c.id === id);
         if (criteria) {
-            // Populate form with existing data
-            document.getElementById('title').value = criteria.title;
-            document.getElementById('description').value = criteria.description;
-            document.getElementById('score').value = criteria.score;
-            document.getElementById('internshipApplicationId').value = criteria.internshipApplicationId;
-
-            // Scroll to form
+            document.getElementById('title').value = criteria.title || criteria.Title || '';
+            document.getElementById('description').value = criteria.description || criteria.Description || '';
+            document.getElementById('score').value = criteria.score || criteria.Score || '';
+            document.getElementById('internshipApplicationId').value = criteria.internship_application_id || criteria.InternshipApplicationId || criteria.internshipApplicationId || '';
+            this.editingId = criteria.ID || criteria.id;
             document.getElementById('criteriaForm').scrollIntoView({ behavior: 'smooth' });
         }
     }
 
-    deleteCriteria(id) {
-        if (confirm('Are you sure you want to delete this criteria?')) {
-            this.criteria = this.criteria.filter(c => c.id !== id);
-            this.totalItems = this.criteria.length;
-
-            // Adjust current page if necessary
-            const totalPages = this.getTotalPages();
-            if (this.currentPage > totalPages && totalPages > 0) {
-                this.currentPage = totalPages;
+    async deleteCriteria(id) {
+        if (!confirm('Are you sure you want to delete this criteria?')) return;
+        try {
+            const response = await fetch(`/curriculum/InternshipCriteria/delete/${id}`, {
+                method: 'GET',
+            });
+            const result = await response.json();
+            if (result.isSuccess) {
+                await this.fetchCriteria();
+                this.refreshTable();
+                this.showMessage('Criteria deleted successfully!', 'success');
+            } else {
+                this.showMessage(result.error || 'Failed to delete criteria.', 'error');
             }
-
-            this.refreshTable();
-            this.showMessage('Criteria deleted successfully!', 'success');
+        } catch (error) {
+            this.showMessage('Error deleting criteria. Please try again.', 'error');
         }
     }
 

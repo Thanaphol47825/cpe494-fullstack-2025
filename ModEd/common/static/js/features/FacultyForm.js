@@ -1,6 +1,3 @@
-// 📍 File: /common/static/js/features/FacultyForm.js
-// Feature module for creating faculties via the core template engine
-
 class CommonFacultyFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;

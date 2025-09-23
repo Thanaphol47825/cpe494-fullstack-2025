@@ -17,7 +17,6 @@ class CommonFacultyFormFeature {
         <button id="commonBackToMain" class="text-blue-700 hover:text-blue-900">← Back to Common Menu</button>
         <div>
           <h2 class="text-2xl font-bold">Add Faculty</h2>
-          <p class="text-sm text-gray-600">Submit faculty data with client-side handling.</p>
         </div>
         <form id="commonFacultyForm" class="space-y-4">
           <label class="block text-sm">Faculty Name *

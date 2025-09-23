@@ -1,6 +1,3 @@
-// 📍 File: /common/static/js/features/DepartmentForm.js
-// Feature module for creating departments via the core template engine
-
 class CommonDepartmentFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;

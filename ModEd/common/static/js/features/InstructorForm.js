@@ -1,6 +1,3 @@
-// 📍 File: /common/static/js/features/InstructorForm.js
-// Feature module for creating instructors in the Common module
-
 class CommonInstructorFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;

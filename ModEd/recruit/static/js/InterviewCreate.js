@@ -113,7 +113,6 @@ class InterviewCreate {
     const formData = new FormData(form);
     const data = {};
     
-    // Parse form data
     for (let [key, value] of formData.entries()) {
       if (key === 'instructor_id' || key === 'application_report_id') {
         data[key] = parseInt(value);
@@ -129,7 +128,6 @@ class InterviewCreate {
           return;
         }
       } else if (key === 'scheduled_appointment' || key === 'evaluated_at') {
-        // Convert datetime-local to ISO string
         if (value) {
           data[key] = new Date(value).toISOString();
         }

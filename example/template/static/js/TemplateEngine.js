@@ -9,40 +9,40 @@ class TemplateEngine{
 	}
 
 	async render(){
-		this.mainContainer = document.getElementById("MainContainer");
 		await this.fetchTemplate();
-		let formContainer = this.create(Mustache.render(this.template.Form, {
-			"action": RootURL+"handle",
-			"method": "POST",
-		}));
-		this.mainContainer.append(formContainer);
-		this.form = document.getElementById("MainForm");
-		this.input = {};
-		this.input.name = this.create(Mustache.render(this.template.TextInput, {
-			"label": "Name",
-			"name": "name",
-			"ID": "NameInput"
-		}));
-		this.form.append(this.input.name);
-		this.form.append(this.create(this.template.Submit));
-		this.form.addEventListener("submit", this.submit);
-		let button = this.create('<a href="#" id="HRButton">HR Module</a>');
-		let hr = new HRApplication(this);
-		button.onclick = () => {
-			return hr.render();
+		this.container = new DOMObject(this.template.MainContainer, {
+			"title": "ModEd BackOffice",
+		}, false);
+		this.body = document.body;
+		this.body.append(this.container.html);
+		this.form = new FormRender(this, {});
+		await this.form.render();
+		this.table = new TableRender(this, {});
+		await this.table.render();
+		this.setElement(this.form.form);
+
+		let object = this;
+		this.container.dom.show.onclick = () => {object.container.dom.container.show();}
+		let container = this.container.dom.container;
+		this.container.dom.hide.onclick = container.hide.bind(container);
+
+		this.container.dom.form.onclick = () => {
+			object.setElement(object.form.form);
 		}
-		this.mainContainer.append(button);
+
+		this.container.dom.table.onclick = () => {
+			object.setElement(object.table.table);
+		}
 	}
 
 	create(code){
 		let element = document.createElement('div');
 		element.innerHTML = code;
-		return element;
+		return element.children[0];
 	}
 
-	submit(event){
-		event.preventDefault();
-		console.log(document.getElementById("NameInput").value);
-		return false;
+	setElement(element){
+		this.container.dom.container.innerHTML = '';
+		this.container.dom.container.append(element)
 	}
 }

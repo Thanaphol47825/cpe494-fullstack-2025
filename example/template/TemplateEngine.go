@@ -21,7 +21,6 @@ func main() {
 		path := filepath.Join(RootPath, "view", "Main.tpl")
 		template, _ := mustache.ParseFile(path)
 		rendered := template.Render(map[string]string{
-			"title":   "ModEd BackOffice",
 			"RootURL": RootURL,
 		})
 		context.Set("Content-Type", "text/html")
@@ -29,7 +28,7 @@ func main() {
 	})
 
 	app.Get("/template", func(context *fiber.Ctx) error {
-		directory := filepath.Join(RootPath, "view", "input")
+		directory := filepath.Join(RootPath, "view", "client")
 		entries, err := os.ReadDir(directory)
 		if err != nil {
 			log.Fatalf("Failed to read directory: %v", err)

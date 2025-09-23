@@ -2,6 +2,8 @@
 	<head>
 		<title>{{ title }}</title>
 		<script src="{{ RootURL }}static/js/TemplateEngine.js"></script>
+		<script src="{{ RootURL }}static/js/FormRender.js"></script>
+		<script src="{{ RootURL }}static/js/TableRender.js"></script>
 		<script src="{{ RootURL }}static/js/mustache.min.js"></script>
 		<script src="{{ RootURL }}static/js/DOMObject.js"></script>
 
@@ -15,11 +17,9 @@
 				engine.render();
 			});
 		</script>
+
+		<link rel="stylesheet" type="text/css" href="{{ RootURL }}static/css/Style.css" />
 	</head>
 	<body>
-		<h1>{{ title }}</h1>
-		<div id="MainContainer">
-			<h2>Nothing</h2>
-		</div>
 	</body>
 </html>

@@ -92,8 +92,6 @@ func (application *ModEdApplication) setSPAServe() {
 			log.Fatal(err)
 		}
 
-
-
 		rendered := tmpl.Render(map[string]any{
 			"title":   "ModEd",
 			"RootURL": application.RootURL,
@@ -101,6 +99,28 @@ func (application *ModEdApplication) setSPAServe() {
 		})
 		context.Set("Content-Type", "text/html; charset=utf-8")
 		return context.SendString(rendered)
+	})
+}
+
+func (application *ModEdApplication) setExportTemplate() {
+	application.Application.Get("/template", func(context *fiber.Ctx) error {
+		directory := filepath.Join(application.RootPath, "core", "view", "client")
+		entries, err := os.ReadDir(directory)
+		if err != nil {
+			log.Fatalf("Failed to read directory: %v", err)
+		}
+
+		template := fiber.Map{}
+		for _, entry := range entries {
+			path := filepath.Join(directory, entry.Name())
+			content, err := os.ReadFile(path)
+			if err != nil {
+				log.Fatalf("Error reading file: %v", err)
+			}
+			name := entry.Name()
+			template[name[0:len(name)-4]] = string(content)
+		}
+		return context.JSON(template)
 	})
 }
 
@@ -119,6 +139,7 @@ func GetApplication() *ModEdApplication {
 		application.loadConfig()
 		application.setConfigStaticServe()
 		application.setSPAServe()
+		application.setExportTemplate()
 
 		db, err := database.ConnectPostgres(application.Configuration.Database.Dsn)
 		if err != nil {

@@ -7,6 +7,7 @@
   <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
   <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
  
+  <link rel="stylesheet" type="text/css" href="{{ RootURL }}/static/css/Style.css" />
   <script>
     let RootURL = "{{ RootURL }}";
     let modules = {{{modules}}};

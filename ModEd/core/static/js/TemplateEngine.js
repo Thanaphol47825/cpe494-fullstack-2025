@@ -25,7 +25,7 @@ class TemplateEngine {
 
   initializeRouterLinks() {
     // Find all elements with routerLink attribute and set up navigation
-    document.querySelectorAll('[routerLink]').forEach(element => {
+    document.querySelectorAll('[routerLink]').forEach((element) => {
       this.setupRouterLink(element)
     })
   }
@@ -65,7 +65,7 @@ class TemplateEngine {
             }
             // Check for routerLink in child elements
             if (node.querySelectorAll) {
-              node.querySelectorAll('[routerLink]').forEach(element => {
+              node.querySelectorAll('[routerLink]').forEach((element) => {
                 this.setupRouterLink(element)
               })
             }
@@ -78,13 +78,13 @@ class TemplateEngine {
     if (document.body) {
       observer.observe(document.body, {
         childList: true,
-        subtree: true
+        subtree: true,
       })
     } else {
       window.addEventListener('DOMContentLoaded', () => {
         observer.observe(document.body, {
           childList: true,
-          subtree: true
+          subtree: true,
         })
       })
     }
@@ -149,7 +149,7 @@ class TemplateEngine {
 
   async handleSubRoute(moduleConfig, fullPath) {
     const moduleInstance = this.moduleInstances.get(moduleConfig.className)
-    
+
     if (moduleInstance && typeof moduleInstance.handleRoute === 'function') {
       // Let the module handle its own sub-routing
       const handled = await moduleInstance.handleRoute(fullPath)
@@ -201,7 +201,14 @@ class TemplateEngine {
     })
   }
 
+  async fetchTemplate() {
+    let URL = RootURL + '/template'
+    let response = await fetch(URL)
+    this.template = await response.json()
+  }
+
   async render() {
+    await fetchTemplate()
     this.mainContainer = document.getElementById('MainContainer')
 
     // Check if we have a current route first
@@ -218,7 +225,7 @@ class TemplateEngine {
   renderModuleMenu() {
     this.mainContainer = document.getElementById('MainContainer')
     this.mainContainer.innerHTML = ''
-    
+
     // Ensure currentModule is cleared when showing menu
     this.currentModule = null
 
@@ -226,7 +233,9 @@ class TemplateEngine {
     const menuTitle = this.create(`<h2>Select a Module:</h2>`)
     this.mainContainer.appendChild(menuTitle)
 
-    const moduleList = this.create(`<div style="display: flex; flex-direction: column; gap: 4px;"></div>`)
+    const moduleList = this.create(
+      `<div style="display: flex; flex-direction: column; gap: 4px;"></div>`
+    )
 
     for (const module of modules) {
       let button = this.createRouterLink(module.label, module.baseRoute.slice(1), '')
@@ -234,7 +243,7 @@ class TemplateEngine {
     }
 
     this.mainContainer.appendChild(moduleList)
-    
+
     // Initialize router links for the newly created elements
     this.initializeRouterLinks()
   }
@@ -252,7 +261,7 @@ class TemplateEngine {
       window.location.hash = ''
       return
     }
-    
+
     // Clean the route and set hash
     const cleanRoute = moduleRoute.startsWith('/') ? moduleRoute.slice(1) : moduleRoute
     window.location.hash = cleanRoute
@@ -293,14 +302,14 @@ class TemplateEngine {
   // Extract sub-path from full path for a module
   getSubPath(moduleBasePath, fullPath) {
     if (!fullPath || !moduleBasePath) return ''
-    
+
     const moduleParts = moduleBasePath.split('/').filter(Boolean)
     const fullParts = fullPath.split('/').filter(Boolean)
-    
+
     if (fullParts.length > moduleParts.length) {
       return '/' + fullParts.slice(moduleParts.length).join('/')
     }
-    
+
     return ''
   }
 
@@ -315,28 +324,28 @@ class TemplateEngine {
   debugCurrentState() {
     const currentPath = this.getCurrentPath()
     const expectedModule = this.findModuleByPath(currentPath)
-    
+
     console.log('=== Template Engine Debug ===')
     console.log('Current URL Hash:', window.location.hash)
     console.log('Current Path:', currentPath)
     console.log('Expected Module:', expectedModule?.label || 'None')
     console.log('Actual currentModule:', this.currentModule?.label || 'None')
-    console.log('States Match:', (expectedModule === this.currentModule))
+    console.log('States Match:', expectedModule === this.currentModule)
     console.log('Loaded Modules:', Array.from(this.moduleInstances.keys()))
     console.log('============================')
-    
+
     return {
       currentPath,
       expectedModule,
       actualModule: this.currentModule,
-      statesMatch: expectedModule === this.currentModule
+      statesMatch: expectedModule === this.currentModule,
     }
   }
 
   render404Page(invalidPath) {
     this.mainContainer = document.getElementById('MainContainer')
     this.mainContainer.innerHTML = ''
-    
+
     // Ensure currentModule is cleared when showing 404
     this.currentModule = null
 
@@ -349,7 +358,7 @@ class TemplateEngine {
       </div>
     `)
     this.mainContainer.appendChild(errorMessage)
-    
+
     // Initialize router links for the newly created elements
     this.initializeRouterLinks()
   }

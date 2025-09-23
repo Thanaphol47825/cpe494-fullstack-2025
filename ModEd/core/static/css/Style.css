@@ -1,0 +1,31 @@
+.hidden{
+	content-visibility: hidden !important;
+	display: none !important;
+	width: 0 !important;
+	height: 0 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	outline: none !important;
+	box-shadow: none !important;
+	visibility: hidden !important;
+}
+
+.button{
+	background: green;
+	color: white;
+	padding: 5px 15px;
+	margin-right: 10px;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+table{
+	width:100%;
+	border: 1px solid #444;
+	margin-top: 20px;
+}
+
+td, th{
+	border: 1px solid #444;
+}

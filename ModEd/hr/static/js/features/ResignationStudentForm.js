@@ -1,22 +1,14 @@
-// 📍 File: /hr/static/js/features/ResignationStudentForm.js
-// Feature module for "Student Request of Resignation" form
-
 class HrResignationStudentFormFeature {
-  /**
-   * @param {object} templateEngine - must provide .mainContainer and .create(html)
-   * @param {string} rootURL - optional base URL (falls back to window.__ROOT_URL__)
-   * @param {string} endpointPath - optional path for POST; defaults to "/hr/resignation-students"
-   */
   constructor(templateEngine, rootURL, endpointPath) {
     this.templateEngine = templateEngine;
     this.rootURL = rootURL || window.__ROOT_URL__ || "";
-    this.endpointPath = endpointPath || "/hr/resignation-student-requests";
+    this.endpointPath = endpointPath || "/hr/resignation-student-requests"; 
     this._isSubmitting = false;
   }
 
   async render() {
     if (!this.templateEngine || !this.templateEngine.mainContainer) {
-      console.error("❌ Template engine or main container not found");
+      console.error("Template engine or main container not found");
       return false;
     }
 
@@ -72,11 +64,9 @@ class HrResignationStudentFormFeature {
     return true;
   }
 
-  // Replace your #collect with this:
 #collect(form) {
   const payload = {};
 
-  // Prefer direct access via form.elements (more robust than FormData for odd DOMs)
   const scEl = form.elements.NamedItem
     ? form.elements.NamedItem("StudentCode")
     : form.elements["StudentCode"];
@@ -84,7 +74,6 @@ class HrResignationStudentFormFeature {
     ? form.elements.NamedItem("Reason")
     : form.elements["Reason"];
 
-  // Fallbacks in case the template engine lowercased or renamed attrs
   const scAlt =
     scEl ||
     form.querySelector('[name="StudentCode"], [name="studentcode"], [name="student_code"]');
@@ -97,13 +86,11 @@ class HrResignationStudentFormFeature {
   if (sc) payload.StudentCode = sc;
   if (rs) payload.Reason = rs;
 
-  // Also sweep other inputs just in case you later add more fields
   try {
     const fd = new FormData(form);
     for (const [k, v] of fd.entries()) {
       const s = String(v ?? "").trim();
       if (!s) continue;
-      // normalize common aliases back to expected server keys
       const key =
         k === "studentcode" || k === "student_code" ? "StudentCode"
         : k === "reason" ? "Reason"
@@ -115,7 +102,6 @@ class HrResignationStudentFormFeature {
   return payload;
 }
 
-// (Optional) keep as-is, or leave it strict:
 #validate(p) {
   const req = ["StudentCode", "Reason"];
   const miss = req.filter((k) => !p[k]);
@@ -123,7 +109,6 @@ class HrResignationStudentFormFeature {
 }
 
 
-  // For this controller, no conversion needed other than trimming & exact keys
   #transform(p) {
     return {
       StudentCode: p.StudentCode,
@@ -176,10 +161,6 @@ class HrResignationStudentFormFeature {
         body: JSON.stringify(payload),
       });
 
-      // The controller returns:
-      // 201 with { "isSuccess": true, "result": row }
-      // 400 with { "isSuccess": false, "error": { code, message } }
-      // 500 with { "isSuccess": false, "error": { code, message } }
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data?.isSuccess === false) {
         const message =
@@ -197,7 +178,6 @@ class HrResignationStudentFormFeature {
         `<div><strong>Result:</strong> success</div>${createdInfo}`
       );
 
-      // Reset the form after a short delay
       setTimeout(() => {
         form.reset();
         setStatus("Ready.");

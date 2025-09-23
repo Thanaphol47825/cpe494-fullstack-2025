@@ -55,7 +55,7 @@ class HrApplication {
   }
 
   async render() {
-    console.log("🎯 Loading HR Module (orchestrator)");
+    console.log("Loading HR Module (orchestrator)");
     if (!this.templateEngine || !this.templateEngine.mainContainer) {
       console.error("Template engine or main container not found");
       return false;

@@ -1,17 +1,11 @@
-// 📍 ไฟล์: /hr/static/js/HrApplication.js
-// 🎯 Orchestrator for HR feature modules (menu + routing to feature modules)
-
 class HrApplication {
   constructor(templateEngine) {
     this.templateEngine = templateEngine;
     this.rootURL = window.__ROOT_URL__ || RootURL || "";
 
-    // Feature registry: add new HR features here
-    // key: action id; value: loader + renderer
     this.features = {
       'instructor/create': {
         title: 'Add Instructor',
-        // Lazy loader for the feature script
         load: async () => {
           if (!window.HrInstructorFormFeature) {
             await this.templateEngine.fetchModule('/hr/static/js/features/InstructorForm.js');
@@ -48,7 +42,6 @@ class HrApplication {
       },
       'resignation-instructor-request/create': {
         title: 'Instructor Resignation Request',
-        // Lazy loader for the feature script
         load: async () => {
         if (!window.HrInstructorResignationFormFeature) {
           await this.templateEngine.fetchModule('/hr/static/js/features/InstructorResignationForm.js');
@@ -56,38 +49,32 @@ class HrApplication {
           return () => new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL);
         }
       }
-      // In the future: add more features like 'student/create', 'instructor/resign', etc.
     };
 
     console.log('HrApplication initialized with Core Template Engine');
   }
 
-  // 🚀 Main render method - เรียกจาก Core TemplateEngine
   async render() {
-    console.log("🎯 Loading HR Module (orchestrator)");
+    console.log("Loading HR Module (orchestrator)");
     if (!this.templateEngine || !this.templateEngine.mainContainer) {
       console.error("Template engine or main container not found");
       return false;
     }
 
-    // Default: show HR menu; if hash matches a feature, route to it
     return await this.#route();
   }
 
   async #route() {
     const raw = (location.hash || "").replace(/^#\/?/, "");
-    // Accept both 'hr/xxx' and 'xxx' (when coming from outside or direct click)
     const route = raw.startsWith('hr/') ? raw.slice(3) : raw;
 
     if (route && this.features[route]) {
       return await this.navigateTo(route);
     }
-    // Otherwise render the HR features menu
     this.renderMenu();
     return true;
   }
 
-  // 📋 Render HR menu with available actions
   renderMenu() {
     const container = this.templateEngine.mainContainer;
     container.innerHTML = "";
@@ -109,18 +96,15 @@ class HrApplication {
     const element = this.templateEngine.create(html);
     container.appendChild(element);
 
-    // Wire up menu actions
     container.querySelectorAll('[data-action]').forEach((btn) => {
       btn.addEventListener('click', async (e) => {
         const id = e.currentTarget.getAttribute('data-action');
-        // update hash to enable back/forward navigation
         location.hash = `#hr/${id}`;
         await this.navigateTo(id);
       });
     });
   }
 
-  // 🚦 Navigate to a registered HR feature by id
   async navigateTo(id) {
     const featureMeta = this.features[id];
     if (!featureMeta) {
@@ -139,7 +123,6 @@ class HrApplication {
   }
 }
 
-// 🌐 Export to global scope
 if (typeof window !== 'undefined') {
   window.HrApplication = HrApplication;
 }

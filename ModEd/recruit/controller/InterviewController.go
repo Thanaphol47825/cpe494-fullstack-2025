@@ -3,8 +3,10 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type InterviewController struct {
@@ -20,8 +22,33 @@ func (controller *InterviewController) SetApplication(application *core.ModEdApp
 	controller.application = application
 }
 
+func (controller *InterviewController) RenderInterviewCreate(context *fiber.Ctx) error {
+	path := filepath.Join(controller.application.RootPath, "recruit", "view", "InterviewCreate.tpl")
+	template, err := mustache.ParseFile(path)
+	if err != nil {
+		return context.Status(500).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Template not found",
+		})
+	}
+
+	rendered := template.Render(map[string]string{
+		"title":   "Create Interview",
+		"RootURL": controller.application.RootURL,
+	})
+
+	context.Set("Content-Type", "text/html")
+	return context.SendString(rendered)
+}
+
 func (controller *InterviewController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/interview/create",
+		Handler: controller.RenderInterviewCreate,
+		Method:  core.GET,
+	})
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/CreateInterview",

@@ -3,10 +3,11 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
-	"github.com/gofiber/fiber/v2"
-	"github.com/hoisie/mustache"
 	"net/http"
 	"path/filepath"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 )
 
 type InterviewCriteriaController struct {
@@ -155,22 +156,22 @@ func (controller *InterviewCriteriaController) DeleteInterviewCriteria(context *
 }
 
 func (controller *InterviewCriteriaController) CreateRawSQL(context *fiber.Ctx) error {
-    rawSQL := `
+	rawSQL := `
     INSERT INTO application_rounds (id, round_name) VALUES (1, 'รอบที่ 1') ON CONFLICT (id) DO NOTHING;
     INSERT INTO faculties (id, name, budget) VALUES (2, 'คณะวิทยาศาสตร์', 100000) ON CONFLICT (id) DO NOTHING;
     INSERT INTO departments (id, name, faculty, budget) VALUES (3, 'ภาควิชาคอมพิวเตอร์', 'คณะวิทยาศาสตร์', 50000) ON CONFLICT (id) DO NOTHING;
     `
-    if err := controller.application.DB.Exec(rawSQL).Error; err != nil {
-        return context.JSON(fiber.Map{
-            "isSuccess": false,
-            "result":    err.Error(),
-        })
-    }
+	if err := controller.application.DB.Exec(rawSQL).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
 
-    return context.JSON(fiber.Map{
-        "isSuccess": true,
-        "result":    "Raw SQL executed successfully (duplicates ignored)",
-    })
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    "Raw SQL executed successfully (duplicates ignored)",
+	})
 }
 
 func (controller *InterviewCriteriaController) RenderInterviewCriteriaForm(context *fiber.Ctx) error {
@@ -202,8 +203,6 @@ func (controller *InterviewCriteriaController) RenderCreateInterviewCriteriaForm
 	context.Set("Content-Type", "text/html; charset=utf-8")
 	return context.SendString(rendered)
 }
-
-
 
 // func (controller *InterviewCriteriaController) ReadInterviewCriteriaFromCSV() string {
 // 	return

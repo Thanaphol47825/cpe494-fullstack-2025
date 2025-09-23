@@ -1,23 +1,26 @@
-(() => {
-  const form = document.getElementById("studentForm");
-  const ROOT = window.__ROOT_URL__ || "";
+class StudentCreate {
+  constructor() {
+    this.form = document.getElementById("studentForm");
+    this.ROOT = window.__ROOT_URL__ || "";
+  }
 
-  const toRFC3339DateOrNull = (ymd) => (!ymd ? null : `${ymd}T00:00:00Z`);
-  const safeText = (x) =>
-    typeof x === "string"
-      ? x
-      : (() => {
-          try {
-            return JSON.stringify(x);
-          } catch {
-            return String(x);
-          }
-        })();
+  toRFC3339DateOrNull(ymd) {
+    return !ymd ? null : `${ymd}T00:00:00Z`;
+  }
 
-  async function handleSubmit(e) {
+  safeText(x) {
+    if (typeof x === "string") return x;
+    try {
+      return JSON.stringify(x);
+    } catch {
+      return String(x);
+    }
+  }
+
+  async handleSubmit(e) {
     e.preventDefault();
 
-    const fd = new FormData(form);
+    const fd = new FormData(this.form);
     const payload = {
       student_code: fd.get("student_code")?.trim(),
       first_name: fd.get("first_name")?.trim(),
@@ -44,7 +47,7 @@
     }
 
     try {
-      const res = await fetch(`${ROOT}/common/students`, {
+      const res = await fetch(`${this.ROOT}/common/students`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -57,15 +60,23 @@
           data?.error ||
           data?.message ||
           `Request failed (${res.status})`;
-        throw new Error(safeText(msg));
+        throw new Error(this.safeText(msg));
       }
 
       alert("Saved successfully.");
-      form.reset();
+      this.form.reset();
     } catch (err) {
       alert(err.message || "Save failed.");
     }
   }
 
-  if (form) form.addEventListener("submit", handleSubmit);
-})();
+  render() {
+    if (this.form) {
+      this.form.addEventListener("submit", (e) => this.handleSubmit(e));
+    } else {
+      console.warn('StudentCreate: #studentForm not found on the page.');
+    }
+  }
+}
+
+new StudentCreate().render();

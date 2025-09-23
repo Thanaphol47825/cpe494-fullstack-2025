@@ -7,6 +7,12 @@ class AdminCreate {
     console.log("AdminCreate: render()");
     this.application.mainContainer.innerHTML = "<h2>Create Admin</h2>";
 
+    if (!document.querySelector('script[src*="cdn.tailwindcss.com"]')) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.tailwindcss.com";
+      document.head.appendChild(script);
+    }
+
     const formTpl = `
       <form id="adminForm" class="space-y-4">
         <p>

@@ -1,96 +1,63 @@
 <!doctype html>
 <html>
 <head>
-    <title>Internship Attendance</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 0;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-        }
-
-        form {
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
-
-        input[type="date"],
-        input[type="time"],
-        input[type="text"],
-        input[type="number"],
-        input[type="email"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-
-        input[readonly] {
-            background-color: #f0f0f0;
-        }
-
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+  <title>Internship Attendance</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Internship Attendance</h1>
-    <form method="POST" action="/curriculum/CreateInternshipAttendance">
-        <label for="Date">Date:</label>
-        <input type="date" id="Date" name="Date" required><br>
+<body class="bg-gray-100 font-sans">
+  <h1 class="text-2xl font-bold text-center text-gray-700 mt-8">Internship Attendance</h1>
 
-        <label for="CheckInTime">Check-In Time:</label>
-        <input type="time" id="CheckInTime" name="CheckInTime" required><br>
+  <form method="POST" action="/curriculum/InternshipAttendance/CreateInternshipAttendance"
+        class="max-w-xl mx-auto mt-6 p-6 bg-white rounded-lg shadow-md space-y-4">
+    
+    <div>
+      <label for="date" class="block mb-2 font-semibold text-gray-600">Date</label>
+      <input type="date" id="date" name="date"
+             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+    </div>
 
-        <label for="CheckOutTime">Check-Out Time:</label>
-        <input type="time" id="CheckOutTime" name="CheckOutTime" required><br>
+    <div>
+      <label for="check_in_time" class="block mb-2 font-semibold text-gray-600">Check-In Time</label>
+      <input type="time" id="check_in_time" name="check_in_time"
+             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+    </div>
 
-        <label for="CheckInStatus">Check-In Status:</label>
-        <input type="text" id="CheckInStatus" name="CheckInStatus" value="Auto-generated" readonly><br>
+    <div>
+      <label for="check_out_time" class="block mb-2 font-semibold text-gray-600">Check-Out Time</label>
+      <input type="time" id="check_out_time" name="check_out_time"
+             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+    </div>
 
-        <label for="AssingWork">Assigned Work:</label>
-        <select id="AssingWork" name="AssingWork">
-            <option value="none">None</option>
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-        </select><br>
+    <div>
+      <label for="check_in_status" class="block mb-2 font-semibold text-gray-600">Check-In Status</label>
+      <select id="check_in_status" name="check_in_status"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <option value="true">On Time</option>
+        <option value="false">Late</option>
+      </select>
+    </div>
 
-        <label for="StudentInfoID">Student Info ID:</label>
-        <input type="number" id="StudentInfoID" name="StudentInfoID" value="Auto-generated" readonly><br>
+    <div>
+      <label for="assing_work" class="block mb-2 font-semibold text-gray-600">Assigned Work</label>
+      <select id="assing_work" name="assing_work"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <option value="none">None</option>
+        <option value="pending">Pending</option>
+        <option value="completed">Completed</option>
+      </select>
+    </div>
 
-        <button type="submit">Check in</button>
-    </form>
+    <div>
+      <label for="student_info_id" class="block mb-2 font-semibold text-gray-600">Student Info ID</label>
+      <input type="number" id="student_info_id" name="student_info_id"
+             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+             placeholder="Enter Student ID" required>
+    </div>
+
+    <button type="submit"
+            class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition duration-200">
+      Check in
+    </button>
+  </form>
 </body>
 </html>

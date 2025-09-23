@@ -1,0 +1,28 @@
+<html>
+
+<head>
+  <title>{{ title }}</title>
+  <script src="{{ RootURL }}/core/static/js/TemplateEngine.js"></script>
+  <script src="{{ RootURL }}/core/static/js/mustache.min.js"></script>
+  <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
+  <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
+
+  <script>
+    let RootURL = "{{ RootURL }}";
+    let modules = {{{modules}}};
+
+    let engine = new TemplateEngine();
+    document.addEventListener("DOMContentLoaded", () => {
+      engine.render();
+    });
+  </script>
+</head>
+
+<body>
+  <h1>{{ title }}</h1>
+  <div id="MainContainer"></div>
+  <div>{{{adminForm}}} {{{formHTML}}} {{{tableHTML}}}</div>
+
+</body>
+
+</html>

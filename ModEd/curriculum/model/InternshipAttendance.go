@@ -8,13 +8,13 @@ import (
 
 type InternshipAttendance struct {
 	core.BaseModel
-	Date          time.Time             `gorm:"type:date"`
-	CheckInTime   time.Time             `gorm:"type:time"`
-	CheckOutTime  time.Time             `gorm:"type:time"`
-	CheckInStatus bool                  `gorm:"type:bool"`
-	AssingWork    string                `gorm:"type:varchar(255)"`
-	StudentInfoID uint                  `gorm:"not null"`
-	Student       InternshipInformation `gorm:"foreignKey:StudentCode;references:StudentCode"`
+	Date          time.Time             `gorm:"type:date" csv:"date" json:"date"`
+	CheckInTime   time.Time             `gorm:"type:time" csv:"check_in_time" json:"check_in_time"`
+	CheckOutTime  time.Time             `gorm:"type:time" csv:"check_out_time" json:"check_out_time"`
+	CheckInStatus bool                  `gorm:"type:bool" csv:"check_in_status" json:"check_in_status"`
+	AssingWork    string                `gorm:"type:varchar(255)" csv:"assing_work" json:"assing_work"`
+	StudentInfoID uint                  `gorm:"not null" csv:"student_info_id" json:"student_info_id"`
+	Student       InternshipInformation `gorm:"foreignKey:StudentInfoID;references:ID"`
 	*core.SerializableRecord
 }
 

@@ -47,7 +47,7 @@ func (controller *InternshipMentorHandler) GetInternshipMentor(context *fiber.Ct
 	}
 
 	// ID provided, return specific mentor
-	if err := controller.DB.First(&mentor, "id = ?", id).Error; err != nil {
+	if err := controller.DB.Preload("Company").First(&mentor, "id = ?", id).Error; err != nil {
 		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "mentor not found",

@@ -9,6 +9,7 @@ type InternshipResultEvaluation struct {
 
 	Comment                 string                `gorm:"type:varchar(255);not null"`
 	Score                   uint                  `gorm:"not null"`
-	InternshipInformation   InternshipInformation `gorm:"foreignKey:InternshipInformationId;references:Id"`
-	InternshipInformationId uint                  `gorm:"not null"`
+	InternshipInformationId uint                  `gorm:"not null" csv:"internship_information_id" json:"internship_information_id"`
+	InternshipInformation   InternshipInformation `gorm:"foreignKey:InternshipInformationId;references:ID"`
+	// *core.SerializableRecord
 }

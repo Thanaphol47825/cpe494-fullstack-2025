@@ -15,7 +15,6 @@
 	- `ClassMaterial.go`
 	- `Course.go`
 	- `CoursePlan.go`
-	- `CourseStatus.go`
 	- `Curriculum.go`
 - Add handler:
 	- Class, Class Material, Course, CoursePlan and Curriculum (`handler/`)
@@ -31,4 +30,27 @@
 
 - TODO : Each member should create a view file of their own model. The view file must contain form which is user use to insert and create a new record.
 
-#### 02/09/2025
+#### 23/09/2025
+**Refactor & Feature Update: Curriculum Module**
+
+- Refactored `CurriculumApplication.js`:
+	- Converted logic to **class structure**
+	- Introduced a `render` method to centralize UI rendering & event handling
+
+- **Implemented** the `CurriculumApplication` class:
+	- Can be instantiated and executed via the `render` method
+	- Allows users to interact with the interface directly
+
+- **New Features:**
+	- Interactive button creation
+	- Dynamic module loading
+	- Seamless execution of curriculum actions:
+		- Create classes
+		- Create materials
+		- Create course plans
+	- Integrated with supporting scripts:
+		- `CurriculumCreate.js`
+		- `ClassCreate.js`
+		- `CoursePlanCreate.js`
+		- `ClassMaterialCreate.js`
+		- `CourseCreate.js`

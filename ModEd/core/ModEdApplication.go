@@ -3,13 +3,17 @@ package core
 import (
 	"ModEd/core/config"
 	"ModEd/core/database"
+	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
+	"ModEd/core/demo"
 )
 
 type ModEdApplication struct {
@@ -50,12 +54,74 @@ func (application *ModEdApplication) loadConfig() {
 }
 
 func (application *ModEdApplication) setConfigStaticServe() {
-	application.Application.Static("/common/static", filepath.Join(application.RootPath, "common", "static"))
-	application.Application.Static("/curriculum/static", filepath.Join(application.RootPath, "curriculum", "static"))
-	application.Application.Static("/eval/static", filepath.Join(application.RootPath, "eval", "static"))
-	application.Application.Static("/hr/static", filepath.Join(application.RootPath, "hr", "static"))
-	application.Application.Static("/project/static", filepath.Join(application.RootPath, "project", "static"))
-	application.Application.Static("/recruit/static", filepath.Join(application.RootPath, "recruit", "static"))
+	// Automatically find all subfolders named 'static' and serve their contents
+	filepath.Walk(application.RootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && info.Name() == "static" {
+			parent := filepath.Base(filepath.Dir(path))
+			// Serve at /<parent>/static
+			urlPath := "/" + parent + "/static"
+			application.Application.Static(urlPath, path)
+		}
+		return nil
+	})
+}
+
+func (application *ModEdApplication) setSPAServe() {
+	application.Application.Get("/", func(context *fiber.Ctx) error {
+		path := filepath.Join(application.RootPath, "core", "view", "Main.tpl")
+		tmpl, _ := mustache.ParseFile(path)
+
+		file, err := os.ReadFile(filepath.Join(application.RootPath, "modules.json"))
+		if err != nil {
+			log.Fatalf("Error reading modules.json: %v", err)
+		}
+
+		var moduleList []struct {
+			Label     string `json:"label"`
+			ClassName string `json:"className"`
+			Script    string `json:"script"`
+			BaseRoute string `json:"baseRoute"`
+		}
+		if err := json.Unmarshal(file, &moduleList); err != nil {
+			log.Fatalf("Error unmarshalling modules.json: %v", err)
+		}
+		modulesJSON, err := json.Marshal(moduleList)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// demo gentable
+		mapper := CSVMapper[demo.Field]{Path: "/workspace/ModEd/core/demo/field.csv"}
+    	fields := mapper.Deserialize() 
+
+    	tableHTML := GenTableFromModels(fields)
+		//
+
+		// demo genform
+		action := "{{ RootURL }}/test/testGenForm"
+		class := ""
+		formHTML := GenFormFromModel(demo.Field{}, "UserForm", "POST", action, class)
+
+		adminForm := GenFormFromModel(demo.Admin{}, "AdminForm", "POST", action, class)
+		//
+
+
+		rendered := tmpl.Render(map[string]any{
+			"title":   "ModEd",
+			"RootURL": application.RootURL,
+			"modules": string(modulesJSON),
+			// demo genform, table
+			"formHTML":  formHTML, 
+			"adminForm": adminForm,
+			"tableHTML": tableHTML, 
+			//
+		})
+		context.Set("Content-Type", "text/html; charset=utf-8")
+		return context.SendString(rendered)
+	})
 }
 
 // NOTE: Singleton
@@ -72,6 +138,7 @@ func GetApplication() *ModEdApplication {
 
 		application.loadConfig()
 		application.setConfigStaticServe()
+		application.setSPAServe()
 
 		db, err := database.ConnectPostgres(application.Configuration.Database.Dsn)
 		if err != nil {

@@ -1,6 +1,3 @@
-// 📍 File: /common/static/js/CommonApplication.js
-// Orchestrates Common module features using the core template engine
-
 class CommonApplication {
   constructor(templateEngine) {
     this.templateEngine = templateEngine;

@@ -3,6 +3,7 @@ class TemplateEngine {
     this.currentModule = null
     this.moduleInstances = new Map()
     this.subRoutes = new Map() // Store sub-routes for each module
+    this.routerLinks = new RouterLinks()
     this.initializeRouting()
   }
 
@@ -16,94 +17,12 @@ class TemplateEngine {
     // Handle initial load
     window.addEventListener('DOMContentLoaded', () => {
       this.handleRouteChange()
-      this.initializeRouterLinks()
     })
-
-    // Listen for dynamic content changes to handle new routerLink elements
-    this.observeRouterLinks()
-  }
-
-  initializeRouterLinks() {
-    // Find all elements with routerLink attribute and set up navigation
-    document.querySelectorAll('[routerLink]').forEach((element) => {
-      this.setupRouterLink(element)
-    })
-  }
-
-  setupRouterLink(element) {
-    const routerLink = element.getAttribute('routerLink')
-    if (!routerLink) return
-
-    // Remove any existing click handlers to avoid duplicates
-    element.removeEventListener('click', element._routerLinkHandler)
-
-    // Create and store the handler
-    element._routerLinkHandler = (e) => {
-      e.preventDefault()
-      this.navigateTo(routerLink)
-    }
-
-    // Add click handler
-    element.addEventListener('click', element._routerLinkHandler)
-
-    // Add visual feedback for router links
-    element.style.cursor = 'pointer'
-    if (!element.classList.contains('router-link')) {
-      element.classList.add('router-link')
-    }
-  }
-
-  observeRouterLinks() {
-    // Create a MutationObserver to watch for new routerLink elements
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node.nodeType === Node.ELEMENT_NODE) {
-            // Check if the added node has routerLink
-            if (node.hasAttribute && node.hasAttribute('routerLink')) {
-              this.setupRouterLink(node)
-            }
-            // Check for routerLink in child elements
-            if (node.querySelectorAll) {
-              node.querySelectorAll('[routerLink]').forEach((element) => {
-                this.setupRouterLink(element)
-              })
-            }
-          }
-        })
-      })
-    })
-
-    // Wait for DOMContentLoaded to ensure document.body exists
-    if (document.body) {
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      })
-    } else {
-      window.addEventListener('DOMContentLoaded', () => {
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true,
-        })
-      })
-    }
-
-    // Store observer for cleanup if needed
-    this.routerLinkObserver = observer
   }
 
   getCurrentPath() {
     // Get path from hash (e.g., #common -> /common)
-    const hash = window.location.hash.slice(1) // Remove #
-    console.log('Current hash:', hash)
-
-    // Handle both #common and #/common formats
-    if (hash) {
-      return hash.startsWith('/') ? hash : `/${hash}`
-    }
-
-    return null
+    return this.routerLinks.getCurrentRoute()
   }
 
   findModuleByPath(path) {
@@ -166,7 +85,6 @@ class TemplateEngine {
   async loadModule(moduleConfig) {
     try {
       // Fetch the module script if not already loaded
-      console.log(this.moduleInstances)
       if (!this.moduleInstances.has(moduleConfig.className)) {
         await this.fetchModule(moduleConfig.script)
         const moduleInstance = eval(`new ${moduleConfig.className}(this)`)
@@ -180,8 +98,6 @@ class TemplateEngine {
       if (moduleInstance && typeof moduleInstance.render === 'function') {
         await moduleInstance.render()
       }
-
-      console.log(`Loaded module: ${moduleConfig.label} (${moduleConfig.baseRoute})`)
     } catch (error) {
       console.error(`Error loading module ${moduleConfig.label}:`, error)
       // Reset currentModule on error to maintain consistency
@@ -208,7 +124,7 @@ class TemplateEngine {
   }
 
   async render() {
-    await fetchTemplate()
+    await this.fetchTemplate()
     this.mainContainer = document.getElementById('MainContainer')
 
     // Check if we have a current route first
@@ -238,14 +154,11 @@ class TemplateEngine {
     )
 
     for (const module of modules) {
-      let button = this.createRouterLink(module.label, module.baseRoute.slice(1), '')
+      let button = this.routerLinks.createRouterLink(module.label, module.baseRoute.slice(1), '')
       moduleList.appendChild(button)
     }
 
     this.mainContainer.appendChild(moduleList)
-
-    // Initialize router links for the newly created elements
-    this.initializeRouterLinks()
   }
 
   create(code) {
@@ -256,27 +169,7 @@ class TemplateEngine {
 
   // Helper method to navigate programmatically
   navigateTo(moduleRoute) {
-    // Handle empty route (go to home/menu)
-    if (!moduleRoute || moduleRoute === '') {
-      window.location.hash = ''
-      return
-    }
-
-    // Clean the route and set hash
-    const cleanRoute = moduleRoute.startsWith('/') ? moduleRoute.slice(1) : moduleRoute
-    window.location.hash = cleanRoute
-  }
-
-  // Create router link programmatically
-  createRouterLink(text, route, className = '') {
-    const link = document.createElement('a')
-    link.setAttribute('routerLink', route)
-    link.textContent = text
-    if (className) {
-      link.className = className
-    }
-    this.setupRouterLink(link)
-    return link
+    this.routerLinks.navigateTo(moduleRoute)
   }
 
   // Get current module info
@@ -358,8 +251,5 @@ class TemplateEngine {
       </div>
     `)
     this.mainContainer.appendChild(errorMessage)
-
-    // Initialize router links for the newly created elements
-    this.initializeRouterLinks()
   }
 }

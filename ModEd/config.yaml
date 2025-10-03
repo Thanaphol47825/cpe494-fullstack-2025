@@ -4,3 +4,8 @@ app:
 
 database:
   dsn: 'host=postgres user=user password=H@55P@ssw0rd dbname=moded port=5432'
+
+redis:
+  addr: redis:6379
+  password: ""
+  db: 0

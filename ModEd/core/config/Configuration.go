@@ -9,6 +9,7 @@ import (
 type EnvConfiguration struct {
 	App      AppConfiguration
 	Database DatabaseConfiguration
+	Redis    RedisConfiguration
 }
 
 type AppConfiguration struct {
@@ -18,6 +19,12 @@ type AppConfiguration struct {
 
 type DatabaseConfiguration struct {
 	Dsn string
+}
+
+type RedisConfiguration struct {
+	Addr     string
+	Password string
+	Db       int
 }
 
 func LoadConfig() EnvConfiguration {

@@ -12,6 +12,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hoisie/mustache"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -22,6 +23,7 @@ type ModEdApplication struct {
 	RootPath      string
 	RootURL       string
 	DB            *gorm.DB
+	Redis         *redis.Client
 }
 
 func (application *ModEdApplication) Run() {
@@ -146,6 +148,12 @@ func GetApplication() *ModEdApplication {
 			panic(err)
 		}
 		application.DB = db
+
+		redis, err := database.NewRedis(application.Configuration.Redis)
+		if err != nil {
+			panic(err)
+		}
+		application.Redis = redis
 	}
 	return application
 }

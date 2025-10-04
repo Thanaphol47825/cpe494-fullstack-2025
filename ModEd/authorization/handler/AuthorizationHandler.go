@@ -46,8 +46,10 @@ func (controller *AuthorizationHandler) Login(ctx *fiber.Ctx) error {
 		HTTPOnly: true,
 		Secure:   true,
 	})
-	return ctx.JSON(fiber.Map{
-		"isSuccess": true,
+	return core.SendResponse(ctx, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Message:   "success",
 	})
 }
 
@@ -71,8 +73,12 @@ func (controller *AuthorizationHandler) Verify(ctx *fiber.Ctx) error {
 		})
 	}
 
-	return ctx.JSON(fiber.Map{
-		"isSuccess": true,
-		"userId":    session.UserID,
+	return core.SendResponse(ctx, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Message:   "success",
+		Result: fiber.Map{
+			"userId": session.UserID,
+		},
 	})
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"ModEd/core/config"
 
+	"ModEd/admin"
 	"ModEd/authorization"
 	"ModEd/common"
 	"ModEd/core"
@@ -53,5 +54,6 @@ func main() {
 	eval.InitialEval()
 	recruit.InitialRecruit()
 	authorization.InitialAuthorization()
+	admin.InitialAdmin()
 	application.Run()
 }

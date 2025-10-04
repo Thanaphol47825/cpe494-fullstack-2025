@@ -5,6 +5,7 @@ import (
 	"ModEd/core"
 	"ModEd/utils"
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -45,7 +46,7 @@ func (controller *AuthorizationHandler) Login(ctx *fiber.Ctx) error {
 	}
 
 	// Save Redis
-	if controller.Application.Redis.Set(context.Background(), sessionId.String(), userId, time.Hour*24*7).Err() != nil {
+	if controller.Application.Redis.Set(context.Background(), fmt.Sprintf("session:%s", sessionId.String()), userId, time.Hour*24*7).Err() != nil {
 		return core.SendResponse(ctx, core.BaseApiResponse{
 			IsSuccess: false,
 			Status:    400,
@@ -88,7 +89,7 @@ func (controller *AuthorizationHandler) Verify(ctx *fiber.Ctx) error {
 	}
 
 	// Get from Redis
-	userId, err := controller.Application.Redis.Get(ctx.Context(), sessionId).Result()
+	userId, err := controller.Application.Redis.Get(ctx.Context(), fmt.Sprintf("session:%s", sessionId)).Result()
 	if err != nil {
 		ctx.ClearCookie("token")
 		return core.SendResponse(ctx, core.BaseApiResponse{

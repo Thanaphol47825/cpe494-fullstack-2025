@@ -7,10 +7,10 @@ import (
 )
 
 type EnvConfiguration struct {
-	App      AppConfiguration
-	Database DatabaseConfiguration
-	Redis    RedisConfiguration
-	Jwt      JwtConfiguration
+	App        AppConfiguration        `mapstructure:"app"`
+	Database   DatabaseConfiguration   `mapstructure:"database"`
+	Redis      RedisConfiguration      `mapstructure:"redis"`
+	TimeToLive TimeToLiveConfiguration `mapstructure:"time-to-live"`
 }
 
 type AppConfiguration struct {
@@ -28,8 +28,8 @@ type RedisConfiguration struct {
 	Db       int
 }
 
-type JwtConfiguration struct {
-	Secret string
+type TimeToLiveConfiguration struct {
+	Session uint64
 }
 
 func LoadConfig() EnvConfiguration {

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -17,13 +18,14 @@ import (
 )
 
 type ModEdApplication struct {
-	Configuration config.EnvConfiguration
-	Application   *fiber.App
-	port          int
-	RootPath      string
-	RootURL       string
-	DB            *gorm.DB
-	Redis         *redis.Client
+	Configuration  config.EnvConfiguration
+	Application    *fiber.App
+	SessionManager *SessionManager
+	port           int
+	RootPath       string
+	RootURL        string
+	DB             *gorm.DB
+	Redis          *redis.Client
 }
 
 func (application *ModEdApplication) Run() {
@@ -154,6 +156,7 @@ func GetApplication() *ModEdApplication {
 			panic(err)
 		}
 		application.Redis = redis
+		application.SessionManager = NewSessionManager(application.Redis, time.Duration(application.Configuration.TimeToLive.Session)*time.Second)
 	}
 	return application
 }

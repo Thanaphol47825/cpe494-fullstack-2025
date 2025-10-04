@@ -10,5 +10,5 @@ redis:
   password: ""
   db: 0
 
-jwt:
-  secret: '0b9b72f783d86c0068cb3650bdc9002364a6caf9'
+time-to-live:
+  session: 604800

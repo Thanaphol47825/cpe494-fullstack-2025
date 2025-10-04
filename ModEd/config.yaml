@@ -9,3 +9,6 @@ redis:
   addr: redis:6379
   password: ""
   db: 0
+
+jwt:
+  secret: '0b9b72f783d86c0068cb3650bdc9002364a6caf9'

@@ -64,7 +64,7 @@ func (controller *AuthorizationHandler) Verify(ctx *fiber.Ctx) error {
 	// Load from Redis
 	session, status := controller.Application.SessionManager.Get(token)
 	if !status {
-		ctx.ClearCookie("token")
+		ctx.Cookie(&fiber.Cookie{Name: "token", Expires: time.Unix(0, 0)})
 		return core.SendResponse(ctx, core.BaseApiResponse{
 			IsSuccess: false,
 			Status:    400,

@@ -18,14 +18,15 @@ import (
 )
 
 type ModEdApplication struct {
-	Configuration  config.EnvConfiguration
-	Application    *fiber.App
-	SessionManager *SessionManager
-	port           int
-	RootPath       string
-	RootURL        string
-	DB             *gorm.DB
-	Redis          *redis.Client
+	Configuration          config.EnvConfiguration
+	Application            *fiber.App
+	SessionManager         *SessionManager
+	RoleBasedAccessControl *RoleBasedAccessControl
+	port                   int
+	RootPath               string
+	RootURL                string
+	DB                     *gorm.DB
+	Redis                  *redis.Client
 }
 
 func (application *ModEdApplication) Run() {
@@ -38,9 +39,9 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 	for _, route := range routeList {
 		switch route.Method {
 		case GET:
-			application.Application.Get(route.Route, route.Handler)
+			application.Application.Get(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Middleware), route.Handler)
 		case POST:
-			application.Application.Post(route.Route, route.Handler)
+			application.Application.Post(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Middleware), route.Handler)
 		}
 	}
 }
@@ -157,6 +158,7 @@ func GetApplication() *ModEdApplication {
 		}
 		application.Redis = redis
 		application.SessionManager = NewSessionManager(application.Redis, time.Duration(application.Configuration.TimeToLive.Session)*time.Second)
+		application.RoleBasedAccessControl = NewRoleBasedAccessControl(application.DB, application.SessionManager)
 	}
 	return application
 }

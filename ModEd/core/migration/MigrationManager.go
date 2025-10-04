@@ -20,6 +20,7 @@ func NewMigrationManager(DB *gorm.DB) *MigrationManager {
 	migrationMap := make(map[ModuleOptionEnum]MigrationStrategy)
 
 	// Register migration strategies for each module
+	migrationMap[MODULE_CORE] = &CoreMigrationStrategy{}
 	migrationMap[MODULE_COMMON] = &CommonMigrationStrategy{}
 	migrationMap[MODULE_RECRUIT] = &RecuitMigrationStrategy{}
 	migrationMap[MODULE_CURRICULUM] = &CurriculumMigrationStrategy{}

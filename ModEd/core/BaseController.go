@@ -10,9 +10,10 @@ const (
 )
 
 type RouteItem struct {
-	Route   string
-	Handler fiber.Handler
-	Method  HTTPMethod
+	Route      string
+	Handler    fiber.Handler
+	Method     HTTPMethod
+	Middleware Middleware
 }
 
 type BaseController interface {

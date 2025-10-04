@@ -3,6 +3,7 @@ package migration
 type ModuleOptionEnum string
 
 const (
+	MODULE_CORE            ModuleOptionEnum = "core"
 	MODULE_ASSET           ModuleOptionEnum = "asset"
 	MODULE_PROCUREMENT     ModuleOptionEnum = "procurement"
 	MODULE_SPACEMANAGEMENT ModuleOptionEnum = "space"

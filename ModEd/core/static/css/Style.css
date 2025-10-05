@@ -29,3 +29,81 @@ table{
 td, th{
 	border: 1px solid #444;
 }
+
+.form-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.form-input:required {
+    border-left: 3px solid #ef4444;
+}
+
+.form-input:valid {
+    border-left: 3px solid #10b981;
+}
+
+.form-submit-btn {
+    width: 100%;
+    padding: 12px 16px;
+    background-color: #2563eb;
+    color: white;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+}
+
+.form-submit-btn:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.form-submit-btn:active {
+    transform: translateY(0);
+}
+
+.form-reset-btn {
+    padding: 8px 24px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #374151;
+    background-color: white;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-reset-btn:hover {
+    background-color: #f9fafb;
+}
+
+.form-reset-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    border-color: #3b82f6;
+}
+
+.form-container {
+    max-width: 576px;
+    margin: 0 auto;
+    padding: 24px;
+    background-color: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.form-container > * + * {
+    margin-top: 24px;
+}

@@ -1,0 +1,6 @@
+{
+    "label": "Common Module",
+    "className": "CommonApplication",
+    "script": "/common/static/js/CommonApplication.js",
+    "baseRoute": "/common"
+}

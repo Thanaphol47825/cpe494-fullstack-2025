@@ -1,0 +1,6 @@
+{
+    "label": "Recruit Module",
+    "className": "RecruitApplication",
+    "script": "/recruit/static/js/RecruitApplication.js",
+    "baseRoute": "/recruit"
+}

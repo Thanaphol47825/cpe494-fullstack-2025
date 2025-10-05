@@ -3,20 +3,20 @@ package core
 import (
 	"ModEd/core/config"
 	"ModEd/core/database"
+	demo "ModEd/core/demo/model"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
-	"ModEd/core/demo/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hoisie/mustache"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
-
 )
 
 type ModEdApplication struct {
@@ -80,20 +80,7 @@ func (application *ModEdApplication) setSPAServe() {
 		path := filepath.Join(application.RootPath, "core", "view", "Main.tpl")
 		tmpl, _ := mustache.ParseFile(path)
 
-		file, err := os.ReadFile(filepath.Join(application.RootPath, "modules.json"))
-		if err != nil {
-			log.Fatalf("Error reading modules.json: %v", err)
-		}
-
-		var moduleList []struct {
-			Label     string `json:"label"`
-			ClassName string `json:"className"`
-			Script    string `json:"script"`
-			BaseRoute string `json:"baseRoute"`
-		}
-		if err := json.Unmarshal(file, &moduleList); err != nil {
-			log.Fatalf("Error unmarshalling modules.json: %v", err)
-		}
+		moduleList := application.DiscoverModules()
 		modulesJSON, err := json.Marshal(moduleList)
 		if err != nil {
 			log.Fatal(err)
@@ -107,6 +94,57 @@ func (application *ModEdApplication) setSPAServe() {
 		context.Set("Content-Type", "text/html; charset=utf-8")
 		return context.SendString(rendered)
 	})
+}
+
+func (application *ModEdApplication) DiscoverModules() []struct {
+	Label     string `json:"label"`
+	ClassName string `json:"className"`
+	Script    string `json:"script"`
+	BaseRoute string `json:"baseRoute"`
+} {
+	var moduleList []struct {
+		Label     string `json:"label"`
+		ClassName string `json:"className"`
+		Script    string `json:"script"`
+		BaseRoute string `json:"baseRoute"`
+	}
+
+	// Walk through the ModEd directory to find modules-config.json files
+	err := filepath.Walk(application.RootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Look for modules-config.json files
+		if !info.IsDir() && (info.Name() == "modules-config.json" || strings.HasSuffix(info.Name(), "-modules-config.json")) {
+			file, err := os.ReadFile(path)
+			if err != nil {
+				log.Printf("Error reading %s: %v", path, err)
+				return nil
+			}
+
+			var module struct {
+				Label     string `json:"label"`
+				ClassName string `json:"className"`
+				Script    string `json:"script"`
+				BaseRoute string `json:"baseRoute"`
+			}
+
+			if err := json.Unmarshal(file, &module); err != nil {
+				log.Printf("Error unmarshalling %s: %v", path, err)
+				return nil
+			}
+
+			moduleList = append(moduleList, module)
+		}
+		return nil
+	})
+
+	if err != nil {
+		log.Printf("Error discovering modules: %v", err)
+	}
+
+	return moduleList
 }
 
 func (application *ModEdApplication) setExportTemplate() {
@@ -130,8 +168,6 @@ func (application *ModEdApplication) setExportTemplate() {
 		return context.JSON(template)
 	})
 }
-
-
 
 // NOTE: Singleton
 var application *ModEdApplication

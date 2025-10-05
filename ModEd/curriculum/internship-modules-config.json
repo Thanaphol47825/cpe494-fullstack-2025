@@ -1,0 +1,6 @@
+{
+    "label": "Internship Module",
+    "className": "InternshipApplication",
+    "script": "/curriculum/static/js/InternshipApplication.js",
+    "baseRoute": "/internship"
+}

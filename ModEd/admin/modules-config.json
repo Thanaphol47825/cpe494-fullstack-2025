@@ -1,0 +1,6 @@
+{
+    "label": "Admin Module",
+    "className": "AdminApplication",
+    "script": "/admin/static/js/AdminApplication.js",
+    "baseRoute": "/admin"
+}

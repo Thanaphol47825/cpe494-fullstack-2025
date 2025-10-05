@@ -1,0 +1,6 @@
+{
+    "label": "Authorization Module",
+    "className": "AuthorizationApplication",
+    "script": "/authorization/static/js/AuthorizationApplication.js",
+    "baseRoute": "/authorization"
+}

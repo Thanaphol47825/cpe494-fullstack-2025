@@ -1,0 +1,6 @@
+{
+    "label": "Eval Module",
+    "className": "EvalApplication",
+    "script": "/eval/static/js/EvalApplication.js",
+    "baseRoute": "/eval"
+}

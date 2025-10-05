@@ -1,0 +1,6 @@
+{
+    "label": "Project Module",
+    "className": "ProjectApplication",
+    "script": "/project/static/js/ProjectApplication.js",
+    "baseRoute": "/project"
+}

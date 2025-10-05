@@ -1,4 +1,9 @@
-<p>
-    <label>{{ label }}</label>
-    <input name="{{ name }}" id="{{ ID }}" rel="input"/>
+<p class="field">
+  <label for="{{ id }}">{{ label }}</label>
+  <input
+    id="{{ id }}"
+    name="{{ name }}"
+    type="{{ type }}"
+    rel="input"
+  />
 </p>

@@ -9,12 +9,14 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"ModEd/core/demo/model"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/hoisie/mustache"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
+
 )
 
 type ModEdApplication struct {
@@ -129,6 +131,8 @@ func (application *ModEdApplication) setExportTemplate() {
 	})
 }
 
+
+
 // NOTE: Singleton
 var application *ModEdApplication
 
@@ -145,6 +149,8 @@ func GetApplication() *ModEdApplication {
 		application.setConfigStaticServe()
 		application.setSPAServe()
 		application.setExportTemplate()
+
+		application.SetAPIform("field", demo.Field{})
 
 		db, err := database.ConnectPostgres(application.Configuration.Database.Dsn)
 		if err != nil {

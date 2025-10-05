@@ -1,15 +1,27 @@
 package core
 
 import (
-	"fmt"
 	"reflect"
-    "strings"
+	"github.com/gofiber/fiber/v2"
+
 )
 
 type FieldMeta struct {
-	Name  string
-	Type  string
-	Label string
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Label string `json:"label"`
+}
+
+func defaultInputType(goType string) string {
+	switch goType {
+	case "int", "int8", "int16", "int32", "int64",
+		"uint", "uint8", "uint16", "uint32", "uint64",
+		"float32", "float64":
+		return "number"
+	case "bool":
+		return "checkbox"
+	}
+	return "text"
 }
 
 func GetModelMetadata(model interface{}) []FieldMeta {
@@ -19,104 +31,43 @@ func GetModelMetadata(model interface{}) []FieldMeta {
 	}
 	typ := val.Type()
 	var fields []FieldMeta
+
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
+
+		if field.Name == "BaseModel" {
+			continue
+		}
+
+		//  tag
+		jsonName := field.Tag.Get("json")
+		if jsonName == "" || jsonName == "-" {
+			jsonName = field.Name
+		}
+		formType := field.Tag.Get("form") 
 		label := field.Tag.Get("label")
+		if formType == "" {
+			formType = defaultInputType(field.Type.Name())
+		} else if formType == "-" {
+			continue
+		}
+
+		if label == "" {
+			label = jsonName
+		}
+
 		fields = append(fields, FieldMeta{
-			Name:  field.Name,
-			Type:  field.Type.Name(),
-			Label: label,
+			Name:     jsonName,
+			Type:     formType,
+			Label:    label,
 		})
 	}
 	return fields
 }
 
-func GenFormFromModel(model interface{}, id string, method string, action string, class string) string {
-	fields := GetModelMetadata(model)
-	html := fmt.Sprintf(`<form id="%s" method="%s" action="%s" class="%s">`, id, method, action, class)
-	html += "\n"
-	for _, f := range fields {
-		if f.Name == "BaseModel" {
-			continue
-		}
-		label := f.Label
-		if label == "" {
-			label = f.Name
-		}
-		html += "<div>\n"
-		html += fmt.Sprintf(`<label class="block text-sm font-medium mb-1">%s: <input name="%s" type="text"></label><br>`, label, f.Name)
-		html += "\n</div>\n"
-	}
-	html += "</form>"
-	// fmt.Println(html)
-	return html
+func (application *ModEdApplication) SetAPIform(path string, model interface{}) {
+	application.Application.Get("/api/modelmeta/" + path, func(c *fiber.Ctx) error {
+		meta := GetModelMetadata(model)
+		return c.JSON(meta)
+	})
 }
-
-func GenTableFromModels(models interface{}) string {
-	val := reflect.ValueOf(models)
-	if val.Kind() != reflect.Slice {
-		return "<table><tr><td>Input must be a slice of struct</td></tr></table>"
-	}
-	if val.Len() == 0 {
-		return "<table><tr><td>No data</td></tr></table>"
-	}
-
-	indirect := func(v reflect.Value) reflect.Value {
-		for v.IsValid() && v.Kind() == reflect.Pointer {
-			if v.IsNil() {
-				return reflect.Zero(v.Type().Elem())
-			}
-			v = v.Elem()
-		}
-		return v
-	}
-
-	first := indirect(val.Index(0))
-	if !first.IsValid() || first.Kind() != reflect.Struct {
-		return "<table><tr><td>Slice elements must be struct or *struct</td></tr></table>"
-	}
-
-	fields := GetModelMetadata(first.Interface())
-
-	var b strings.Builder
-	b.WriteString("<table border='1'>\n<tr>")
-
-	for _, f := range fields {
-		if f.Name == "BaseModel" {
-			continue
-		}
-		label := f.Label
-		if label == "" {
-			label = f.Name
-		}
-		fmt.Fprintf(&b, "<th>%s</th>", label)
-	}
-	b.WriteString("</tr>\n")
-
-	for i := 0; i < val.Len(); i++ {
-		row := indirect(val.Index(i)) 
-		b.WriteString("<tr>")
-		for _, f := range fields {
-			if f.Name == "BaseModel" {
-				continue
-			}
-
-			var cell any = ""
-			if row.IsValid() && row.Kind() == reflect.Struct {
-				fv := row.FieldByName(f.Name)
-				if fv.IsValid() {
-					fv = indirect(fv)
-					if fv.IsValid() && fv.CanInterface() {
-						cell = fv.Interface()
-					}
-				}
-			}
-			fmt.Fprintf(&b, "<td>%v</td>", cell)
-		}
-		b.WriteString("</tr>\n")
-	}
-
-	b.WriteString("</table>")
-	return b.String()
-}
-

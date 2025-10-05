@@ -3,6 +3,7 @@ package test
 import (
 	"fmt"
 	"net/http"
+
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestFacultyController(t *testing.T) {
 	// CREATE
 	t.Run("create", func(t *testing.T) {
 		payload := map[string]any{
-			"name": "TestFaculty",
+			"name":   "TestFaculty",
 			"budget": 1000000,
 		}
 		created := req(t, http.MethodPost, "/common/faculties", payload)
@@ -33,7 +34,7 @@ func TestFacultyController(t *testing.T) {
 	// UPDATE
 	t.Run("update", func(t *testing.T) {
 		updatePayload := map[string]any{
-			"name": "Updated Faculty",
+			"name":   "Updated Faculty",
 			"budget": 1500000,
 		}
 		updated := req(t, http.MethodPost, "/common/faculties/"+facultyID, updatePayload)

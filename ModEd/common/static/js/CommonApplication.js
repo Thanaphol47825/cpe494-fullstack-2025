@@ -148,3 +148,5 @@ class CommonApplication {
 if (typeof window !== "undefined") {
   window.CommonApplication = CommonApplication;
 }
+
+

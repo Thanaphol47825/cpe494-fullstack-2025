@@ -3,87 +3,37 @@ class ClassMaterialCreate {
         this.application = application;
     }
 
-    classMaterialTemplate = `
-    <form
-        id="classMaterialForm"
-        method="post"
-        action="{{ RootURL }}/curriculum/ClassMaterial/createClassMaterial"
-        class="flex flex-col gap-6"
-    >
-        <div>
-            <label class="block text-sm font-medium mb-1"> <span class="text-red-500">Class</span></label>
-            <div id="classSelectContainer"></div>
-        </div>
+    getClassesOption = async () => {
+        const res = await fetch(`${RootURL}/curriculum/Class/getClasses`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json().catch(() => ([]));
 
-        <div>
-            <label class="block text-sm font-medium mb-1">File Name</label>
-            <input required name="FileName" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Class Material File Name" />
-        </div>
-
-        <div>
-            <label class="block text-sm font-medium mb-1">File Path</label>
-            <input required name="FilePath" type="text" class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="/path/to/your/file" />
-        </div>
-
-        <div class="md:col-span-2">
-            <button type="submit" class="w-full bg-indigo-600 text-white rounded-xl px-4 py-2 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">Save Class Material</button>
-        </div>
-    </form>
-    `
-
-    getClasses = async () => {
-        try {
-            const res = await fetch(`${RootURL}/curriculum/Class/getClasses`, {
-                method: "GET",
-                headers: { "Content-Type": "application/json" },
-            });
-            const data = await res.json().catch(() => ([]));
-            if (!res.ok) {
-                const msg = data?.error?.message || data?.error || data?.message || `Request failed (${res.status})`;
-                throw new Error(msg);
+        let select = []
+        data.result.forEach(item => {
+            let formattedSchedule = "";
+            if (item.Schedule) {
+                const d = new Date(item.Schedule);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const hh = String(d.getHours()).padStart(2, '0');
+                const min = String(d.getMinutes()).padStart(2, '0');
+                formattedSchedule = `${yyyy}-${mm}-${dd} | ${hh}:${min}`;
             }
 
-            // Create select element
-            const select = document.createElement("select");
-            select.name = "ClassId";
-            select.className = "w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500";
+            let label = item.Course.Name + " - " + formattedSchedule;
 
-            // Add default not-selected option
-            const defaultOption = document.createElement("option");
-            defaultOption.value = "";
-            defaultOption.textContent = "-- Select a class --";
-            defaultOption.disabled = true;
-            defaultOption.selected = true;
-            select.appendChild(defaultOption);
-
-            data.result.forEach(item => {
-                const option = document.createElement("option");
-                option.value = item.ID;
-
-                let formattedSchedule = "";
-                if (item.Schedule) {
-                    const d = new Date(item.Schedule);
-                    const yyyy = d.getFullYear();
-                    const mm = String(d.getMonth() + 1).padStart(2, '0');
-                    const dd = String(d.getDate()).padStart(2, '0');
-                    const hh = String(d.getHours()).padStart(2, '0');
-                    const min = String(d.getMinutes()).padStart(2, '0');
-                    formattedSchedule = `${yyyy}-${mm}-${dd} | ${hh}:${min}`;
-                }
-
-                option.textContent = item.Course.Name + " - " + formattedSchedule;
-                select.appendChild(option);
-            });
-            return select;
-        } catch (err) {
-            console.error("Failed to fetch classes:", err);
-            return document.createTextNode("Failed to load classes");
-        }
+            select.push({ value: item.ID, label: label });
+        });
+        return select;
     }
 
     handleSubmit = async (e) => {
         e.preventDefault(); // prevent default form submission
-        const formData = new FormData(this.form);
+        const form = document.getElementById('curriculum-form');
+        const formData = new FormData(form);
         const payload = Object.fromEntries(formData.entries());
 
         if (!payload.ClassId) {
@@ -93,7 +43,7 @@ class ClassMaterialCreate {
         payload.ClassId = parseInt(payload.ClassId);
 
         try {
-            const res = await fetch(this.form.action, {
+            const res = await fetch(`${RootURL}/curriculum/ClassMaterial/createClassMaterial`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -101,8 +51,7 @@ class ClassMaterialCreate {
             const data = await res.json();
             if (data.isSuccess) {
                 alert("Class Material saved!");
-                this.form.reset();
-                this.form.ClassId.value = "";
+                form.reset();
             } else {
                 alert("Error: " + (data.result || "Failed to save"));
             }
@@ -115,18 +64,64 @@ class ClassMaterialCreate {
         // clear application container
         this.application.mainContainer.innerHTML = "";
 
-        const renderedTemplate = Mustache.render(this.classMaterialTemplate, {
-            RootURL: RootURL
+        // create form wrapper
+        const formWrapper = this.application.create(`
+            <div class="bg-gray-100 min-h-screen py-8">
+                <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
+                    Class Material
+                </h1>
+                <form method="POST" id="curriculum-form"
+                        class="form-container">
+                    <div id="form-fields"></div>
+                    <button type="submit" class="form-submit-btn">
+                        Create Class Material
+                    </button>
+                </form>
+                <div style="margin-top: 20px;">
+                    <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
+                </div>
+            </div>
+        `);
+        this.application.mainContainer.appendChild(formWrapper);
+
+        // fetch class options
+        const classesOption = await this.getClassesOption();
+
+        // define form fields
+        const fields = [
+            {
+                Id: "ClassId", Label: "Class", Type: "select", Name: "ClassId", required: true,
+                options: classesOption
+            },
+            { Id: "file_name", Label: "File Name", Type: "text", Name: "FileName", Required: true, Placeholder: "Enter Class Material File Name" },
+            { Id: "file_path", Label: "File Path", Type: "text", Name: "FilePath", Required: true, Placeholder: "Enter Class Material File Path" },
+        ];
+
+        // render form template
+        const fieldsContainer = document.getElementById('form-fields');
+        fields.forEach(field => {
+        let inputHTML = '';
+
+            if (field.Type === "select" && this.application.template && this.application.template.Select) {
+                inputHTML = Mustache.render(this.application.template.Select, field);
+            }
+
+            else if (this.application.template && this.application.template.Input) {
+                inputHTML = Mustache.render(this.application.template.Input, field);
+            }
+
+            if (inputHTML) {
+                const inputElement = this.application.create(inputHTML);
+                fieldsContainer.appendChild(inputElement);
+            }
         });
 
-        let formContainer = this.application.create(renderedTemplate)
-        this.application.mainContainer.append(formContainer)
-
-        this.options = await this.getClasses();
-        this.selectContainer = document.getElementById("classSelectContainer");
-        this.selectContainer.appendChild(this.options);
-        
-        this.form = document.getElementById("classMaterialForm");
-        this.form.addEventListener("submit", this.handleSubmit);
+        let formHandler = document.getElementById('curriculum-form');
+        formHandler.addEventListener('submit', this.handleSubmit.bind(this));
     }
+}
+
+// Make available globally
+if (typeof window !== 'undefined') {
+    window.ClassMaterialCreate = ClassMaterialCreate;
 }

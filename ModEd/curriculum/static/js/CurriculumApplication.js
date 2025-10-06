@@ -120,7 +120,7 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
             </h1>
             <div class="w-24 h-1 bg-gradient-to-r from-emerald-500 to-teal-500 mx-auto mb-6 rounded-full"></div>
             <p class="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-              Comprehensive educational management system for organizing curricula, courses, classes, and learning materials in one integrated platform
+              Curriculum Module for organizing curriculum, courses, classes, class materials, and course plans
             </p>
           </div>
 

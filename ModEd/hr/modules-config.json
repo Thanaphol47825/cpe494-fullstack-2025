@@ -1,6 +1,6 @@
 {
     "label": "Hr Module",
     "className": "HrApplication",
-    "script": "/hr/static/js/HrApplication.js",
+    "script": "/hr/static/js/core/HrErrorHandler.js,/hr/static/js/core/HrValidator.js,/hr/static/js/core/HrApiService.js,/hr/static/js/core/HrUiComponents.js,/hr/static/js/HrApplication.js",
     "baseRoute": "/hr"
 }

@@ -1,4 +1,5 @@
 // Student Resignation Form Feature using Core Module's FormRender
+if (typeof HrStudentResignationFormFeature === 'undefined') {
 class HrStudentResignationFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;
@@ -68,7 +69,7 @@ class HrStudentResignationFormFeature {
             </div>
 
             <div class="text-center mt-8">
-              <a routerLink="hr/resignation/student" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Student Resignations</a>
+              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
             </div>
           </div>
         </div>
@@ -88,6 +89,21 @@ class HrStudentResignationFormFeature {
       for (let i = 1; i < allForms.length; i++) allForms[i].remove();
       document.querySelectorAll('form').forEach(f => { if (!f.closest('.student-resignation-form-container')) f.remove(); });
 
+      // Remove any submit buttons that FormRender might have created
+      const form = document.querySelector('form');
+      if (form) {
+        const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        submitButtons.forEach(btn => btn.remove());
+        
+        // Remove any text content that might contain "Submit"
+        const formElements = form.querySelectorAll('*');
+        formElements.forEach(el => {
+          if (el.textContent && el.textContent.trim() === 'Submit' && el.tagName !== 'BUTTON') {
+            el.remove();
+          }
+        });
+      }
+
       this.#addCustomButtons();
       this.#attachFormHandlers();
       this.#attachResultHandlers();
@@ -100,35 +116,59 @@ class HrStudentResignationFormFeature {
   #addCustomButtons() {
     const form = document.querySelector('form');
     if (!form) return;
+    
+    // Create button container outside of form
     const container = document.createElement('div');
     container.className = 'flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200';
+    container.id = 'custom-buttons-container';
 
     const submitBtn = document.createElement('button');
-    submitBtn.type = 'submit';
+    submitBtn.type = 'button'; // Change from 'submit' to 'button'
     submitBtn.className = 'inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-300 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1';
     submitBtn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Submit Request';
 
     const resetBtn = document.createElement('button');
-    resetBtn.type = 'reset';
+    resetBtn.type = 'button'; // Change from 'reset' to 'button'
     resetBtn.className = 'inline-flex items-center justify-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg';
     resetBtn.innerHTML = '<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>Reset';
 
     container.appendChild(submitBtn);
     container.appendChild(resetBtn);
-    form.appendChild(container);
+    
+    // Insert buttons after the form container, not inside the form
+    const formContainer = document.querySelector('.student-resignation-form-container');
+    if (formContainer && formContainer.parentNode) {
+      formContainer.parentNode.insertBefore(container, formContainer.nextSibling);
+    }
   }
 
   #attachFormHandlers() {
     const form = document.querySelector('form');
     if (!form) return;
+    
+    // Remove default form submission behavior
     form.addEventListener('submit', (e) => {
       e.preventDefault();
-      this.#handleSubmit(form);
     });
-    form.addEventListener('reset', () => {
-      this.#setStatus('✓ Form reset', 'info');
-      this.#hideResult();
-    });
+    
+    // Add click handlers for custom buttons
+    const submitBtn = document.querySelector('#custom-buttons-container button[type="button"]:first-child');
+    const resetBtn = document.querySelector('#custom-buttons-container button[type="button"]:last-child');
+    
+    if (submitBtn) {
+      submitBtn.addEventListener('click', () => {
+        this.#handleSubmit(form);
+      });
+    }
+    
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        form.reset();
+        this.#setStatus('✓ Form reset', 'info');
+        this.#hideResult();
+      });
+    }
+    
     const firstField = form.querySelector('input[name="StudentCode"]');
     if (firstField) setTimeout(() => firstField.focus(), 100);
   }
@@ -235,5 +275,6 @@ if (typeof window !== 'undefined') {
 }
 
 console.log('HrStudentResignationFormFeature loaded');
+}
 
 

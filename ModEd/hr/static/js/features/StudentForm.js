@@ -1,4 +1,5 @@
 // Student Form Feature using Core Module's FormRender
+if (typeof HrStudentFormFeature === 'undefined') {
 class HrStudentFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;
@@ -407,3 +408,4 @@ if (typeof window !== 'undefined') {
 }
 
 console.log("HrStudentFormFeature loaded");
+}

@@ -1,4 +1,5 @@
 // Instructor Form Feature using Core Module's FormRender
+if (typeof HrInstructorFormFeature === 'undefined') {
 class HrInstructorFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;
@@ -398,3 +399,4 @@ if (typeof window !== 'undefined') {
 }
 
 console.log("HrInstructorFormFeature loaded");
+}

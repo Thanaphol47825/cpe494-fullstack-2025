@@ -40,7 +40,7 @@ class ApplicantCreate {
                       d="M12 11c.943 0 1.809.386 2.432 1.01A3.432 3.432 0 0115.442 14h.058A4.5 4.5 0 0012 9.5 4.5 4.5 0 007.5 14h.058c.07-1.043.504-2.003 1.265-2.744A3.432 3.432 0 0111 11h1z"></path>
               </svg>
             </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Applicant</h1>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Applicant Registration</h1>
           </div>
 
           <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
@@ -58,7 +58,7 @@ class ApplicantCreate {
               <div class="applicant-form-container"></div>
               <div class="flex gap-3 mt-6">
                 <button id="btnReset"
-                        class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-gray-700 hover:bg-gray-50">
+                        class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-gray-700 hover:bg-gray-100 transition">
                   Reset
                 </button>
               </div>
@@ -90,7 +90,11 @@ class ApplicantCreate {
 
     const formRender = new FormRender(application, schema, ".applicant-form-container")
     await formRender.render()
-    requestAnimationFrame(() => this.#applyTailwindStyles())
+    requestAnimationFrame(() => {
+      this.#applyTailwindStyles()
+      this.#styleSubmitButton()
+      this.#enforceRequiredFields()
+    })
 
     const container = this.engine.mainContainer.querySelector(".applicant-form-container")
     document.getElementById("btnReset")?.addEventListener("click", () => {
@@ -118,12 +122,54 @@ class ApplicantCreate {
     root.querySelectorAll("p, .field, .form-row").forEach(w => w.classList.add("mb-3"))
   }
 
+  #styleSubmitButton() {
+    const root = this.engine.mainContainer.querySelector(".applicant-form-container")
+    if (!root) return
+    const submitBtn = root.querySelector('input[type="submit"], button[type="submit"]')
+    if (submitBtn) {
+      submitBtn.classList.add(
+        "mt-4", "inline-flex", "items-center", "justify-center",
+        "rounded-xl", "px-4", "py-2", "bg-indigo-600",
+        "text-white", "font-medium", "shadow-md",
+        "hover:bg-indigo-700", "hover:shadow-lg", "transition", "duration-200", "ease-in-out"
+      )
+      submitBtn.value = submitBtn.value || "Submit"
+    }
+  }
+
   async #submit(e, numericFieldNames) {
     e.preventDefault()
-    const fd = new FormData(e.target)
+
+    const form = e.target
+    const submitBtn = form.querySelector('input[type="submit"], button[type="submit"]')
+    const resultBox = document.getElementById("resultBox")
+    const resultContent = document.getElementById("resultContent")
+
+    if (!submitBtn.dataset.confirmed) {
+      const valid = this.#validateForm(form)
+      if (!valid) {
+        this.#setStatus("Please complete all required fields.", "text-red-600")
+        resultBox.classList.add("hidden") 
+        return
+      }
+      this.#setStatus("Press submit again to confirm.", "text-yellow-600")
+      submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-700")
+      submitBtn.classList.add("bg-yellow-500", "hover:bg-yellow-600")
+      submitBtn.dataset.confirmed = "true"
+      return
+    }
+
+    submitBtn.dataset.confirmed = ""
+    submitBtn.classList.remove("bg-yellow-500", "hover:bg-yellow-600")
+    submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-700")
+
+    const fd = new FormData(form)
     const data = Object.fromEntries(fd.entries())
+
     for (const key of Object.keys(data)) {
-      if (numericFieldNames.has(key) && data[key] !== "" && !Number.isNaN(Number(data[key]))) data[key] = Number(data[key])
+      if (numericFieldNames.has(key) && data[key] !== "" && !Number.isNaN(Number(data[key]))) {
+        data[key] = Number(data[key])
+      }
     }
     if (data.birth_date) {
       const d = new Date(data.birth_date)
@@ -132,8 +178,6 @@ class ApplicantCreate {
 
     this.#setStatus("Submitting...", "text-gray-600")
     const url = this.rootURL + "/recruit/CreateApplicant"
-    const resultBox = document.getElementById("resultBox")
-    const resultContent = document.getElementById("resultContent")
 
     try {
       const resp = await fetch(url, {
@@ -142,21 +186,31 @@ class ApplicantCreate {
         body: JSON.stringify(data)
       })
       const result = await resp.json().catch(() => ({}))
+
       if (result?.isSuccess) {
+        const payload = result.result
+        let id = null
+        if (Array.isArray(payload) && payload.length) id = payload[0]?.ID ?? payload[0]?.id ?? payload[0]?.Id
+        else if (payload && typeof payload === "object") id = payload.ID ?? payload.id ?? payload.Id
+
         this.#setStatus("Applicant created successfully!", "text-green-600")
-        resultContent.textContent = JSON.stringify(result.result, null, 2)
+
         resultBox.classList.remove("hidden")
-        e.target.reset()
+        resultContent.innerHTML = `
+          <div class="flex flex-col items-center justify-center py-10">
+            <div class="text-5xl sm:text-6xl font-bold text-indigo-700 mb-3">Applicant ID</div>
+            <div class="text-6xl sm:text-7xl font-extrabold text-cyan-600">${id ?? "N/A"}</div>
+            <p class="mt-6 text-gray-500 text-sm">Please save this ID for your reference.</p>
+          </div>
+        `
+        form.reset()
       } else {
-        this.#setStatus("Failed to create applicant", "text-red-600")
-        resultContent.textContent =
-          typeof result?.result === "string" ? result.result : JSON.stringify(result || {}, null, 2)
-        resultBox.classList.remove("hidden")
+        this.#setStatus("Failed to create applicant.", "text-red-600")
+        resultBox.classList.add("hidden")
       }
     } catch (err) {
-      this.#setStatus("Error submitting form", "text-red-600")
-      resultContent.textContent = err.toString()
-      resultBox.classList.remove("hidden")
+      this.#setStatus("Error submitting form.", "text-red-600")
+      resultBox.classList.add("hidden")
     }
   }
 
@@ -179,5 +233,48 @@ class ApplicantCreate {
     div.className = "max-w-3xl mx-auto my-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800"
     div.textContent = msg
     ;(this.engine?.mainContainer || document.body).appendChild(div)
+  }
+
+  #enforceRequiredFields() {
+    const root = this.engine.mainContainer.querySelector(".applicant-form-container")
+    if (!root) return
+    root.querySelectorAll("input, select, textarea").forEach(el => {
+      const type = (el.getAttribute("type") || "").toLowerCase()
+      if (["submit","button","reset","hidden"].includes(type)) return
+      if (el.disabled) return
+      el.required = true
+
+      el.addEventListener("input", () => this.#clearValidityStyles(el))
+      el.addEventListener("change", () => this.#clearValidityStyles(el))
+    })
+  }
+
+  #validateForm(form) {
+
+    form.querySelectorAll("input, select, textarea").forEach(el => this.#clearValidityStyles(el))
+
+    const ok = form.checkValidity()
+
+    if (!ok) {
+
+      const invalids = Array.from(form.querySelectorAll(":invalid"))
+      invalids.forEach(el => this.#markInvalid(el))
+
+      invalids[0]?.focus()
+      invalids[0]?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }
+    return ok
+  }
+
+  #markInvalid(el) {
+    el.classList.add("border-red-500", "ring-1", "ring-red-400")
+    const label = el.closest("p, .field, .form-row")?.querySelector("label")
+    if (label) label.classList.add("text-red-600")
+  }
+
+  #clearValidityStyles(el) {
+    el.classList.remove("border-red-500", "ring-1", "ring-red-400")
+    const label = el.closest("p, .field, .form-row")?.querySelector("label")
+    if (label) label.classList.remove("text-red-600")
   }
 }

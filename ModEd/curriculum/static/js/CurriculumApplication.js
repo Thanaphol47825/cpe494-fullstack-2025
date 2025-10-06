@@ -188,7 +188,17 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       </div>
     `
     }
-    async renderCreateCourse() { }
+    async renderCreateCourse() { 
+      if (window.CourseCreate) {
+        const feature = new window.CourseCreate(this.templateEngine);
+        await feature.render();
+      } else {
+        console.error('CourseCreate not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="text-red-600">Error loading.</div>
+        `;
+      }
+    }
 
     async renderClass() {
       this.templateEngine.mainContainer.innerHTML = `

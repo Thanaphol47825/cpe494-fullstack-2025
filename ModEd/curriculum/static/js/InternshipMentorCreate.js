@@ -17,8 +17,7 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                 <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
                     Create Internship Mentor
                 </h1>
-                <form method="POST" action="/curriculum/CreateInternshipMentor"
-                      class="form-container">
+                <form id="internship-mentor-form" class="form-container">
                     <div id="form-fields"></div>
                     <button type="submit" class="form-submit-btn">
                       Create Mentor
@@ -48,6 +47,35 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                     fieldsContainer.appendChild(inputElement);
                 }
             });
+
+            // Add event listener for form submission
+            const form = document.getElementById('internship-mentor-form');
+            form.addEventListener('submit', this.handleSubmit.bind(this));
+        }
+
+        async handleSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/curriculum/CreateInternshipMentor', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Success:', result);
+                    form.reset();
+                } else {
+                    throw new Error('Failed to create mentor');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to create mentor. Please try again.');
+            }
         }
     }
     window.InternshipMentorCreate = InternshipMentorCreate;

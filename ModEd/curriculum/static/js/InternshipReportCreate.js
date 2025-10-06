@@ -15,7 +15,7 @@ if (typeof window !== 'undefined' && !window.InternshipReportCreate) {
         <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
           Create Internship Report
         </h1>
-        <form method="POST" action="/curriculum/CreateInternshipReport" class="form-container">
+        <form id="internship-report-form" class="form-container">
           <div id="form-fields"></div>
           <button type="submit" class="form-submit-btn">
             Create Report
@@ -40,6 +40,34 @@ if (typeof window !== 'undefined' && !window.InternshipReportCreate) {
           fieldsContainer.appendChild(inputElement);
         }
       });
+
+      const form = document.getElementById('internship-report-form');
+      form.addEventListener('submit', this.handleSubmit.bind(this));
+    }
+
+    async handleSubmit(event) {
+      event.preventDefault();
+      
+      const form = event.target;
+      const formData = new FormData(form);
+      
+      try {
+        const response = await fetch('/curriculum/CreateInternshipReport', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Success:', result);
+          form.reset();
+        } else {
+          throw new Error('Failed to create report');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to create report. Please try again.');
+      }
     }
   }
   window.InternshipReportCreate = InternshipReportCreate;

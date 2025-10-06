@@ -13,9 +13,7 @@ if (typeof window !== 'undefined' && !window.InternshipCriteriaCreate) {
               <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
                   Internship Criteria
               </h1>
-              <form method="POST" 
-                    action="/curriculum/InternshipCriteria/CreateInternshipCriteria"
-                    class="form-container">
+              <form id="internship-criteria-form" class="form-container">
                   <div id="form-fields"></div>
                   <button type="submit" class="form-submit-btn">
                       Create Criteria
@@ -49,6 +47,34 @@ if (typeof window !== 'undefined' && !window.InternshipCriteriaCreate) {
                     fieldsContainer.appendChild(inputElement);
                 }
             });
+
+            const form = document.getElementById('internship-criteria-form');
+            form.addEventListener('submit', this.handleSubmit.bind(this));
+        }
+
+        async handleSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/curriculum/InternshipCriteria/CreateInternshipCriteria', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Success:', result);
+                    form.reset();
+                } else {
+                    throw new Error('Failed to create criteria');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to create criteria. Please try again.');
+            }
         }
     }
 

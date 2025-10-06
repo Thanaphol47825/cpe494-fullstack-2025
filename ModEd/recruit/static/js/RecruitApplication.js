@@ -14,6 +14,11 @@ class RecruitApplication {
         script: "/recruit/static/js/ApplicantCreate.js",
       },
       {
+        label: "Manage Application Report",
+        className: "ApplicationReportList",
+        script: "/recruit/static/js/ApplicationReportList.js",
+      },
+      {
         label: "Create Application Round",
         className: "ApplicationRoundCreate",
         script: "/recruit/static/js/ApplicationRoundCreate.js",
@@ -33,6 +38,7 @@ class RecruitApplication {
     this.moduleIcons = {
       "Create Admin": "👤",
       "Create Applicant": "🧑‍💼",
+      "Create Application Report": "📊",
       "Create Application Round": "📅",
       "Create Interview Criteria": "📝",
       "Create Interview": "💬",

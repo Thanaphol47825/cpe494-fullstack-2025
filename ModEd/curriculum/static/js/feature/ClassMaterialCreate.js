@@ -53,6 +53,8 @@ if (typeof window !== 'undefined' && !window.ClassMaterialCreate) {
                 if (data.isSuccess) {
                     alert("Class Material saved!");
                     form.reset();
+                    // Redirect to ClassMaterialList page
+                    window.location.hash = "#curriculum/classmaterial";
                 } else {
                     alert("Error: " + (data.result || "Failed to save"));
                 }
@@ -63,10 +65,10 @@ if (typeof window !== 'undefined' && !window.ClassMaterialCreate) {
 
         render = async () => {
             // clear application container
-            this.application.mainContainer.innerHTML = "";
+            this.application.templateEngine.mainContainer.innerHTML = "";
 
             // create form wrapper
-            const formWrapper = this.application.create(`
+            const formWrapper = this.application.templateEngine.create(`
                 <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 relative overflow-hidden">
                     <!-- Background Decorative Elements -->
                     <div class="absolute inset-0 overflow-hidden pointer-events-none">
@@ -124,7 +126,7 @@ if (typeof window !== 'undefined' && !window.ClassMaterialCreate) {
                     </div>
                 </div>
             `);
-            this.application.mainContainer.appendChild(formWrapper);
+            this.application.templateEngine.mainContainer.appendChild(formWrapper);
 
             // fetch class options
             const classesOption = await this.getClassesOption();
@@ -145,16 +147,16 @@ if (typeof window !== 'undefined' && !window.ClassMaterialCreate) {
             fields.forEach(field => {
                 let inputHTML = '';
 
-                if (field.Type === "select" && this.application.template && this.application.template.SelectInput) {
-                    inputHTML = Mustache.render(this.application.template.SelectInput, field);
+                if (field.Type === "select" && this.application.templateEngine.template && this.application.templateEngine.template.SelectInput) {
+                    inputHTML = Mustache.render(this.application.templateEngine.template.SelectInput, field);
                 }
 
-                else if (this.application.template && this.application.template.Input) {
-                    inputHTML = Mustache.render(this.application.template.Input, field);
+                else if (this.application.templateEngine.template && this.application.templateEngine.template.Input) {
+                    inputHTML = Mustache.render(this.application.templateEngine.template.Input, field);
                 }
 
                 if (inputHTML) {
-                    const inputElement = this.application.create(inputHTML);
+                    const inputElement = this.application.templateEngine.create(inputHTML);
                     fieldsContainer.appendChild(inputElement);
                 }
             });

@@ -31,6 +31,11 @@ func (controller *AuthorizationController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+func (controller *AuthorizationController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *AuthorizationController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 	controller.handler.Application = application

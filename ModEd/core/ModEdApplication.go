@@ -3,7 +3,6 @@ package core
 import (
 	"ModEd/core/config"
 	"ModEd/core/database"
-	demo "ModEd/core/demo/model"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -37,6 +36,7 @@ func (application *ModEdApplication) Run() {
 
 func (application *ModEdApplication) AddController(controller BaseController) {
 	routeList := controller.GetRoute()
+	modelMetaList := controller.GetModelMeta()
 	controller.SetApplication(application)
 	for _, route := range routeList {
 		switch route.Method {
@@ -45,6 +45,12 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 		case POST:
 			application.Application.Post(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Middleware), route.Handler)
 		}
+	}
+	for _, modelMeta := range modelMetaList {
+		application.Application.Get("/api/modelmeta/"+modelMeta.Path, func(c *fiber.Ctx) error {
+			meta := GetModelMetadata(modelMeta.Model)
+			return c.JSON(meta)
+		})
 	}
 }
 
@@ -185,8 +191,6 @@ func GetApplication() *ModEdApplication {
 		application.setConfigStaticServe()
 		application.setSPAServe()
 		application.setExportTemplate()
-
-		application.SetAPIform("field", demo.Field{})
 
 		db, err := database.ConnectPostgres(application.Configuration.Database.Dsn)
 		if err != nil {

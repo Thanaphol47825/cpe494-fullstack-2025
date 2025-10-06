@@ -327,6 +327,11 @@ func (ctl *LeaveStudentHRController) HandleDeleteRequest(c *fiber.Ctx) error {
 	})
 }
 
+func (ctl *LeaveStudentHRController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (ctl *LeaveStudentHRController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	ctl.application.DB = app.DB

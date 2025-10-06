@@ -60,6 +60,11 @@ func (controller *InternshipResultEvaluationController) GetRoute() []*core.Route
 	return r
 }
 
+func (controller *InternshipResultEvaluationController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *InternshipResultEvaluationController) SetApplication(app *core.ModEdApplication) {
 	controller.application = app
 	controller.handler.DB = app.DB

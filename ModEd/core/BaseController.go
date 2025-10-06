@@ -16,7 +16,13 @@ type RouteItem struct {
 	Middleware Middleware
 }
 
+type ModelMeta struct {
+	Path  string
+	Model interface{}
+}
+
 type BaseController interface {
 	GetRoute() []*RouteItem
 	SetApplication(application *ModEdApplication)
+	GetModelMeta() []*ModelMeta
 }

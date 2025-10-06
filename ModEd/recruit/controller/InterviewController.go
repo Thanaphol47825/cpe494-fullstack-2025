@@ -18,6 +18,11 @@ func NewInterviewController() *InterviewController {
 	return controller
 }
 
+func (controller *InterviewController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *InterviewController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

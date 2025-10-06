@@ -40,7 +40,7 @@ func (controller *InstructorController) CreateInstructor(context *fiber.Ctx) err
 	if err := context.BodyParser(&instructor); err != nil {
 		return context.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
-	
+
 	result := controller.application.DB.Create(&instructor)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
@@ -51,15 +51,15 @@ func (controller *InstructorController) CreateInstructor(context *fiber.Ctx) err
 func (controller *InstructorController) UpdateInstructor(context *fiber.Ctx) error {
 	id := context.Params("id")
 	var instructor model.Instructor
-	
+
 	if err := controller.application.DB.First(&instructor, id).Error; err != nil {
 		return context.Status(404).JSON(fiber.Map{"error": "Instructor not found"})
 	}
-	
+
 	if err := context.BodyParser(&instructor); err != nil {
 		return context.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
-	
+
 	instructorID, _ := strconv.Atoi(id)
 	instructor.ID = uint(instructorID)
 	controller.application.DB.Save(&instructor)
@@ -80,7 +80,7 @@ func (controller *InstructorController) ImportJSON(context *fiber.Ctx) error {
 	if filePath == "" {
 		return context.Status(400).JSON(fiber.Map{"error": "file parameter required"})
 	}
-	
+
 	err := util.ImportInstructorsFromJSON(filePath, controller.application)
 	if err != nil {
 		return context.Status(500).JSON(fiber.Map{"error": err.Error()})
@@ -107,7 +107,6 @@ func (controller *InstructorController) RenderMain(context *fiber.Ctx) error {
 	context.Set("Content-Type", "text/html")
 	return context.SendString(rendered)
 }
-
 
 func (controller *InstructorController) GetInfo(context *fiber.Ctx) error {
 	fmt.Printf("%s\n", string(context.Request().Body()))
@@ -177,4 +176,10 @@ func (controller *InstructorController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *InstructorController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+
+	return modelMetaList
 }

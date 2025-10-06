@@ -40,7 +40,7 @@ func (controller *DepartmentController) CreateDepartment(context *fiber.Ctx) err
 	if err := context.BodyParser(&department); err != nil {
 		return context.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
-	
+
 	result := controller.application.DB.Create(&department)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
@@ -51,15 +51,15 @@ func (controller *DepartmentController) CreateDepartment(context *fiber.Ctx) err
 func (controller *DepartmentController) UpdateDepartment(context *fiber.Ctx) error {
 	id := context.Params("id")
 	var department model.Department
-	
+
 	if err := controller.application.DB.First(&department, id).Error; err != nil {
 		return context.Status(404).JSON(fiber.Map{"error": "Department not found"})
 	}
-	
+
 	if err := context.BodyParser(&department); err != nil {
 		return context.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
-	
+
 	departmentID, _ := strconv.Atoi(id)
 	department.ID = uint(departmentID)
 	controller.application.DB.Save(&department)
@@ -80,7 +80,7 @@ func (controller *DepartmentController) ImportJSON(context *fiber.Ctx) error {
 	if filePath == "" {
 		return context.Status(400).JSON(fiber.Map{"error": "file parameter required"})
 	}
-	
+
 	err := util.ImportDepartmentsFromJSON(filePath, controller.application)
 	if err != nil {
 		return context.Status(500).JSON(fiber.Map{"error": err.Error()})
@@ -176,4 +176,13 @@ func (controller *DepartmentController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *DepartmentController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "common/departments",
+		Model: &model.Department{},
+	})
+	return modelMetaList
 }

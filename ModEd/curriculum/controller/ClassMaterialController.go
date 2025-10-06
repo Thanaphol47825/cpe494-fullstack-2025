@@ -59,6 +59,11 @@ func (controller *ClassMaterialController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+func (controller *ClassMaterialController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *ClassMaterialController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 	controller.handler.Application = application

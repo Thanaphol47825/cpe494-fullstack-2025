@@ -40,6 +40,11 @@ func (controller *AssignmentProgressController) RenderMain(context *fiber.Ctx) e
 	})
 }
 
+func (controller *AssignmentProgressController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *AssignmentProgressController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

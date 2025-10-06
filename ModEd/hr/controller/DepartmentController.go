@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"ModEd/core"
-	"strings"
-	"net/http"
 	"ModEd/common/model"
+	"ModEd/core"
+	"net/http"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -33,6 +33,11 @@ func (ctl *DepartmentController) GetRoute() []*core.RouteItem {
 
 		{Route: "/hr/Department", Method: core.GET, Handler: ctl.RenderMain},
 	}
+}
+
+func (ctl *DepartmentController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
 }
 
 func (ctl *DepartmentController) SetApplication(app *core.ModEdApplication) {

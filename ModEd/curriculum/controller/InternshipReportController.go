@@ -55,6 +55,11 @@ func (controller *InternshipReportController) GetRoute() []*core.RouteItem {
 	return r
 }
 
+func (controller *InternshipReportController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *InternshipReportController) SetApplication(app *core.ModEdApplication) {
 	controller.application = app
 	controller.handler.DB = app.DB

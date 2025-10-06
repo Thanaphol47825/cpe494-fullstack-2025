@@ -17,6 +17,11 @@ func NewApplicantController() *ApplicantController {
 	return &ApplicantController{}
 }
 
+func (controller *ApplicantController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *ApplicantController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

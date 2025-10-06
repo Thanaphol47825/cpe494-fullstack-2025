@@ -2,8 +2,6 @@ package core
 
 import (
 	"reflect"
-	"github.com/gofiber/fiber/v2"
-
 )
 
 type FieldMeta struct {
@@ -44,7 +42,7 @@ func GetModelMetadata(model interface{}) []FieldMeta {
 		if jsonName == "" || jsonName == "-" {
 			jsonName = field.Name
 		}
-		formType := field.Tag.Get("form") 
+		formType := field.Tag.Get("form")
 		label := field.Tag.Get("label")
 		if formType == "" {
 			formType = defaultInputType(field.Type.Name())
@@ -57,17 +55,10 @@ func GetModelMetadata(model interface{}) []FieldMeta {
 		}
 
 		fields = append(fields, FieldMeta{
-			Name:     jsonName,
-			Type:     formType,
-			Label:    label,
+			Name:  jsonName,
+			Type:  formType,
+			Label: label,
 		})
 	}
 	return fields
-}
-
-func (application *ModEdApplication) SetAPIform(path string, model interface{}) {
-	application.Application.Get("/api/modelmeta/" + path, func(c *fiber.Ctx) error {
-		meta := GetModelMetadata(model)
-		return c.JSON(meta)
-	})
 }

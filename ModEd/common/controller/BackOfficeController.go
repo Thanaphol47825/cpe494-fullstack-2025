@@ -59,6 +59,11 @@ func (controller *BackOfficeController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+func (controller *BackOfficeController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *BackOfficeController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

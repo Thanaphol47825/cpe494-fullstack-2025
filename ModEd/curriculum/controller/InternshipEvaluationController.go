@@ -2,13 +2,14 @@ package controller
 
 import (
 	"ModEd/core"
+
 	"github.com/gofiber/fiber/v2"
-	
 )
 
 type InternshipEvaluationController struct {
 	application *core.ModEdApplication
 }
+
 func NewInternshipEvaluationController() *InternshipEvaluationController {
 	controller := &InternshipEvaluationController{}
 	return controller
@@ -25,6 +26,11 @@ func (controller *InternshipEvaluationController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *InternshipEvaluationController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
 }
 
 func (controller *InternshipEvaluationController) SetApplication(application *core.ModEdApplication) {

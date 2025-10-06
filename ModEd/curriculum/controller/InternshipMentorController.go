@@ -63,6 +63,11 @@ func (controller *InternshipMentorController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+func (controller *InternshipMentorController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *InternshipMentorController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

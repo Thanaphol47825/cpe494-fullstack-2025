@@ -16,7 +16,6 @@ type StudentController struct {
 	application *core.ModEdApplication
 }
 
-
 func (controller *StudentController) GetAllStudents(context *fiber.Ctx) error {
 	var students []model.Student
 	result := controller.application.DB.Find(&students)
@@ -221,6 +220,11 @@ func (controller *StudentController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *StudentController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
 }
 
 func (controller *StudentController) SetApplication(application *core.ModEdApplication) {

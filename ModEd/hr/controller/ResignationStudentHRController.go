@@ -5,9 +5,9 @@ import (
 	"ModEd/hr/model"
 	"ModEd/hr/util"
 	"fmt"
-	"strconv"
-	"path/filepath"
 	"net/http"
+	"path/filepath"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -249,6 +249,10 @@ func (ctl *ResignationStudentHRController) HandleDelete(c *fiber.Ctx) error {
 	})
 }
 
+func (ctl *ResignationStudentHRController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
 
 func (ctl *ResignationStudentHRController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app

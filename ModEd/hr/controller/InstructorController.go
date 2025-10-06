@@ -66,12 +66,19 @@ func (ctl *InstructorController) GetRoute() []*core.RouteItem {
 	}
 }
 
+func (ctl *InstructorController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "hr/instructors",
+		Model: &cmodel.Instructor{},
+	})
+	return modelMetaList
+}
+
 func (ctl *InstructorController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&cmodel.Instructor{})
 
-	// Set up dynamic form metadata API
-	ctl.application.SetAPIform("instructor", &cmodel.Instructor{})
 }
 
 // ---------- Helpers ----------

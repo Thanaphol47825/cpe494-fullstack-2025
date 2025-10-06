@@ -80,8 +80,8 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                 </div>
               </div>
               
-              <!-- Resignation Card (TODO) -->
-              <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden opacity-75">
+              <!-- Resignation - Students -->
+              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
                   <div class="flex items-center mb-4">
                     <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-4">
@@ -89,24 +89,41 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                       </svg>
                     </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Resignation</h3>
-                    <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">TODO</span>
+                    <h3 class="text-xl font-semibold text-gray-900">Student Resignation</h3>
                   </div>
-                  <p class="text-gray-600 mb-6">Handle resignation requests and exit processes</p>
+                  <p class="text-gray-600 mb-6">Handle student withdrawal and resignation requests</p>
                   <div class="flex flex-col space-y-2">
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">
+                    <a routerLink="hr/resignation/student" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
                       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
                       View Requests
-                      <span class="ml-2 text-xs">(Coming Soon)</span>
-                    </button>
+                    </a>
                   </div>
-                  <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm text-yellow-800">
-                      <strong>Developer Note:</strong> This feature is assigned to another team member for implementation.
-                    </p>
+                </div>
+              </div>
+
+              <!-- Resignation - Instructors -->
+              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
+                <div class="p-6">
+                  <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center mr-4">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900">Instructor Resignation</h3>
+                  </div>
+                  <p class="text-gray-600 mb-6">Handle instructor resignation and exit processes</p>
+                  <div class="flex flex-col space-y-2">
+                    <a routerLink="hr/resignation/instructor" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      View Requests
+                    </a>
                   </div>
                 </div>
               </div>
@@ -432,6 +449,43 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
             </svg>
             Add First Student
           </a>
+        </div>
+      `;
+    }
+
+    static renderStudentResignationCard(request) {
+      const studentCode = request.student_code || 'N/A';
+      const reason = request.reason || 'No reason provided';
+      const status = request.status || 'Pending';
+      const requestedAt = request.requested_at ? new Date(request.requested_at).toLocaleString() : 'Unknown';
+
+      return `
+        <div class="bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-lg mb-4 p-6">
+          <div class="flex items-start justify-between">
+            <div>
+              <h4 class="text-lg font-semibold text-gray-900">Student: ${studentCode}</h4>
+              <p class="text-sm text-gray-600 mt-1">Reason: ${reason}</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status === 'Approved' ? 'bg-green-100 text-green-800' : status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${status}</span>
+          </div>
+          <div class="mt-3 text-sm text-gray-500">Requested At: ${requestedAt}</div>
+          <div class="mt-4 flex gap-3">
+            <a routerLink="hr/resignation/student/${request.id}" class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">View</a>
+          </div>
+        </div>
+      `;
+    }
+
+    static renderEmptyStudentResignationsState() {
+      return `
+        <div class="text-center py-16">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Student Resignations</h3>
+          <p class="text-gray-600">There are currently no student resignation requests.</p>
         </div>
       `;
     }

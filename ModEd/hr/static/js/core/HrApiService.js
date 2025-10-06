@@ -176,6 +176,42 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
 
       return await response.json();
     }
+
+    // Student Resignations
+    async fetchStudentResignations() {
+      const candidates = [
+        `${this.rootURL}/hr/resignation-student-requests`, // exact path from backend controller
+      ];
+
+      for (const url of candidates) {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err?.error?.message || err?.message || `Failed to load student resignations: ${response.status}`);
+        }
+        const data = await response.json().catch(() => ([]));
+        return data.result || data;
+      }
+    }
+
+    async fetchStudentResignation(resignationId) {
+      const url = `${this.rootURL}/hr/resignation-student-requests/${resignationId}`; // exact backend path
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || err?.message || `Failed to load student resignation: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.result || data;
+    }
   }
   
   window.HrApiService = HrApiService

@@ -1135,16 +1135,69 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderStudentResignation() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="hr-student-resignation">
-        <h2>📝 Student Resignation Requests</h2>
-        <p>Process student withdrawal and resignation requests.</p>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="hr/resignation" style="color: #6c757d;">← Back to Resignations</a>
+    // Show loading state first
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Student Resignations',
+      'Process student withdrawal and resignation requests'
+    );
+
+    try {
+      const requests = await this.apiService.fetchStudentResignations();
+      const listHTML = Array.isArray(requests) && requests.length > 0
+        ? requests.map(r => HrUiComponents.renderStudentResignationCard(r)).join('')
+        : HrUiComponents.renderEmptyStudentResignationsState();
+
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-8">
+              <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-4">
+                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <h1 class="text-3xl font-bold text-gray-900 mb-2">Student Resignation Requests</h1>
+              <p class="text-lg text-gray-600">Process student withdrawal and resignation requests</p>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
+                <h2 class="text-2xl font-semibold text-white">Current Requests</h2>
+              </div>
+              <div class="p-8">
+                ${listHTML}
+              </div>
+            </div>
+
+            <div class="text-center mt-8">
+              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">← Back to Resignations</a>
+            </div>
+          </div>
         </div>
-      </div>
-    `
+      `;
+    } catch (error) {
+      console.error('Error loading student resignations:', error);
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
+                <h2 class="text-2xl font-semibold text-white">Error Loading Student Resignations</h2>
+              </div>
+              <div class="p-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <p class="text-red-700 mb-4">${error.message}</p>
+                  <button onclick="hrApp.renderStudentResignation()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-8">
+              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Resignations</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   }
 
   async renderInstructorResignation() {

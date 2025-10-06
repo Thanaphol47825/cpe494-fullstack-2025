@@ -56,10 +56,10 @@ class HrApplication extends BaseModuleApplication {
     
     // Initialize logger
     this.logger = {
-      info: (msg) => {},
+      info: (msg) => console.log(`[HR] ${msg}`),
       error: (msg) => console.error(`[HR] ${msg}`),
       warn: (msg) => console.warn(`[HR] ${msg}`),
-      debug: (msg) => {}
+      debug: (msg) => console.log(`[HR DEBUG] ${msg}`)
     }
     
     // Setup routes and navigation
@@ -77,13 +77,7 @@ class HrApplication extends BaseModuleApplication {
       }
       
       // Check if features are already loaded
-      if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
-          window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature &&
-          window.HrStudentListFeature && window.HrInstructorListFeature &&
-          window.HrStudentEditFeature && window.HrInstructorEditFeature &&
-          window.HrStudentLeaveFormFeature && window.HrInstructorLeaveFormFeature &&
-          window.HrStudentLeaveListFeature && window.HrInstructorLeaveListFeature &&
-          window.HrLeaveHistoryFeature) {
+      if (window.HrStudentFormFeature && window.HrInstructorFormFeature) {
         return
       }
       
@@ -97,56 +91,6 @@ class HrApplication extends BaseModuleApplication {
       // Load InstructorForm feature
       if (!window.HrInstructorFormFeature) {
         await this.loadScript('/hr/static/js/features/InstructorForm.js')
-      }
-      // Load StudentResignationForm feature
-      if (!window.HrStudentResignationFormFeature) {
-        await this.loadScript('/hr/static/js/features/StudentResignationForm.js')
-      }
-      
-      // Load StudentResignationList feature
-      if (!window.HrStudentResignationListFeature) {
-        await this.loadScript('/hr/static/js/features/StudentResignationList.js')
-      }
-      
-      // Load StudentList feature
-      if (!window.HrStudentListFeature) {
-        await this.loadScript('/hr/static/js/features/StudentList.js')
-      }
-      
-      // Load InstructorList feature
-      if (!window.HrInstructorListFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorList.js')
-      }
-      
-      // Load StudentEdit feature
-      if (!window.HrStudentEditFeature) {
-        await this.loadScript('/hr/static/js/features/StudentEdit.js')
-      }
-      
-      // Load InstructorEdit feature
-      if (!window.HrInstructorEditFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorEdit.js')
-      }
-      
-      // Load Leave Management features
-      if (!window.HrStudentLeaveFormFeature) {
-        await this.loadScript('/hr/static/js/features/StudentLeaveForm.js')
-      }
-      
-      if (!window.HrInstructorLeaveFormFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorLeaveForm.js')
-      }
-      
-      if (!window.HrStudentLeaveListFeature) {
-        await this.loadScript('/hr/static/js/features/StudentLeaveList.js')
-      }
-      
-      if (!window.HrInstructorLeaveListFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorLeaveList.js')
-      }
-      
-      if (!window.HrLeaveHistoryFeature) {
-        await this.loadScript('/hr/static/js/features/LeaveHistory.js')
       }
       
       this._loadingFeatures = false
@@ -171,26 +115,25 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('', this.renderMainPage.bind(this))
     this.addRoute('/instructors', this.renderInstructors.bind(this))
     this.addRoute('/instructors/create', this.renderCreateInstructor.bind(this))
-    this.addRoute('/instructors/edit/:code', this.renderEditInstructor.bind(this))
     
     // Students routes with StudentManager sub-module
     this.addRouteWithSubModule('/students', this.renderStudents.bind(this), 'StudentManager.js')
     this.addRoute('/students/create', this.renderCreateStudent.bind(this))
-    this.addRoute('/students/edit/:code', this.renderEditStudent.bind(this))
     this.addRoute('/students/:id', this.renderStudentDetail.bind(this))
     
     this.addRoute('/resignation', this.renderResignation.bind(this))
     this.addRoute('/resignation/student', this.renderStudentResignation.bind(this))
-    this.addRoute('/resignation/student/create', this.renderCreateStudentResignation.bind(this))
     this.addRoute('/resignation/instructor', this.renderInstructorResignation.bind(this))
     
-    // Leave Management routes
-    this.addRoute('/leave', this.renderLeaveMain.bind(this))
-    this.addRoute('/leave/student', this.renderStudentLeaveList.bind(this))
-    this.addRoute('/leave/student/create', this.renderCreateStudentLeave.bind(this))
-    this.addRoute('/leave/instructor', this.renderInstructorLeaveList.bind(this))
-    this.addRoute('/leave/instructor/create', this.renderCreateInstructorLeave.bind(this))
-    this.addRoute('/leave/history', this.renderLeaveHistory.bind(this))
+    // Leave routes with LeaveManager sub-module
+    this.addRouteWithSubModule('/leave', this.renderLeave.bind(this), 'LeaveManager.js')
+    this.addRouteWithSubModule('/leave/create', this.renderCreateLeave.bind(this), 'LeaveManager.js')
+    this.addRouteWithSubModule('/leave/history', this.renderLeaveHistory.bind(this), 'LeaveManager.js')
+
+    // Department routes
+    this.addRoute('/departments', this.renderDepartments.bind(this))
+    this.addRoute('/departments/create', this.renderCreateDepartment.bind(this))
+    this.addRoute('/departments/edit/:name', this.renderEditDepartment.bind(this))
     
     this.setDefaultRoute('')
     
@@ -258,41 +201,19 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderInstructors() {
+    // Show loading state first
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Instructor Management', 
+      'Manage teaching staff and academic personnel'
+    );
+
+    // Load instructors data
     try {
-      // Load the InstructorList feature
-      await this.loadFeatureModules();
-      
-      if (window.HrInstructorListFeature) {
-        const listFeature = new window.HrInstructorListFeature(this.templateEngine, this.rootURL);
-        await listFeature.render();
-        
-        // Make it globally accessible for onclick handlers
-        window.instructorList = listFeature;
-      } else {
-        throw new Error('InstructorListFeature not available');
-      }
+      const instructors = await this.apiService.fetchInstructors();
+      this.renderInstructorsList(instructors);
     } catch (error) {
       console.error('Error loading instructors:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Instructors</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderInstructors()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.renderInstructorsError(error.message);
     }
   }
 
@@ -427,14 +348,8 @@ class HrApplication extends BaseModuleApplication {
 
   async viewInstructor(instructorCode) {
     try {
-      // Use the global instructorList instance if available
-      if (window.instructorList) {
-        await window.instructorList.viewInstructor(instructorCode);
-      } else {
-        // Fallback to old method
-        const instructor = await this.apiService.fetchInstructor(instructorCode);
-        this.renderInstructorDetails(instructor);
-      }
+      const instructor = await this.apiService.fetchInstructor(instructorCode);
+      this.renderInstructorDetails(instructor);
     } catch (error) {
       console.error('Error loading instructor:', error);
       alert(`Error loading instructor: ${error.message}`);
@@ -624,31 +539,16 @@ class HrApplication extends BaseModuleApplication {
   }
 
   editInstructor(instructorCode) {
-    try {
-      // Use the global instructorList instance if available
-      if (window.instructorList) {
-        window.instructorList.editInstructor(instructorCode);
-      } else {
-        // Fallback to old method
-        this.templateEngine.routerLinks.navigateTo('hr/instructors/create');
-        alert(`Edit functionality for instructor ${instructorCode} will be implemented soon!`);
-      }
-    } catch (error) {
-      console.error('Error editing instructor:', error);
-      alert(`Error editing instructor: ${error.message}`);
-    }
+    // For now, redirect to create form with edit mode
+    // This can be enhanced later with a proper edit form
+    this.templateEngine.routerLinks.navigateTo('hr/instructors/create');
+    alert(`Edit functionality for instructor ${instructorCode} will be implemented soon!`);
   }
 
   async viewStudent(studentCode) {
     try {
-      // Use the global studentList instance if available
-      if (window.studentList) {
-        await window.studentList.viewStudent(studentCode);
-      } else {
-        // Fallback to old method
-        const student = await this.apiService.fetchStudent(studentCode);
-        this.renderStudentDetails(student);
-      }
+      const student = await this.apiService.fetchStudent(studentCode);
+      this.renderStudentDetails(student);
     } catch (error) {
       console.error('Error loading student:', error);
       alert(`Error loading student: ${error.message}`);
@@ -840,19 +740,10 @@ class HrApplication extends BaseModuleApplication {
   }
 
   editStudent(studentCode) {
-    try {
-      // Use the global studentList instance if available
-      if (window.studentList) {
-        window.studentList.editStudent(studentCode);
-      } else {
-        // Fallback to old method
-        this.templateEngine.routerLinks.navigateTo('hr/students/create');
-        alert(`Edit functionality for student ${studentCode} will be implemented soon!`);
-      }
-    } catch (error) {
-      console.error('Error editing student:', error);
-      alert(`Error editing student: ${error.message}`);
-    }
+    // For now, redirect to create form with edit mode
+    // This can be enhanced later with a proper edit form
+    this.templateEngine.routerLinks.navigateTo('hr/students/create');
+    alert(`Edit functionality for student ${studentCode} will be implemented soon!`);
   }
 
   async renderCreateInstructor() {
@@ -951,41 +842,19 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderStudents() {
+    // Show loading state first
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Student Management', 
+      'Manage student records and academic progress'
+    );
+
+    // Load students data
     try {
-      // Load the StudentList feature
-      await this.loadFeatureModules();
-      
-      if (window.HrStudentListFeature) {
-        const listFeature = new window.HrStudentListFeature(this.templateEngine, this.rootURL);
-        await listFeature.render();
-        
-        // Make it globally accessible for onclick handlers
-        window.studentList = listFeature;
-      } else {
-        throw new Error('StudentListFeature not available');
-      }
+      const students = await this.apiService.fetchStudents();
+      this.renderStudentsList(students);
     } catch (error) {
       console.error('Error loading students:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Students</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderStudents()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.renderStudentsError(error.message);
     }
   }
 
@@ -1218,7 +1087,7 @@ class HrApplication extends BaseModuleApplication {
     const studentId = params.id.toUpperCase()
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-student-detail">
-        <h2>Student Details: ${studentId}</h2>
+        <h2>👨‍🎓 Student Details: ${studentId}</h2>
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3>Personal Information</h3>
@@ -1247,17 +1116,17 @@ class HrApplication extends BaseModuleApplication {
   async renderResignation() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-resignation">
-        <h2>Resignation Management</h2>
+        <h2>📝 Resignation Management</h2>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
           <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-            <h4>Student Resignations</h4>
+            <h4>👨‍🎓 Student Resignations</h4>
             <p>Handle student withdrawal requests</p>
             <a routerLink="hr/resignation/student" style="color: #007bff;">Manage Student Resignations</a>
           </div>
           
           <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-            <h4>Instructor Resignations</h4>
+            <h4>👨‍🏫 Instructor Resignations</h4>
             <p>Handle instructor resignation requests</p>
             <a routerLink="hr/resignation/instructor" style="color: #007bff;">Manage Instructor Resignations</a>
           </div>
@@ -1271,107 +1140,22 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderStudentResignation() {
-    try {
-      // Load the StudentResignationList feature
-      await this.loadFeatureModules();
-      
-      if (window.HrStudentResignationListFeature) {
-        const listFeature = new window.HrStudentResignationListFeature(this.templateEngine, this.rootURL);
-        await listFeature.render();
-        
-        // Make it globally accessible for onclick handlers
-        window.resignationList = listFeature;
-      } else {
-        throw new Error('StudentResignationListFeature not available');
-      }
-    } catch (error) {
-      console.error('Error loading student resignations:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Student Resignations</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderStudentResignation()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Resignations</a>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  async renderCreateStudentResignation() {
-    // Show loading UI while feature loads
     this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-12">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-6">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Student Resignation</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
-          </div>
-          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-            <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
-              <h2 class="text-2xl font-semibold text-white">Loading Form...</h2>
-            </div>
-            <div class="p-8">
-              <div class="text-center py-16">
-                <div class="inline-block w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4"></div>
-                <p class="text-lg text-gray-600">Loading form components...</p>
-              </div>
-            </div>
-          </div>
+      <div class="hr-student-resignation">
+        <h2>📝 Student Resignation Requests</h2>
+        <p>Process student withdrawal and resignation requests.</p>
+        
+        <div style="margin-top: 20px;">
+          <a routerLink="hr/resignation" style="color: #6c757d;">← Back to Resignations</a>
         </div>
       </div>
-    `;
-
-    if (window.HrStudentResignationFormFeature) {
-      const feature = new window.HrStudentResignationFormFeature(this.templateEngine, this.rootURL)
-      await feature.render()
-      return
-    }
-
-    await this.loadFeatureModules()
-    let retries = 0
-    while (!window.HrStudentResignationFormFeature && retries < 10) {
-      await new Promise(r => setTimeout(r, 100))
-      retries++
-    }
-    if (window.HrStudentResignationFormFeature) {
-      const feature = new window.HrStudentResignationFormFeature(this.templateEngine, this.rootURL)
-      await feature.render()
-    } else {
-      console.error('HrStudentResignationFormFeature not available after loading')
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gray-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-              <p class="text-red-600 mt-2">Please refresh the page or try again later.</p>
-              <div class="mt-4">
-                <a routerLink="hr/resignation/student" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back</a>
-              </div>
-            </div>
-          </div>
-        </div>`
-    }
+    `
   }
 
   async renderInstructorResignation() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-instructor-resignation">
-        <h2>Instructor Resignation Requests</h2>
+        <h2>📝 Instructor Resignation Requests</h2>
         <p>Process instructor resignation requests.</p>
         
         <div style="margin-top: 20px;">
@@ -1381,104 +1165,138 @@ class HrApplication extends BaseModuleApplication {
     `
   }
 
-  async renderLeaveMain() {
+  async renderLeave() {
     this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-        <div class="max-w-7xl mx-auto px-4">
-          <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Leave Management</h1>
-            <p class="text-gray-600">Manage student and instructor leave requests</p>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-              <div class="flex items-center mb-4">
-                <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                  </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900">Student Leave</h3>
-              </div>
-              <p class="text-gray-600 mb-6">Manage student leave requests</p>
-              <div class="flex flex-col space-y-2">
-                <a routerLink="hr/leave/student" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">View Requests</a>
-                <a routerLink="hr/leave/student/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100">New Request</a>
-              </div>
-            </div>
-            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-              <div class="flex items-center mb-4">
-                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                  </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900">Instructor Leave</h3>
-              </div>
-              <p class="text-gray-600 mb-6">Manage instructor leave requests</p>
-              <div class="flex flex-col space-y-2">
-                <a routerLink="hr/leave/instructor" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">View Requests</a>
-                <a routerLink="hr/leave/instructor/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100">New Request</a>
-              </div>
-            </div>
-            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
-              <div class="flex items-center mb-4">
-                <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mr-4">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900">History</h3>
-              </div>
-              <p class="text-gray-600 mb-6">View complete leave request history</p>
-              <a routerLink="hr/leave/history" class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100">View History</a>
-            </div>
-          </div>
-          <div class="text-center">
-            <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">Back to HR Menu</a>
-          </div>
+      <div class="hr-leave">
+        <h2>🏖️ Leave Management</h2>
+        <p>Manage student and instructor leave requests.</p>
+        
+        <div style="margin: 15px 0;">
+          <a routerLink="hr/leave/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ New Leave Request</a>
+        </div>
+        
+        <div style="margin-top: 20px;">
+          <a routerLink="hr" style="color: #6c757d;">← Back to HR Menu</a>
         </div>
       </div>
     `
   }
 
-  async renderCreateStudentLeave() {
-    await this.loadFeatureModules()
-    if (window.HrStudentLeaveFormFeature) {
-      const feature = new window.HrStudentLeaveFormFeature(this.templateEngine, this.rootURL)
-      await feature.render()
-    }
-  }
-
-  async renderCreateInstructorLeave() {
-    await this.loadFeatureModules()
-    if (window.HrInstructorLeaveFormFeature) {
-      const feature = new window.HrInstructorLeaveFormFeature(this.templateEngine, this.rootURL)
-      await feature.render()
-    }
-  }
-
-  async renderStudentLeaveList() {
-    await this.loadFeatureModules()
-    if (window.HrStudentLeaveListFeature) {
-      const feature = new window.HrStudentLeaveListFeature(this.templateEngine, this.rootURL)
-      await feature.render()
-    }
-  }
-
-  async renderInstructorLeaveList() {
-    await this.loadFeatureModules()
-    if (window.HrInstructorLeaveListFeature) {
-      const feature = new window.HrInstructorLeaveListFeature(this.templateEngine, this.rootURL)
-      await feature.render()
-    }
+  async renderCreateLeave() {
+    this.templateEngine.mainContainer.innerHTML = `
+      <div class="hr-create-leave">
+        <h2>➕ Create Leave Request</h2>
+        <p>Submit a new leave request.</p>
+        
+        <div style="margin-top: 20px;">
+          <a routerLink="hr/leave" style="color: #6c757d;">← Back to Leave Management</a>
+        </div>
+      </div>
+    `
   }
 
   async renderLeaveHistory() {
-    await this.loadFeatureModules()
-    if (window.HrLeaveHistoryFeature) {
-      const feature = new window.HrLeaveHistoryFeature(this.templateEngine, this.rootURL)
+    this.templateEngine.mainContainer.innerHTML = `
+      <div class="hr-leave-history">
+        <h2>📊 Leave History</h2>
+        <p>Leave history functionality.</p>
+        
+        <div style="margin-top: 20px;">
+          <a routerLink="hr/leave" style="color: #6c757d;">← Back to Leave Management</a>
+        </div>
+      </div>
+    `
+  }
+
+  async renderDepartments() {
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Departments',
+      'Manage departments and budgets'
+    )
+
+    try {
+      if (!window.HrDepartmentListFeature) {
+        await this.loadScript('/hr/static/js/features/DepartmentList.js')
+      }
+      const feature = new window.HrDepartmentListFeature(this.templateEngine, this.rootURL)
+      window.departmentList = feature
       await feature.render()
+    } catch (err) {
+      console.error('Error loading Departments list:', err)
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Departments</h2>
+              <p class="text-red-600 mt-2">${err.message || 'Unknown error'}</p>
+              <div class="mt-4">
+                <a routerLink="hr" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to HR</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }
+
+  async renderCreateDepartment() {
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Add Department',
+      'Create a new department'
+    )
+
+    try {
+      if (!window.HrDepartmentFormFeature) {
+        await this.loadScript('/hr/static/js/features/DepartmentForm.js')
+      }
+      const feature = new window.HrDepartmentFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    } catch (err) {
+      console.error('Error loading Department form:', err)
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <p class="text-red-600 mt-2">${err.message || 'Unknown error'}</p>
+              <div class="mt-4">
+                <a routerLink="hr/departments" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to Departments</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }
+
+  async renderEditDepartment(params) {
+    const name = params?.name || ''
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Edit Department',
+      `Updating: ${decodeURIComponent(name)}`
+    )
+
+    try {
+      if (!window.HrDepartmentEditFeature) {
+        await this.loadScript('/hr/static/js/features/DepartmentEdit.js')
+      }
+      const feature = new window.HrDepartmentEditFeature(this.templateEngine, this.rootURL, name)
+      await feature.render()
+    } catch (err) {
+      console.error('Error loading Department edit:', err)
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Department</h2>
+              <p class="text-red-600 mt-2">${err.message || 'Unknown error'}</p>
+              <div class="mt-4">
+                <a routerLink="hr/departments" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to Departments</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
     }
   }
 
@@ -1581,80 +1399,11 @@ class HrApplication extends BaseModuleApplication {
   // Debug utilities
   debug() {
     console.group('HrApplication Debug Info')
-    // Debug info available but not logged to console
+    console.log('Module Info:', this.getModuleInfo())
+    console.log('Health Status:', this.getHealthStatus())
+    console.log('Template Engine:', this.templateEngine ? 'Available' : 'Not Available')
+    console.log('Main Container:', this.templateEngine?.mainContainer ? 'Available' : 'Not Available')
     console.groupEnd()
-  }
-
-  async renderEditInstructor(params) {
-    try {
-      // Load the InstructorEdit feature
-      await this.loadFeatureModules();
-      
-      if (window.HrInstructorEditFeature) {
-        const editFeature = new window.HrInstructorEditFeature(this.templateEngine, this.rootURL, params.code);
-        await editFeature.render();
-      } else {
-        throw new Error('InstructorEditFeature not available');
-      }
-    } catch (error) {
-      console.error('Error loading instructor edit:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Instructor Edit</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderEditInstructor({code: '${params.code}'})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/instructors" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Instructors</a>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  async renderEditStudent(params) {
-    try {
-      // Load the StudentEdit feature
-      await this.loadFeatureModules();
-      
-      if (window.HrStudentEditFeature) {
-        const editFeature = new window.HrStudentEditFeature(this.templateEngine, this.rootURL, params.code);
-        await editFeature.render();
-      } else {
-        throw new Error('StudentEditFeature not available');
-      }
-    } catch (error) {
-      console.error('Error loading student edit:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Student Edit</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderEditStudent({code: '${params.code}'})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/students" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Students</a>
-            </div>
-          </div>
-        </div>
-      `;
-    }
   }
 }
 

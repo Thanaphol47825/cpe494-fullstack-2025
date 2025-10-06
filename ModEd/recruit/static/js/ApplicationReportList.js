@@ -113,20 +113,9 @@ async loadList() {
 
   async openForm(id = null) {
     await this.engine.fetchModule("/recruit/static/js/ApplicationReportCreate.js");
-    const form = new ApplicationReportCreate(this.engine, this.rootURL);
+    const form = new ApplicationReportCreate(this.engine, this.rootURL, id);
     this.engine.mainContainer.innerHTML = "";
     await form.render();
-
-    if (id) {
-      const res = await fetch(`${this.rootURL}/recruit/GetApplicationReport/${id}`);
-      const data = await res.json();
-      if (data.isSuccess) {
-        const formEl = document.querySelector("form");
-        for (const key in data.result) {
-          if (formEl.elements[key]) formEl.elements[key].value = data.result[key];
-        }
-      }
-    }
   }
 
   async deleteItem(id) {

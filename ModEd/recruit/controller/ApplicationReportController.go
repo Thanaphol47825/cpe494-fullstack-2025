@@ -5,6 +5,7 @@ import (
 	"ModEd/recruit/model"
 	"fmt"
 	"path/filepath"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -254,24 +255,43 @@ func (controller *ApplicationReportController) GetApplicationReportsFromFile(c *
 }
 
 func (controller *ApplicationReportController) GetApplicationReportByApplicant(c *fiber.Ctx) error {
-	applicantId := c.Params("applicantId")
-	var reports []model.ApplicationReport
+	applicantParam := c.Params("applicantId")
+	id, err := strconv.Atoi(applicantParam)
+	if err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusBadRequest,
+			Message:   "Invalid applicantId",
+		})
+	}
 
+	var reports []model.ApplicationReport
 	if err := controller.application.DB.
 		Preload("Applicant").
 		Preload("ApplicationRound").
 		Preload("Faculty").
 		Preload("Department").
-		Preload("ApplicationStatus").
-		Where("applicant_id = ?", applicantId).
+		Where("applicant_id = ?", id).
 		Find(&reports).Error; err != nil {
 		return core.SendResponse(c, core.BaseApiResponse{
-			IsSuccess: false, Status: fiber.StatusNotFound, Message: "No ApplicationReport found for this applicant",
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
+
+	if len(reports) == 0 {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusNotFound,
+			Message:   "No ApplicationReport found for this applicant",
 		})
 	}
 
 	return core.SendResponse(c, core.BaseApiResponse{
-		IsSuccess: true, Status: fiber.StatusOK, Result: reports,
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Result:    reports,
 	})
 }
 

@@ -2,7 +2,7 @@ class ApplicationReportCreate {
   constructor(engine, rootURL, reportId = null) {
     this.engine = engine;
     this.rootURL = rootURL || window.RootURL || window.__ROOT_URL__ || "";
-    this.reportId = reportId; 
+    this.reportId =reportId
   }
 
   async render() {
@@ -126,13 +126,13 @@ class ApplicationReportCreate {
     const form = e.target;
     const data = Object.fromEntries(new FormData(form).entries());
 
+    if (this.reportId) data.id = Number(this.reportId);
+    
     for (const key of ["applicant_id", "application_rounds_id", "faculty_id", "department_id"]) {
       if (data[key]) data[key] = Number(data[key]);
     }
 
     if (!data.application_statuses) delete data.application_statuses;
-
-    if (this.reportId) data.id = this.reportId;
 
     const url = this.rootURL + (
       this.reportId

@@ -32,8 +32,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this), 'feature/ClassMaterialList.js')
       this.addRouteWithSubModule('/classmaterial/create', this.renderCreateClassMaterial.bind(this), 'feature/ClassMaterialCreate.js')
 
-      this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this))
-      this.addRouteWithSubModule('/courseplan/create', this.renderCreateCoursePlan.bind(this), 'CoursePlanCreate.js')
+      this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this), 'feature/CoursePlanList.js')
+      this.addRouteWithSubModule('/courseplan/create', this.renderCreateCoursePlan.bind(this), 'feature/CoursePlanCreate.js')
     }
 
     async renderMainPage() {
@@ -254,25 +254,27 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCoursePlan() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-courseplans">
-        <h2>Course Plan Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/courseplan/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Course Plan</a>
+      if (window.CoursePlanList) {
+        const CoursePlanList = new window.CoursePlanList(this);
+        await CoursePlanList.render();
+      } else {
+        console.error('CoursePlanList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
         </div>
-        
-        <div class="courseplan-list">
-          <!-- course plan list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      `;
+      }
     }
-    async renderCreateCoursePlan() { }
+    async renderCreateCoursePlan() { 
+      if (window.CoursePlanCreate) {
+        const coursePlanCreate = new window.CoursePlanCreate(this);
+        await coursePlanCreate.render();
+      } else {
+        console.error('CoursePlanCreate coursePlan not found');
+        this.templateEngine.mainContainer.innerHTML = '<div>Error: CoursePlanCreate module not loaded</div>';
+      }
+    }
 
     async render() {
       return await this.handleRoute(this.templateEngine.getCurrentPath())

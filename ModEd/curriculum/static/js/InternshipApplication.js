@@ -55,7 +55,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                         </svg>
-                                        เข้าจัดการ
+                                        Manage
                                     </a>
                                 </div>
                             </div>
@@ -87,27 +87,13 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
                                 </div>
                             </div>
                             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 mb-6">
-                                ระบบจัดการฝึกงาน
+                                Internship Management
                             </h1>
                             <p class="text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed mb-8">
-                                จัดการโปรแกรมฝึกงานอย่างครอบคลุม ตั้งแต่การติดตามบริษัท พี่เลี้ยง 
+                                End-to-end internship management, company, mentor and evaluation
                                 <br class="hidden md:block">
-                                ไปจนถึงการประเมินผลและรายงานความคืบหน้าของนักศึกษา
                             </p>
-                            <div class="flex justify-center space-x-4 text-sm text-slate-500">
-                                <div class="flex items-center">
-                                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                                    ระบบออนไลน์
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
-                                    ติดตามแบบเรียลไทม์
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></div>
-                                    รายงานอัตโนมัติ
-                                </div>
-                            </div>
+
                         </div>
 
                         <!-- Navigation Cards -->
@@ -132,13 +118,13 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
 
         getDescriptionForModel(label) {
             const descriptions = {
-                'internship report': 'สร้างและจัดการรายงานความคืบหน้าการฝึกงาน',
-                'Company': 'จัดการข้อมูลบริษัทและหุ้นส่วนการฝึกงาน',
-                'Internship Mentor': 'จัดการการมอบหมายพี่เลี้ยงและโปรแกรมการแนะนำ',
-                'Internship Attendance': 'ติดตามและตรวจสอบการเข้าร่วมการฝึกงานของนักศึกษา',
-                'Internship Criteria': 'กำหนดและจัดการเกณฑ์การประเมินผลการฝึกงาน'
+                'internship report': '',
+                'Company': '',
+                'Internship Mentor': '',
+                'Internship Attendance': '',
+                'Internship Criteria': ''
             }
-            return descriptions[label] || 'จัดการและจัดระเบียบกิจกรรมที่เกี่ยวข้องกับการฝึกงาน'
+            return descriptions[label] || ''
         }
 
         getGradientForModel(label) {

@@ -42,8 +42,36 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
                 document.head.appendChild(script);
             }
 
+            // Generate cards HTML first
+            let cardsHTML = '';
+            this.models.forEach(model => {
+                cardsHTML += `
+                    <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
+                        <div class="p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                                    ${this.getIconForModel(model.label)}
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900">${model.label}</h3>
+                            </div>
+                            <p class="text-gray-600 mb-6">${this.getDescriptionForModel(model.label)}</p>
+                            <div class="flex flex-col space-y-2">
+                                <a routerLink="curriculum${model.route}" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    Manage ${model.label}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Set the complete HTML structure
             this.templateEngine.mainContainer.innerHTML = `
-                <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-100 py-8">
+                <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-8">
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <!-- Header Section -->
                         <div class="text-center mb-12">
@@ -58,31 +86,7 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
 
                         <!-- Main Menu Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            `
-
-            this.models.forEach(model => {
-                const cardHtml = `
-                    <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                        <div class="p-6">
-                            <div class="flex items-center mb-4">
-                                <h3 class="text-xl font-semibold text-gray-900">${model.label}</h3>
-                            </div>
-                            <div class="flex flex-col space-y-2">
-                                <a routerLink="curriculum${model.route}" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    Manage ${model.label}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `
-                this.templateEngine.mainContainer.innerHTML += cardHtml
-            })
-
-            this.templateEngine.mainContainer.innerHTML += `
+                            ${cardsHTML}
                         </div>
 
                         <!-- Back to Main Menu -->
@@ -96,7 +100,30 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
                         </div>
                     </div>
                 </div>
-            `
+            `;
+        }
+
+        // Helper methods for UI generation
+        getIconForModel(label) {
+            const icons = {
+                'internship report': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
+                'Company': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>',
+                'Internship Mentor': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>',
+                'Internship Attendance': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>',
+                'Internship Criteria': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>'
+            }
+            return icons[label] || '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'
+        }
+
+        getDescriptionForModel(label) {
+            const descriptions = {
+                'internship report': 'Create and manage internship progress reports',
+                'Company': 'Manage company profiles and internship partnerships',
+                'Internship Mentor': 'Handle mentor assignments and mentorship programs',
+                'Internship Attendance': 'Track and monitor student internship attendance',
+                'Internship Criteria': 'Define and manage evaluation criteria for internships'
+            }
+            return descriptions[label] || 'Manage and organize internship-related activities'
         }
 
         // Individual render methods for sub-routes

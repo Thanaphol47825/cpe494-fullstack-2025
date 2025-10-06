@@ -3,6 +3,7 @@ package migration
 // Wrote By : MEP-0001
 
 import (
+	"ModEd/core/meta"
 	"ModEd/utils/deserializer"
 	"fmt"
 
@@ -40,6 +41,8 @@ func NewMigrationManager(DB *gorm.DB) *MigrationManager {
 			seedPaths = append(seedPaths, strategy.GetSeedPath()...)
 		}
 	}
+
+	meta.AutoRegisterModels(models)
 
 	return &MigrationManager{
 		DB:                   DB,

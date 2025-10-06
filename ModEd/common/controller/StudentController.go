@@ -224,6 +224,10 @@ func (controller *StudentController) GetRoute() []*core.RouteItem {
 
 func (controller *StudentController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{}
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "common/student",
+		Model: model.Student{},
+	})
 	return modelMetaList
 }
 

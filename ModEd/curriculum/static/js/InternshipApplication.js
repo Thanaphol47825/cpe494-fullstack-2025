@@ -18,7 +18,7 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             this.addRouteWithSubModule('/internshipreport', this.renderInternshipReport.bind(this), 'InternshipReportCreate.js')
             this.addRouteWithSubModule('/company', this.renderCompany.bind(this), 'CompanyCreate.js')
             this.addRouteWithSubModule('/internshipmentor', this.renderInternshipMentor.bind(this), 'InternshipMentorCreate.js')
-            this.addRouteWithSubModule('/internshipattendance', this.renderInternshipAttendance.bind(this), 'internshipAttendanceCreate.js')
+            this.addRouteWithSubModule('/internshipattendance', this.renderInternshipAttendance.bind(this), 'InternshipAttendanceCreate.js')
             this.addRouteWithSubModule('/internshipcriteria', this.renderInternshipCriteria.bind(this), 'InternshipCriteriaCreate.js')
             
             // Set default route
@@ -204,7 +204,12 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
 
         async renderInternshipCriteria() {
             console.log("Rendering Internship Criteria")
-            this.templateEngine.mainContainer.innerHTML = InternshipCriteriaCreate.render();
+            if (window.InternshipCriteriaCreate) {
+                const criteriaCreate = new window.InternshipCriteriaCreate(this.templateEngine)
+                await criteriaCreate.render()
+            } else {
+                console.error("InternshipCriteriaCreate class not found")
+            }
         }
 
         // Override the default render method

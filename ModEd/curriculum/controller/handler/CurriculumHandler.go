@@ -80,7 +80,7 @@ func (h *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 // Read all
 func (h *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
 	var curriculums []model.Curriculum
-	if err := h.Application.DB.Preload("CourseList").Find(&curriculums).Error; err != nil {
+	if err := h.Application.DB.Preload("CourseList").Preload("Department").Find(&curriculums).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculums",

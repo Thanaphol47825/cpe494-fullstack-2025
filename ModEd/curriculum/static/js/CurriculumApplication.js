@@ -1,6 +1,4 @@
-if (typeof window !== 'undefined' && window.CurriculumApplication) {
-
-} else {
+if (typeof window !== 'undefined' && !window.CurriculumApplication) {
   class CurriculumApplication extends BaseModuleApplication {
 
     models = [
@@ -21,8 +19,8 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
     setupRoutes() {
       this.addRoute('', this.renderMainPage.bind(this))
 
-      this.addRouteWithSubModule('/curriculum', this.renderCurriculum.bind(this))
-      this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'CurriculumCreate.js')
+      this.addRouteWithSubModule('/curriculum', this.renderCurriculum.bind(this), 'feature/CurriculumList.js')
+      this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'feature/CurriculumCreate.js')
 
       this.addRouteWithSubModule('/course', this.renderCourse.bind(this))
       this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'CourseCreate.js')
@@ -49,7 +47,7 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
 
       const modelColors = {
         "Curriculum": "from-emerald-500 to-teal-600",
-        "Course": "from-amber-500 to-orange-600", 
+        "Course": "from-amber-500 to-orange-600",
         "Class": "from-purple-500 to-indigo-600",
         "Class Material": "from-rose-500 to-pink-600",
         "Course Plan": "from-cyan-500 to-blue-600"
@@ -59,7 +57,7 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
       this.models.forEach((model, index) => {
         const icon = modelIcons[model.label] || modelIcons["Course"];
         const color = modelColors[model.label] || "from-gray-500 to-gray-600";
-        
+
         cardsHTML += `
         <div class="curriculum-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-${model.label === 'Curriculum' ? 'emerald' : model.label === 'Course' ? 'amber' : model.label === 'Class' ? 'purple' : model.label === 'Class Material' ? 'rose' : 'cyan'}-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
           <!-- Background Pattern -->
@@ -144,29 +142,23 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
     }
 
     async renderCurriculum() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-curriculums">
-        <h2>Curriculum Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/curriculum/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Curriculum</a>
+      if (window.CurriculumList) {
+        const curriculumList = new window.CurriculumList(this.templateEngine);
+        await curriculumList.render();
+      } else {
+        console.error('CurriculumList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
         </div>
-        
-        <div class="curriculum-list">
-          <!-- Curriculum list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      `;
+      }
     }
 
     async renderCreateCurriculum() {
       if (window.CurriculumCreate) {
-        const formFeature = new window.CurriculumCreate(this.templateEngine, this.rootURL);
-        await formFeature.render();
+        const curriculumCreate = new window.CurriculumCreate(this.templateEngine);
+        await curriculumCreate.render();
       } else {
         console.error('CurriculumCreate not available after loading');
         this.templateEngine.mainContainer.innerHTML = `
@@ -238,7 +230,7 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
       </div>
     `
     }
-    async renderCreateClassMaterial() { 
+    async renderCreateClassMaterial() {
       if (window.ClassMaterialCreate) {
         const formFeature = new window.ClassMaterialCreate(this.templateEngine, this.rootURL);
         await formFeature.render();

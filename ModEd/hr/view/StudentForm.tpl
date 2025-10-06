@@ -14,6 +14,8 @@
     <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
     
     <!-- HR Module Dependencies -->
+    <script src="{{ RootURL }}/hr/static/js/HrConfig.js"></script>
+    <script src="{{ RootURL }}/hr/static/js/HrLogger.js"></script>
     <script src="{{ RootURL }}/hr/static/js/HrApplication.js"></script>
     <script src="{{ RootURL }}/hr/static/js/features/StudentForm.js"></script>
     

@@ -9,8 +9,14 @@
   <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
   <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
   
+  <!-- HR Module Scripts -->
+  <script src="{{ RootURL }}/hr/static/js/HrApplication.js"></script>
+  <script src="{{ RootURL }}/hr/static/js/features/StudentForm.js"></script>
+  <script src="{{ RootURL }}/hr/static/js/features/InstructorForm.js"></script>
+  
   <link rel="stylesheet" type="text/css" href="{{ RootURL }}/core/static/css/Style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <script>
     let RootURL = "{{ RootURL }}";
     let modules = {{{modules}}};

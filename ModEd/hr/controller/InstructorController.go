@@ -11,9 +11,8 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/hoisie/mustache"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
@@ -28,7 +27,7 @@ func (ctl *InstructorController) RenderMain(c *fiber.Ctx) error {
 }
 
 func (ctl *InstructorController) RenderCreateForm(c *fiber.Ctx) error {
-	path := filepath.Join(ctl.application.RootPath, "hr", "view", "InstructorForm.tpl")
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "HrTemplate.tpl")
 	tmpl, err := mustache.ParseFile(path)
 	if err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())

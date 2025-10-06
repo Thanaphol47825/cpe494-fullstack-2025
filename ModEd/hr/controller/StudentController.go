@@ -7,15 +7,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
-
-	"path/filepath"
-
 	"github.com/hoisie/mustache"
+	"gorm.io/gorm"
 )
 
 type StudentController struct {
@@ -23,7 +21,7 @@ type StudentController struct {
 }
 
 func (ctl *StudentController) RenderCreateForm(c *fiber.Ctx) error {
-	path := filepath.Join(ctl.application.RootPath, "hr", "view", "StudentForm.tpl")
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "HrTemplate.tpl")
 	tmpl, err := mustache.ParseFile(path)
 	if err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())

@@ -107,14 +107,20 @@ class TemplateEngine {
   }
 
   async fetchModule(path) {
-    let URL = RootURL + path
-    let script = document.createElement('script')
-    script.src = URL
-    document.head.appendChild(script)
-    return new Promise((resolve, reject) => {
-      script.onload = resolve
-      script.onerror = reject
-    })
+    // Handle multiple scripts separated by comma
+    const scripts = path.split(',').map(s => s.trim())
+    
+    for (const scriptPath of scripts) {
+      let URL = RootURL + scriptPath
+      let script = document.createElement('script')
+      script.src = URL
+      document.head.appendChild(script)
+      
+      await new Promise((resolve, reject) => {
+        script.onload = resolve
+        script.onerror = reject
+      })
+    }
   }
 
   async fetchTemplate() {

@@ -33,8 +33,6 @@ func (controller *AdminController) GetModelMeta() []*core.ModelMeta {
 
 func (controller *AdminController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
-
-	controller.application.SetAPIform("admin", &model.Admin{})
 }
 
 func (controller *AdminController) RenderCreateForm(c *fiber.Ctx) error {

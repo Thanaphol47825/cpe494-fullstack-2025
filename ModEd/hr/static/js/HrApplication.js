@@ -92,6 +92,10 @@ class HrApplication extends BaseModuleApplication {
       if (!window.HrInstructorFormFeature) {
         await this.loadScript('/hr/static/js/features/InstructorForm.js')
       }
+      // Load StudentResignationForm feature
+      if (!window.HrStudentResignationFormFeature) {
+        await this.loadScript('/hr/static/js/features/StudentResignationForm.js')
+      }
       
       this._loadingFeatures = false
     } catch (error) {
@@ -123,6 +127,7 @@ class HrApplication extends BaseModuleApplication {
     
     this.addRoute('/resignation', this.renderResignation.bind(this))
     this.addRoute('/resignation/student', this.renderStudentResignation.bind(this))
+    this.addRoute('/resignation/student/create', this.renderCreateStudentResignation.bind(this))
     this.addRoute('/resignation/instructor', this.renderInstructorResignation.bind(this))
     
     // Leave routes with LeaveManager sub-module
@@ -1162,7 +1167,13 @@ class HrApplication extends BaseModuleApplication {
 
             <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
               <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
-                <h2 class="text-2xl font-semibold text-white">Current Requests</h2>
+                <div class="flex items-center justify-between">
+                  <h2 class="text-2xl font-semibold text-white">Current Requests</h2>
+                  <a routerLink="hr/resignation/student/create" class="inline-flex items-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
+                    New Request
+                  </a>
+                </div>
               </div>
               <div class="p-8">
                 ${listHTML}
@@ -1197,6 +1208,65 @@ class HrApplication extends BaseModuleApplication {
           </div>
         </div>
       `;
+    }
+  }
+
+  async renderCreateStudentResignation() {
+    // Show loading UI while feature loads
+    this.templateEngine.mainContainer.innerHTML = `
+      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-6">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Student Resignation</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
+          </div>
+          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
+              <h2 class="text-2xl font-semibold text-white">Loading Form...</h2>
+            </div>
+            <div class="p-8">
+              <div class="text-center py-16">
+                <div class="inline-block w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4"></div>
+                <p class="text-lg text-gray-600">Loading form components...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (window.HrStudentResignationFormFeature) {
+      const feature = new window.HrStudentResignationFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+      return
+    }
+
+    await this.loadFeatureModules()
+    let retries = 0
+    while (!window.HrStudentResignationFormFeature && retries < 10) {
+      await new Promise(r => setTimeout(r, 100))
+      retries++
+    }
+    if (window.HrStudentResignationFormFeature) {
+      const feature = new window.HrStudentResignationFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    } else {
+      console.error('HrStudentResignationFormFeature not available after loading')
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <p class="text-red-600 mt-2">Please refresh the page or try again later.</p>
+              <div class="mt-4">
+                <a routerLink="hr/resignation/student" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back</a>
+              </div>
+            </div>
+          </div>
+        </div>`
     }
   }
 

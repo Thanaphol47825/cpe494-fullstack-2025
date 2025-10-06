@@ -212,6 +212,20 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       const data = await response.json();
       return data.result || data;
     }
+
+    async createStudentResignation(payload) {
+      const url = `${this.rootURL}/hr/resignation-student-requests`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
   }
   
   window.HrApiService = HrApiService

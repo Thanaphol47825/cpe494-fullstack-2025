@@ -14,6 +14,3 @@ Run specific test
 - Add Student
 ` /hr/students/create `
 You can run this command in path /workspace/ModEd no need to `cd` to hr folder
-
-
-This is the  test commit

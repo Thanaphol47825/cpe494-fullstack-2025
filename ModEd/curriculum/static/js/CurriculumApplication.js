@@ -26,7 +26,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'feature/CourseCreate.js')
 
       this.addRouteWithSubModule('/class', this.renderClass.bind(this))
-      this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'ClassCreate.js')
+      this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'feature/ClassCreate.js')
 
       this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this), 'feature/ClassMaterialList.js')
       this.addRouteWithSubModule('/classmaterial/create', this.renderCreateClassMaterial.bind(this), 'feature/ClassMaterialCreate.js')
@@ -219,7 +219,16 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       </div>
     `
     }
-    async renderCreateClass() { }
+    
+    async renderCreateClass() {
+      if (window.ClassCreate) {
+        const classCreate = new window.ClassCreate(this);
+        await classCreate.render();
+      } else {
+        console.error('ClassCreate class not found');
+        this.templateEngine.mainContainer.innerHTML = '<div>Error: ClassCreate module not loaded</div>';
+      }
+    }
 
     async renderClassMaterial() {
       if (window.ClassMaterialList) {

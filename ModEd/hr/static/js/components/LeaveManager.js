@@ -28,7 +28,7 @@ class LeaveManager {
     renderLeaveRequestForm(container) {
         container.innerHTML = `
             <div class="leave-request-form">
-                <h3>📝 Leave Request Form</h3>
+                <h3>Leave Request Form</h3>
                 
                 <form style="max-width: 600px; margin: 20px 0;">
                     <div style="margin-bottom: 15px;">
@@ -127,7 +127,7 @@ class LeaveManager {
         
         container.innerHTML = `
             <div class="leave-history">
-                <h3>📊 Leave History</h3>
+                <h3>Leave History</h3>
                 
                 <div style="margin: 20px 0;">
                     ${mockHistory.map(leave => `

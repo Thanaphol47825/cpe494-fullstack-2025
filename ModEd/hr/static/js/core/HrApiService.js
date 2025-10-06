@@ -240,6 +240,88 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       }
       return result.result || result;
     }
+
+    // Student CRUD operations
+    async fetchStudent(studentCode) {
+      const url = `${this.rootURL}/hr/students/${studentCode}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    async updateStudent(studentCode, payload) {
+      const url = `${this.rootURL}/hr/students/${studentCode}`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    async deleteStudent(studentCode) {
+      const url = `${this.rootURL}/hr/students/${studentCode}`;
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    // Instructor CRUD operations
+    async fetchInstructor(instructorCode) {
+      const url = `${this.rootURL}/hr/instructors/${instructorCode}`;
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    async updateInstructor(instructorCode, payload) {
+      const url = `${this.rootURL}/hr/instructors/${instructorCode}`;
+      const response = await fetch(url, {
+        method: 'PUT',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    async deleteInstructor(instructorCode) {
+      const url = `${this.rootURL}/hr/instructors/${instructorCode}`;
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
   }
   
   window.HrApiService = HrApiService

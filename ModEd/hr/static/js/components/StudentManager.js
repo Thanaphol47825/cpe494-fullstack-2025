@@ -80,7 +80,7 @@ class StudentManager {
         const searchHTML = `
             <div class="enhanced-student-manager">
                 <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">🔍 Student Search</h3>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Search</h3>
                     <div class="flex gap-4">
                         <input type="text" 
                                id="studentSearch" 
@@ -242,4 +242,4 @@ if (typeof window !== 'undefined') {
     window.StudentManager = StudentManager;
 }
 
-console.log("📦 StudentManager (Clean) loaded");
+console.log("StudentManager (Clean) loaded");

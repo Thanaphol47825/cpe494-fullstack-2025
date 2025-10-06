@@ -78,7 +78,8 @@ class HrApplication extends BaseModuleApplication {
       
       // Check if features are already loaded
       if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
-          window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature) {
+          window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature &&
+          window.HrStudentListFeature && window.HrInstructorListFeature) {
         return
       }
       
@@ -101,6 +102,16 @@ class HrApplication extends BaseModuleApplication {
       // Load StudentResignationList feature
       if (!window.HrStudentResignationListFeature) {
         await this.loadScript('/hr/static/js/features/StudentResignationList.js')
+      }
+      
+      // Load StudentList feature
+      if (!window.HrStudentListFeature) {
+        await this.loadScript('/hr/static/js/features/StudentList.js')
+      }
+      
+      // Load InstructorList feature
+      if (!window.HrInstructorListFeature) {
+        await this.loadScript('/hr/static/js/features/InstructorList.js')
       }
       
       this._loadingFeatures = false
@@ -207,19 +218,41 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderInstructors() {
-    // Show loading state first
-    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
-      'Instructor Management', 
-      'Manage teaching staff and academic personnel'
-    );
-
-    // Load instructors data
     try {
-      const instructors = await this.apiService.fetchInstructors();
-      this.renderInstructorsList(instructors);
+      // Load the InstructorList feature
+      await this.loadFeatureModules();
+      
+      if (window.HrInstructorListFeature) {
+        const listFeature = new window.HrInstructorListFeature(this.templateEngine, this.rootURL);
+        await listFeature.render();
+        
+        // Make it globally accessible for onclick handlers
+        window.instructorList = listFeature;
+      } else {
+        throw new Error('InstructorListFeature not available');
+      }
     } catch (error) {
       console.error('Error loading instructors:', error);
-      this.renderInstructorsError(error.message);
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
+                <h2 class="text-2xl font-semibold text-white">Error Loading Instructors</h2>
+              </div>
+              <div class="p-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <p class="text-red-700 mb-4">${error.message}</p>
+                  <button onclick="hrApp.renderInstructors()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-8">
+              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
+            </div>
+          </div>
+        </div>
+      `;
     }
   }
 
@@ -354,8 +387,14 @@ class HrApplication extends BaseModuleApplication {
 
   async viewInstructor(instructorCode) {
     try {
-      const instructor = await this.apiService.fetchInstructor(instructorCode);
-      this.renderInstructorDetails(instructor);
+      // Use the global instructorList instance if available
+      if (window.instructorList) {
+        await window.instructorList.viewInstructor(instructorCode);
+      } else {
+        // Fallback to old method
+        const instructor = await this.apiService.fetchInstructor(instructorCode);
+        this.renderInstructorDetails(instructor);
+      }
     } catch (error) {
       console.error('Error loading instructor:', error);
       alert(`Error loading instructor: ${error.message}`);
@@ -545,16 +584,31 @@ class HrApplication extends BaseModuleApplication {
   }
 
   editInstructor(instructorCode) {
-    // For now, redirect to create form with edit mode
-    // This can be enhanced later with a proper edit form
-    this.templateEngine.routerLinks.navigateTo('hr/instructors/create');
-    alert(`Edit functionality for instructor ${instructorCode} will be implemented soon!`);
+    try {
+      // Use the global instructorList instance if available
+      if (window.instructorList) {
+        window.instructorList.editInstructor(instructorCode);
+      } else {
+        // Fallback to old method
+        this.templateEngine.routerLinks.navigateTo('hr/instructors/create');
+        alert(`Edit functionality for instructor ${instructorCode} will be implemented soon!`);
+      }
+    } catch (error) {
+      console.error('Error editing instructor:', error);
+      alert(`Error editing instructor: ${error.message}`);
+    }
   }
 
   async viewStudent(studentCode) {
     try {
-      const student = await this.apiService.fetchStudent(studentCode);
-      this.renderStudentDetails(student);
+      // Use the global studentList instance if available
+      if (window.studentList) {
+        await window.studentList.viewStudent(studentCode);
+      } else {
+        // Fallback to old method
+        const student = await this.apiService.fetchStudent(studentCode);
+        this.renderStudentDetails(student);
+      }
     } catch (error) {
       console.error('Error loading student:', error);
       alert(`Error loading student: ${error.message}`);
@@ -746,10 +800,19 @@ class HrApplication extends BaseModuleApplication {
   }
 
   editStudent(studentCode) {
-    // For now, redirect to create form with edit mode
-    // This can be enhanced later with a proper edit form
-    this.templateEngine.routerLinks.navigateTo('hr/students/create');
-    alert(`Edit functionality for student ${studentCode} will be implemented soon!`);
+    try {
+      // Use the global studentList instance if available
+      if (window.studentList) {
+        window.studentList.editStudent(studentCode);
+      } else {
+        // Fallback to old method
+        this.templateEngine.routerLinks.navigateTo('hr/students/create');
+        alert(`Edit functionality for student ${studentCode} will be implemented soon!`);
+      }
+    } catch (error) {
+      console.error('Error editing student:', error);
+      alert(`Error editing student: ${error.message}`);
+    }
   }
 
   async renderCreateInstructor() {
@@ -848,19 +911,41 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderStudents() {
-    // Show loading state first
-    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
-      'Student Management', 
-      'Manage student records and academic progress'
-    );
-
-    // Load students data
     try {
-      const students = await this.apiService.fetchStudents();
-      this.renderStudentsList(students);
+      // Load the StudentList feature
+      await this.loadFeatureModules();
+      
+      if (window.HrStudentListFeature) {
+        const listFeature = new window.HrStudentListFeature(this.templateEngine, this.rootURL);
+        await listFeature.render();
+        
+        // Make it globally accessible for onclick handlers
+        window.studentList = listFeature;
+      } else {
+        throw new Error('StudentListFeature not available');
+      }
     } catch (error) {
       console.error('Error loading students:', error);
-      this.renderStudentsError(error.message);
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
+                <h2 class="text-2xl font-semibold text-white">Error Loading Students</h2>
+              </div>
+              <div class="p-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <p class="text-red-700 mb-4">${error.message}</p>
+                  <button onclick="hrApp.renderStudents()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-8">
+              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
+            </div>
+          </div>
+        </div>
+      `;
     }
   }
 
@@ -1093,7 +1178,7 @@ class HrApplication extends BaseModuleApplication {
     const studentId = params.id.toUpperCase()
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-student-detail">
-        <h2>👨‍🎓 Student Details: ${studentId}</h2>
+        <h2>Student Details: ${studentId}</h2>
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3>Personal Information</h3>

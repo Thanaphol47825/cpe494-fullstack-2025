@@ -175,7 +175,7 @@ class HrStudentResignationFormFeature {
 
   async #handleSubmit(form) {
     try {
-      this.#setStatus('⏳ Submitting request...', 'loading');
+      this.#setStatus('Submitting request...', 'loading');
       this.#hideResult();
       const payload = this.#collect(form);
       if (!this.#validate(payload)) return;

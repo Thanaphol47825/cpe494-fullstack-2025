@@ -108,6 +108,22 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       return responseData.result || responseData;
     }
 
+    async fetchStudent(studentCode) {
+      const response = await fetch(`${this.rootURL}/hr/students/${studentCode}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load student: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
     async createStudent(studentData) {
       const response = await fetch(`${this.rootURL}/hr/students`, {
         method: 'POST',
@@ -116,6 +132,41 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(studentData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      return await response.json();
+    }
+
+    async updateStudent(studentCode, studentData) {
+      const response = await fetch(`${this.rootURL}/hr/students/${studentCode}`, {
+        method: 'PUT',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(studentData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      return await response.json();
+    }
+
+    async deleteStudent(studentCode) {
+      const response = await fetch(`${this.rootURL}/hr/students/${studentCode}`, {
+        method: 'DELETE',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
       });
 
       if (!response.ok) {

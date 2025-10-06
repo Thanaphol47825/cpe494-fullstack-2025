@@ -72,5 +72,6 @@ if (typeof window !== 'undefined' && !window.InternshipAttendanceCreate) {
             });
         }
     }
+    
     window.InternshipAttendanceCreate = InternshipAttendanceCreate;
 }

@@ -1,27 +1,21 @@
-if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
+if (typeof window !== 'undefined' && !window.InternshipApplication) {
     class InternshipApplication extends BaseModuleApplication {
         constructor(templateEngine) {
             super(templateEngine)
             
-            // Set the base path for sub-modules
             this.setSubModuleBasePath('/curriculum/static/js')
-            
-            // Setup routes and navigation
             this.setupRoutes()
         }
 
         setupRoutes() {
-            // Register main routes
             this.addRoute('', this.renderMainPage.bind(this))
             
-            // Add routes for each model with sub-module loading
             this.addRouteWithSubModule('/internshipreport', this.renderInternshipReport.bind(this), 'InternshipReportCreate.js')
             this.addRouteWithSubModule('/company', this.renderCompany.bind(this), 'CompanyCreate.js')
             this.addRouteWithSubModule('/internshipmentor', this.renderInternshipMentor.bind(this), 'InternshipMentorCreate.js')
             this.addRouteWithSubModule('/internshipattendance', this.renderInternshipAttendance.bind(this), 'InternshipAttendanceCreate.js')
             this.addRouteWithSubModule('/internshipcriteria', this.renderInternshipCriteria.bind(this), 'InternshipCriteriaCreate.js')
             
-            // Set default route
             this.setDefaultRoute('')
         }
 
@@ -42,7 +36,6 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
                 document.head.appendChild(script);
             }
 
-            // Generate cards HTML first
             let cardsHTML = '';
             this.models.forEach(model => {
                 cardsHTML += `
@@ -71,7 +64,6 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
                 `;
             });
 
-            // Set the complete HTML structure with internship-focused design
             this.templateEngine.mainContainer.innerHTML = `
                 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 relative overflow-hidden">
                     <!-- Background Pattern -->
@@ -127,7 +119,6 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             `;
         }
 
-        // Helper methods for UI generation
         getIconForModel(label) {
             const icons = {
                 'internship report': '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
@@ -161,7 +152,6 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             return gradients[label] || 'from-gray-500 to-gray-600'
         }
 
-        // Individual render methods for sub-routes
         async renderInternshipReport() {
             console.log("Rendering Internship Report")
             if (window.InternshipReportCreate) {
@@ -212,16 +202,13 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             }
         }
 
-        // Override the default render method
         async render() {
             try {
-                // Try to handle sub-routing first
                 const handled = await this.handleRoute(this.templateEngine.getCurrentPath())
                 if (handled) {
                     return true
                 }
 
-                // Default render - show main page
                 await this.renderMainPage()
                 return false
             } catch (error) {

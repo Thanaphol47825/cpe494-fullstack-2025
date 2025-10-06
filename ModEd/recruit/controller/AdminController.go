@@ -3,6 +3,7 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,14 +33,35 @@ func (controller *AdminController) GetModelMeta() []*core.ModelMeta {
 
 func (controller *AdminController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
+
+	controller.application.SetAPIform("admin", &model.Admin{})
 }
 
 func (controller *AdminController) RenderCreateForm(c *fiber.Ctx) error {
 	path := filepath.Join(controller.application.RootPath, "recruit", "view", "AdminCreate.tpl")
+	tmpl, err := mustache.ParseFile(path)
+	if err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
 
-	rendered := mustache.RenderFile(path, map[string]any{
+	moduleList := controller.application.DiscoverModules()
+	modulesJSON, err := json.Marshal(moduleList)
+	if err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
+
+	rendered := tmpl.Render(map[string]any{
 		"title":   "Create Admin",
 		"RootURL": controller.application.RootURL,
+		"modules": string(modulesJSON),
 	})
 
 	c.Set("Content-Type", "text/html; charset=utf-8")

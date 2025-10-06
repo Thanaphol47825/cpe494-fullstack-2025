@@ -1,6 +1,6 @@
 class RecruitApplication {
-  constructor(application) {
-    this.application = application;
+  constructor(engine) {
+    this.engine = engine;
 
     this.subModules = [
       {
@@ -27,8 +27,16 @@ class RecruitApplication {
         label: "Create Interview",
         className: "InterviewCreate",
         script: "/recruit/static/js/InterviewCreate.js",
-      }
+      },
     ];
+
+    this.moduleIcons = {
+      "Create Admin": "👤",
+      "Create Applicant": "🧑‍💼",
+      "Create Application Round": "📅",
+      "Create Interview Criteria": "📝",
+      "Create Interview": "💬",
+    };
   }
 
   async ensureTailwind() {
@@ -44,43 +52,53 @@ class RecruitApplication {
   }
 
   async render() {
-    console.log("RecruitApplication: render()");
-
     await this.ensureTailwind();
 
-    this.application.mainContainer.innerHTML = `
-      <div class="max-w-4xl mx-auto py-10 px-4">
-        <header class="mb-6">
-          <h1 class="text-3xl font-bold tracking-tight text-gray-800">
-            Recruit Module
-          </h1>
-          <p class="text-sm text-gray-500">
-            Choose an action below to manage recruitment.
-          </p>
+    this.engine.mainContainer.innerHTML = `
+      <div class="min-h-screen bg-gray-50">
+        <header class="bg-indigo-600 shadow">
+          <div class="max-w-5xl mx-auto px-6 py-8 text-white">
+            <h1 class="text-4xl font-bold mb-1">Recruit Module</h1>
+            <p class="text-indigo-100 text-sm">Manage recruitment system easily.</p>
+          </div>
         </header>
-        <div id="RecruitButtons" class="flex flex-wrap gap-3"></div>
+
+
+        <main class="max-w-5xl mx-auto px-6 py-10">
+          <h2 class="text-lg font-semibold text-gray-700 mb-6">
+            Select an Action
+          </h2>
+          <div id="RecruitButtons"
+               class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          </div>
+        </main>
       </div>
     `;
 
-    const buttonContainer = this.application.mainContainer.querySelector("#RecruitButtons");
+    const buttonContainer = this.engine.mainContainer.querySelector("#RecruitButtons");
 
-    for (const module of this.subModules) {
-      await this.application.fetchModule(module.script);
+    for (const mod of this.subModules) {
+      await this.engine.fetchModule(mod.script);
 
-      const button = this.application.create(`
-        <button id="${module.label}" 
-          class="rounded-lg bg-indigo-600 px-4 py-2 text-white 
-                 hover:bg-indigo-700 focus:outline-none focus:ring-2 
-                 focus:ring-indigo-400 transition">
-          ${module.label}
+      const icon = this.moduleIcons[mod.label] || "📦"; 
+
+      const button = this.engine.create(`
+        <button
+          class="flex flex-col justify-center items-center text-center p-6 rounded-xl bg-white border border-gray-200 shadow-sm
+                 hover:bg-indigo-50 hover:shadow-md hover:-translate-y-1 transform transition-all duration-200 ease-in-out">
+          <div class="w-12 h-12 flex items-center justify-center text-2xl mb-3">
+            ${icon}
+          </div>
+          <span class="text-gray-700 font-medium">${mod.label}</span>
         </button>
       `);
 
-      const moduleEngine = eval(`new ${module.className}(this.application)`);
+      const moduleInstance = eval(`new ${mod.className}(this.engine)`);
 
-      button.onclick = (e) => {
+      button.onclick = async (e) => {
         e.preventDefault();
-        return moduleEngine.render();
+        this.engine.mainContainer.innerHTML = "";
+        await moduleInstance.render();
       };
 
       buttonContainer.appendChild(button);

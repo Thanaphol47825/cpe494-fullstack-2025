@@ -25,7 +25,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRouteWithSubModule('/course', this.renderCourse.bind(this))
       this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'feature/CourseCreate.js')
 
-      this.addRouteWithSubModule('/class', this.renderClass.bind(this))
+      this.addRouteWithSubModule('/class', this.renderClass.bind(this), 'feature/ClassList.js')
       this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'feature/ClassCreate.js')
 
       this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this), 'feature/ClassMaterialList.js')
@@ -201,25 +201,15 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderClass() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-classes">
-        <h2>Class Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/class/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Class</a>
-        </div>
-        
-        <div class="class-list">
-          <!-- class list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      if (window.ClassList) {
+        const classList = new window.ClassList(this);
+        await classList.render();
+      } else {
+        console.error('ClassList class not found');
+        this.templateEngine.mainContainer.innerHTML = '<div>Error: ClassList module not loaded</div>';
+      }
     }
-    
+
     async renderCreateClass() {
       if (window.ClassCreate) {
         const classCreate = new window.ClassCreate(this);

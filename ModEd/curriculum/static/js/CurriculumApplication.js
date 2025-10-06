@@ -28,7 +28,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRouteWithSubModule('/class', this.renderClass.bind(this))
       this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'ClassCreate.js')
 
-      this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this))
+      this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this), 'feature/ClassMaterialList.js')
       this.addRouteWithSubModule('/classmaterial/create', this.renderCreateClassMaterial.bind(this), 'feature/ClassMaterialCreate.js')
 
       this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this))
@@ -212,27 +212,21 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     async renderCreateClass() { }
 
     async renderClassMaterial() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-classmaterials">
-        <h2>Class Material Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/classmaterial/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Class Material</a>
+      if (window.ClassMaterialList) {
+        const classMaterialList = new window.ClassMaterialList(this);
+        await classMaterialList.render();
+      } else {
+        console.error('ClassMaterialList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
         </div>
-        
-        <div class="classmaterial-list">
-          <!-- class material list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      `;
+      }
     }
     async renderCreateClassMaterial() {
       if (window.ClassMaterialCreate) {
-        const formFeature = new window.ClassMaterialCreate(this.templateEngine, this.rootURL);
+        const formFeature = new window.ClassMaterialCreate(this);
         await formFeature.render();
       } else {
         console.error('ClassMaterialCreate not available after loading');

@@ -19,6 +19,9 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
             //     console.log('Loaded');
             // }
 
+            // Set current instance for global access
+            window.currentClassMaterialList = this;
+
             this.application.templateEngine.mainContainer.innerHTML = "";
 
             const ListWrapper = this.application.templateEngine.create(`
@@ -93,6 +96,7 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
             this.application.templateEngine.mainContainer.appendChild(ListWrapper);
 
             const classMaterials = await this.getClassMaterials();
+            this.classMaterials = classMaterials; // Store for later use
 
             this.renderSimpleTable(classMaterials, ListWrapper.querySelector('#table-container'));
         }
@@ -230,26 +234,222 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
             container.innerHTML = tableHTML;
         }
 
-        // Placeholder functions for edit and delete (will be implemented later)
-        editClassMaterial = (id) => {
-            alert(`Edit class material with ID: ${id} - Function not implemented yet`);
+        // Get classes option for select dropdown
+        getClassesOption = async () => {
+            const res = await fetch(`${RootURL}/curriculum/Class/getClasses`, {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+            });
+            const data = await res.json().catch(() => ([]));
+
+            let select = []
+            data.result.forEach(item => {
+                let formattedSchedule = "";
+                if (item.Schedule) {
+                    const d = new Date(item.Schedule);
+                    const yyyy = d.getFullYear();
+                    const mm = String(d.getMonth() + 1).padStart(2, '0');
+                    const dd = String(d.getDate()).padStart(2, '0');
+                    const hh = String(d.getHours()).padStart(2, '0');
+                    const min = String(d.getMinutes()).padStart(2, '0');
+                    formattedSchedule = `${yyyy}-${mm}-${dd} | ${hh}:${min}`;
+                }
+
+                let label = item.Course.Name + " - " + formattedSchedule;
+                select.push({ value: item.ID, label: label });
+            });
+            return select;
         }
 
-        deleteClassMaterial = (id) => {
-            if (confirm(`Are you sure you want to delete class material with ID: ${id}?`)) {
-                alert(`Delete class material with ID: ${id} - Function not implemented yet`);
+        // Edit Class Material - Show inline edit form using FormRender
+        editClassMaterial = async (id) => {
+            const data = this.classMaterials.find(item => item.ID === id);
+            if (!data) {
+                alert('Class Material not found');
+                return;
+            }
+
+            // Get classes options for the select dropdown
+            const classesOption = await this.getClassesOption();
+
+            // Create edit modal with form container
+            const modal = this.application.templateEngine.create(`
+                <div id="edit-modal-${id}" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-bold text-gray-900">Edit Class Material</h3>
+                            <button onclick="closeEditModal(${id})" class="text-gray-400 hover:text-gray-600">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <form id="edit-form-${id}" class="space-y-4">
+                            <div id="edit-form-fields-${id}"></div>
+                            
+                            <div class="flex gap-3 pt-4">
+                                <button type="submit" class="flex-1 bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200">
+                                    Update
+                                </button>
+                                <button type="button" onclick="closeEditModal(${id})" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `);
+
+            document.body.appendChild(modal);
+
+            // Define form fields with pre-filled values
+            const fields = [
+                {
+                    Id: "ClassId", 
+                    Label: "Class", 
+                    Type: "select", 
+                    Name: "ClassId", 
+                    required: true,
+                    options: classesOption,
+                    value: data.ClassId
+                },
+                { 
+                    Id: "file_name", 
+                    Label: "File Name", 
+                    Type: "text", 
+                    Name: "FileName", 
+                    Required: true, 
+                    Placeholder: "Enter Class Material File Name",
+                    value: data.FileName || ''
+                },
+                { 
+                    Id: "file_path", 
+                    Label: "File Path", 
+                    Type: "text", 
+                    Name: "FilePath", 
+                    Required: true, 
+                    Placeholder: "Enter Class Material File Path",
+                    value: data.FilePath || ''
+                },
+            ];
+
+            // Render form fields using template engine
+            const fieldsContainer = document.getElementById(`edit-form-fields-${id}`);
+            fieldsContainer.innerHTML = '';
+            
+            fields.forEach(field => {
+                let inputHTML = '';
+
+                if (field.Type === "select" && this.application.templateEngine.template && this.application.templateEngine.template.SelectInput) {
+                    inputHTML = Mustache.render(this.application.templateEngine.template.SelectInput, field);
+                } else if (this.application.templateEngine.template && this.application.templateEngine.template.Input) {
+                    inputHTML = Mustache.render(this.application.templateEngine.template.Input, field);
+                }
+
+                if (inputHTML) {
+                    const inputElement = this.application.templateEngine.create(inputHTML);
+                    fieldsContainer.appendChild(inputElement);
+                    
+                    // Set the value after creating the element (for pre-filling)
+                    if (field.value !== undefined) {
+                        const input = inputElement.querySelector(`[name="${field.Name}"]`);
+                        if (input) {
+                            input.value = field.value;
+                        }
+                    }
+                }
+            });
+
+            // Handle form submission
+            document.getElementById(`edit-form-${id}`).addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const payload = {
+                    ID: id,
+                    ClassId: parseInt(formData.get('ClassId')),
+                    FileName: formData.get('FileName'),
+                    FilePath: formData.get('FilePath')
+                };
+
+                try {
+                    const res = await fetch(`${RootURL}/curriculum/ClassMaterial/updateClassMaterial`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+                    const result = await res.json();
+                    
+                    if (result.isSuccess) {
+                        alert('Class Material updated successfully!');
+                        this.closeEditModal(id);
+                        // Refresh the table
+                        const classMaterials = await this.getClassMaterials();
+                        this.classMaterials = classMaterials;
+                        const container = document.querySelector('#table-container');
+                        this.renderSimpleTable(classMaterials, container);
+                    } else {
+                        alert('Error: ' + (result.result || 'Failed to update'));
+                    }
+                } catch (err) {
+                    alert('Network error: ' + err.message);
+                }
+            });
+        }
+
+        // Close edit modal
+        closeEditModal = (id) => {
+            const modal = document.getElementById(`edit-modal-${id}`);
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        // Delete Class Material
+        deleteClassMaterial = async (id) => {
+            if (!confirm(`Are you sure you want to delete this class material?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`${RootURL}/curriculum/ClassMaterial/deleteClassMaterial/${id}`, {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                });
+                const result = await res.json();
+                
+                if (result.isSuccess) {
+                    alert('Class Material deleted successfully!');
+                    // Refresh the table
+                    const classMaterials = await this.getClassMaterials();
+                    this.classMaterials = classMaterials;
+                    const container = document.querySelector('#table-container');
+                    this.renderSimpleTable(classMaterials, container);
+                } else {
+                    alert('Error: ' + (result.result || 'Failed to delete'));
+                }
+            } catch (err) {
+                alert('Network error: ' + err.message);
             }
         }
     }
 
     // Make functions globally available for onclick handlers
     window.editClassMaterial = (id) => {
-        alert(`Edit class material with ID: ${id} - Function not implemented yet`);
+        if (window.currentClassMaterialList) {
+            window.currentClassMaterialList.editClassMaterial(id);
+        }
     }
 
     window.deleteClassMaterial = (id) => {
-        if (confirm(`Are you sure you want to delete class material with ID: ${id}?`)) {
-            alert(`Delete class material with ID: ${id} - Function not implemented yet`);
+        if (window.currentClassMaterialList) {
+            window.currentClassMaterialList.deleteClassMaterial(id);
+        }
+    }
+
+    window.closeEditModal = (id) => {
+        if (window.currentClassMaterialList) {
+            window.currentClassMaterialList.closeEditModal(id);
         }
     }
 

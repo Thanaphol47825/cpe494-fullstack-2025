@@ -128,47 +128,32 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                 </div>
               </div>
               
-              <!-- Leave Management Card (TODO) -->
-              <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden opacity-75">
+              <!-- Leave Management Card -->
+              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
                   <div class="flex items-center mb-4">
                     <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
                       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                       </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900">Leave Management</h3>
-                    <span class="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">TODO</span>
+                    <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">ACTIVE</span>
                   </div>
                   <p class="text-gray-600 mb-6">Manage leave requests and vacation tracking</p>
                   <div class="flex flex-col space-y-2">
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">
+                    <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors duration-200">
                       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                       </svg>
-                      View Requests
-                      <span class="ml-2 text-xs">(Coming Soon)</span>
-                    </button>
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                      </svg>
-                      New Request
-                      <span class="ml-2 text-xs">(Coming Soon)</span>
-                    </button>
-                    <button disabled class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-400 rounded-lg cursor-not-allowed">
+                      Manage Leave
+                    </a>
+                    <a routerLink="hr/leave/history" class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors duration-200">
                       <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
-                      History
-                      <span class="ml-2 text-xs">(Coming Soon)</span>
-                    </button>
-                  </div>
-                  <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm text-yellow-800">
-                      <strong>Developer Note:</strong> This feature is assigned to another team member for implementation.
-                    </p>
+                      View History
+                    </a>
                   </div>
                 </div>
               </div>

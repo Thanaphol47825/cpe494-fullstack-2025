@@ -63,13 +63,30 @@ func (c *LeaveInstructorHRController) SubmitInstructorLeaveRequest(instructorID,
 	})
 }
 
+func (c *LeaveInstructorHRController) ReviewInstructorLeaveRequest(requestID, action, reason string) error {
+	return ReviewRequest(
+		requestID,
+		action,
+		reason,
+		// fetch
+		func(id uint) (Reviewable, error) {
+			return c.getByID(id)
+		},
+		// save
+		func(r Reviewable) error {
+			return c.application.DB.Save(r).Error
+		},
+	)
+}
+
 // -------- HTTP --------
 
 func (ctl *LeaveInstructorHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/leave-instructor-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
+		{Route: "/hr/leave-instructor-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-instructor-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
-
+		{Route: "/hr/leave-instructor-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewRequest},
 		{Route: "/hr/leave-instructor-requests/update", Method: core.POST, Handler: ctl.HandleUpdateRequest},
 		{Route: "/hr/leave-instructor-requests/delete", Method: core.POST, Handler: ctl.HandleDeleteRequest},
 	}
@@ -86,6 +103,27 @@ func (ctl *LeaveInstructorHRController) HandleGetAllRequests(c *fiber.Ctx) error
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    rs,
+	})
+}
+
+func (ctl *LeaveInstructorHRController) HandleGetRequestByID(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request ID"},
+		})
+	}
+	req, err := ctl.getByID(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    req,
 	})
 }
 
@@ -128,6 +166,45 @@ func (ctl *LeaveInstructorHRController) HandleSubmitRequest(c *fiber.Ctx) error 
 		"result":    fiber.Map{"message": "Leave request submitted successfully"},
 	})
 }
+
+func (ctl *LeaveInstructorHRController) HandleReviewRequest(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request ID"},
+		})
+	}
+
+	var body struct {
+		Action string `json:"action"` // "approve" or "reject"
+		Reason string `json:"reason"` // optional
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
+	}
+	if body.Action != "approve" && body.Action != "reject" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "action must be 'approve' or 'reject'"},
+		})
+	}
+
+	if err := ctl.ReviewInstructorLeaveRequest(fmt.Sprintf("%d", id), body.Action, body.Reason); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    fiber.Map{"message": "Leave request reviewed successfully"},
+	})
+}
+
 func (ctl *LeaveInstructorHRController) HandleUpdateRequest(c *fiber.Ctx) error {
 	var body struct {
 		ID        uint   `json:"id"`

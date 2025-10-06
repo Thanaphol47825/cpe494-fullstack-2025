@@ -80,7 +80,10 @@ class HrApplication extends BaseModuleApplication {
       if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
           window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature &&
           window.HrStudentListFeature && window.HrInstructorListFeature &&
-          window.HrStudentEditFeature && window.HrInstructorEditFeature) {
+          window.HrStudentEditFeature && window.HrInstructorEditFeature &&
+          window.HrStudentLeaveFormFeature && window.HrInstructorLeaveFormFeature &&
+          window.HrStudentLeaveListFeature && window.HrInstructorLeaveListFeature &&
+          window.HrLeaveHistoryFeature) {
         return
       }
       
@@ -125,6 +128,27 @@ class HrApplication extends BaseModuleApplication {
         await this.loadScript('/hr/static/js/features/InstructorEdit.js')
       }
       
+      // Load Leave Management features
+      if (!window.HrStudentLeaveFormFeature) {
+        await this.loadScript('/hr/static/js/features/StudentLeaveForm.js')
+      }
+      
+      if (!window.HrInstructorLeaveFormFeature) {
+        await this.loadScript('/hr/static/js/features/InstructorLeaveForm.js')
+      }
+      
+      if (!window.HrStudentLeaveListFeature) {
+        await this.loadScript('/hr/static/js/features/StudentLeaveList.js')
+      }
+      
+      if (!window.HrInstructorLeaveListFeature) {
+        await this.loadScript('/hr/static/js/features/InstructorLeaveList.js')
+      }
+      
+      if (!window.HrLeaveHistoryFeature) {
+        await this.loadScript('/hr/static/js/features/LeaveHistory.js')
+      }
+      
       this._loadingFeatures = false
     } catch (error) {
       this._loadingFeatures = false
@@ -160,10 +184,13 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/resignation/student/create', this.renderCreateStudentResignation.bind(this))
     this.addRoute('/resignation/instructor', this.renderInstructorResignation.bind(this))
     
-    // Leave routes with LeaveManager sub-module
-    this.addRouteWithSubModule('/leave', this.renderLeave.bind(this), 'LeaveManager.js')
-    this.addRouteWithSubModule('/leave/create', this.renderCreateLeave.bind(this), 'LeaveManager.js')
-    this.addRouteWithSubModule('/leave/history', this.renderLeaveHistory.bind(this), 'LeaveManager.js')
+    // Leave Management routes
+    this.addRoute('/leave', this.renderLeaveMain.bind(this))
+    this.addRoute('/leave/student', this.renderStudentLeaveList.bind(this))
+    this.addRoute('/leave/student/create', this.renderCreateStudentLeave.bind(this))
+    this.addRoute('/leave/instructor', this.renderInstructorLeaveList.bind(this))
+    this.addRoute('/leave/instructor/create', this.renderCreateInstructorLeave.bind(this))
+    this.addRoute('/leave/history', this.renderLeaveHistory.bind(this))
     
     this.setDefaultRoute('')
     
@@ -1354,47 +1381,105 @@ class HrApplication extends BaseModuleApplication {
     `
   }
 
-  async renderLeave() {
+  async renderLeaveMain() {
     this.templateEngine.mainContainer.innerHTML = `
-      <div class="hr-leave">
-        <h2>Leave Management</h2>
-        <p>Manage student and instructor leave requests.</p>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="hr/leave/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ New Leave Request</a>
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="hr" style="color: #6c757d;">← Back to HR Menu</a>
+      <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+        <div class="max-w-7xl mx-auto px-4">
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Leave Management</h1>
+            <p class="text-gray-600">Manage student and instructor leave requests</p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900">Student Leave</h3>
+              </div>
+              <p class="text-gray-600 mb-6">Manage student leave requests</p>
+              <div class="flex flex-col space-y-2">
+                <a routerLink="hr/leave/student" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">View Requests</a>
+                <a routerLink="hr/leave/student/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100">New Request</a>
+              </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900">Instructor Leave</h3>
+              </div>
+              <p class="text-gray-600 mb-6">Manage instructor leave requests</p>
+              <div class="flex flex-col space-y-2">
+                <a routerLink="hr/leave/instructor" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100">View Requests</a>
+                <a routerLink="hr/leave/instructor/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100">New Request</a>
+              </div>
+            </div>
+            <div class="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300">
+              <div class="flex items-center mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center mr-4">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900">History</h3>
+              </div>
+              <p class="text-gray-600 mb-6">View complete leave request history</p>
+              <a routerLink="hr/leave/history" class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100">View History</a>
+            </div>
+          </div>
+          <div class="text-center">
+            <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">Back to HR Menu</a>
+          </div>
         </div>
       </div>
     `
   }
 
-  async renderCreateLeave() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="hr-create-leave">
-        <h2>Create Leave Request</h2>
-        <p>Submit a new leave request.</p>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="hr/leave" style="color: #6c757d;">← Back to Leave Management</a>
-        </div>
-      </div>
-    `
+  async renderCreateStudentLeave() {
+    await this.loadFeatureModules()
+    if (window.HrStudentLeaveFormFeature) {
+      const feature = new window.HrStudentLeaveFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
+  }
+
+  async renderCreateInstructorLeave() {
+    await this.loadFeatureModules()
+    if (window.HrInstructorLeaveFormFeature) {
+      const feature = new window.HrInstructorLeaveFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
+  }
+
+  async renderStudentLeaveList() {
+    await this.loadFeatureModules()
+    if (window.HrStudentLeaveListFeature) {
+      const feature = new window.HrStudentLeaveListFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
+  }
+
+  async renderInstructorLeaveList() {
+    await this.loadFeatureModules()
+    if (window.HrInstructorLeaveListFeature) {
+      const feature = new window.HrInstructorLeaveListFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
   }
 
   async renderLeaveHistory() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="hr-leave-history">
-        <h2>Leave History</h2>
-        <p>Leave history functionality.</p>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="hr/leave" style="color: #6c757d;">← Back to Leave Management</a>
-        </div>
-      </div>
-    `
+    await this.loadFeatureModules()
+    if (window.HrLeaveHistoryFeature) {
+      const feature = new window.HrLeaveHistoryFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
   }
 
   // Override the default render method

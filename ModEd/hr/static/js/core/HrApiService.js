@@ -322,6 +322,225 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       }
       return result.result || result;
     }
+
+    // ==================== Leave Request APIs (Student) ====================
+    
+    async fetchStudentLeaveRequests() {
+      const response = await fetch(`${this.rootURL}/hr/leave-student-requests`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load student leave requests: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    async fetchStudentLeaveRequest(requestId) {
+      const response = await fetch(`${this.rootURL}/hr/leave-student-requests/${requestId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to load student leave request: ${response.status}`);
+      }
+
+      return await response.json();
+    }
+
+    async createStudentLeaveRequest(requestData) {
+      const response = await fetch(`${this.rootURL}/hr/leave-student-requests`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      return await response.json();
+    }
+
+    async reviewStudentLeaveRequest(requestId, action, reason = '') {
+      const response = await fetch(`${this.rootURL}/hr/leave-student-requests/${requestId}/review`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action, reason })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      return await response.json();
+    }
+
+    async editStudentLeaveRequest(requestId, requestData) {
+      const response = await fetch(`${this.rootURL}/hr/leave-student-requests/${requestId}/edit`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      return await response.json();
+    }
+
+    async deleteStudentLeaveRequest(requestId) {
+      const response = await fetch(`${this.rootURL}/hr/leave-student-requests/${requestId}/delete`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      return await response.json();
+    }
+
+    // ==================== Leave Request APIs (Instructor) ====================
+    
+    async fetchInstructorLeaveRequests() {
+      const response = await fetch(`${this.rootURL}/hr/leave-instructor-requests`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `Failed to load instructor leave requests: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.result || result;
+    }
+
+    async fetchInstructorLeaveRequest(requestId) {
+      const response = await fetch(`${this.rootURL}/hr/leave-instructor-requests/${requestId}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `Failed to load instructor leave request: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.result || result;
+    }
+
+    async createInstructorLeaveRequest(requestData) {
+      const response = await fetch(`${this.rootURL}/hr/leave-instructor-requests`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      const result = await response.json();
+      return result.result || result;
+    }
+
+    async reviewInstructorLeaveRequest(requestId, action, reason = '') {
+      const response = await fetch(`${this.rootURL}/hr/leave-instructor-requests/${requestId}/review`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ action, reason })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      const result = await response.json();
+      return result.result || result;
+    }
+
+    async updateInstructorLeaveRequest(requestData) {
+      const response = await fetch(`${this.rootURL}/hr/leave-instructor-requests/update`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      const result = await response.json();
+      return result.result || result;
+    }
+
+    async deleteInstructorLeaveRequest(requestId) {
+      const response = await fetch(`${this.rootURL}/hr/leave-instructor-requests/delete`, {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id: requestId })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData?.error?.message || errorData?.message || `API Error (${response.status})`);
+      }
+
+      const result = await response.json();
+      return result.result || result;
+    }
   }
   
   window.HrApiService = HrApiService

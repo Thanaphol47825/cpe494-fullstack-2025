@@ -20,6 +20,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRoute('', this.renderMainPage.bind(this))
 
       this.addRouteWithSubModule('/curriculum', this.renderCurriculum.bind(this), 'feature/CurriculumList.js')
+      this.addRouteWithSubModule('/curriculum/:id', this.renderEditCurriculum.bind(this), 'feature/CurriculumEdit.js')
       this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'feature/CurriculumCreate.js')
 
       this.addRouteWithSubModule('/course', this.renderCourse.bind(this))
@@ -155,6 +156,20 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       }
     }
 
+    async renderEditCurriculum() {
+      if (window.CurriculumEdit) {
+        const curriculumEdit = new window.CurriculumEdit(this.templateEngine);
+        await curriculumEdit.render();
+      } else {
+        console.error('CurriculumEdit not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
+        </div>
+      `;
+      }
+    }
+
     async renderCreateCurriculum() {
       if (window.CurriculumCreate) {
         const curriculumCreate = new window.CurriculumCreate(this.templateEngine);
@@ -188,7 +203,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       </div>
     `
     }
-    async renderCreateCourse() { 
+    async renderCreateCourse() {
       if (window.CourseCreate) {
         const feature = new window.CourseCreate(this);
         await feature.render();

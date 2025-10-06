@@ -38,6 +38,11 @@ class RecruitApplication {
         className: "InterviewCreate",
         script: "/recruit/static/js/InterviewCreate.js",
       },
+      {
+        label: "Manage Interview Criteria",
+        className: "InterviewCriteriaList",
+        script: "/recruit/static/js/InterviewCriteriaList.js",
+      }
     ];
 
     this.moduleIcons = {
@@ -48,6 +53,7 @@ class RecruitApplication {
       "Manage Application Round": "📅",
       "Create Interview Criteria": "📝",
       "Create Interview": "💬",
+      "Manage Interview Criteria": "📋",
     };
   }
 

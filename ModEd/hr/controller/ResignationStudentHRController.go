@@ -124,9 +124,23 @@ func (ctl *ResignationStudentHRController) HandleList(c *fiber.Ctx) error {
 			"error":     fiber.Map{"code": 500, "message": err.Error()},
 		})
 	}
+
+	// Transform data to ensure proper field mapping
+	transformedRows := make([]fiber.Map, len(rows))
+	for i, row := range rows {
+		transformedRows[i] = fiber.Map{
+			"ID":          row.ID,
+			"StudentCode": row.StudentCode,
+			"Reason":      row.Reason,
+			"Status":      row.Status,
+			"CreatedAt":   row.CreatedAt,
+			"UpdatedAt":   row.UpdatedAt,
+		}
+	}
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    rows,
+		"result":    transformedRows,
 	})
 }
 

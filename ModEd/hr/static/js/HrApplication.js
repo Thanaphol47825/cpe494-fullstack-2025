@@ -77,7 +77,8 @@ class HrApplication extends BaseModuleApplication {
       }
       
       // Check if features are already loaded
-      if (window.HrStudentFormFeature && window.HrInstructorFormFeature) {
+      if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
+          window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature) {
         return
       }
       
@@ -95,6 +96,11 @@ class HrApplication extends BaseModuleApplication {
       // Load StudentResignationForm feature
       if (!window.HrStudentResignationFormFeature) {
         await this.loadScript('/hr/static/js/features/StudentResignationForm.js')
+      }
+      
+      // Load StudentResignationList feature
+      if (!window.HrStudentResignationListFeature) {
+        await this.loadScript('/hr/static/js/features/StudentResignationList.js')
       }
       
       this._loadingFeatures = false
@@ -1140,52 +1146,19 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderStudentResignation() {
-    // Show loading state first
-    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
-      'Student Resignations',
-      'Process student withdrawal and resignation requests'
-    );
-
     try {
-      const requests = await this.apiService.fetchStudentResignations();
-      const listHTML = Array.isArray(requests) && requests.length > 0
-        ? requests.map(r => HrUiComponents.renderStudentResignationCard(r)).join('')
-        : HrUiComponents.renderEmptyStudentResignationsState();
-
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-8">
-              <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-4">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </div>
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">Student Resignation Requests</h1>
-              <p class="text-lg text-gray-600">Process student withdrawal and resignation requests</p>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
-                <div class="flex items-center justify-between">
-                  <h2 class="text-2xl font-semibold text-white">Current Requests</h2>
-                  <a routerLink="hr/resignation/student/create" class="inline-flex items-center px-4 py-2 bg-white/20 text-white rounded-lg hover:bg-white/30 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m6-6H6"/></svg>
-                    New Request
-                  </a>
-                </div>
-              </div>
-              <div class="p-8">
-                ${listHTML}
-              </div>
-            </div>
-
-            <div class="text-center mt-8">
-              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">← Back to Resignations</a>
-            </div>
-          </div>
-        </div>
-      `;
+      // Load the StudentResignationList feature
+      await this.loadFeatureModules();
+      
+      if (window.HrStudentResignationListFeature) {
+        const listFeature = new window.HrStudentResignationListFeature(this.templateEngine, this.rootURL);
+        await listFeature.render();
+        
+        // Make it globally accessible for onclick handlers
+        window.resignationList = listFeature;
+      } else {
+        throw new Error('StudentResignationListFeature not available');
+      }
     } catch (error) {
       console.error('Error loading student resignations:', error);
       this.templateEngine.mainContainer.innerHTML = `

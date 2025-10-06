@@ -58,7 +58,7 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
                                     <p class="text-sm text-slate-500 mt-2 leading-relaxed">${this.getDescriptionForModel(model.label)}</p>
                                 </div>
                                 <div class="w-full pt-4">
-                                    <a routerLink="curriculum${model.route}" class="w-full inline-flex items-center justify-center px-6 py-3 text-white font-semibold rounded-xl bg-gradient-to-r ${this.getGradientForModel(model.label)} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group-hover:scale-110">
+                                    <a routerLink="internship${model.route}" class="w-full inline-flex items-center justify-center px-6 py-3 text-white font-semibold rounded-xl bg-gradient-to-r ${this.getGradientForModel(model.label)} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group-hover:scale-110">
                                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
                                         </svg>
@@ -121,24 +121,6 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
                         <!-- Navigation Cards -->
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-16">
                             ${cardsHTML}
-                        </div>
-
-                        <!-- Bottom Action -->
-                        <div class="text-center">
-                            <div class="inline-flex items-center space-x-6 bg-white/80 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-lg">
-                                <a routerLink="" class="group inline-flex items-center px-6 py-3 text-slate-600 hover:text-slate-800 font-medium rounded-xl border-2 border-slate-300 hover:border-slate-400 transition-all duration-300 hover:shadow-md">
-                                    <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                    </svg>
-                                    กลับหน้าหลัก
-                                </a>
-                                <div class="hidden md:flex items-center text-sm text-slate-500">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    เลือกเมนูด้านบนเพื่อเริ่มจัดการข้อมูลฝึกงาน
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

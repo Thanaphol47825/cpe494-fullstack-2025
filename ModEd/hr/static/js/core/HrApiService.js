@@ -256,9 +256,9 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
     }
 
     async updateStudent(studentCode, payload) {
-      const url = `${this.rootURL}/hr/students/${studentCode}`;
+      const url = `${this.rootURL}/hr/students/${studentCode}/update`;
       const response = await fetch(url, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -297,9 +297,9 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
     }
 
     async updateInstructor(instructorCode, payload) {
-      const url = `${this.rootURL}/hr/instructors/${instructorCode}`;
+      const url = `${this.rootURL}/hr/instructors/${instructorCode}/update`;
       const response = await fetch(url, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });

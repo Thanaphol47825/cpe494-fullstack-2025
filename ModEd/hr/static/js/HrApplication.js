@@ -79,7 +79,8 @@ class HrApplication extends BaseModuleApplication {
       // Check if features are already loaded
       if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
           window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature &&
-          window.HrStudentListFeature && window.HrInstructorListFeature) {
+          window.HrStudentListFeature && window.HrInstructorListFeature &&
+          window.HrStudentEditFeature && window.HrInstructorEditFeature) {
         return
       }
       
@@ -114,6 +115,16 @@ class HrApplication extends BaseModuleApplication {
         await this.loadScript('/hr/static/js/features/InstructorList.js')
       }
       
+      // Load StudentEdit feature
+      if (!window.HrStudentEditFeature) {
+        await this.loadScript('/hr/static/js/features/StudentEdit.js')
+      }
+      
+      // Load InstructorEdit feature
+      if (!window.HrInstructorEditFeature) {
+        await this.loadScript('/hr/static/js/features/InstructorEdit.js')
+      }
+      
       this._loadingFeatures = false
     } catch (error) {
       this._loadingFeatures = false
@@ -136,10 +147,12 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('', this.renderMainPage.bind(this))
     this.addRoute('/instructors', this.renderInstructors.bind(this))
     this.addRoute('/instructors/create', this.renderCreateInstructor.bind(this))
+    this.addRoute('/instructors/edit/:code', this.renderEditInstructor.bind(this))
     
     // Students routes with StudentManager sub-module
     this.addRouteWithSubModule('/students', this.renderStudents.bind(this), 'StudentManager.js')
     this.addRoute('/students/create', this.renderCreateStudent.bind(this))
+    this.addRoute('/students/edit/:code', this.renderEditStudent.bind(this))
     this.addRoute('/students/:id', this.renderStudentDetail.bind(this))
     
     this.addRoute('/resignation', this.renderResignation.bind(this))
@@ -1488,6 +1501,78 @@ class HrApplication extends BaseModuleApplication {
     console.log('Template Engine:', this.templateEngine ? 'Available' : 'Not Available')
     console.log('Main Container:', this.templateEngine?.mainContainer ? 'Available' : 'Not Available')
     console.groupEnd()
+  }
+
+  async renderEditInstructor(params) {
+    try {
+      // Load the InstructorEdit feature
+      await this.loadFeatureModules();
+      
+      if (window.HrInstructorEditFeature) {
+        const editFeature = new window.HrInstructorEditFeature(this.templateEngine, this.rootURL, params.code);
+        await editFeature.render();
+      } else {
+        throw new Error('InstructorEditFeature not available');
+      }
+    } catch (error) {
+      console.error('Error loading instructor edit:', error);
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
+                <h2 class="text-2xl font-semibold text-white">Error Loading Instructor Edit</h2>
+              </div>
+              <div class="p-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <p class="text-red-700 mb-4">${error.message}</p>
+                  <button onclick="hrApp.renderEditInstructor({code: '${params.code}'})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-8">
+              <a routerLink="hr/instructors" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Instructors</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  async renderEditStudent(params) {
+    try {
+      // Load the StudentEdit feature
+      await this.loadFeatureModules();
+      
+      if (window.HrStudentEditFeature) {
+        const editFeature = new window.HrStudentEditFeature(this.templateEngine, this.rootURL, params.code);
+        await editFeature.render();
+      } else {
+        throw new Error('StudentEditFeature not available');
+      }
+    } catch (error) {
+      console.error('Error loading student edit:', error);
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
+                <h2 class="text-2xl font-semibold text-white">Error Loading Student Edit</h2>
+              </div>
+              <div class="p-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <p class="text-red-700 mb-4">${error.message}</p>
+                  <button onclick="hrApp.renderEditStudent({code: '${params.code}'})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-8">
+              <a routerLink="hr/students" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Students</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
   }
 }
 

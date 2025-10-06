@@ -1,7 +1,6 @@
 package meta
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -28,6 +27,5 @@ func AutoRegisterModels(models []interface{}) {
 		ModelRegistry[fullName] = slicePtr
 
 		ModelRegistry[strings.ToLower(fullName)] = slicePtr
-		fmt.Println("Registered model:", fullName)
 	}
 }

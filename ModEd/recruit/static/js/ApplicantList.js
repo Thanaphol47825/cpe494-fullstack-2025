@@ -1,4 +1,4 @@
-class ApplicantManager {
+class ApplicantList {
   constructor(engine, rootURL) {
     this.engine = engine;
     this.rootURL = rootURL || window.__ROOT_URL__ || "";
@@ -14,7 +14,7 @@ class ApplicantManager {
               ← Back
             </button>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              🧑‍💼 Applicant Manager
+              🧑‍💼 Applicants
             </h1>
             <div class="flex flex-wrap gap-2">
               <button id="btnImport"
@@ -105,13 +105,13 @@ class ApplicantManager {
 
   async #openForm(id = null) {
     try {
-      await this.engine.fetchModule("/recruit/static/js/ApplicantManager_Create.js");
+      await this.engine.fetchModule("/recruit/static/js/ApplicantList_Create.js");
     } catch (e) {
       alert("Failed to load form module: " + e.message);
       return;
     }
 
-    const FormClass = window.ApplicantManagerCreate || window.ApplicantCreate;
+    const FormClass = window.ApplicantListCreate;
     if (typeof FormClass !== "function") {
       alert("Form class not found. Make sure ApplicantManager_Create.js sets window.ApplicantManagerCreate.");
       return;
@@ -187,4 +187,4 @@ class ApplicantManager {
   }
 }
 
-window.ApplicantManager = ApplicantManager;
+window.ApplicantList = ApplicantList;

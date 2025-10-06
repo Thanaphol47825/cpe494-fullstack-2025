@@ -15,8 +15,8 @@ class RecruitApplication {
       },
       {
         label: "Manage Applicant",
-        className: "ApplicantManager",
-        script: "/recruit/static/js/ApplicantManager.js",
+        className: "ApplicantList",
+        script: "/recruit/static/js/ApplicantList.js",
       },
       {
         label: "Manage Application Report",

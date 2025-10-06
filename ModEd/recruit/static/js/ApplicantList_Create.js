@@ -1,12 +1,9 @@
-// /recruit/static/js/ApplicantManager_Create.js
-class ApplicantManagerCreate {
+class ApplicantListCreate {
   constructor(engine, rootURL, applicantId = null) {
     this.engine = engine;
     this.rootURL = rootURL || window.RootURL || window.__ROOT_URL__ || "";
     this.applicantId = applicantId;
-    this._confirmOnce = false;
 
-    // cache schema for sanitization
     this._schema = [];
   }
 
@@ -24,28 +21,24 @@ class ApplicantManagerCreate {
   }
 
   async #createDynamicApplicantForm() {
-    // 1) fetch metadata
     const metaURL = this.rootURL + "/api/modelmeta/applicant";
     const res = await fetch(metaURL);
     if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
     const meta = await res.json();
     if (!Array.isArray(meta)) throw new Error("Invalid metadata format");
 
-    // keep schema for sanitization later
     this._schema = meta.map((f) => ({
       type: (f.type || "text").toLowerCase(),
       name: f.name,
       label: f.label || f.name,
     }));
 
-    // 2) ensure template is available for FormRender
     if (!this.engine.template && typeof this.engine.fetchTemplate === "function") {
       await this.engine.fetchTemplate();
     }
     if (!this.engine.template) throw new Error("Template not loaded");
     const application = { template: this.engine.template };
 
-    // 3) page shell
     const pageHTML = `
       <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-sky-50 to-cyan-50 py-8">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,7 +52,7 @@ class ApplicantManagerCreate {
             <h1 class="text-4xl font-bold text-gray-900 mb-2">
               ${this.applicantId != null ? "Edit Applicant" : "Applicant Registration"}
             </h1>
-            <p class="text-gray-600">Fill all fields and submit (you'll confirm on a second press).</p>
+            <p class="text-gray-600">Fill all fields and submit.</p>
           </div>
 
           <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
@@ -118,11 +111,9 @@ class ApplicantManagerCreate {
     this.engine.mainContainer.innerHTML = "";
     this.engine.mainContainer.appendChild(pageEl);
 
-    // 4) render the dynamic form
     const formRender = new FormRender(application, this._schema, ".applicant-form-container");
     await formRender.render();
 
-    // 5) cosmetics + handlers
     requestAnimationFrame(() => {
       this.#applyTailwindStyles();
       this.#styleSubmitButton();
@@ -135,7 +126,6 @@ class ApplicantManagerCreate {
       if (f) f.reset();
       this.#setStatus("", "");
       this.#hideResult();
-      this._confirmOnce = false;
     });
     document.getElementById("btnBack")?.addEventListener("click", () => this.#goBack());
     document.getElementById("btnBackToList")?.addEventListener("click", () => this.#goBack());
@@ -257,7 +247,6 @@ class ApplicantManagerCreate {
     return ok;
   }
 
-  // Build a clean payload matching Go struct types exactly.
   #buildSanitizedPayload(form) {
     const fd = new FormData(form);
     const raw = Object.fromEntries(fd.entries());
@@ -266,11 +255,10 @@ class ApplicantManagerCreate {
     const data = {};
 
     for (const [k, v] of Object.entries(raw)) {
-      if (!typeMap.has(k)) continue; // drop unknown keys
+      if (!typeMap.has(k)) continue;
 
       const t = typeMap.get(k);
       if (t === "number") {
-        // Empty -> omit (avoid "" to int/float)
         if (v === "" || Number.isNaN(Number(v))) continue;
         data[k] = Number(v);
       } else if (t === "date") {
@@ -282,14 +270,12 @@ class ApplicantManagerCreate {
       }
     }
 
-    // extra guard if meta didn't mark birth_date as date
     if ("birth_date" in data && data.birth_date) {
       const d = new Date(data.birth_date);
       if (!isNaN(d.getTime())) data.birth_date = d.toISOString();
       else delete data.birth_date;
     }
 
-    // set id for edit (lowercase to match json:"id")
     if (this.applicantId != null) data.id = Number(this.applicantId);
 
     return data;
@@ -300,31 +286,17 @@ class ApplicantManagerCreate {
     const form = e.target;
     const submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
 
-    // First press: validate only
-    if (!this._confirmOnce) {
-      const ok = this.#validateForm(form);
-      if (!ok) {
-        this.#setStatus("Please complete all required fields.", "text-red-600");
-        this.#hideResult();
-        return;
-      }
-      this.#setStatus("Press submit again to confirm.", "text-yellow-600");
-      submitBtn?.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
-      submitBtn?.classList.add("bg-yellow-500", "hover:bg-yellow-600");
-      this._confirmOnce = true;
+    const ok = this.#validateForm(form);
+    if (!ok) {
+      this.#setStatus("Please complete all required fields.", "text-red-600");
+      this.#hideResult();
       return;
     }
 
-    // Second press: send
-    this._confirmOnce = false;
-    submitBtn?.classList.remove("bg-yellow-500", "hover:bg-yellow-600");
-    submitBtn?.classList.add("bg-indigo-600", "hover:bg-indigo-700");
     this.#setStatus(this.applicantId != null ? "Updating..." : "Submitting...", "text-gray-600");
+    submitBtn?.setAttribute("disabled", "disabled");
 
     const data = this.#buildSanitizedPayload(form);
-    // Debug: uncomment to see exact outgoing payload
-    // console.log("OUTGOING BODY →", JSON.stringify(data, null, 2));
-
     const url =
       this.rootURL + (this.applicantId != null ? "/recruit/UpdateApplicant" : "/recruit/CreateApplicant");
 
@@ -335,7 +307,6 @@ class ApplicantManagerCreate {
         body: JSON.stringify(data),
       });
 
-      // If server returns non-JSON (e.g. HTML error), avoid crashing:
       let payload = {};
       try {
         payload = await resp.json();
@@ -367,6 +338,8 @@ class ApplicantManagerCreate {
     } catch (err) {
       this.#setStatus("Error submitting form.", "text-red-600");
       this.#hideResult();
+    } finally {
+      submitBtn?.removeAttribute("disabled");
     }
   }
 
@@ -393,8 +366,8 @@ class ApplicantManagerCreate {
 
   async #goBack() {
     try {
-      await this.engine.fetchModule("/recruit/static/js/ApplicantManager.js");
-      const list = new ApplicantManager(this.engine, this.rootURL);
+      await this.engine.fetchModule("/recruit/static/js/ApplicantList.js");
+      const list = new ApplicantList(this.engine, this.rootURL);
       this.engine.mainContainer.innerHTML = "";
       await list.render();
     } catch (e) {
@@ -410,4 +383,4 @@ class ApplicantManagerCreate {
   }
 }
 
-window.ApplicantManagerCreate = ApplicantManagerCreate;
+window.ApplicantListCreate = ApplicantListCreate;

@@ -16,7 +16,7 @@ class InternshipCriteriaCreate {
                     class="form-container">
                   <div id="form-fields"></div>
                   <button type="submit" class="form-submit-btn">
-                      Check in
+                      Create Criteria
                   </button>
               </form>
           </div>
@@ -29,7 +29,7 @@ class InternshipCriteriaCreate {
             { Id: "title", Label: "Title", Type: "text", Name: "title", Required: true, Placeholder: "Enter Criteria Title" },
             { Id: "description", Label: "Description", Type: "text", Name: "description", Required: true, Placeholder: "Enter Description" },
             { Id: "score", Label: "Score", Type: "number", Name: "score", Required: true, Placeholder: "Enter Score" },
-            { Id: "internship_application_id", Label: "Internship Application ID", Type: "number", Name: "internship_application_id", Required: true, Placeholder: "Enter Application ID" },
+            { Id: "internship_application_id", Label: "Internship Application ID", Type: "select", Name: "internship_application_id", Required: true, Placeholder: "Enter Application ID" },
         ];
 
         fields.forEach(field => {

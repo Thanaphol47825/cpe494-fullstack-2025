@@ -26,7 +26,7 @@ class InternshipApplication {
         for (const model of this.models) {
             await this.application.fetchModule(model.script)
             let button = this.application.create(`
-                <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow mr-2 mb-2" id="${model.label.replace(/\s+/g, '')}">
+                <button routerLink=${model.route} type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow mr-2 mb-2" id="${model.label.replace(/\s+/g, '')}">
                 ${model.label}
                 </button>
             `)

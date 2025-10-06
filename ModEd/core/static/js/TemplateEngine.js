@@ -145,19 +145,23 @@ class TemplateEngine {
     // Ensure currentModule is cleared when showing menu
     this.currentModule = null
 
+    // Create menu container
+    const menuContainer = this.create(`<div class="menu-container"></div>`)
+
     // Create navigation menu
-    const menuTitle = this.create(`<h2>Select a Module:</h2>`)
+    const menuTitle = this.create(`<h2 class="menu-title">Select a Module:</h2>`)
     this.mainContainer.appendChild(menuTitle)
 
-    const moduleList = this.create(
-      `<div style="display: flex; flex-direction: column; gap: 4px;"></div>`
-    )
+    // Create module buttons
+    const moduleList = this.create(`<div class="module-list"></div>`)
 
     for (const module of modules) {
       let button = this.routerLinks.createRouterLink(module.label, module.baseRoute.slice(1), '')
+      button.classList.add('module-button')
       moduleList.appendChild(button)
     }
-
+    
+    menuContainer.appendChild(moduleList)
     this.mainContainer.appendChild(moduleList)
   }
 

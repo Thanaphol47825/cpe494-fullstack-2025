@@ -5,7 +5,7 @@ class InternshipApplication {
 
     models = [
         // { label: "internship application", script: "/curriculum/static/js/InternshipApplicationCreate.js", className: "InternshipApplicationCreate" },
-        // { label: "internship report", script: "/curriculum/static/js/InternshipReportCreate.js", className: "InternshipReportCreate" },
+        { label: "internship report", script: "/curriculum/static/js/InternshipReportCreate.js", className: "InternshipReportCreate",route: "/internshipreport" },
         // { label: "internship evaluation", script: "/curriculum/static/js/InternshipEvaluationCreate.js", className: "InternshipEvaluationCreate" },
         { label: "Company", script: "/curriculum/static/js/CompanyCreate.js", className: "CompanyCreate", route: "/company" },
         { label: "Internship Mentor", script: "/curriculum/static/js/InternshipMentorCreate.js", className: "InternshipMentorCreate", route: "/internshipmentor" },

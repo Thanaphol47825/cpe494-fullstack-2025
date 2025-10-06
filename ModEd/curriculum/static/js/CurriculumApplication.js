@@ -47,8 +47,10 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
           <h4 style="font-weight: bold; font-size: large;">${model.label}</h4>
           <p>Manage ${model.label}</p>
           <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-            <a routerLink="${model.route}" style="color: #007bff;">View All</a>
-            <a routerLink="${model.route}/create" style="color: #28a745;">Add New</a>
+            <div class="mx-auto flex flex-row gap-4">
+              <button routerLink="${model.route}" class="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">View All</button>
+              <button routerLink="${model.route}/create" class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">Add New</button>
+            </div>
           </div>
         </div>`
       })
@@ -162,7 +164,19 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
       </div>
     `
     }
-    async renderCreateClassMaterial() { }
+    async renderCreateClassMaterial() { 
+      if (window.ClassMaterialCreate) {
+        const formFeature = new window.ClassMaterialCreate(this.templateEngine, this.rootURL);
+        await formFeature.render();
+      } else {
+        console.error('ClassMaterialCreate not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="text-red-600">
+          Error loading.
+        </div>
+      `;
+      }
+    }
 
     async renderCoursePlan() {
       this.templateEngine.mainContainer.innerHTML = `

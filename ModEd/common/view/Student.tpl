@@ -3,87 +3,103 @@
 <head>
   <meta charset="utf-8" />
   <title>{{ title }}</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <script>window.__ROOT_URL__ = "{{ RootURL }}";</script>
+
+  <script src="{{ RootURL }}/core/static/js/mustache.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="{{ RootURL }}/core/static/css/Style.css" />
 </head>
-<body class="min-h-screen bg-white text-gray-800">
-  <div class="max-w-2xl mx-auto py-10 px-4">
-    <header class="mb-8">
-      <h1 class="text-2xl font-semibold">Add Student</h1>
+<body>
+  <main class="form-container">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 8px;">
+      <a id="commonBackToMain" href="{{ RootURL }}/common" class="btn-home">← Back to Common Menu</a>
+    </div>
+
+    <header style="margin-bottom: 12px;">
+      <h2 style="margin:0;">Add Student</h2>
     </header>
 
-    <form
-      id="studentForm"
-      method="post"
-      action="{{ RootURL }}/common/students"
-      class="space-y-4"
-    >
-      <div>
-        <label class="block text-sm mb-1">Student Code</label>
-        <input name="student_code" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="STU001" />
+    <!-- FORM -->
+    <form id="commonStudentForm">
+      <div class="form-field">
+        <label for="student_code">Student Code *</label>
+        <input id="student_code" name="student_code" type="text" required placeholder="STU001" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">First Name</label>
-        <input name="first_name" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="First name" />
+      <div class="form-field">
+        <label for="email">Email *</label>
+        <input id="email" name="email" type="email" required placeholder="name@example.com" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Last Name</label>
-        <input name="last_name" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Last name" />
+      <div class="form-field">
+        <label for="first_name">First Name *</label>
+        <input id="first_name" name="first_name" type="text" required placeholder="First name" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Email</label>
-        <input name="email" type="email" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="name@example.com" />
+      <div class="form-field">
+        <label for="last_name">Last Name *</label>
+        <input id="last_name" name="last_name" type="text" required placeholder="Last name" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Start Date</label>
-        <input name="start_date" type="date" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none" />
+      <div class="form-field">
+        <label for="department">Department</label>
+        <input id="department" name="department" type="text" placeholder="Department" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Birth Date</label>
-        <input name="birth_date" type="date" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none" />
+      <div class="form-field">
+        <label for="program">Program</label>
+        <input id="program" name="program" type="text" placeholder="Program" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Program</label>
-        <input name="program" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Program" />
+      <div class="form-field">
+        <label for="Gender">Gender</label>
+        <select id="Gender" name="Gender" class="form-select">
+            <option value="" disabled selected>Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select>
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Department</label>
-        <input name="department" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Department" />
+      <div class="form-field">
+        <label for="CitizenID">Citizen ID</label>
+        <input id="CitizenID" name="CitizenID" type="text" placeholder="Citizen ID" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Gender</label>
-        <input name="Gender" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Gender" />
+      <div class="form-field">
+        <label for="PhoneNumber">Phone Number</label>
+        <input id="PhoneNumber" name="PhoneNumber" type="tel" placeholder="Phone Number" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Citizen ID</label>
-        <input name="CitizenID" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Citizen ID" />
+      <div class="form-field">
+        <label for="AdvisorCode">Advisor Code</label>
+        <input id="AdvisorCode" name="AdvisorCode" type="text" placeholder="Advisor Code" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Phone Number</label>
-        <input name="PhoneNumber" type="tel" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Phone Number" />
+      <div class="form-field">
+        <label for="start_date">Start Date</label>
+        <input id="start_date" name="start_date" type="date" />
       </div>
 
-      <div>
-        <label class="block text-sm mb-1">Advisor Code</label>
-        <input name="AdvisorCode" type="text" class="w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-none focus:ring focus:ring-gray-400" placeholder="Advisor Code" />
+      <div class="form-field">
+        <label for="birth_date">Birth Date</label>
+        <input id="birth_date" name="birth_date" type="date" />
       </div>
 
-      <div>
-        <button type="submit" class="w-full rounded-md mt-2 bg-green-700 text-white px-4 py-2 hover:bg-green-800 focus:outline-none focus:ring focus:ring-green-400">Submit</button>
+      <!-- Actions -->
+      <div class="form-field" style="display:flex; gap:12px; align-items:center; margin-top: 8px;">
+        <button type="submit" class="form-submit-btn">Create Student</button>
+        <button type="reset" class="form-reset-btn">Reset</button>
+        <span id="commonStudentStatus" class="status-text"></span>
       </div>
     </form>
-  </div>
 
-  <script src="{{ RootURL }}/common/static/js/StudentCreate.js?v=1" defer></script>
+    <!-- Result / message area -->
+    <div id="commonStudentResult" class="hidden" style="margin-top: 12px;"></div>
+  </main>
+
+  <script>window.RootURL = "{{ RootURL }}";</script>
+  <script src="{{ RootURL }}/common/static/js/features/StudentForm.js" defer></script>
+
 </body>
 </html>

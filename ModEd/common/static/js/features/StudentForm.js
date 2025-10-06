@@ -13,63 +13,90 @@ class CommonStudentFormFeature {
     this.templateEngine.mainContainer.innerHTML = "";
 
     const html = `
-      <div class="max-w-3xl mx-auto space-y-6">
-        <button id="commonBackToMain" class="text-blue-700 hover:text-blue-900">← Back to Common Menu</button>
+      <main class="form-container">
         <div>
-          <h2 class="text-2xl font-bold">Add Student</h2>
+          <a id="commonBackToMain" href="#common" class="btn-home">← Back to Common Menu</a>
         </div>
-        <form id="commonStudentForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="block text-sm">Student Code *
-                <input name="student_code" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="STU001" />
-              </label>
-              <label class="block text-sm">Email *
-                <input name="email" type="email" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="name@example.com" />
-              </label>
-              <label class="block text-sm">First Name *
-                <input name="first_name" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="First name" />
-              </label>
-              <label class="block text-sm">Last Name *
-                <input name="last_name" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Last name" />
-              </label>
-            </div>
-          
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="block text-sm">Department
-                <input name="department" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Department" />
-              </label>
-              <label class="block text-sm">Program
-                <input name="program" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Program" />
-              </label>
-              <label class="block text-sm">Gender
-                <input name="Gender" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Gender" />
-              </label>
-              <label class="block text-sm">Citizen ID
-                <input name="CitizenID" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Citizen ID" />
-              </label>
-              <label class="block text-sm">Phone Number
-                <input name="PhoneNumber" type="tel" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Phone Number" />
-              </label>
-              <label class="block text-sm">Advisor Code
-                <input name="AdvisorCode" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Advisor Code" />
-              </label>
-              <label class="block text-sm">Start Date
-                <input name="start_date" type="date" class="mt-1 w-full rounded-md border px-3 py-2" />
-              </label>
-              <label class="block text-sm">Birth Date
-                <input name="birth_date" type="date" class="mt-1 w-full rounded-md border px-3 py-2" />
-              </label>
-            </div>
-        
 
-          <div class="md:col-span-2 flex items-center gap-3 pt-2">
-            <button type="submit" class="rounded-md bg-green-700 px-4 py-2 text-white hover:bg-green-800">Create Student</button>
-            <button type="reset" class="rounded-md border px-4 py-2 hover:bg-gray-50">Reset</button>
-            <span id="commonStudentStatus" class="text-sm"></span>
+        <header>
+          <h2>Add Student</h2>
+        </header>
+
+        <form id="commonStudentForm">
+          <div class="form-field">
+            <label for="student_code">Student Code *</label>
+            <input id="student_code" name="student_code" type="text" required class="form-input" placeholder="STU001" />
+          </div>
+
+          <div class="form-field">
+            <label for="email">Email *</label>
+            <input id="email" name="email" type="email" required class="form-input" placeholder="name@example.com" />
+          </div>
+
+          <div class="form-field">
+            <label for="first_name">First Name *</label>
+            <input id="first_name" name="first_name" type="text" required class="form-input" placeholder="First name" />
+          </div>
+
+          <div class="form-field">
+            <label for="last_name">Last Name *</label>
+            <input id="last_name" name="last_name" type="text" required class="form-input" placeholder="Last name" />
+          </div>
+
+          <div class="form-field">
+            <label for="department">Department</label>
+            <input id="department" name="department" type="text" class="form-input" placeholder="Department" />
+          </div>
+
+          <div class="form-field">
+            <label for="program">Program</label>
+            <input id="program" name="program" type="text" class="form-input" placeholder="Program" />
+          </div>
+
+          <div class="form-field">
+            <label for="Gender">Gender</label>
+            <select id="Gender" name="Gender" class="form-select">
+              <option value="" disabled selected>Select gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label for="CitizenID">Citizen ID</label>
+            <input id="CitizenID" name="CitizenID" type="text" class="form-input" placeholder="Citizen ID" />
+          </div>
+
+          <div class="form-field">
+            <label for="PhoneNumber">Phone Number</label>
+            <input id="PhoneNumber" name="PhoneNumber" type="tel" class="form-input" placeholder="Phone Number" />
+          </div>
+
+          <div class="form-field">
+            <label for="AdvisorCode">Advisor Code</label>
+            <input id="AdvisorCode" name="AdvisorCode" type="text" class="form-input" placeholder="Advisor Code" />
+          </div>
+
+          <div class="form-field">
+            <label for="start_date">Start Date</label>
+            <input id="start_date" name="start_date" type="date" class="form-input" />
+          </div>
+
+          <div class="form-field">
+            <label for="birth_date">Birth Date</label>
+            <input id="birth_date" name="birth_date" type="date" class="form-input" />
+          </div>
+
+          <div class="form-field" style="display:flex; gap:12px; align-items:center;">
+            <button type="submit" class="form-submit-btn">Create Student</button>
+            <button type="reset" class="form-reset-btn">Reset</button>
+            <span id="commonStudentStatus" class="status-text"></span>
           </div>
         </form>
-        <div id="commonStudentResult" class="hidden rounded-md border bg-white p-4 text-sm"></div>
-      </div>
+
+        <div id="commonStudentResult" class="hidden result-box"></div>
+      </main>
     `;
 
     const element = this.templateEngine.create(html);

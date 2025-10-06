@@ -59,7 +59,7 @@ if (typeof window !== 'undefined' && !window.InternshipCriteriaCreate) {
             const formData = new FormData(form);
             
             try {
-                const response = await fetch('/curriculum/InternshipCriteria/CreateInternshipCriteria', {
+                const response = await fetch('/curriculum/InternshipCriteria/create', {
                     method: 'POST',
                     body: formData
                 });

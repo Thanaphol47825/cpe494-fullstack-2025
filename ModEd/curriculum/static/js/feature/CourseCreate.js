@@ -83,8 +83,13 @@ class CourseCreate {
         <div id="form-fields"></div>
         <button type="submit" class="form-submit-btn">Create Course</button>
       </form>
-      <div style="margin-top: 20px;">
-        <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
+      <div class="text-center mt-12">
+        <a routerLink="curriculum" class="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:bg-white/90 border border-gray-200/50 font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+          </svg>
+          Back to Curriculum Menu
+        </a>
       </div>
     </div>
   `;
@@ -96,18 +101,18 @@ class CourseCreate {
 
     const curriculumsOption = await this.getCurriculumsOption();
     const fields = [
-      { Id: "name", Label: "Name", Type: "text", Name: "Name", Required: true, Placeholder: "Enter Course Name" },
+      { Id: "name", Label: "Name", Type: "text", Name: "Name", Placeholder: "Enter Course Name" },
       { Id: "description", Label: "Description", Type: "text", Name: "Description", Placeholder: "Enter Course Description" },
-      { Id: "curriculum_id", Label: "Curriculum", Type: "select", Name: "CurriculumId", Required: true, options: curriculumsOption },
+      { Id: "curriculum_id", Label: "Curriculum", Type: "select", Name: "CurriculumId", options: curriculumsOption },
       {
-        Id: "optional", Label: "Optional", Type: "select", Name: "Optional", Required: true,
+        Id: "optional", Label: "Optional", Type: "select", Name: "Optional",
         options: [
           { label: "Required", value: "false" },
           { label: "Optional", value: "true" }
         ]
       },
       {
-        Id: "status", Label: "Course Status", Type: "select", Name: "CourseStatus", Required: true,
+        Id: "status", Label: "Course Status", Type: "select", Name: "CourseStatus",
         options: [
           { label: "Active", value: 1 },
           { label: "Inactive", value: 0 }

@@ -31,7 +31,7 @@ if (typeof window !== 'undefined' && window.CurriculumApplication) {
       this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'ClassCreate.js')
 
       this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this))
-      this.addRouteWithSubModule('/classmaterial/create', this.renderCreateClassMaterial.bind(this), 'ClassMaterialCreate.js')
+      this.addRouteWithSubModule('/classmaterial/create', this.renderCreateClassMaterial.bind(this), 'feature/ClassMaterialCreate.js')
 
       this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this))
       this.addRouteWithSubModule('/courseplan/create', this.renderCreateCoursePlan.bind(this), 'CoursePlanCreate.js')

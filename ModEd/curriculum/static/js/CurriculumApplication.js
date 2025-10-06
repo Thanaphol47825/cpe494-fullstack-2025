@@ -1,4 +1,4 @@
-if (typeof window !== 'undefined' && window.HrApplication) {
+if (typeof window !== 'undefined' && window.CurriculumApplication) {
 
 } else {
   class CurriculumApplication extends BaseModuleApplication {
@@ -107,7 +107,7 @@ if (typeof window !== 'undefined' && window.HrApplication) {
         <h2>Course Management</h2>
         
         <div style="margin: 15px 0;">
-          <a routerLink="curriculum/course/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Instructor</a>
+          <a routerLink="curriculum/course/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Course</a>
         </div>
         
         <div class="course-list">

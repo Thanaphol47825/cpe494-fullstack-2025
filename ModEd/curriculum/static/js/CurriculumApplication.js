@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRouteWithSubModule('/curriculum/:id', this.renderEditCurriculum.bind(this), 'feature/CurriculumEdit.js')
       this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'feature/CurriculumCreate.js')
 
-      this.addRouteWithSubModule('/course', this.renderCourse.bind(this))
+      this.addRouteWithSubModule('/course', this.renderCourse.bind(this), 'feature/CourseList.js')
       this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'feature/CourseCreate.js')
 
       this.addRouteWithSubModule('/class', this.renderClass.bind(this), 'feature/ClassList.js')
@@ -185,23 +185,14 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCourse() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-courses">
-        <h2>Course Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/course/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Course</a>
-        </div>
-        
-        <div class="course-list">
-          <!-- course list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      if (window.CourseList) {
+        const courseList = new window.CourseList(this);
+        await courseList.render();
+      } else {
+        console.error('CourseList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="text-red-600">Error loading CourseList.</div>`;
+      }
     }
     async renderCreateCourse() {
       if (window.CourseCreate) {

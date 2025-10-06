@@ -108,7 +108,7 @@ func (h *CourseHandler) UpdateCourse(context *fiber.Ctx) error {
 	return context.JSON(
 		fiber.Map{
 			"isSuccess": true,
-			"result":    result,
+			"result":    "course updated successfully",
 		})
 }
 

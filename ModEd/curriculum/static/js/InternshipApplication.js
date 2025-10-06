@@ -1,4 +1,4 @@
-if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
+if (typeof window !== 'undefined' && !window.InternshipApplication) {
     class InternshipApplication extends BaseModuleApplication {
         constructor(templateEngine) {
             super(templateEngine)

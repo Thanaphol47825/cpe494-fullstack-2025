@@ -46,57 +46,99 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             let cardsHTML = '';
             this.models.forEach(model => {
                 cardsHTML += `
-                    <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                        <div class="p-6">
-                            <div class="flex items-center mb-4">
-                                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                    <div class="group relative bg-gradient-to-br from-white to-slate-50 rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105 border border-slate-200 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-400/10 to-purple-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="relative p-8">
+                            <div class="flex flex-col items-center text-center space-y-4">
+                                <div class="w-16 h-16 bg-gradient-to-r ${this.getGradientForModel(model.label)} rounded-2xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:rotate-6">
                                     ${this.getIconForModel(model.label)}
                                 </div>
-                                <h3 class="text-xl font-semibold text-gray-900">${model.label}</h3>
-                            </div>
-                            <p class="text-gray-600 mb-6">${this.getDescriptionForModel(model.label)}</p>
-                            <div class="flex flex-col space-y-2">
-                                <a routerLink="curriculum${model.route}" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    Manage ${model.label}
-                                </a>
+                                <div>
+                                    <h3 class="text-xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors duration-300">${model.label}</h3>
+                                    <p class="text-sm text-slate-500 mt-2 leading-relaxed">${this.getDescriptionForModel(model.label)}</p>
+                                </div>
+                                <div class="w-full pt-4">
+                                    <a routerLink="curriculum${model.route}" class="w-full inline-flex items-center justify-center px-6 py-3 text-white font-semibold rounded-xl bg-gradient-to-r ${this.getGradientForModel(model.label)} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group-hover:scale-110">
+                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                                        </svg>
+                                        เข้าจัดการ
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
             });
 
-            // Set the complete HTML structure
+            // Set the complete HTML structure with internship-focused design
             this.templateEngine.mainContainer.innerHTML = `
-                <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-100 py-8">
-                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <!-- Header Section -->
-                        <div class="text-center mb-12">
-                            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6">
-                                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 112 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 112-2V6m8 0H8"></path>
-                                </svg>
+                <div class="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 relative overflow-hidden">
+                    <!-- Background Pattern -->
+                    <div class="absolute inset-0 opacity-30">
+                        <div class="absolute top-10 left-10 w-32 h-32 bg-blue-200 rounded-full filter blur-3xl"></div>
+                        <div class="absolute top-40 right-20 w-48 h-48 bg-purple-200 rounded-full filter blur-3xl"></div>
+                        <div class="absolute bottom-20 left-1/3 w-40 h-40 bg-indigo-200 rounded-full filter blur-3xl"></div>
+                    </div>
+                    
+                    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                        <!-- Hero Header -->
+                        <div class="text-center mb-16">
+                            <div class="flex justify-center mb-8">
+                                <div class="relative">
+                                    <div class="w-24 h-24 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-6 transition-transform duration-300">
+                                        <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 112 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 112-2V6m8 0H8"></path>
+                                        </svg>
+                                    </div>
+                                    <div class="absolute -bottom-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-pulse"></div>
+                                </div>
                             </div>
-                            <h1 class="text-4xl font-bold text-gray-900 mb-4">Internship Management</h1>
-                            <p class="text-xl text-gray-600 max-w-3xl mx-auto">Comprehensive system for managing internship programs, companies, mentors, and student progress</p>
+                            <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 mb-6">
+                                ระบบจัดการฝึกงาน
+                            </h1>
+                            <p class="text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed mb-8">
+                                จัดการโปรแกรมฝึกงานอย่างครอบคลุม ตั้งแต่การติดตามบริษัท พี่เลี้ยง 
+                                <br class="hidden md:block">
+                                ไปจนถึงการประเมินผลและรายงานความคืบหน้าของนักศึกษา
+                            </p>
+                            <div class="flex justify-center space-x-4 text-sm text-slate-500">
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                                    ระบบออนไลน์
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-blue-400 rounded-full mr-2 animate-pulse"></div>
+                                    ติดตามแบบเรียลไทม์
+                                </div>
+                                <div class="flex items-center">
+                                    <div class="w-2 h-2 bg-purple-400 rounded-full mr-2 animate-pulse"></div>
+                                    รายงานอัตโนมัติ
+                                </div>
+                            </div>
                         </div>
 
-                        <!-- Main Menu Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                        <!-- Navigation Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 mb-16">
                             ${cardsHTML}
                         </div>
 
-                        <!-- Back to Main Menu -->
+                        <!-- Bottom Action -->
                         <div class="text-center">
-                            <a routerLink="" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                                </svg>
-                                Back to Main Menu
-                            </a>
+                            <div class="inline-flex items-center space-x-6 bg-white/80 backdrop-blur-sm rounded-2xl px-8 py-4 shadow-lg">
+                                <a routerLink="" class="group inline-flex items-center px-6 py-3 text-slate-600 hover:text-slate-800 font-medium rounded-xl border-2 border-slate-300 hover:border-slate-400 transition-all duration-300 hover:shadow-md">
+                                    <svg class="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                                    </svg>
+                                    กลับหน้าหลัก
+                                </a>
+                                <div class="hidden md:flex items-center text-sm text-slate-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    เลือกเมนูด้านบนเพื่อเริ่มจัดการข้อมูลฝึกงาน
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,24 +148,35 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
         // Helper methods for UI generation
         getIconForModel(label) {
             const icons = {
-                'internship report': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
-                'Company': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>',
-                'Internship Mentor': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>',
-                'Internship Attendance': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>',
-                'Internship Criteria': '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>'
+                'internship report': '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
+                'Company': '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>',
+                'Internship Mentor': '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>',
+                'Internship Attendance': '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>',
+                'Internship Criteria': '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>'
             }
-            return icons[label] || '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'
+            return icons[label] || '<svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>'
         }
 
         getDescriptionForModel(label) {
             const descriptions = {
-                'internship report': 'Create and manage internship progress reports',
-                'Company': 'Manage company profiles and internship partnerships',
-                'Internship Mentor': 'Handle mentor assignments and mentorship programs',
-                'Internship Attendance': 'Track and monitor student internship attendance',
-                'Internship Criteria': 'Define and manage evaluation criteria for internships'
+                'internship report': 'สร้างและจัดการรายงานความคืบหน้าการฝึกงาน',
+                'Company': 'จัดการข้อมูลบริษัทและหุ้นส่วนการฝึกงาน',
+                'Internship Mentor': 'จัดการการมอบหมายพี่เลี้ยงและโปรแกรมการแนะนำ',
+                'Internship Attendance': 'ติดตามและตรวจสอบการเข้าร่วมการฝึกงานของนักศึกษา',
+                'Internship Criteria': 'กำหนดและจัดการเกณฑ์การประเมินผลการฝึกงาน'
             }
-            return descriptions[label] || 'Manage and organize internship-related activities'
+            return descriptions[label] || 'จัดการและจัดระเบียบกิจกรรมที่เกี่ยวข้องกับการฝึกงาน'
+        }
+
+        getGradientForModel(label) {
+            const gradients = {
+                'internship report': 'from-emerald-500 to-teal-600',
+                'Company': 'from-blue-500 to-cyan-600', 
+                'Internship Mentor': 'from-purple-500 to-indigo-600',
+                'Internship Attendance': 'from-orange-500 to-red-600',
+                'Internship Criteria': 'from-pink-500 to-rose-600'
+            }
+            return gradients[label] || 'from-gray-500 to-gray-600'
         }
 
         // Individual render methods for sub-routes

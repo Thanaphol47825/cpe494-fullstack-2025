@@ -28,14 +28,23 @@ func (ctl *InstructorController) RenderMain(c *fiber.Ctx) error {
 }
 
 func (ctl *InstructorController) RenderCreateForm(c *fiber.Ctx) error {
-	path := filepath.Join(ctl.application.RootPath, "hr", "view", "Instructor.tpl")
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "InstructorForm.tpl")
 	tmpl, err := mustache.ParseFile(path)
 	if err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())
 	}
+
+	// Get module list for template
+	moduleList := ctl.application.DiscoverModules()
+	modulesJSON, err := json.Marshal(moduleList)
+	if err != nil {
+		return writeErr(c, http.StatusInternalServerError, err.Error())
+	}
+
 	rendered := tmpl.Render(map[string]any{
 		"title":   "Create Instructor",
 		"RootURL": ctl.application.RootURL,
+		"modules": string(modulesJSON),
 	})
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return c.SendString(rendered)
@@ -61,6 +70,9 @@ func (ctl *InstructorController) GetRoute() []*core.RouteItem {
 func (ctl *InstructorController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&cmodel.Instructor{})
+
+	// Set up dynamic form metadata API
+	ctl.application.SetAPIform("instructor", &cmodel.Instructor{})
 }
 
 // ---------- Helpers ----------

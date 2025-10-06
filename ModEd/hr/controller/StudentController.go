@@ -3,6 +3,7 @@ package controller
 import (
 	cmodel "ModEd/common/model"
 	"ModEd/core"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -22,14 +23,23 @@ type StudentController struct {
 }
 
 func (ctl *StudentController) RenderCreateForm(c *fiber.Ctx) error {
-	path := filepath.Join(ctl.application.RootPath, "hr", "view", "Student.tpl")
+	path := filepath.Join(ctl.application.RootPath, "hr", "view", "StudentForm.tpl")
 	tmpl, err := mustache.ParseFile(path)
 	if err != nil {
 		return writeErr(c, http.StatusInternalServerError, err.Error())
 	}
+
+	// Get module list for template
+	moduleList := ctl.application.DiscoverModules()
+	modulesJSON, err := json.Marshal(moduleList)
+	if err != nil {
+		return writeErr(c, http.StatusInternalServerError, err.Error())
+	}
+
 	rendered := tmpl.Render(map[string]any{
 		"title":   "Create Student",
 		"RootURL": ctl.application.RootURL,
+		"modules": string(modulesJSON),
 	})
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return c.SendString(rendered)
@@ -55,6 +65,9 @@ func (ctl *StudentController) GetRoute() []*core.RouteItem {
 func (ctl *StudentController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&cmodel.Student{})
+
+	// Set up dynamic form metadata API
+	ctl.application.SetAPIform("student", &cmodel.Student{})
 }
 
 func (ctl *StudentController) ListStudents(c *fiber.Ctx) error {

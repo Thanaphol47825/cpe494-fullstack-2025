@@ -24,9 +24,9 @@ class RecruitApplication {
         script: "/recruit/static/js/ApplicationReportList.js",
       },
       {
-        label: "Create Application Round",
-        className: "ApplicationRoundCreate",
-        script: "/recruit/static/js/ApplicationRoundCreate.js",
+        label: "Manage Application Round",
+        className: "ApplicationRoundList",
+        script: "/recruit/static/js/ApplicationRoundList.js",
       },
       {
         label: "Create Interview Criteria",
@@ -44,8 +44,8 @@ class RecruitApplication {
       "Create Admin": "👤",
       "Create Applicant": "🧑‍💼",
       "Manage Applicant": "🗂️",
-      "Create Application Report": "📊",
-      "Create Application Round": "📅",
+      "Manage Application Report": "📊",
+      "Manage Application Round": "📅",
       "Create Interview Criteria": "📝",
       "Create Interview": "💬",
     };

@@ -7,5 +7,5 @@ import (
 
 type ApplicationRound struct {
 	core.BaseModel
-	RoundName string `csv:"round_name" json:"round_name"`
+	RoundName string `csv:"round_name" json:"round_name" label:"Round Name" form:"text"`
 }

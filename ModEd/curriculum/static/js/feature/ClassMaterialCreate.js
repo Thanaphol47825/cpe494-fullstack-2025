@@ -1,4 +1,4 @@
-if (typeof window !== 'undefined' && !window.CurriculumList) {
+if (typeof window !== 'undefined' && !window.ClassMaterialCreate) {
     class ClassMaterialCreate {
         constructor(application) {
             this.application = application;

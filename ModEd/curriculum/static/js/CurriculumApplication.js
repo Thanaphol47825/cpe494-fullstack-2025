@@ -23,7 +23,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'feature/CurriculumCreate.js')
 
       this.addRouteWithSubModule('/course', this.renderCourse.bind(this))
-      this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'CourseCreate.js')
+      this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'feature/CourseCreate.js')
 
       this.addRouteWithSubModule('/class', this.renderClass.bind(this))
       this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'ClassCreate.js')
@@ -190,7 +190,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
     async renderCreateCourse() { 
       if (window.CourseCreate) {
-        const feature = new window.CourseCreate(this.templateEngine);
+        const feature = new window.CourseCreate(this);
         await feature.render();
       } else {
         console.error('CourseCreate not available after loading');

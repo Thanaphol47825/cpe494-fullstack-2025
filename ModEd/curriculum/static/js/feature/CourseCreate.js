@@ -90,9 +90,9 @@ class CourseCreate {
   `;
 
   render = async () => {
-    this.application.mainContainer.innerHTML = "";
-    const view = this.application.create(Mustache.render(this.formWrapperTemplate, {}));
-    this.application.mainContainer.append(view);
+    this.application.templateEngine.mainContainer.innerHTML = "";
+    const view = this.application.templateEngine.create(Mustache.render(this.formWrapperTemplate, {}));
+    this.application.templateEngine.mainContainer.append(view);
 
     const curriculumsOption = await this.getCurriculumsOption();
     const fields = [
@@ -119,16 +119,16 @@ class CourseCreate {
     fields.forEach(field => {
       let inputHTML = '';
 
-      if (field.Type === "select" && this.application.template?.Select) {
-        inputHTML = Mustache.render(this.application.template.Select, field);
-      } else if (field.Type === "select" && this.application.template?.SelectInput) {
-        inputHTML = Mustache.render(this.application.template.SelectInput, field);
-      } else if (this.application.template?.Input) {
-        inputHTML = Mustache.render(this.application.template.Input, field);
+      if (field.Type === "select" && this.application.templateEngine.template?.Select) {
+        inputHTML = Mustache.render(this.application.templateEngine.template.Select, field);
+      } else if (field.Type === "select" && this.application.templateEngine.template?.SelectInput) {
+        inputHTML = Mustache.render(this.application.templateEngine.template.SelectInput, field);
+      } else if (this.application.templateEngine.template?.Input) {
+        inputHTML = Mustache.render(this.application.templateEngine.template.Input, field);
       }
 
       if (inputHTML) {
-        fieldsContainer.appendChild(this.application.create(inputHTML));
+        fieldsContainer.appendChild(this.application.templateEngine.create(inputHTML));
       }
     });
 

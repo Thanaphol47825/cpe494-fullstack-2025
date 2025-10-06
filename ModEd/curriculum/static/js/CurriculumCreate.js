@@ -3,110 +3,92 @@ class CurriculumCreate {
     this.application = application;
   }
 
-  async getDepartments() {
+  async getDepartmentsOption() {
     const res = await fetch(`${RootURL}/common/departments/getall`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
     const data = await res.json().catch(() => ([]));
 
-    const select = document.createElement("select");
-    select.name = "DepartmentId";
-    select.className = "w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500";
-
-    // Add default not-selected option
-    const defaultOption = document.createElement("option");
-    defaultOption.value = "";
-    defaultOption.textContent = "-- Select a department --";
-    defaultOption.selected = true;
-    select.appendChild(defaultOption);
-
+    let select = []
     if (data.result == undefined) {
       data.forEach(item => {
-        const option = document.createElement("option");
-        option.value = item.ID;
-        option.textContent = item.name;
-        select.appendChild(option);
+        select.push({ value: item.ID, label: item.name })
       });
     } else {
       data.result.forEach(item => {
-        const option = document.createElement("option");
-        option.value = item.ID;
-        option.textContent = item.name;
-        select.appendChild(option);
+        select.push({ value: item.ID, label: item.name })
       });
     }
 
     return select;
   }
 
-  curricumCreateTemplalte = `<div class="max-w-3xl mx-auto py-10 px-4">
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold">Add Curriculum</h1>
-    </header>
-
-    <section class="bg-white rounded-2xl shadow p-6">
-      <form
-        id="curriculum-create-form"
-        class="flex flex-col gap-4"
-      >
-        <div>
-          <label class="text-sm font-medium mb-1">Name<span class="text-red-500">*</span></label>
-          <input name="Name" type="text" required class="w-full rounded-md border border-gray-300 px-3 py-2" placeholder="Curriculum Name" />
-        </div>
-
-        <div>
-          <label class="text-sm font-medium mb-1">Start Year<span class="text-red-500">*</span></label>
-          <input name="StartYear" type="text" required class="w-full rounded-md border border-gray-300 px-3 py-2" placeholder="25xx" />
-        </div>
-
-        <div>
-          <label class="text-sm font-medium mb-1">End Year<span class="text-red-500">*</span></label>
-          <input name="EndYear" type="text" required class="w-full rounded-md border border-gray-300 px-3 py-2" placeholder="25xx" />
-        </div>
-
-        <div>
-          <label class="text-sm font-medium mb-1">Department</label>
-          <div id="departmentSelectContainer"></div>
-        </div>
-
-        <div>
-          <label class="text-sm font-medium mb-1">ProgramType</label>
-          <select name="ProgramType" class="w-full rounded-md border border-gray-300 px-3 py-2">
-            <option value="">-- Select a program type --</option>
-            <option value=0>Regular</option>
-            <option value=1>International</option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-3 pt-2">
-          <button id='btn-create-curriculum' type="submit" class="inline-flex items-center rounded-md bg-blue-600 text-white px-4 py-2 font-medium hover:bg-blue-700 focus:ring-blue-500">Save</button>
-        </div>
-      </form>
-    </section>
-
-  </div>`;
-
   async render() {
     this.application.mainContainer.innerHTML = ""
 
-    let formContainer = this.application.create(Mustache.render(this.curricumCreateTemplalte));
-    this.application.mainContainer.append(formContainer);
+    const formWrapper = this.application.create(`
+          <div class="bg-gray-100 min-h-screen py-8">
+              <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
+                  Curriculum
+              </h1>
+              <form method="POST" id="curriculum-form"
+                    class="form-container">
+                  <div id="form-fields"></div>
+                  <button type="submit" class="form-submit-btn">
+                      Create Curriculum
+                  </button>
+              </form>
+              <div style="margin-top: 20px;">
+                <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
+              </div>
+          </div>
+      `);
+    this.application.mainContainer.appendChild(formWrapper);
 
-    this.options = await this.getDepartments();
-    this.selectContainer = document.getElementById("departmentSelectContainer");;
-    this.selectContainer.append(this.options);
+    const departmentsOption = await this.getDepartmentsOption();
+    const fields = [
+      { Id: "name", Label: "Name", Type: "text", Name: "Name", Required: true, Placeholder: "Enter Curriculum Name" },
+      { Id: "start_year", Label: "Start Year", Type: "text", Name: "StartYear", Required: true, Placeholder: "25xx" },
+      { Id: "end_year", Label: "End Year", Type: "text", Name: "EndYear", Required: true, Placeholder: "25xx" },
+      {
+        Id: "department_id", Label: "Department", Type: "select", Name: "DepartmentId", required: true,
+        options: departmentsOption
+      },
+      {
+        Id: "program_type_id", Label: "Program Type", Type: "select", Name: "ProgramType", required: true,
+        options: [{ label: "Regular", value: 0 }, { label: "International", value: 1 }]
+      },
+    ];
 
-    let submitButton = document.getElementById("btn-create-curriculum");
-    submitButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.submit();
+
+    const fieldsContainer = document.getElementById('form-fields');
+    fields.forEach(field => {
+      let inputHTML = '';
+
+      if (field.Type === "select" && this.application.template && this.application.template.Select) {
+        inputHTML = Mustache.render(this.application.template.Select, field);
+      }
+      else if (this.application.template && this.application.template.Input) {
+        inputHTML = Mustache.render(this.application.template.Input, field);
+      }
+
+      if (inputHTML) {
+        const inputElement = this.application.create(inputHTML);
+        fieldsContainer.appendChild(inputElement);
+      }
     });
+
+    let formHandler = document.getElementById("curriculum-form");
+    formHandler.addEventListener('submit', this.handleSubmit.bind(this));
   }
 
-  async submit() {
+  async handleSubmit(e) {
+
+    e.preventDefault();
+
     try {
-      const getForm = document.getElementById("curriculum-create-form");
+      const getForm = document.getElementById("curriculum-form");
       const formData = new FormData(getForm);
       const payload = {
         Name: formData.get('Name'),
@@ -142,4 +124,9 @@ class CurriculumCreate {
 
     return false;
   }
+}
+
+// Make available globally
+if (typeof window !== 'undefined') {
+  window.CurriculumCreate = CurriculumCreate;
 }

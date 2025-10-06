@@ -167,6 +167,8 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             if (window.InternshipReportCreate) {
                 const reportCreate = new window.InternshipReportCreate(this.templateEngine)
                 await reportCreate.render()
+            } else {
+                console.error("InternshipReportCreate class not found")
             }
         }
 
@@ -175,6 +177,8 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             if (window.CompanyCreate) {
                 const companyCreate = new window.CompanyCreate(this.templateEngine)
                 await companyCreate.render()
+            } else {
+                console.error("CompanyCreate class not found")
             }
         }
 
@@ -183,6 +187,8 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             if (window.InternshipMentorCreate) {
                 const mentorCreate = new window.InternshipMentorCreate(this.templateEngine)
                 await mentorCreate.render()
+            } else {
+                console.error("InternshipMentorCreate class not found")
             }
         }
 
@@ -191,15 +197,14 @@ if (typeof window !== 'undefined' && window.InternshipApplication) {} else {
             if (window.InternshipAttendanceCreate) {
                 const attendanceCreate = new window.InternshipAttendanceCreate(this.templateEngine)
                 await attendanceCreate.render()
+            } else {
+                console.error("InternshipAttendanceCreate class not found")
             }
         }
 
         async renderInternshipCriteria() {
             console.log("Rendering Internship Criteria")
-            if (window.InternshipCriteriaCreate) {
-                const criteriaCreate = new window.InternshipCriteriaCreate(this.templateEngine)
-                await criteriaCreate.render()
-            }
+            this.templateEngine.mainContainer.innerHTML = InternshipCriteriaCreate.render();
         }
 
         // Override the default render method

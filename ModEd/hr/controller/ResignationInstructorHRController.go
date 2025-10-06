@@ -166,6 +166,11 @@ func (ctl *ResignationInstructorHRController) HandleReview(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "updated"})
 }
 
+func (ctl *ResignationInstructorHRController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (ctl *ResignationInstructorHRController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&model.RequestResignationInstructor{})

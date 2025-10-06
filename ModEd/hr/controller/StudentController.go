@@ -60,12 +60,18 @@ func (ctl *StudentController) GetRoute() []*core.RouteItem {
 	}
 }
 
+func (ctl *StudentController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "hr/students",
+		Model: &cmodel.Student{},
+	})
+	return modelMetaList
+}
+
 func (ctl *StudentController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&cmodel.Student{})
-
-	// Set up dynamic form metadata API
-	ctl.application.SetAPIform("student", &cmodel.Student{})
 }
 
 func (ctl *StudentController) ListStudents(c *fiber.Ctx) error {

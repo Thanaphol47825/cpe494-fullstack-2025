@@ -25,6 +25,11 @@ func (controller *AdminController) RenderMain(context *fiber.Ctx) error {
 	return context.SendString("Hello Recruit Admins")
 }
 
+func (controller *AdminController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *AdminController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

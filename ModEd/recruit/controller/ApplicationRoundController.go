@@ -18,6 +18,11 @@ func NewApplicationRoundController() *ApplicationRoundController {
 	return &ApplicationRoundController{}
 }
 
+func (controller *ApplicationRoundController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *ApplicationRoundController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

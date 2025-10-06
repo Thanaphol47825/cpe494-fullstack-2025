@@ -25,6 +25,11 @@ func (controller *AdvisorController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+func (controller *AdvisorController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *AdvisorController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

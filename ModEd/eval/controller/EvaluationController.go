@@ -37,6 +37,11 @@ func (controller *EvaluationController) RenderMain(context *fiber.Ctx) error {
 	})
 }
 
+func (controller *EvaluationController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *EvaluationController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

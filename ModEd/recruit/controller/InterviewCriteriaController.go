@@ -267,6 +267,11 @@ func (controller *InterviewCriteriaController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+func (controller *InterviewCriteriaController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *InterviewCriteriaController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

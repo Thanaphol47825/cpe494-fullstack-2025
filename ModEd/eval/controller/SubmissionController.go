@@ -55,6 +55,11 @@ func (controller *SubmissionController) RenderMain(context *fiber.Ctx) error {
 	})
 }
 
+func (controller *SubmissionController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *SubmissionController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

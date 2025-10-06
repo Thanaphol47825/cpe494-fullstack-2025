@@ -32,28 +32,33 @@ func (controller *InternshipAttendanceController) GetRoute() []*core.RouteItem {
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/InternshipAttendance/CreateInternshipAttendance",
+		Route:   "/curriculum/InternshipAttendance/CreateInternshipAttendance",
 		Handler: controller.handler.CreateInternshipAttendance,
 		Method:  core.POST,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/InternshipAttendance/GetInternshipAttendance/:id",
+		Route:   "/curriculum/InternshipAttendance/GetInternshipAttendance/:id",
 		Handler: controller.handler.GetInternshipAttendanceByID,
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/InternshipAttendance/UpdateInternshipAttendance",
+		Route:   "/curriculum/InternshipAttendance/UpdateInternshipAttendance",
 		Handler: controller.handler.UpdateInternshipAttendanceByID,
 		Method:  core.POST,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:  "/curriculum/InternshipAttendance/DeleteInternshipAttendance/:id",
+		Route:   "/curriculum/InternshipAttendance/DeleteInternshipAttendance/:id",
 		Handler: controller.handler.DeleteInternshipAttendanceByID,
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *InternshipAttendanceController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
 }
 
 func (controller *InternshipAttendanceController) SetApplication(application *core.ModEdApplication) {

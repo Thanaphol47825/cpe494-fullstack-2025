@@ -37,6 +37,11 @@ func (controller *QuizSubmissionController) RenderMain(context *fiber.Ctx) error
 	})
 }
 
+func (controller *QuizSubmissionController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *QuizSubmissionController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

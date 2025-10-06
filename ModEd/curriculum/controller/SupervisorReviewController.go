@@ -3,7 +3,6 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/curriculum/handler"
-
 )
 
 type SupervisorReviewController struct {
@@ -55,6 +54,11 @@ func (controller *SupervisorReviewController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	return routeList
+}
+
+func (controller *SupervisorReviewController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
 }
 
 func (controller *SupervisorReviewController) SetApplication(application *core.ModEdApplication) {

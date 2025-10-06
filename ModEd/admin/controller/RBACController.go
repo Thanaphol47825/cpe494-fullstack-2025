@@ -35,3 +35,8 @@ func (controller *RBACController) SetApplication(application *core.ModEdApplicat
 	controller.application = application
 	controller.handler.Application = application
 }
+
+func (controller *RBACController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}

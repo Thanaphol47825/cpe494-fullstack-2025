@@ -30,6 +30,11 @@ func (controller *InternshipApplicationController) GetRoute() []*core.RouteItem 
 	return routeList
 }
 
+func (controller *InternshipApplicationController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *InternshipApplicationController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

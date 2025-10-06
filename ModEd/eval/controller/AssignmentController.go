@@ -1,157 +1,162 @@
 package controller
 
 import (
- "ModEd/core"
- "ModEd/eval/model"
+	"ModEd/core"
+	"ModEd/eval/model"
 
- "github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2"
 )
 
 type AssignmentController struct {
- application *core.ModEdApplication
+	application *core.ModEdApplication
 }
 
 func NewAssignmentController() *AssignmentController {
- controller := &AssignmentController{}
- return controller
+	controller := &AssignmentController{}
+	return controller
+}
+
+func (controller *AssignmentController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
 }
 
 func (controller *AssignmentController) SetApplication(application *core.ModEdApplication) {
- controller.application = application
+	controller.application = application
 }
 
 func (controller *AssignmentController) GetRoute() []*core.RouteItem {
- routeList := []*core.RouteItem{}
+	routeList := []*core.RouteItem{}
 
- routeList = append(routeList, &core.RouteItem{
-  Route:   "/eval/assignment/create",
-  Handler: controller.CreateAssignment,
-  Method:  core.POST,
- })
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/eval/assignment/create",
+		Handler: controller.CreateAssignment,
+		Method:  core.POST,
+	})
 
- routeList = append(routeList, &core.RouteItem{
-  Route:   "/eval/assignment/getAll",
-  Handler: controller.GetAllAssignments,
-  Method:  core.GET,
- })
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/eval/assignment/getAll",
+		Handler: controller.GetAllAssignments,
+		Method:  core.GET,
+	})
 
- routeList = append(routeList, &core.RouteItem{
-  Route:   "/eval/assignment/get/:id",
-  Handler: controller.GetAssignmentByID,
-  Method:  core.GET,
- })
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/eval/assignment/get/:id",
+		Handler: controller.GetAssignmentByID,
+		Method:  core.GET,
+	})
 
- routeList = append(routeList, &core.RouteItem{
-  Route:   "/eval/assignment/update",
-  Handler: controller.UpdateAssignment,
-  Method:  core.POST,
- })
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/eval/assignment/update",
+		Handler: controller.UpdateAssignment,
+		Method:  core.POST,
+	})
 
- routeList = append(routeList, &core.RouteItem{
-  Route:   "/eval/assignment/delete/:id",
-  Handler: controller.DeleteAssignment,
-  Method:  core.GET,
- })
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/eval/assignment/delete/:id",
+		Handler: controller.DeleteAssignment,
+		Method:  core.GET,
+	})
 
- return routeList
+	return routeList
 }
 
-//Create new assignment
+// Create new assignment
 func (controller *AssignmentController) CreateAssignment(context *fiber.Ctx) error {
- var assignment model.Assignment
+	var assignment model.Assignment
 
- if err := context.BodyParser(&assignment); err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    "cannot parse JSON",
-  })
- }
+	if err := context.BodyParser(&assignment); err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "cannot parse JSON",
+		})
+	}
 
- if err := controller.application.DB.Create(&assignment).Error; err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    err.Error(),
-  })
- }
+	if err := controller.application.DB.Create(&assignment).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
 
- return context.JSON(fiber.Map{
-  "isSuccess": true,
-  "result":    assignment,
- })
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    assignment,
+	})
 }
 
-//Get all assignments
+// Get all assignments
 func (controller *AssignmentController) GetAllAssignments(context *fiber.Ctx) error {
- var assignments []model.Assignment
+	var assignments []model.Assignment
 
- if err := controller.application.DB.Find(&assignments).Error; err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    err.Error(),
-  })
- }
+	if err := controller.application.DB.Find(&assignments).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
 
- return context.JSON(fiber.Map{
-  "isSuccess": true,
-  "result":    assignments,
- })
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    assignments,
+	})
 }
 
-//Get assignment by ID
+// Get assignment by ID
 func (controller *AssignmentController) GetAssignmentByID(context *fiber.Ctx) error {
- id := context.Params("id")
- var assignment model.Assignment
+	id := context.Params("id")
+	var assignment model.Assignment
 
- if err := controller.application.DB.First(&assignment, id).Error; err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    "Assignment not found",
-  })
- }
+	if err := controller.application.DB.First(&assignment, id).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Assignment not found",
+		})
+	}
 
- return context.JSON(fiber.Map{
-  "isSuccess": true,
-  "result":    assignment,
- })
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    assignment,
+	})
 }
 
-//Update existing assignment
+// Update existing assignment
 func (controller *AssignmentController) UpdateAssignment(context *fiber.Ctx) error {
- var assignment model.Assignment
+	var assignment model.Assignment
 
- if err := context.BodyParser(&assignment); err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    "cannot parse JSON",
-  })
- }
+	if err := context.BodyParser(&assignment); err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "cannot parse JSON",
+		})
+	}
 
- if err := controller.application.DB.Save(&assignment).Error; err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    err.Error(),
-  })
- }
+	if err := controller.application.DB.Save(&assignment).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
 
- return context.JSON(fiber.Map{
-  "isSuccess": true,
-  "result":    assignment,
- })
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    assignment,
+	})
 }
 
-//Delete assignment by ID
+// Delete assignment by ID
 func (controller *AssignmentController) DeleteAssignment(context *fiber.Ctx) error {
- id := context.Params("id")
+	id := context.Params("id")
 
- if err := controller.application.DB.Delete(&model.Assignment{}, id).Error; err != nil {
-  return context.JSON(fiber.Map{
-   "isSuccess": false,
-   "result":    err.Error(),
-  })
- }
+	if err := controller.application.DB.Delete(&model.Assignment{}, id).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
 
- return context.JSON(fiber.Map{
-  "isSuccess": true,
-  "result":    "Assignment deleted successfully",
- })
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    "Assignment deleted successfully",
+	})
 }

@@ -16,6 +16,11 @@ func NewSeniorProjectController() *SeniorProjectController {
 	}
 }
 
+func (controller *SeniorProjectController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *SeniorProjectController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

@@ -16,6 +16,11 @@ func NewApplicationReportController() *ApplicationReportController {
 	return controller
 }
 
+func (controller *ApplicationReportController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *ApplicationReportController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

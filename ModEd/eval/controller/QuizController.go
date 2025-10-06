@@ -38,6 +38,11 @@ func (controller *QuizController) RenderMain(context *fiber.Ctx) error {
 	})
 }
 
+func (controller *QuizController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (controller *QuizController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

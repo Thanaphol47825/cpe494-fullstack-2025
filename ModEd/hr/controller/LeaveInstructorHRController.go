@@ -222,6 +222,11 @@ func (ctl *LeaveInstructorHRController) HandleDeleteRequest(c *fiber.Ctx) error 
 	})
 }
 
+func (ctl *LeaveInstructorHRController) GetModelMeta() []*core.ModelMeta {
+	modelMetaList := []*core.ModelMeta{}
+	return modelMetaList
+}
+
 func (ctl *LeaveInstructorHRController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&model.RequestLeaveInstructor{})

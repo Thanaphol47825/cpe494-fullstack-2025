@@ -274,7 +274,6 @@ if (typeof window !== 'undefined') {
   window.HrStudentResignationFormFeature = HrStudentResignationFormFeature;
 }
 
-console.log('HrStudentResignationFormFeature loaded');
 }
 
 

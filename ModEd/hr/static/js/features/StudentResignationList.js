@@ -470,5 +470,4 @@ if (typeof window !== 'undefined') {
   window.HrStudentResignationListFeature = HrStudentResignationListFeature;
 }
 
-console.log('HrStudentResignationListFeature loaded');
 }

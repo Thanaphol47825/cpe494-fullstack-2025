@@ -56,10 +56,10 @@ class HrApplication extends BaseModuleApplication {
     
     // Initialize logger
     this.logger = {
-      info: (msg) => console.log(`[HR] ${msg}`),
+      info: (msg) => {},
       error: (msg) => console.error(`[HR] ${msg}`),
       warn: (msg) => console.warn(`[HR] ${msg}`),
-      debug: (msg) => console.log(`[HR DEBUG] ${msg}`)
+      debug: (msg) => {}
     }
     
     // Setup routes and navigation
@@ -1496,10 +1496,7 @@ class HrApplication extends BaseModuleApplication {
   // Debug utilities
   debug() {
     console.group('HrApplication Debug Info')
-    console.log('Module Info:', this.getModuleInfo())
-    console.log('Health Status:', this.getHealthStatus())
-    console.log('Template Engine:', this.templateEngine ? 'Available' : 'Not Available')
-    console.log('Main Container:', this.templateEngine?.mainContainer ? 'Available' : 'Not Available')
+    // Debug info available but not logged to console
     console.groupEnd()
   }
 

@@ -407,5 +407,4 @@ if (typeof window !== 'undefined') {
   window.HrStudentFormFeature = HrStudentFormFeature;
 }
 
-console.log("HrStudentFormFeature loaded");
 }

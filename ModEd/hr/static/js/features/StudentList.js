@@ -486,5 +486,4 @@ if (typeof window !== 'undefined') {
   window.HrStudentListFeature = HrStudentListFeature;
 }
 
-console.log('HrStudentListFeature loaded');
 }

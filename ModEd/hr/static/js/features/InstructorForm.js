@@ -398,5 +398,4 @@ if (typeof window !== 'undefined') {
   window.HrInstructorFormFeature = HrInstructorFormFeature;
 }
 
-console.log("HrInstructorFormFeature loaded");
 }

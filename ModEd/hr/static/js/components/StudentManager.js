@@ -7,7 +7,6 @@ class StudentManager {
 
     // Advanced student search functionality
     async searchStudents(query) {
-        console.log(`Searching students with query: ${query}`);
         
         try {
             const response = await fetch(`${this.rootURL}/hr/students?limit=50`);
@@ -40,7 +39,6 @@ class StudentManager {
 
     // Generate student report
     async generateStudentReport(studentCode) {
-        console.log(`Generating report for student: ${studentCode}`);
         
         try {
             const response = await fetch(`${this.rootURL}/hr/students/${studentCode}`);
@@ -242,4 +240,3 @@ if (typeof window !== 'undefined') {
     window.StudentManager = StudentManager;
 }
 
-console.log("StudentManager (Clean) loaded");

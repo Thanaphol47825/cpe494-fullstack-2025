@@ -86,4 +86,3 @@ if (typeof window !== 'undefined') {
   window.HrConfig = HrConfig
 }
 
-console.log("HrConfig loaded")

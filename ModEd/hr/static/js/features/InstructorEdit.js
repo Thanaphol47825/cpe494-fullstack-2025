@@ -474,5 +474,4 @@ if (typeof window !== 'undefined') {
   window.HrInstructorEditFeature = HrInstructorEditFeature;
 }
 
-console.log("HrInstructorEditFeature loaded");
 }

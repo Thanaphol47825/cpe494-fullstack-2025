@@ -1,7 +1,6 @@
 // Sub-module for Leave Management features
 class LeaveManager {
     constructor() {
-        console.log('LeaveManager sub-module loaded')
         this.leaveTypes = [
             'Annual Leave',
             'Sick Leave',
@@ -103,7 +102,7 @@ class LeaveManager {
         const end = new Date(endDate)
         const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1
         
-        console.log('Leave request submitted:', {
+        // Leave request submitted
             type: leaveType,
             startDate,
             endDate,

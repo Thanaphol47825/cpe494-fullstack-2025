@@ -481,5 +481,4 @@ if (typeof window !== 'undefined') {
   window.HrInstructorListFeature = HrInstructorListFeature;
 }
 
-console.log('HrInstructorListFeature loaded');
 }

@@ -478,5 +478,4 @@ if (typeof window !== 'undefined') {
   window.HrStudentEditFeature = HrStudentEditFeature;
 }
 
-console.log("HrStudentEditFeature loaded");
 }

@@ -13,29 +13,35 @@ class CommonDepartmentFormFeature {
     this.templateEngine.mainContainer.innerHTML = "";
 
     const html = `
-      <div class="max-w-xl mx-auto space-y-6">
-        <button id="commonBackToMain" class="text-blue-700 hover:text-blue-900">← Back to Common Menu</button>
+      <main class="form-container">
         <div>
-          <h2 class="text-2xl font-bold">Add Department</h2>
+          <a id="commonBackToMain" href="#common" class="btn-home">← Back to Common Menu</a>
         </div>
-        <form id="commonDepartmentForm" class="space-y-4">
-          <label class="block text-sm">Department Name *
-            <input name="name" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Computer Engineering" />
-          </label>
-          <label class="block text-sm">Faculty *
-            <input name="faculty" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Engineering" />
-          </label>
-          <label class="block text-sm">Budget (THB)
-            <input name="budget" type="number" min="0" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="1000000" />
-          </label>
-          <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="rounded-md bg-green-700 px-4 py-2 text-white hover:bg-green-800">Create Department</button>
-            <button type="reset" class="rounded-md border px-4 py-2 hover:bg-gray-50">Reset</button>
-            <span id="commonDepartmentStatus" class="text-sm"></span>
+
+        <header>
+          <h2>Add Department</h2>
+        </header>
+
+        <form id="commonDepartmentForm">
+          <div class="form-field">
+            <label for="dept_code">Department Code *</label>
+            <input id="dept_code" name="code" type="text" required class="form-input" placeholder="CPE" />
+          </div>
+
+          <div class="form-field">
+            <label for="dept_name">Department Name *</label>
+            <input id="dept_name" name="name" type="text" required class="form-input" placeholder="Computer Engineering" />
+          </div>
+
+          <div class="form-field" style="display:flex; gap:12px; align-items:center;">
+            <button type="submit" class="form-submit-btn">Create Department</button>
+            <button type="reset" class="form-reset-btn">Reset</button>
+            <span id="commonDepartmentStatus" class="status-text"></span>
           </div>
         </form>
-        <div id="commonDepartmentResult" class="hidden rounded-md border bg-white p-4 text-sm"></div>
-      </div>
+
+        <div id="commonDepartmentResult" class="hidden result-box"></div>
+      </main>
     `;
 
     const element = this.templateEngine.create(html);

@@ -13,43 +13,51 @@ class CommonInstructorFormFeature {
     this.templateEngine.mainContainer.innerHTML = "";
 
     const html = `
-      <div class="max-w-2xl mx-auto space-y-6">
-        <button id="commonBackToMain" class="text-blue-700 hover:text-blue-900">← Back to Common Menu</button>
+      <main class="form-container">
         <div>
-          <h2 class="text-2xl font-bold">Add Instructor</h2>
+          <a id="commonBackToMain" href="#common" class="btn-home">← Back to Common Menu</a>
         </div>
-        <form id="commonInstructorForm" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="block text-sm">Instructor Code *
-                <input name="instructor_code" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="INS001" />
-              </label>
-              <label class="block text-sm">Email *
-                <input name="email" type="email" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="name@example.com" />
-              </label>
-              <label class="block text-sm">First Name *
-                <input name="first_name" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="First name" />
-              </label>
-              <label class="block text-sm">Last Name *
-                <input name="last_name" type="text" required class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Last name" />
-              </label>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <label class="block text-sm">Department
-                <input name="department" type="text" class="mt-1 w-full rounded-md border px-3 py-2" placeholder="Department" />
-              </label>
-              <label class="block text-sm">Start Date
-                <input name="start_date" type="date" class="mt-1 w-full rounded-md border px-3 py-2" />
-              </label>
-            </div>
 
-          <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="rounded-md bg-green-700 px-4 py-2 text-white hover:bg-green-800">Create Instructor</button>
-            <button type="reset" class="rounded-md border px-4 py-2 hover:bg-gray-50">Reset</button>
-            <span id="commonInstructorStatus" class="text-sm"></span>
+        <header>
+          <h2>Add Instructor</h2>
+        </header>
+
+        <form id="commonInstructorForm">
+          <div class="form-field">
+            <label for="inst_code">Instructor Code *</label>
+            <input id="inst_code" name="instructor_code" type="text" required class="form-input" placeholder="INST001" />
+          </div>
+
+          <div class="form-field">
+            <label for="inst_email">Email *</label>
+            <input id="inst_email" name="email" type="email" required class="form-input" placeholder="name@example.com" />
+          </div>
+
+          <div class="form-field">
+            <label for="first_name">First Name *</label>
+            <input id="first_name" name="first_name" type="text" required class="form-input" placeholder="First name" />
+          </div>
+
+          <div class="form-field">
+            <label for="last_name">Last Name *</label>
+            <input id="last_name" name="last_name" type="text" required class="form-input" placeholder="Last name" />
+          </div>
+
+          <div class="form-field">
+            <label for="dept">Department</label>
+            <input id="dept" name="department" type="text" class="form-input" placeholder="Department" />
+            <!-- If you use a dropdown, swap to: <select class="form-select"> -->
+          </div>
+
+          <div class="form-field" style="display:flex; gap:12px; align-items:center;">
+            <button type="submit" class="form-submit-btn">Create Instructor</button>
+            <button type="reset" class="form-reset-btn">Reset</button>
+            <span id="commonInstructorStatus" class="status-text"></span>
           </div>
         </form>
-        <div id="commonInstructorResult" class="hidden rounded-md border bg-white p-4 text-sm"></div>
-      </div>
+
+        <div id="commonInstructorResult" class="hidden result-box"></div>
+      </main>
     `;
 
     const element = this.templateEngine.create(html);

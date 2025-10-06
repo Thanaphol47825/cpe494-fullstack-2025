@@ -15,9 +15,7 @@ if (typeof window !== 'undefined' && !window.InternshipAttendanceCreate) {
               <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
                   Internship Attendance
               </h1>
-              <form method="POST" 
-                    action="/curriculum/InternshipAttendance/CreateInternshipAttendance"
-                    class="form-container">
+              <form id="internship-attendance-form" class="form-container">
                   <div id="form-fields"></div>
                   <button type="submit" class="form-submit-btn">
                       Check in
@@ -70,6 +68,34 @@ if (typeof window !== 'undefined' && !window.InternshipAttendanceCreate) {
                     fieldsContainer.appendChild(inputElement);
                 }
             });
+
+            const form = document.getElementById('internship-attendance-form');
+            form.addEventListener('submit', this.handleSubmit.bind(this));
+        }
+
+        async handleSubmit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch('/curriculum/InternshipAttendance/CreateInternshipAttendance', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('Success:', result);
+                    form.reset();
+                } else {
+                    throw new Error('Failed to record attendance');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to record attendance. Please try again.');
+            }
         }
     }
     

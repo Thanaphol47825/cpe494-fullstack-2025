@@ -215,7 +215,7 @@ class HrStudentFormFeature {
 
   async #handleFormSubmit(form) {
     try {
-      this.#setStatus('⏳ Creating student...', 'loading');
+      this.#setStatus('Creating student...', 'loading');
       this.#hideResult();
 
       const payload = this.#collectFormData(form);
@@ -235,7 +235,7 @@ class HrStudentFormFeature {
         throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
       }
 
-      this.#setStatus('✅ Student created successfully!', 'success');
+      this.#setStatus('Student created successfully!', 'success');
       this.#showResult(result, false);
       
       setTimeout(() => {
@@ -247,7 +247,7 @@ class HrStudentFormFeature {
 
     } catch (error) {
       console.error('Form submission error:', error);
-      this.#setStatus(`❌ ${error.message}`, 'error');
+      this.#setStatus(`${error.message}`, 'error');
       this.#showResult({ error: error.message }, true);
     }
   }
@@ -292,7 +292,7 @@ class HrStudentFormFeature {
     if (window.HrValidator) {
       const validation = HrValidator.validateStudentData(payload);
       if (!validation.isValid) {
-        this.#setStatus(`❌ ${validation.errors.join(', ')}`, 'error');
+        this.#setStatus(`${validation.errors.join(', ')}`, 'error');
         return false;
       }
       return true;
@@ -302,11 +302,11 @@ class HrStudentFormFeature {
     const requiredFields = ['student_code', 'first_name', 'last_name', 'email'];
     const missing = requiredFields.filter(field => !payload[field]);
     if (missing.length > 0) {
-      this.#setStatus(`❌ Please fill required fields: ${missing.join(', ')}`, 'error');
+      this.#setStatus(`Please fill required fields: ${missing.join(', ')}`, 'error');
       return false;
     }
     if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-      this.#setStatus('❌ Please enter a valid email address', 'error');
+      this.#setStatus('Please enter a valid email address', 'error');
       return false;
     }
     return true;

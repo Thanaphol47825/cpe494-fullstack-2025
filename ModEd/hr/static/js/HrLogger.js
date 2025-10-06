@@ -113,4 +113,4 @@ if (typeof window !== 'undefined') {
   window.HrLogger = HrLogger
 }
 
-console.log("📝 HrLogger loaded")
+console.log("HrLogger loaded")

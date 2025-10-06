@@ -209,7 +209,7 @@ class HrInstructorFormFeature {
 
   async #handleFormSubmit(form) {
     try {
-      this.#setStatus('⏳ Creating instructor...', 'loading');
+      this.#setStatus(' Creating instructor...', 'loading');
       this.#hideResult();
 
       const payload = this.#collectFormData(form);
@@ -231,7 +231,7 @@ class HrInstructorFormFeature {
         throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
       }
 
-      this.#setStatus('✅ Instructor created successfully!', 'success');
+      this.#setStatus('Instructor created successfully!', 'success');
       this.#showResult(result, false);
       
       setTimeout(() => {
@@ -243,7 +243,7 @@ class HrInstructorFormFeature {
 
     } catch (error) {
       console.error('Form submission error:', error);
-      this.#setStatus(`❌ ${error.message}`, 'error');
+      this.#setStatus(` ${error.message}`, 'error');
       this.#showResult({ error: error.message }, true);
     }
   }
@@ -264,11 +264,11 @@ class HrInstructorFormFeature {
     const requiredFields = ['instructor_code', 'email', 'first_name', 'last_name'];
     const missing = requiredFields.filter(field => !payload[field]);
     if (missing.length > 0) {
-      this.#setStatus(`❌ Please fill required fields: ${missing.join(', ')}`, 'error');
+      this.#setStatus(`Please fill required fields: ${missing.join(', ')}`, 'error');
       return false;
     }
     if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-      this.#setStatus('❌ Please enter a valid email address', 'error');
+      this.#setStatus('Please enter a valid email address', 'error');
       return false;
     }
     return true;

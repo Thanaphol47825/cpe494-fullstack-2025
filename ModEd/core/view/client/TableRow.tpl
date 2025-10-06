@@ -1,5 +1,5 @@
 <tr>
-    <td><a href="#" rel="ID">{{ ID }}</a></td>
-    <td>{{ name }}</td>
-    <td>{{ surname }}</td>
+  {{#Columns}}
+    {{> TableColumn}}
+  {{/Columns}}
 </tr>

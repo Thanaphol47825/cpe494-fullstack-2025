@@ -19,15 +19,8 @@
 	border-radius: 5px;
 	cursor: pointer;
 }
-
-table{
-	width:100%;
-	border: 1px solid #444;
-	margin-top: 20px;
-}
-
-td, th{
-	border: 1px solid #444;
+.button:hover{
+    background: darkgreen;
 }
 
 .form-input {
@@ -106,4 +99,45 @@ td, th{
 
 .form-container > * + * {
     margin-top: 24px;
+}
+
+/* ===== Blue Table Theme ===== */
+.table-blue {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border: 2px solid #3b82f6;               /* น้ำเงินสด */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(59,130,246,0.2);
+  background: #f8fbff;                     /* ฟ้าอ่อนอมขาว */
+}
+
+.table-blue thead th {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  color: #f9fafb;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: none;
+  padding: 10px 14px;
+  text-align: left;
+}
+
+.table-blue tbody td {
+  border-top: 1px solid #bfdbfe;
+  padding: 10px 14px;
+  color: #1e3a8a;
+  background-color: #f9fbff;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.table-blue tbody tr:hover td {
+  background-color: #e0f2fe;               /* ฟ้าอ่อนเมื่อ hover */
+}
+
+.ui-table-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 12px;
 }

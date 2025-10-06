@@ -3,46 +3,63 @@ class AssignmentCreate {
   constructor() {
     this.apiService = new EvalApiService();
     this.validator = new EvalValidator();
+    this.templatePath = '/eval/static/view/AssignmentForm.tpl';
   }
 
   async initialize() {
-    const container = document.getElementById('assignment-demo');
+    const container = document.getElementById('assignment-demo') || document.getElementById('MainContainer') || document.body;
     if (!container) return;
 
-    container.innerHTML = `
-      <div class="demo-section">
-        <h2>Assignment Management Demo</h2>
-        <form id="assignmentForm">
-          <label>Assignment Name:</label>
-          <input type="text" name="name" required placeholder="Enter assignment name" />
-          <label>Description:</label>
-          <input type="text" name="description" placeholder="Enter assignment description" />
-          <label>Start Date:</label>
-          <input type="datetime-local" name="startDate" />
-          <label>Due Date:</label>
-          <input type="datetime-local" name="dueDate" />
-          <label>Max Score:</label>
-          <input type="number" name="maxScore" value="100" min="1" max="1000" />
-          <input type="submit" value="Create Assignment" />
-        </form>
-
-        <button id="loadAllBtn">Load All Assignments</button>
-
-        <h3>Latest Result:</h3>
-        <div id="result"></div>
-        <h3>All Assignments:</h3>
-        <div id="allAssignments"></div>
-      </div>
-    `;
+    // Load template
+    const tplText = await this.fetchTemplate(this.templatePath);
+    const html = Mustache.render(tplText, { title: 'สร้าง Assignment ใหม่' });
+    // insert content
+    container.innerHTML = html;
 
     // Attach event listeners
-    document.getElementById("assignmentForm")
-      .addEventListener("submit", (e) => this.handleSubmit(e));
-    document.getElementById("loadAllBtn")
-      .addEventListener("click", () => this.loadAllAssignments());
+    const form = document.getElementById('assignmentForm');
+    if (form) {
+      form.addEventListener('submit', (e) => this.handleSubmit(e));
+      form.addEventListener('reset', () => this.onReset());
+    }
 
-    // Load initial data
+    const loadBtn = document.getElementById('loadAllBtn');
+    if (loadBtn) loadBtn.addEventListener('click', () => this.loadAllAssignments());
+
     await this.loadAllAssignments();
+  }
+
+  async fetchTemplate(path) {
+    const candidates = [];
+    try {
+      if (typeof RootURL !== 'undefined' && RootURL !== null) {
+        candidates.push(String(RootURL).replace(/\/$/, '') + path);
+      }
+    } catch (e) {
+      // ignore
+    }
+    candidates.push(path);
+
+    let lastErr = null;
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Template fetch failed: ' + res.status + ' for ' + url);
+        return await res.text();
+      } catch (err) {
+        lastErr = err;
+        console.warn('Attempt to fetch template failed for', url, err);
+        // try next candidate
+      }
+    }
+
+    console.error('All attempts to load template failed. Tried:', candidates, 'last error:', lastErr);
+    return '<div>Error loading template</div>';
+  }
+
+  onReset() {
+    const result = document.getElementById('result');
+    if (result) result.textContent = '';
   }
 
   async handleSubmit(e) {
@@ -51,18 +68,28 @@ class AssignmentCreate {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    // Validate data
-    const validation = this.validator.validateAssignment(data);
-    if (!this.validator.showErrors(validation.errors)) {
-      return;
+    // convert types
+    if (data.startDate) data.startDate = new Date(data.startDate).toISOString();
+    if (data.dueDate) data.dueDate = new Date(data.dueDate).toISOString();
+    data.maxScore = Number(data.maxScore || 100);
+
+  // normalize field names: validator expects `name`, template uses `title`
+  if (!data.name && data.title) data.name = data.title;
+  // also ensure title exists for display/use downstream
+  if (!data.title && data.name) data.title = data.name;
+
+    // Validate data (validator may be optional)
+    if (this.validator && typeof this.validator.validateAssignment === 'function') {
+      const validation = this.validator.validateAssignment(data);
+      if (!this.validator.showErrors(validation.errors)) return;
     }
 
-    // Submit data
     const result = await this.apiService.createAssignment(data);
-    
-    document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+    const resultEl = document.getElementById('result');
+    if (resultEl) resultEl.textContent = JSON.stringify(result, null, 2);
+
     await this.loadAllAssignments();
-    document.getElementById('assignmentForm').reset();
+    if (form) form.reset();
   }
 
   async loadAllAssignments() {
@@ -70,22 +97,23 @@ class AssignmentCreate {
     const container = document.getElementById('allAssignments');
     if (!container) return;
 
-    if (data.isSuccess && Array.isArray(data.result)) {
-      let text = "";
-      data.result.forEach(assignment => {
-        const title = assignment.title || assignment.Title;
-        const description = assignment.description || assignment.Description;
-        const id = assignment.id || assignment.ID;
-        const dueDate = assignment.dueDate || assignment.DueDate;
-        const maxScore = assignment.maxScore || assignment.MaxScore;
-        text += `ID: ${id}, Title: ${title}, Description: ${description}, Due: ${dueDate}, Max Score: ${maxScore}\n`;
-      });
-      container.textContent = text || "No assignments found.";
+    if (data && (data.isSuccess || data.success) && Array.isArray(data.result || data.data)) {
+      const list = data.result || data.data;
+      const items = list.map(a => {
+        const title = a.title || a.Title || a.Name || '';
+        const description = a.description || a.Description || '';
+        const id = a.id || a.ID || a.Id || '';
+        const due = a.dueDate || a.DueDate || '';
+        const maxScore = a.maxScore || a.MaxScore || '';
+        return `ID: ${id}\nTitle: ${title}\nDesc: ${description}\nDue: ${due}\nMax: ${maxScore}\n----`;
+      }).join('\n');
+
+      container.textContent = items || 'No assignments found.';
     } else {
-      container.textContent = "Error loading assignments: " + JSON.stringify(data.result);
+      container.textContent = 'Error loading assignments: ' + JSON.stringify(data);
     }
   }
 }
 
-// Make it globally available
+// Expose globally for TemplateEngine
 window.AssignmentCreate = AssignmentCreate;

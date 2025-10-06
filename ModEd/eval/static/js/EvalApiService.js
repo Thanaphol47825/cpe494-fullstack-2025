@@ -20,13 +20,22 @@ class EvalApiService {
 
   formatToRFC3339(dtLocal) {
     if (!dtLocal) return null;
-    return dtLocal + ":00Z";
+    // If already in ISO Zulu format, return as-is
+    if (typeof dtLocal === 'string' && /Z$/.test(dtLocal)) return dtLocal;
+    // If it looks like a datetime-local (YYYY-MM-DDTHH:MM) append seconds and Z
+    if (typeof dtLocal === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dtLocal)) return dtLocal + ":00Z";
+    // Try to parse and toISOString
+    try {
+      const d = new Date(dtLocal);
+      if (!isNaN(d.getTime())) return d.toISOString();
+    } catch (e) {}
+    return null;
   }
 
   // Assignment API calls
   async createAssignment(assignmentData) {
     const payload = {
-      title: assignmentData.name,
+      title: assignmentData.name || assignmentData.title,
       description: assignmentData.description,
       dueDate: this.formatToRFC3339(assignmentData.dueDate),
       startDate: this.formatToRFC3339(assignmentData.startDate),
@@ -83,7 +92,7 @@ class EvalApiService {
       title: submissionData.title,
       studentId: Number(submissionData.studentId),
       studentName: submissionData.studentName,
-      submittedAt: this.formatToRFC3339(submissionData.submittedAt),
+      submittedAt: this.formatToRFC3339(submissionData.submittedAt) || new Date().toISOString(),
       maxScore: Number(submissionData.maxScore),
       isLate: submissionData.isLate || false,
       status: submissionData.status || 'submitted',
@@ -97,7 +106,7 @@ class EvalApiService {
     return await this.fetchJSON(`${this.baseUrl}/submission/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(Object.assign(payload, { lastModified: new Date().toISOString() }))
     });
   }
 

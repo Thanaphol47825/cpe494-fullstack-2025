@@ -3,69 +3,87 @@ class SubmissionCreate {
   constructor() {
     this.apiService = new EvalApiService();
     this.validator = new EvalValidator();
+    this.tplPath = '/eval/static/view/SubmissionForm.tpl';
   }
 
   async initialize() {
-    const container = document.getElementById('submission-demo');
+    const container = document.getElementById('submission-demo') || document.getElementById('MainContainer') || document.body;
     if (!container) return;
 
-    container.innerHTML = `
-      <div class="demo-section">
-        <h2>General Submission Management</h2>
+    // load tpl
+    const tpl = await this.fetchTpl(this.tplPath);
+    container.innerHTML = tpl.replace('{{title}}','Submit Assignment');
+
+    const form = document.getElementById('submissionForm');
+    if (form) form.addEventListener('submit', (e)=> this.handleSubmit(e));
+
+    // populate assignment select
+    await this.populateAssignmentSelect();
+
+    // Load initial submissions list
+    await this.loadAllSubmissions();
+  }
+
+  async fetchTpl(path){
+    const candidates = [];
+    try{ if (typeof RootURL !== 'undefined' && RootURL !== null) candidates.push(String(RootURL).replace(/\/$/, '') + path); }catch(e){}
+    candidates.push(path);
+
+    let lastErr = null;
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
+        return await res.text();
+      } catch (err) {
+        lastErr = err;
+        console.warn('fetchTpl attempt failed for', url, err);
+      }
+    }
+
+    console.error('All fetchTpl attempts failed. Tried:', candidates, 'lastErr:', lastErr);
+    // return a small inline fallback so UI still works
+    return `
+      <div class="card">
+        <h2>Submit Assignment</h2>
         <form id="submissionForm">
-          <label>Submission Type:</label>
-          <select name="type" required>
-            <option value="">Select Type</option>
-            <option value="assignment">Assignment</option>
-            <option value="quiz">Quiz</option>
-            <option value="project">Project</option>
-            <option value="homework">Homework</option>
-          </select>
-          <label>Title:</label>
-          <input type="text" name="title" required placeholder="Enter submission title" />
-          <label>Student ID:</label>
-          <input type="number" name="studentId" required placeholder="Enter student ID" min="1" />
-          <label>Student Name:</label>
-          <input type="text" name="studentName" required placeholder="Enter student name" />
-          <label>Submitted At:</label>
-          <input type="datetime-local" name="submittedAt" required />
-          <label>Max Score:</label>
-          <input type="number" name="maxScore" required placeholder="100" min="1" max="1000" />
-          <label>Score (optional):</label>
-          <input type="number" name="score" placeholder="Leave empty if not graded" min="0" />
-          <label>Status:</label>
-          <select name="status">
-            <option value="submitted">Submitted</option>
-            <option value="graded">Graded</option>
-            <option value="pending">Pending</option>
-            <option value="late">Late</option>
-          </select>
-          <label>
-            <input type="checkbox" name="isLate" />
-            Is Late Submission
-          </label>
-          <label>Feedback:</label>
-          <textarea name="feedback" placeholder="Enter feedback (optional)" rows="3"></textarea>
-          <input type="submit" value="Create Submission" />
+          <label>Assignment</label>
+          <div id="assignmentSelectContainer"></div>
+          <label>Student ID</label>
+          <input type="number" name="studentId" />
+          <label>Student Name</label>
+          <input type="text" name="studentName" />
+          <label>Submitted At</label>
+          <input type="datetime-local" name="submittedAt" />
+          <label>Content</label>
+          <textarea name="content"></textarea>
+          <div style="margin-top:8px"><button type="submit">Submit</button></div>
         </form>
-
-        <button id="loadAllSubmissionsBtn">Load All Submissions</button>
-
-        <h3>Latest Submission Result:</h3>
-        <div id="submissionResult"></div>
-        <h3>All Submissions:</h3>
+        <pre id="submissionResult"></pre>
         <div id="allSubmissions"></div>
       </div>
     `;
+  }
 
-    // Attach event listeners
-    document.getElementById("submissionForm")
-      .addEventListener("submit", (e) => this.handleSubmit(e));
-    document.getElementById("loadAllSubmissionsBtn")
-      .addEventListener("click", () => this.loadAllSubmissions());
-
-    // Load initial data
-    await this.loadAllSubmissions();
+  async populateAssignmentSelect(){
+    const data = await this.apiService.getAllAssignments();
+    const container = document.getElementById('assignmentSelectContainer');
+    if (!container) return;
+    // cache assignments for quick lookup when autofilling
+    this.assignments = {};
+    const select = document.createElement('select');
+    select.name = 'assignmentId';
+    select.className = 'w-full rounded-md border border-gray-300 px-3 py-2';
+    select.innerHTML = '<option value="">Please select assignment</option>';
+    if (data.isSuccess && Array.isArray(data.result)){
+      data.result.forEach(a=>{
+        const id = a.id||a.ID; const title = a.title||a.Title||`Assignment ${id}`;
+        const opt = document.createElement('option'); opt.value = id; opt.textContent = title; select.appendChild(opt);
+        this.assignments[id] = a;
+      })
+    }
+    container.innerHTML = '';
+    container.appendChild(select);
   }
 
   async handleSubmit(e) {
@@ -74,34 +92,77 @@ class SubmissionCreate {
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
-    // Add checkbox value
-    data.isLate = form.isLate.checked;
+    // coerce types
+    if (data.assignmentId) data.assignmentId = Number(data.assignmentId);
+    if (data.studentId) data.studentId = Number(data.studentId);
 
-    // Validate data
-    const validation = this.validator.validateSubmission(data);
-    if (!this.validator.showErrors(validation.errors)) {
-      return;
+    // If an assignment is selected, auto-fill submission type/title/maxScore from cached assignment
+    if (data.assignmentId) {
+      let a = this.assignments && this.assignments[data.assignmentId];
+      if (!a) {
+        // fallback: try fetching single assignment (do not block submission on failure)
+        try {
+          const res = await fetch(RootURL + `/eval/assignment/get/${data.assignmentId}`);
+          const j = await res.json();
+          if (j.isSuccess) a = j.result;
+        } catch (err) {
+          console.warn('Failed to auto-fill from assignment (fetch)', err);
+        }
+      }
+
+      if (a) {
+        data.type = 'assignment';
+        data.title = a.title || a.Title || data.title || '';
+        data.maxScore = a.maxScore || a.MaxScore || data.maxScore || 100;
+        // determine late by comparing submittedAt to assignment due date if available
+        try {
+          const due = a.dueDate || a.DueDate || a.Due || null;
+          if (due) {
+            const dueDate = new Date(due);
+            const submitted = new Date(data.submittedAt || new Date().toISOString());
+            data.isLate = submitted.getTime() > dueDate.getTime();
+          }
+        } catch (e) { console.warn('Cannot compute isLate', e); }
+      } else {
+        console.warn('Assignment data not available for autofill, continuing without assignment autofill');
+      }
     }
 
-    // Submit data
+  // set submittedAt to current time if not present
+  if (!data.submittedAt) data.submittedAt = new Date().toISOString();
+
+  // ensure status default
+  if (!data.status) data.status = 'submitted';
+
+    // Validate
+  const validation = this.validator.validateSubmission ? this.validator.validateSubmission(data) : { errors: [] };
+  if (this.validator && !this.validator.showErrors(validation.errors)) return;
+
+    // create submission
     const result = await this.apiService.createSubmission(data);
-    
     document.getElementById('submissionResult').textContent = JSON.stringify(result, null, 2);
     await this.loadAllSubmissions();
-    document.getElementById('submissionForm').reset();
+    form.reset();
   }
 
   async loadAllSubmissions() {
     const data = await this.apiService.getAllSubmissions();
-    this.ui.displayData('allSubmissions', data, (submission) => {
-      const type = submission.type || submission.Type;
-      const title = submission.title || submission.Title;
-      const studentName = submission.studentName || submission.StudentName;
-      const score = submission.score || submission.Score || 'Not graded';
-      const status = submission.status || submission.Status;
-      const maxScore = submission.maxScore || submission.MaxScore;
-      return `${type.toUpperCase()}: ${title} | Student: ${studentName} | Score: ${score}/${maxScore} | Status: ${status}`;
-    });
+    const container = document.getElementById('allSubmissions');
+    if (!container) return;
+    if (data.isSuccess && Array.isArray(data.result)){
+      container.innerHTML = '';
+      data.result.forEach(s=>{
+        const assignment = s.assignmentId || s.AssignmentID || '';
+        const student = s.studentName || s.StudentName || '';
+        const submittedAt = s.submittedAt || s.SubmittedAt || '';
+        const isLate = s.isLate || s.IsLate || false;
+        const score = s.score !== undefined ? s.score : (s.Score || 'Not graded');
+        const div = document.createElement('div');
+        div.className = 'submission-item';
+        div.innerHTML = `<strong>Assignment:${assignment}</strong> ${student} - ${submittedAt} - Score:${score} ${isLate?'<span style="color:red">LATE</span>':''}`;
+        container.appendChild(div);
+      })
+    } else container.textContent = 'Error loading submissions: ' + JSON.stringify(data);
   }
 }
 

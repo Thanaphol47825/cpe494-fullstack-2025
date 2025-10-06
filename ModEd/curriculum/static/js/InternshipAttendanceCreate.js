@@ -34,18 +34,21 @@ class InternshipAttendanceCreate {
           { Id: "check_out_time", Label: "Check-Out Time", Type: "time", Name: "check_out_time", Required: true },
           {
               Id: "check_in_status", Label: "Check-In Status", Type: "select", Name: "check_in_status",
-              Options: [
-                  { value: "true", text: "On Time" },
-                  { value: "false", text: "Late" }
-              ]
+              options: [
+                  { value: "true", label: "On Time" },
+                  { value: "false", label: "Late" }
+                ],
+                required: true,
+                default: "true"
           },
           {
               Id: "assing_work", Label: "Assigned Work", Type: "select", Name: "assing_work",
-              Options: [
-                  { value: "none", text: "None" },
-                  { value: "pending", text: "Pending" },
-                  { value: "completed", text: "Completed" }
-              ]
+              options: [
+                  { value: "none", label: "None" },
+                  { value: "pending", label: "Pending" },
+                  { value: "completed", label: "Completed" }
+                ],
+                required: true
           },
           { Id: "student_info_id", Label: "Student Info ID", Type: "number", Name: "student_info_id", Required: true, Placeholder: "Enter Student ID" }
       ];
@@ -53,14 +56,15 @@ class InternshipAttendanceCreate {
       fields.forEach(field => {
           let inputHTML = '';
 
-          if (field.Type === "select" && this.application.template && this.application.template.Select) {
-              inputHTML = Mustache.render(this.application.template.Select, field);
+          if (field.Type === "select" && this.application.template && this.application.template.SelectInput) {
+              inputHTML = Mustache.render(this.application.template.SelectInput, field);
+
           } 
           else if (this.application.template && this.application.template.Input) {
               inputHTML = Mustache.render(this.application.template.Input, field);
           }
 
-          if (inputHTML) {
+          if (inputHTML) { 
               const inputElement = this.application.create(inputHTML);
               fieldsContainer.appendChild(inputElement);
           }

@@ -22,16 +22,10 @@
       const res = await fetch('/api/modelmeta/field');
       const meta = await res.json();
 
-      const schema = (meta || []).map(f => ({
-        type:     f.type || "text",
-        name:     f.name,
-        label:    f.label || f.name,
-      }));
+      const formRender = new FormRender(engine, meta, ".Form1");
+      const form = await formRender.render();
 
-    const formRender = new FormRender(engine, schema, ".Form1");
-    const form = await formRender.render();
-
-    const container = document.getElementById("MainContainer");
+      const container = document.getElementById("MainContainer");
     });
   </script>
 </head>

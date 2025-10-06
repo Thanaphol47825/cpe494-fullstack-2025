@@ -13,48 +13,51 @@
     3.map form 
     4.formRender(engine, schema, (class or id)) 
 
+    In model file
+
+    1. add form, label (form:"-" for skip)
+    
+    type Field struct {
+        Name    string `gorm:"type:varchar(255)" json:"name" csv:"Name" form:"text" label:"name"`
+        Surname string `gorm:"type:varchar(255)" json:"surname" csv:"Surname" form:"text" label:"surname"`
+        Age     int    `gorm:"type:int" json:"age" csv:"Age" form:"number" label:"age"`
+    }
 
     <html>
 
-        <head>
-        <title>{{ title }}</title>
-        <script src="{{ RootURL }}/core/static/js/RouterLinks.js"></script>
-        <script src="{{ RootURL }}/core/static/js/TemplateEngine.js"></script>
-        <script src="{{ RootURL }}/core/static/js/mustache.min.js"></script>
-        <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
-        <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
-        <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
+    <head>
+    <title>{{ title }}</title>
+    <script src="{{ RootURL }}/core/static/js/RouterLinks.js"></script>
+    <script src="{{ RootURL }}/core/static/js/TemplateEngine.js"></script>
+    <script src="{{ RootURL }}/core/static/js/mustache.min.js"></script>
+    <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
+    <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
+    <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
+    
+    <link rel="stylesheet" type="text/css" href="{{ RootURL }}/core/static/css/Style.css" />
+    <script>
+        let RootURL = "{{ RootURL }}";
+        let modules = {{{modules}}};
 
-        <link rel="stylesheet" type="text/css" href="{{ RootURL }}/core/static/css/Style.css" />
-            <script>
-                let RootURL = "{{ RootURL }}";
-                let modules = {{{modules}}};
+        let engine = new TemplateEngine();
+        document.addEventListener("DOMContentLoaded", async () => {
+        await engine.render();
 
-                let engine = new TemplateEngine();
-                document.addEventListener("DOMContentLoaded", async () => {
-                await engine.render();
+        const res = await fetch('/api/modelmeta/field');
+        const meta = await res.json();
 
-                const res = await fetch('/api/modelmeta/field');
-                const meta = await res.json();
+        const formRender = new FormRender(engine, meta, ".Form1");
+        const form = await formRender.render();
 
-                const schema = (meta || []).map(f => ({
-                    type:     f.type || "text",
-                    name:     f.name,
-                    label:    f.label || f.name,
-                }));
+        const container = document.getElementById("MainContainer");
+        });
+    </script>
+    </head>
 
-                const formRender = new FormRender(engine, schema, ".Form1");
-                const form = await formRender.render();
-
-                const container = document.getElementById("MainContainer");
-                });
-            </script>
-        </head>
-
-        <body>
-            <h1>{{ title }}</h1>
-            <div id="MainContainer"></div>
-            <div class="Form1"></div>
-        </body>
+    <body>
+    <h1>{{ title }}</h1>
+    <div id="MainContainer"></div>
+    <div class="Form1"></div>
+    </body>
 
     </html>

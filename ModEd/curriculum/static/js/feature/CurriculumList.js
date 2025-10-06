@@ -61,7 +61,25 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
                     <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
                         Curriculum List
                     </h1>
-                        <div id="curriculum-list"></div>
+                    <div class="max-w-6xl mx-auto mb-8">
+                        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6">
+                            <div class="flex flex-col sm:flex-row gap-4 justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                                    </svg>
+                                    <span class="text-gray-700 font-medium">Curriculum Management</span>
+                                </div>
+                                <a routerLink="curriculum/curriculum/create" class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    Add New Curriculum
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="curriculum-list"></div>
                     <div style="margin-top: 20px;">
                         <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
                     </div>

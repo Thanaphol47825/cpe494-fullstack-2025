@@ -18,7 +18,13 @@ func NewApplicantController() *ApplicantController {
 }
 
 func (controller *ApplicantController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
+	modelMetaList := []*core.ModelMeta{
+		{
+            Path: "Applicant",
+            Model: &model.Applicant{},
+        },
+
+	}
 	return modelMetaList
 }
 

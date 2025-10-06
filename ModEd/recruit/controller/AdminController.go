@@ -27,7 +27,12 @@ func (controller *AdminController) RenderMain(context *fiber.Ctx) error {
 }
 
 func (controller *AdminController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
+	modelMetaList := []*core.ModelMeta{
+		{
+			Path:  "Admin",
+			Model: &model.Admin{},
+		},
+	}
 	return modelMetaList
 }
 

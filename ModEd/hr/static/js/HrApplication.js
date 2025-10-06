@@ -1116,17 +1116,17 @@ class HrApplication extends BaseModuleApplication {
   async renderResignation() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-resignation">
-        <h2>📝 Resignation Management</h2>
+        <h2>Resignation Management</h2>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
           <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-            <h4>👨‍🎓 Student Resignations</h4>
+            <h4>Student Resignations</h4>
             <p>Handle student withdrawal requests</p>
             <a routerLink="hr/resignation/student" style="color: #007bff;">Manage Student Resignations</a>
           </div>
           
           <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-            <h4>👨‍🏫 Instructor Resignations</h4>
+            <h4>Instructor Resignations</h4>
             <p>Handle instructor resignation requests</p>
             <a routerLink="hr/resignation/instructor" style="color: #007bff;">Manage Instructor Resignations</a>
           </div>
@@ -1273,7 +1273,7 @@ class HrApplication extends BaseModuleApplication {
   async renderInstructorResignation() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-instructor-resignation">
-        <h2>📝 Instructor Resignation Requests</h2>
+        <h2>Instructor Resignation Requests</h2>
         <p>Process instructor resignation requests.</p>
         
         <div style="margin-top: 20px;">
@@ -1286,7 +1286,7 @@ class HrApplication extends BaseModuleApplication {
   async renderLeave() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-leave">
-        <h2>🏖️ Leave Management</h2>
+        <h2>Leave Management</h2>
         <p>Manage student and instructor leave requests.</p>
         
         <div style="margin: 15px 0;">
@@ -1303,7 +1303,7 @@ class HrApplication extends BaseModuleApplication {
   async renderCreateLeave() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-create-leave">
-        <h2>➕ Create Leave Request</h2>
+        <h2>Create Leave Request</h2>
         <p>Submit a new leave request.</p>
         
         <div style="margin-top: 20px;">
@@ -1316,7 +1316,7 @@ class HrApplication extends BaseModuleApplication {
   async renderLeaveHistory() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-leave-history">
-        <h2>📊 Leave History</h2>
+        <h2>Leave History</h2>
         <p>Leave history functionality.</p>
         
         <div style="margin-top: 20px;">

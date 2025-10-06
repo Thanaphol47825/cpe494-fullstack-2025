@@ -140,12 +140,12 @@ class HrStudentResignationFormFeature {
       const payload = this.#collect(form);
       if (!this.#validate(payload)) return;
       const result = await this.api.createStudentResignation(payload);
-      this.#setStatus('✅ Request submitted successfully!', 'success');
+      this.#setStatus('Request submitted successfully!', 'success');
       this.#showResult(result, false);
       setTimeout(() => { form.reset(); this.#setStatus('', 'info'); }, 3000);
     } catch (error) {
       console.error('Submit error:', error);
-      this.#setStatus(`❌ ${error.message}`, 'error');
+      this.#setStatus(`${error.message}`, 'error');
       this.#showResult({ error: error.message }, true);
     }
   }
@@ -163,7 +163,7 @@ class HrStudentResignationFormFeature {
   #validate(payload) {
     const missing = ['StudentCode', 'Reason'].filter(f => !payload[f]);
     if (missing.length) {
-      this.#setStatus(`❌ Please fill required fields: ${missing.join(', ')}`, 'error');
+      this.#setStatus(`Please fill required fields: ${missing.join(', ')}`, 'error');
       return false;
     }
     return true;

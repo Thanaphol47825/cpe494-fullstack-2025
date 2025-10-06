@@ -22,7 +22,7 @@ if (typeof window !== 'undefined' && !window.HrErrorHandler) {
         this.errors.shift()
       }
       
-      console.error('🚨 HR Error:', errorEntry)
+      console.error(' HR Error:', errorEntry)
       return errorEntry
     }
 

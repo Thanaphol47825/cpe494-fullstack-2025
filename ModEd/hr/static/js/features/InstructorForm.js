@@ -19,7 +19,7 @@ class HrInstructorFormFeature {
   async #createDynamicInstructorForm() {
     try {
       // Fetch form metadata from API
-      const response = await fetch('/api/modelmeta/instructor');
+      const response = await fetch('/api/modelmeta/hr/instructors');
       const meta = await response.json();
       
       if (!meta || !Array.isArray(meta)) {

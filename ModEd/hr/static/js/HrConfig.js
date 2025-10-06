@@ -15,8 +15,8 @@ class HrConfig {
           instructors: '/hr/instructors',
           students: '/hr/students',
           metadata: {
-            instructor: '/api/modelmeta/instructor',
-            student: '/api/modelmeta/student'
+            instructor: '/api/modelmeta/hr/instructors',
+            student: '/api/modelmeta/hr/students'
           }
         }
       },

@@ -19,7 +19,7 @@ class HrStudentFormFeature {
   async #createDynamicStudentForm() {
     try {
       // Fetch form metadata from API
-      const response = await fetch('/api/modelmeta/student');
+      const response = await fetch('/api/modelmeta/hr/students');
       
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} ${response.statusText}`);

@@ -56,7 +56,20 @@ class CommonInstructorFormFeature {
     this.templateEngine.mainContainer.appendChild(element);
 
     const backBtn = document.getElementById("commonBackToMain");
-    if (backBtn) backBtn.addEventListener("click", () => this.templateEngine.render());
+    if (backBtn) backBtn.addEventListener("click", async () => {
+      location.hash = "#common";
+      console.log("Navigating back to Common Menu");
+
+      if (window.CommonAppInstance) {
+        await window.CommonAppInstance.renderMenu();
+      } else if (this.templateEngine?.mainContainer) {
+        this.templateEngine.mainContainer.innerHTML = "";
+        const msg = document.createElement("div");
+        msg.textContent = "Common Menu not found. Please reload.";
+        msg.className = "text-center text-red-600 mt-6";
+        this.templateEngine.mainContainer.appendChild(msg);
+      }
+    });
 
     const form = document.getElementById("commonInstructorForm");
     if (!form) return true;

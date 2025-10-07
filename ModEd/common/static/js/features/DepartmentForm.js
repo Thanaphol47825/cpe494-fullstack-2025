@@ -7,7 +7,6 @@ class CommonDepartmentFormFeature {
 
   async render() {
     if (!this.templateEngine || !this.templateEngine.mainContainer) {
-      console.error("❌ Template engine or main container not found");
       return false;
     }
 
@@ -47,7 +46,7 @@ class CommonDepartmentFormFeature {
 
     // ====== FORM RENDER ======
     try {
-      this.formRenderer = new FormRenderV2(this.templateEngine, {
+      this.formRenderer = new AdvanceFormRender(this.templateEngine, {
         modelPath: "common/department",
         targetSelector: "#departmentFormContainer",
         submitHandler: this.handleSubmit.bind(this),
@@ -57,10 +56,9 @@ class CommonDepartmentFormFeature {
 
       await this.formRenderer.render();
 
-      console.log("✅ Department form rendered using FormRenderV2");
+      console.log("✅ Department form rendered using AdvanceFormRender");
       return true;
     } catch (error) {
-      console.error("❌ Error rendering department form:", error);
       this.showMessage(`Failed to load form: ${error.message}`, "error");
       return false;
     }
@@ -152,4 +150,4 @@ if (typeof window !== "undefined") {
   window.CommonDepartmentFormFeature = CommonDepartmentFormFeature;
 }
 
-console.log("📦 CommonDepartmentFormFeature loaded (using FormRenderV2)");
+console.log("📦 CommonDepartmentFormFeature loaded (using AdvanceFormRender)");

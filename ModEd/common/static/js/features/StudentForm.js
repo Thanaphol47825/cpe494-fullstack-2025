@@ -47,7 +47,7 @@ class CommonStudentFormFeature {
 
     // ====== FORM RENDER ======
     try {
-      this.formRenderer = new FormRenderV2(this.templateEngine, {
+      this.formRenderer = new AdvanceFormRender(this.templateEngine, {
         modelPath: "common/student",
         targetSelector: "#studentFormContainer",
         submitHandler: this.handleSubmit.bind(this),
@@ -57,7 +57,7 @@ class CommonStudentFormFeature {
 
       await this.formRenderer.render();
 
-      console.log("✅ Student form rendered using FormRenderV2");
+      console.log("✅ Student form rendered using AdvanceFormRender");
       return true;
     } catch (error) {
       console.error("❌ Error rendering student form:", error);
@@ -169,4 +169,4 @@ if (typeof window !== "undefined") {
   window.CommonStudentFormFeature = CommonStudentFormFeature;
 }
 
-console.log("📦 CommonStudentFormFeature loaded (using FormRenderV2)");
+console.log("📦 CommonStudentFormFeature loaded (using AdvanceFormRender)");

@@ -1,4 +1,4 @@
-class TableRenderV2 {
+class AdvanceTableRender{
     constructor(application, options = {}) {
         this.application = application;
         this.schema = options.schema || null;
@@ -11,7 +11,7 @@ class TableRenderV2 {
         this.isLoading = false;
     }
 
-    // Load schema from API (same as FormRenderV2)
+    // Load schema from API (same as AdvanceFormRender)
     async loadSchema(modelPath = null) {
         const path = modelPath || this.modelPath;
         if (!path) throw new Error("Model path required");
@@ -112,7 +112,7 @@ class TableRenderV2 {
                 content: content
             }, false);
         } else {
-            // Regular data field
+            // Regular data field//ไม่มี template//
             const value = rowData[column.name];
             return new DOMObject(this.application.template.TableCell, {
                 template: false,
@@ -184,7 +184,7 @@ class TableRenderV2 {
 
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TableRenderV2;
+    module.exports = AdvanceTableRender;
 } else {
-    window.TableRenderV2 = TableRenderV2;
+    window.AdvanceTableRender = AdvanceTableRender;
 }

@@ -170,3 +170,7 @@ async loadList() {
     }
   }
 }
+
+if (typeof window !== "undefined") {
+  window.ApplicationReportList = ApplicationReportList;
+}

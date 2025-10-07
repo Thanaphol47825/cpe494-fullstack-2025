@@ -53,8 +53,6 @@ if (typeof window !== 'undefined' && !window.ClassMaterialCreate) {
                 if (data.isSuccess) {
                     alert("Class Material saved!");
                     form.reset();
-                    // Redirect to ClassMaterialList page
-                    window.location.hash = "#curriculum/classmaterial";
                 } else {
                     alert("Error: " + (data.result || "Failed to save"));
                 }

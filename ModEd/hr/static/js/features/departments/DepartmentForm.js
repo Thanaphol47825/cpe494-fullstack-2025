@@ -11,9 +11,33 @@ class HrDepartmentFormFeature {
       console.error("Template engine or main container not found");
       return false;
     }
-    this.templateEngine.mainContainer.innerHTML = "";
-    await this.#createDynamicForm();
-    return true;
+
+    // Prevent duplicate rendering
+    if (this._isRendering) {
+      return false;
+    }
+    
+    // Check if form is already rendered
+    if (this.templateEngine.mainContainer.querySelector('.department-form-container')) {
+      return false;
+    }
+    
+    // Check if there are multiple forms and clear if so
+    const existingForms = this.templateEngine.mainContainer.querySelectorAll('form');
+    if (existingForms.length > 0) {
+      this.templateEngine.mainContainer.innerHTML = "";
+    }
+    
+    this._isRendering = true;
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 10)); // Delay for race conditions
+      this.templateEngine.mainContainer.innerHTML = "";
+      await this.#createDynamicForm();
+      return true;
+    } finally {
+      this._isRendering = false;
+    }
   }
 
   async #createDynamicForm() {
@@ -135,7 +159,7 @@ class HrDepartmentFormFeature {
     `;
 
     const reset = document.createElement('button');
-    reset.type = 'reset';
+    reset.type = 'button'; // Changed from 'reset' to 'button' to prevent default form reset behavior
     reset.className = 'inline-flex items-center justify-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg';
     reset.innerHTML = `
       <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,6 +167,26 @@ class HrDepartmentFormFeature {
       </svg>
       Reset
     `;
+
+    // Add click handler for reset button
+    reset.addEventListener('click', () => {
+      this.#status('✓ Form reset', 'info');
+      this.#hideResult();
+      
+      // Clear all form fields manually
+      const inputs = form.querySelectorAll('input, select, textarea');
+      inputs.forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+      });
+      
+      // Focus first field
+      const firstField = form.querySelector('input[name="name"]');
+      if (firstField) firstField.focus();
+    });
 
     actions.appendChild(submit);
     actions.appendChild(reset);
@@ -157,10 +201,7 @@ class HrDepartmentFormFeature {
       e.preventDefault();
       this.#submit(form);
     });
-    form.addEventListener('reset', () => {
-      this.#status('✓ Form reset', 'info');
-      this.#hideResult();
-    });
+    // Reset handler is now handled by the reset button's click event
 
     const first = form.querySelector('input[name="name"]');
     if (first) setTimeout(() => first.focus(), 100);

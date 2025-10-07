@@ -33,10 +33,17 @@ if (typeof window !== 'undefined') {
 // Prevent duplicate declaration
 if (typeof window !== 'undefined' && window.HrApplication) {
   // Skip re-declaration silently
+} else if (typeof window !== 'undefined' && window.hrApp) {
+  // Skip if instance already exists
 } else {
 class HrApplication extends BaseModuleApplication {
   constructor(templateEngine) {
     super(templateEngine)
+    
+    // Prevent duplicate initialization
+    if (this.isInitialized) {
+      return;
+    }
     
     // Initialize HR-specific properties
     this.moduleName = 'hr'
@@ -45,6 +52,9 @@ class HrApplication extends BaseModuleApplication {
     this.rootURL = window.__ROOT_URL__ || ""
     
     // Make this instance globally accessible for onclick handlers
+    if (window.hrApp) {
+      return window.hrApp;
+    }
     window.hrApp = this
     
     // Set the base path for sub-modules
@@ -66,6 +76,7 @@ class HrApplication extends BaseModuleApplication {
     this.setupRoutes()
     this.setupErrorHandling()
     
+    this.isInitialized = true
     this.logger.info(`HrApplication v${this.moduleVersion} initialized`)
   }
 
@@ -92,73 +103,73 @@ class HrApplication extends BaseModuleApplication {
       
       // Load StudentForm feature
       if (!window.HrStudentFormFeature) {
-        await this.loadScript('/hr/static/js/features/StudentForm.js')
+        await this.loadScript('/hr/static/js/features/students/StudentForm.js?v=' + Date.now())
       }
       
       // Load InstructorForm feature
       if (!window.HrInstructorFormFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorForm.js')
+        await this.loadScript('/hr/static/js/features/instructors/InstructorForm.js?v=' + Date.now())
       }
       
       // Load StudentResignationForm feature
       if (!window.HrStudentResignationFormFeature) {
-        await this.loadScript('/hr/static/js/features/StudentResignationForm.js')
+        await this.loadScript('/hr/static/js/features/resignations/StudentResignationForm.js?v=' + Date.now())
       }
       
       // Load StudentResignationList feature
       if (!window.HrStudentResignationListFeature) {
-        await this.loadScript('/hr/static/js/features/StudentResignationList.js')
+        await this.loadScript('/hr/static/js/features/resignations/StudentResignationList.js?v=' + Date.now())
       }
       
       // Load InstructorResignationForm feature
       if (!window.HrInstructorResignationFormFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorResignationForm.js')
+        await this.loadScript('/hr/static/js/features/resignations/InstructorResignationForm.js?v=' + Date.now())
       }
       
       // Load InstructorResignationList feature
       if (!window.HrInstructorResignationListFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorResignationList.js')
+        await this.loadScript('/hr/static/js/features/resignations/InstructorResignationList.js?v=' + Date.now())
       }
       
       // Load StudentList feature
       if (!window.HrStudentListFeature) {
-        await this.loadScript('/hr/static/js/features/StudentList.js')
+        await this.loadScript('/hr/static/js/features/students/StudentList.js?v=' + Date.now())
       }
       
       // Load InstructorList feature
       if (!window.HrInstructorListFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorList.js')
+        await this.loadScript('/hr/static/js/features/instructors/InstructorList.js?v=' + Date.now())
       }
       
       // Load StudentEdit feature
       if (!window.HrStudentEditFeature) {
-        await this.loadScript('/hr/static/js/features/StudentEdit.js')
+        await this.loadScript('/hr/static/js/features/students/StudentEdit.js?v=' + Date.now())
       }
       
       // Load InstructorEdit feature
       if (!window.HrInstructorEditFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorEdit.js')
+        await this.loadScript('/hr/static/js/features/instructors/InstructorEdit.js?v=' + Date.now())
       }
       
       // Load Leave Management features
       if (!window.HrStudentLeaveFormFeature) {
-        await this.loadScript('/hr/static/js/features/StudentLeaveForm.js')
+        await this.loadScript('/hr/static/js/features/leaveManagement/StudentLeaveForm.js?v=' + Date.now())
       }
       
       if (!window.HrInstructorLeaveFormFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorLeaveForm.js')
+        await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveForm.js?v=' + Date.now())
       }
       
       if (!window.HrStudentLeaveListFeature) {
-        await this.loadScript('/hr/static/js/features/StudentLeaveList.js')
+        await this.loadScript('/hr/static/js/features/leaveManagement/StudentLeaveList.js?v=' + Date.now())
       }
       
       if (!window.HrInstructorLeaveListFeature) {
-        await this.loadScript('/hr/static/js/features/InstructorLeaveList.js')
+        await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveList.js?v=' + Date.now())
       }
       
       if (!window.HrLeaveHistoryFeature) {
-        await this.loadScript('/hr/static/js/features/LeaveHistory.js')
+        await this.loadScript('/hr/static/js/features/leaveManagement/LeaveHistory.js?v=' + Date.now())
       }
       
       this._loadingFeatures = false
@@ -874,8 +885,75 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderCreateInstructor() {
-    // Show loading state first
-    this.templateEngine.mainContainer.innerHTML = `
+    // Prevent duplicate rendering
+    if (this._renderingInstructorForm) {
+      return;
+    }
+    
+    // Check if form is already rendered
+    if (this.templateEngine.mainContainer.querySelector('.instructor-form-container')) {
+      return;
+    }
+    
+    // Check if there are multiple forms
+    const existingForms = this.templateEngine.mainContainer.querySelectorAll('form');
+    if (existingForms.length > 0) {
+      this.templateEngine.mainContainer.innerHTML = "";
+    }
+    
+    // Check if there are multiple "Add New Instructor" headers
+    const existingHeaders = this.templateEngine.mainContainer.querySelectorAll('h1');
+    if (existingHeaders.length > 1) {
+      this.templateEngine.mainContainer.innerHTML = "";
+    }
+    
+    // Check if there are multiple "Add New Instructor" text
+    const addNewInstructorTexts = this.templateEngine.mainContainer.querySelectorAll('*');
+    let addNewInstructorCount = 0;
+    addNewInstructorTexts.forEach(el => {
+      if (el.textContent && el.textContent.includes('Add New Instructor')) {
+        addNewInstructorCount++;
+      }
+    });
+    if (addNewInstructorCount > 1) {
+      this.templateEngine.mainContainer.innerHTML = "";
+    }
+    
+    // Check if there are multiple "Instructor Information" text
+    const instructorInfoTexts = this.templateEngine.mainContainer.querySelectorAll('*');
+    let instructorInfoCount = 0;
+    instructorInfoTexts.forEach(el => {
+      if (el.textContent && el.textContent.includes('Instructor Information')) {
+        instructorInfoCount++;
+      }
+    });
+    if (instructorInfoCount > 1) {
+      this.templateEngine.mainContainer.innerHTML = "";
+    }
+    
+    // Check if there are multiple "Create a new instructor record" text
+    const createInstructorTexts = this.templateEngine.mainContainer.querySelectorAll('*');
+    let createInstructorCount = 0;
+    createInstructorTexts.forEach(el => {
+      if (el.textContent && el.textContent.includes('Create a new instructor record')) {
+        createInstructorCount++;
+      }
+    });
+    if (createInstructorCount > 1) {
+      this.templateEngine.mainContainer.innerHTML = "";
+    }
+    
+    this._renderingInstructorForm = true;
+    
+    // Clear mainContainer first to prevent duplicate content
+    this.templateEngine.mainContainer.innerHTML = "";
+    
+    // Add a small delay to prevent race conditions
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
+    try {
+      // Show loading state first
+      this.templateEngine.mainContainer.innerHTML = `
       <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center mb-12">
@@ -965,6 +1043,9 @@ class HrApplication extends BaseModuleApplication {
           </div>
         </div>
       `;
+    }
+    } finally {
+      this._renderingInstructorForm = false;
     }
   }
 
@@ -1593,7 +1674,7 @@ class HrApplication extends BaseModuleApplication {
 
     try {
       if (!window.HrDepartmentListFeature) {
-        await this.loadScript('/hr/static/js/features/DepartmentList.js')
+        await this.loadScript('/hr/static/js/features/departments/DepartmentList.js?v=' + Date.now())
       }
       const feature = new window.HrDepartmentListFeature(this.templateEngine, this.rootURL)
       window.departmentList = feature
@@ -1624,7 +1705,7 @@ class HrApplication extends BaseModuleApplication {
 
     try {
       if (!window.HrDepartmentFormFeature) {
-        await this.loadScript('/hr/static/js/features/DepartmentForm.js')
+        await this.loadScript('/hr/static/js/features/departments/DepartmentForm.js?v=' + Date.now())
       }
       const feature = new window.HrDepartmentFormFeature(this.templateEngine, this.rootURL)
       await feature.render()
@@ -1655,7 +1736,7 @@ class HrApplication extends BaseModuleApplication {
 
     try {
       if (!window.HrDepartmentEditFeature) {
-        await this.loadScript('/hr/static/js/features/DepartmentEdit.js')
+        await this.loadScript('/hr/static/js/features/departments/DepartmentEdit.js?v=' + Date.now())
       }
       const feature = new window.HrDepartmentEditFeature(this.templateEngine, this.rootURL, name)
       await feature.render()

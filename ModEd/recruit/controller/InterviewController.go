@@ -10,6 +10,12 @@ import (
 	"github.com/hoisie/mustache"
 )
 
+const (
+	ErrCannotParseJSON      = "Cannot parse JSON"
+	ErrInterviewNotFound    = "Interview not found"
+	ErrWhereIDAndInstructor = "id = ? AND instructor_id = ?"
+)
+
 type InterviewController struct {
 	application *core.ModEdApplication
 }
@@ -61,27 +67,23 @@ func (controller *InterviewController) GetRoute() []*core.RouteItem {
 		Handler: controller.CreateInterview,
 		Method:  core.POST,
 	})
-
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/GetInterviews",
 		Handler: controller.GetAllInterviews,
 		Method:  core.GET,
 	})
-
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/GetInterview/:id",
 		Handler: controller.GetInterviewByID,
 		Method:  core.GET,
 	})
-
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/UpdateInterview/:id",
+		Route:   "/recruit/UpdateInterview",
 		Handler: controller.UpdateInterview,
 		Method:  core.POST,
 	})
-
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/DeleteInterview/:id",
+		Route:   "/recruit/DeleteInterview",
 		Handler: controller.DeleteInterview,
 		Method:  core.POST,
 	})
@@ -136,46 +138,36 @@ func (controller *InterviewController) CreateInterview(context *fiber.Ctx) error
 	interview := new(model.Interview)
 
 	if err := context.BodyParser(interview); err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "cannot parse JSON",
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: ErrCannotParseJSON,
 		})
 	}
-
-	// DEBUG: Print what we received
-	println("=== DEBUG CreateInterview ===")
-	println("InstructorID:", interview.InstructorID)
-	println("ApplicationReportID:", interview.ApplicationReportID)
-	println("InterviewStatus:", string(interview.InterviewStatus))
-	println("TotalScore:", interview.TotalScore)
-	println("============================")
 
 	if err := controller.application.DB.Create(interview).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    interview,
+	return core.SendResponse(context, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: interview,
 	})
 }
 
 func (controller *InterviewController) GetAllInterviews(context *fiber.Ctx) error {
 	var interviews []*model.Interview
 
-	if err := controller.application.DB.Find(&interviews).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+	if err := controller.application.DB.
+		Preload("Instructor").
+		Preload("ApplicationReport").
+		Find(&interviews).Error; err != nil {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    interviews,
+	return core.SendResponse(context, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: interviews,
 	})
 }
 
@@ -183,88 +175,84 @@ func (controller *InterviewController) GetInterviewByID(context *fiber.Ctx) erro
 	id := context.Params("id")
 	var interview model.Interview
 
-	if err := controller.application.DB.Preload("Instructor").
+	if err := controller.application.DB.
+		Preload("Instructor").
 		Preload("ApplicationReport").
 		First(&interview, id).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "Interview not found",
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusNotFound, Message: ErrInterviewNotFound,
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    interview,
+	return core.SendResponse(context, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: interview,
 	})
 }
 
 func (controller *InterviewController) UpdateInterview(context *fiber.Ctx) error {
-	id := context.Params("id")
-	var existingInterview model.Interview
-
-	if err := controller.application.DB.First(&existingInterview, id).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "Interview not found",
+	interview := new(model.Interview)
+	if err := context.BodyParser(interview); err != nil {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: ErrCannotParseJSON,
 		})
 	}
 
-	var updateData model.Interview
-	if err := context.BodyParser(&updateData); err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "cannot parse JSON",
+	if interview.ID == 0 {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Missing ID",
 		})
 	}
 
-	if updateData.InstructorID != 0 {
-		existingInterview.InstructorID = updateData.InstructorID
-	}
-	if updateData.ApplicationReportID != 0 {
-		existingInterview.ApplicationReportID = updateData.ApplicationReportID
-	}
-	if !updateData.ScheduledAppointment.IsZero() {
-		existingInterview.ScheduledAppointment = updateData.ScheduledAppointment
-	}
-	if updateData.CriteriaScores != "" {
-		existingInterview.CriteriaScores = updateData.CriteriaScores
-	}
-	if updateData.TotalScore != 0 {
-		existingInterview.TotalScore = updateData.TotalScore
-	}
-	if !updateData.EvaluatedAt.IsZero() {
-		existingInterview.EvaluatedAt = updateData.EvaluatedAt
-	}
-	if updateData.InterviewStatus != "" {
-		existingInterview.InterviewStatus = updateData.InterviewStatus
-	}
-
-	if err := controller.application.DB.Save(&existingInterview).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+	var existing model.Interview
+	if err := controller.application.DB.First(&existing, interview.ID).Error; err != nil {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusNotFound, Message: ErrInterviewNotFound,
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    existingInterview,
+	updateData := map[string]interface{}{
+		"instructor_id":         interview.InstructorID,
+		"application_report_id": interview.ApplicationReportID,
+		"scheduled_appointment": interview.ScheduledAppointment,
+		"criteria_scores":       interview.CriteriaScores,
+		"total_score":           interview.TotalScore,
+		"evaluated_at":          interview.EvaluatedAt,
+		"interview_status":      interview.InterviewStatus,
+	}
+
+	if err := controller.application.DB.Model(&existing).Updates(updateData).Error; err != nil {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
+		})
+	}
+
+	return core.SendResponse(context, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: existing,
 	})
 }
 
 func (controller *InterviewController) DeleteInterview(context *fiber.Ctx) error {
-	id := context.Params("id")
-
-	if err := controller.application.DB.Delete(&model.Interview{}, id).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    err.Error(),
+	interview := new(model.Interview)
+	if err := context.BodyParser(interview); err != nil {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: ErrCannotParseJSON,
 		})
 	}
 
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    "Interview deleted successfully",
+	if interview.ID == 0 {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Missing ID",
+		})
+	}
+
+	if err := controller.application.DB.Delete(&model.Interview{}, interview.ID).Error; err != nil {
+		return core.SendResponse(context, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
+		})
+	}
+
+	return core.SendResponse(context, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: "Interview deleted successfully",
 	})
 }
 
@@ -357,13 +345,13 @@ func (controller *InterviewController) GetMyInterviewByID(context *fiber.Ctx) er
 	id := context.Params("id")
 	var interview model.Interview
 	if err := controller.application.DB.
-		Where("id = ? AND instructor_id = ?", id, instructorID).
+		Where(ErrWhereIDAndInstructor, id, instructorID).
 		Preload("Instructor").
 		Preload("ApplicationReport").
 		First(&interview).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "Interview not found",
+			"result":    ErrInterviewNotFound,
 		})
 	}
 	return context.JSON(fiber.Map{
@@ -384,10 +372,10 @@ func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) err
 	id := context.Params("id")
 
 	var existing model.Interview
-	if err := controller.application.DB.Where("id = ? AND instructor_id = ?", id, instructorID).First(&existing).Error; err != nil {
+	if err := controller.application.DB.Where(ErrWhereIDAndInstructor, id, instructorID).First(&existing).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "Interview not found",
+			"result":    ErrInterviewNotFound,
 		})
 	}
 
@@ -443,10 +431,10 @@ func (controller *InterviewController) DeleteMyInterview(context *fiber.Ctx) err
 
 	// ensure ownership
 	var interview model.Interview
-	if err := controller.application.DB.Where("id = ? AND instructor_id = ?", id, instructorID).First(&interview).Error; err != nil {
+	if err := controller.application.DB.Where(ErrWhereIDAndInstructor, id, instructorID).First(&interview).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "Interview not found",
+			"result":    ErrInterviewNotFound,
 		})
 	}
 

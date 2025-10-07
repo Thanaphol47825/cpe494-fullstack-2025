@@ -1,256 +1,220 @@
 class InterviewCreate {
-  constructor(application) {
-    this.application = application;
+  constructor(engine, rootURL, interviewId = null) {
+    this.engine = engine;
+    this.rootURL = rootURL || window.RootURL || window.__ROOT_URL__ || "";
+    this.interviewId = interviewId;
   }
 
   async render() {
-    console.log("InterviewCreate: render()");
+    if (!this.engine?.mainContainer) return false;
+    this.engine.mainContainer.innerHTML = "";
+    try {
+      await this.#renderFormPage();
+      if (this.interviewId) await this.#loadExistingData(this.interviewId);
+      return true;
+    } catch (err) {
+      console.error(err);
+      this.#showError("Failed to initialize Interview form: " + err.message);
+      return false;
+    }
+  }
 
-    const fields = [
-      { label: "Instructor ID", name: "instructor_id", type: "number", required: true, value: "1" },
-      { label: "Application Report ID", name: "application_report_id", type: "number", required: true, value: "1" },
-      { label: "Scheduled Appointment", name: "scheduled_appointment", type: "datetime-local", required: true, colSpan: "md:col-span-2", value: "2025-01-20T14:00" },
-      { label: "Criteria Scores", name: "criteria_scores", type: "textarea", colSpan: "md:col-span-2", placeholder: '{"communication": 8.5, "technical": 9.0, "motivation": 8.0}', value: '{"communication": 8.5, "technical": 9.0, "motivation": 8.0}' },
-      { label: "Total Score", name: "total_score", type: "number", step: "0.1", value: "8.5" },
-      { label: "Evaluated At", name: "evaluated_at", type: "datetime-local" },
-      { 
-        label: "Interview Status", 
-        name: "interview_status", 
-        type: "select", 
-        colSpan: "md:col-span-2",
-        options: [
-          { value: "", text: "Select Status" },
-          { value: "Scheduled", text: "Scheduled" },
-          { value: "In Progress", text: "In Progress" },
-          { value: "Evaluated", text: "Evaluated" },
-          { value: "Accepted", text: "Accepted" },
-          { value: "Rejected", text: "Rejected" },
-          { value: "Cancelled", text: "Cancelled" }
-        ]
-      }
-    ];
+  async #renderFormPage() {
+    const pageHTML = `
+      <div class="min-h-screen bg-gray-50 py-10 px-6">
+        <div class="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl p-8">
+          <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">
+              ${this.interviewId ? "Edit Interview" : "Create Interview"}
+            </h1>
+            <button id="btnBack"
+              class="text-gray-700 bg-gray-100 px-3 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
+              ← Back
+            </button>
+          </div>
 
-    const formTpl = `
-      <div class="max-w-3xl mx-auto py-10 px-4">
-        <header class="mb-8">
-          <h1 class="text-3xl font-bold tracking-tight">Create Interview</h1>
-        </header>
-        <section class="bg-white rounded-2xl shadow p-6">
-          <form id="InterviewForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            ${fields.map(f => {
-              if (f.type === 'textarea') {
-                return `
-                  <div class="${f.colSpan || ''}">
-                    <label class="block text-sm font-medium mb-1">
-                      ${f.label}${f.required ? '<span class="text-red-500">*</span>' : ''}
-                    </label>
-                    <textarea name="${f.name}" 
-                             ${f.required ? 'required' : ''} 
-                             rows="4"
-                             placeholder="${f.placeholder || ''}"
-                             class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">${f.value || ''}</textarea>
-                    ${f.name === 'criteria_scores' ? '<p class="text-sm text-gray-500 mt-1">Enter JSON format for criteria scores</p>' : ''}
-                  </div>
-                `;
-              } else if (f.type === 'select') {
-                return `
-                  <div class="${f.colSpan || ''}">
-                    <label class="block text-sm font-medium mb-1">
-                      ${f.label}${f.required ? '<span class="text-red-500">*</span>' : ''}
-                    </label>
-                    <select name="${f.name}" 
-                           ${f.required ? 'required' : ''} 
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                      ${f.options.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('')}
-                    </select>
-                  </div>
-                `;
-              } else {
-                return `
-                  <div class="${f.colSpan || ''}">
-                    <label class="block text-sm font-medium mb-1">
-                      ${f.label}${f.required ? '<span class="text-red-500">*</span>' : ''}
-                    </label>
-                    <input type="${f.type}" 
-                           name="${f.name}" 
-                           ${f.required ? 'required' : ''} 
-                           ${f.step ? `step="${f.step}"` : ''}
-                           ${f.value ? `value="${f.value}"` : ''}
-                           ${f.placeholder ? `placeholder="${f.placeholder}"` : ''}
-                           class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-                  </div>
-                `;
-              }
-            }).join('')}
+          <form id="interviewForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium mb-1">Instructor ID <span class="text-red-500">*</span></label>
+              <input name="instructor_id" type="number" required
+                     class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500" />
+            </div>
 
-            <div class="md:col-span-2 flex items-center gap-3 pt-2">
-              <button type="submit" 
-                class="inline-flex items-center rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                Save Interview
+            <div>
+              <label class="block text-sm font-medium mb-1">Application Report ID <span class="text-red-500">*</span></label>
+              <input name="application_report_id" type="number" required
+                     class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1">Scheduled Appointment <span class="text-red-500">*</span></label>
+              <input name="scheduled_appointment" type="datetime-local" required
+                     class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1">Interview Status</label>
+              <select name="interview_status"
+                      class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none">
+                <option value="">-- Select Status --</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Evaluated">Evaluated</option>
+                <option value="Accepted">Accepted</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Total Score</label>
+              <input name="total_score" type="number" step="0.1"
+                     class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium mb-1">Evaluated At</label>
+              <input name="evaluated_at" type="datetime-local"
+                     class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none" />
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium mb-1">Criteria Scores (JSON)</label>
+              <textarea name="criteria_scores" rows="4" placeholder='{"communication": 8.5, "technical": 9.0, "motivation": 8.0}'
+                        class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none"></textarea>
+              <p class="text-sm text-gray-500 mt-1">Enter JSON format for criteria scores</p>
+            </div>
+
+            <div class="md:col-span-2 flex justify-end items-center gap-3 pt-4">
+              <button type="button" id="btnCancel"
+                      class="rounded-xl border px-4 py-2 hover:bg-gray-50">Cancel</button>
+              <button type="reset"
+                      class="rounded-xl border px-4 py-2 hover:bg-gray-50">Reset</button>
+              <button type="submit"
+                      class="rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-700">
+                ${this.interviewId ? "Update" : "Save"}
               </button>
-              <button type="button" id="setupTestData" 
-                class="inline-flex items-center rounded-xl bg-green-600 text-white px-4 py-2 font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
-                Setup Test Data
-              </button>
-              <button type="reset" 
-                class="inline-flex items-center rounded-xl border px-4 py-2 font-medium hover:bg-gray-50">
-                Reset
-              </button>
-              <span id="formStatus" class="text-sm"></span>
+              <span id="formStatus" class="text-sm ml-4"></span>
             </div>
           </form>
-          <div id="resultBox" class="hidden mt-6 rounded-xl border bg-white p-4 text-sm"></div>
-        </section>
+
+          <div id="resultBox" class="hidden mt-6 border bg-white p-4 rounded-lg text-sm">
+            <pre id="resultContent" class="whitespace-pre-wrap text-gray-800"></pre>
+          </div>
+        </div>
       </div>
     `;
 
-    this.application.mainContainer.innerHTML = formTpl;
+    const pageEl = this.engine.create(pageHTML);
+    this.engine.mainContainer.appendChild(pageEl);
 
-    document
-      .getElementById("InterviewForm")
-      .addEventListener("submit", (e) => this.submit(e));
-    
-    document
-      .getElementById("setupTestData")
-      .addEventListener("click", (e) => this.setupTestData(e));
+    document.getElementById("interviewForm")?.addEventListener("submit", (e) => this.#submit(e));
+    document.getElementById("btnCancel")?.addEventListener("click", () => this.#goBack());
+    document.getElementById("btnBack")?.addEventListener("click", () => this.#goBack());
   }
 
-  async submit(e) {
+  async #loadExistingData(id) {
+    try {
+      const res = await fetch(`${this.rootURL}/recruit/GetInterview/${id}`);
+      const data = await res.json();
+      if (data.isSuccess && data.result) {
+        const formEl = document.getElementById("interviewForm");
+        const interview = data.result;
+        
+        // Set form values
+        if (formEl.elements["instructor_id"]) formEl.elements["instructor_id"].value = interview.instructor_id || "";
+        if (formEl.elements["application_report_id"]) formEl.elements["application_report_id"].value = interview.application_report_id || "";
+        if (formEl.elements["interview_status"]) formEl.elements["interview_status"].value = interview.interview_status || "";
+        if (formEl.elements["total_score"]) formEl.elements["total_score"].value = interview.total_score || "";
+        if (formEl.elements["criteria_scores"]) formEl.elements["criteria_scores"].value = interview.criteria_scores || "";
+        
+        // Handle datetime fields
+        if (interview.scheduled_appointment) {
+          const scheduledDate = new Date(interview.scheduled_appointment).toISOString().slice(0, 16);
+          if (formEl.elements["scheduled_appointment"]) formEl.elements["scheduled_appointment"].value = scheduledDate;
+        }
+        
+        if (interview.evaluated_at) {
+          const evaluatedDate = new Date(interview.evaluated_at).toISOString().slice(0, 16);
+          if (formEl.elements["evaluated_at"]) formEl.elements["evaluated_at"].value = evaluatedDate;
+        }
+      }
+    } catch (err) {
+      console.error("Error loading interview:", err);
+    }
+  }
+
+  async #submit(e) {
     e.preventDefault();
-    
     const form = e.target;
-    console.log('Form:', form); 
-    console.log('Form elements:', form.elements);
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    if (this.interviewId) data.id = Number(this.interviewId);
     
-    const formData = new FormData(form);
-    const data = {};
-    
-    console.log('FormData entries:'); 
-    for (let [key, value] of formData.entries()) {
-      console.log(`  ${key} = "${value}"`); 
-      if (key === 'instructor_id' || key === 'application_report_id') {
-        const parsedValue = parseInt(value);
-        if (isNaN(parsedValue) || parsedValue === 0) {
-          const statusEl = document.getElementById('formStatus');
-          statusEl.textContent = `Please enter a valid ${key.replace('_', ' ')}`;
-          statusEl.className = 'text-sm text-red-600';
-          return;
-        }
-        data[key] = parsedValue;
-      } else if (key === 'total_score') {
-        data[key] = parseFloat(value) || 0;
-      } else if (key === 'criteria_scores') {
-       
-        data[key] = value || '';
-      } else if (key === 'scheduled_appointment' || key === 'evaluated_at') {
-        if (value) {
-          data[key] = new Date(value).toISOString();
-        }
-      } else {
-        data[key] = value;
-      }
+    for (const key of ["instructor_id", "application_report_id"]) {
+      if (data[key]) data[key] = Number(data[key]);
     }
-    
-   
-    if (data.criteria_scores && typeof data.criteria_scores === 'object') {
-      data.criteria_scores = JSON.stringify(data.criteria_scores);
+
+    if (data.total_score) data.total_score = parseFloat(data.total_score) || 0;
+
+    // Handle datetime fields
+    if (data.scheduled_appointment) {
+      data.scheduled_appointment = new Date(data.scheduled_appointment).toISOString();
     }
-    
-    console.log('Final data object:', data);
-    
-    
-    if (!data.instructor_id || !data.application_report_id) {
-      const statusEl = document.getElementById('formStatus');
-      statusEl.textContent = 'Instructor ID and Application Report ID are required';
-      statusEl.className = 'text-sm text-red-600';
-      return;
+    if (data.evaluated_at) {
+      data.evaluated_at = new Date(data.evaluated_at).toISOString();
     }
-    
-    const statusEl = document.getElementById('formStatus');
-    const resultBox = document.getElementById('resultBox');
-    
-    statusEl.textContent = 'Submitting...';
-    statusEl.className = 'text-sm text-gray-500';
-    
+
+    if (!data.interview_status) delete data.interview_status;
+    if (!data.criteria_scores) delete data.criteria_scores;
+
+    const url = this.rootURL + (
+      this.interviewId
+        ? "/recruit/UpdateInterview"
+        : "/recruit/CreateInterview"
+    );
+
+    this.#setStatus(this.interviewId ? "Updating..." : "Submitting...", "text-gray-600");
+
     try {
-      const response = await fetch((window.__ROOT_URL__ || 'http://localhost:8080') + '/recruit/CreateInterview', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data)
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
-      
-      const result = await response.json();
-      
-      if (result.isSuccess) {
-        statusEl.textContent = 'Interview created successfully!';
-        statusEl.className = 'text-sm text-green-600';
-        
-        resultBox.className = 'mt-6 rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-800';
-        resultBox.textContent = JSON.stringify(result.result, null, 2);
-        resultBox.classList.remove('hidden');
-        
-        form.reset();
+
+      const result = await resp.json().catch(() => ({}));
+
+      if (result?.isSuccess) {
+        this.#setStatus(this.interviewId ? "✅ Updated successfully!" : "✅ Saved successfully!", "text-green-600");
+        setTimeout(() => this.#goBack(), 1000);
       } else {
-        statusEl.textContent = 'Failed to create interview';
-        statusEl.className = 'text-sm text-red-600';
-        
-        resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';
-        resultBox.textContent = result.result || 'Unknown error';
-        resultBox.classList.remove('hidden');
+        this.#setStatus("❌ Operation failed: " + (result.message || ""), "text-red-600");
       }
-    } catch (error) {
-      statusEl.textContent = 'Error submitting form';
-      statusEl.className = 'text-sm text-red-600';
-      
-      resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';
-      resultBox.textContent = error.toString();
-      resultBox.classList.remove('hidden');
+    } catch (err) {
+      console.error("Error while submitting:", err);
+      this.#setStatus("Error: " + err.message, "text-red-600");
     }
   }
 
-  async setupTestData(e) {
-    e.preventDefault();
-    
-    const statusEl = document.getElementById('formStatus');
-    const resultBox = document.getElementById('resultBox');
-    
-    statusEl.textContent = 'Setting up test data...';
-    statusEl.className = 'text-sm text-gray-500';
-    
-    try {
-      const response = await fetch((window.__ROOT_URL__ || 'http://localhost:8080') + '/recruit/SetupTestData', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const result = await response.json();
-      
-      if (result.isSuccess) {
-        statusEl.textContent = 'Test data created successfully!';
-        statusEl.className = 'text-sm text-green-600';
-        
-        resultBox.className = 'mt-6 rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-800';
-        resultBox.textContent = result.result;
-        resultBox.classList.remove('hidden');
-      } else {
-        statusEl.textContent = 'Failed to setup test data';
-        statusEl.className = 'text-sm text-red-600';
-        
-        resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';
-        resultBox.textContent = result.result || 'Unknown error';
-        resultBox.classList.remove('hidden');
-      }
-    } catch (error) {
-      statusEl.textContent = 'Error setting up test data';
-      statusEl.className = 'text-sm text-red-600';
-      
-      resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';
-      resultBox.textContent = error.toString();
-      resultBox.classList.remove('hidden');
-    }
+  async #goBack() {
+    await this.engine.fetchModule("/recruit/static/js/InterviewList.js");
+    const list = new InterviewList(this.engine, this.rootURL);
+    this.engine.mainContainer.innerHTML = "";
+    await list.render();
+  }
+
+  #setStatus(text, cls) {
+    const el = document.getElementById("formStatus");
+    if (!el) return;
+    el.textContent = text || "";
+    el.className = "text-sm font-medium " + (cls || "text-gray-500");
+  }
+
+  #showError(msg) {
+    const div = document.createElement("div");
+    div.className = "max-w-3xl mx-auto my-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800";
+    div.textContent = msg;
+    (this.engine?.mainContainer || document.body).appendChild(div);
   }
 }

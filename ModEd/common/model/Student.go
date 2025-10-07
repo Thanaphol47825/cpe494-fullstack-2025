@@ -11,12 +11,12 @@ import (
 
 type Student struct {
 	core.BaseModel
-	StudentCode string         `gorm:"not null;unique" csv:"student_code" json:"student_code" form:"label:Student Code;placeholder:Enter student code;type:text;format:text"`
-	FirstName   string         `csv:"first_name" json:"first_name" form:"label:First Name;placeholder:Enter first name;type:text;format:text"`
-	LastName    string         `csv:"last_name" json:"last_name" form:"label:Last Name;placeholder:Enter last name;type:text;format:text"`
-	Email       string         `csv:"email" json:"email" form:"label:Email Address;placeholder:Enter email address;type:email;format:email"`
-	StartDate   time.Time      `csv:"start_date" json:"start_date" form:"label:Start Date;type:date;format:date"`
-	BirthDate   time.Time      `csv:"birth_date" json:"birth_date" form:"label:Birth Date;type:date;format:date"`
+	StudentCode string         `gorm:"not null;unique" csv:"student_code" json:"student_code" form:"label:Student Code;placeholder:Enter student code;type:text;format:text;required:true"`
+	FirstName   string         `csv:"first_name" json:"first_name" form:"label:First Name;placeholder:Enter first name;type:text;format:text;required:true"`
+	LastName    string         `csv:"last_name" json:"last_name" form:"label:Last Name;placeholder:Enter last name;type:text;format:text;required:true"`
+	Email       string         `csv:"email" json:"email" form:"label:Email Address;placeholder:Enter email address;type:email;format:email;required:true"`
+	StartDate   time.Time      `csv:"start_date" json:"start_date" form:"label:Start Date;type:date;format:date;required:true"`
+	BirthDate   time.Time      `csv:"birth_date" json:"birth_date" form:"label:Birth Date;type:date;format:date;required:true"`
 	Program     ProgramType    `csv:"program" json:"program" form:"label:Program;type:select;fk:ProgramType;format:text"`
 	Department  string         `csv:"department" json:"department" form:"label:Department;placeholder:Enter department;type:text;format:text"`
 	Status      *StudentStatus `csv:"status" json:"status" form:"label:Status;type:select;fk:StudentStatus;format:text"`

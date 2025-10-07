@@ -53,6 +53,7 @@ func BuildFormSchema(db *gorm.DB, model interface{}) ([]FormField, error) {
 			Placeholder: getFormValue(formConfig, "placeholder", ""),
 			Type:        getFormValue(formConfig, "type", defaultInputType(fieldTypeName)),
 			Format:      getFormValue(formConfig, "format", ""),
+			Required:    getFormValue(formConfig, "required", "") == "true",
 		}
 
 		// Handle select fields with foreign key relationships
@@ -61,13 +62,7 @@ func BuildFormSchema(db *gorm.DB, model interface{}) ([]FormField, error) {
 			if fkModel != "" {
 				data, err := buildSelectData(db, fkModel, formConfig)
 				if err == nil {
-					fmt.Println("fkModel: ", fkModel)
-					for _, item := range data {
-						fmt.Println(item)
-					}
 					formField.Data = data
-				} else {
-					fmt.Println(err.Error())
 				}
 			}
 		}

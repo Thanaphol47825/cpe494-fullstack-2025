@@ -2,6 +2,7 @@ class CommonStudentFormFeature {
   constructor(templateEngine, rootURL) {
     this.templateEngine = templateEngine;
     this.rootURL = rootURL || window.__ROOT_URL__ || "";
+    this.formRenderer = null;
   }
 
   async render() {
@@ -10,234 +11,157 @@ class CommonStudentFormFeature {
       return false;
     }
 
-    this.templateEngine.mainContainer.innerHTML = "";
+    const container = this.templateEngine.mainContainer;
+    container.innerHTML = "";
 
-    const html = `
-      <main class="form-container">
-        <div>
-          <a id="commonBackToMain" href="#common" class="btn-home">← Back to Common Menu</a>
-        </div>
+    const wrapper = document.createElement("main");
+    wrapper.className = "form-container";
 
-        <header>
-          <h2>Add Student</h2>
-        </header>
+    const header = document.createElement("div");
 
-        <form id="commonStudentForm">
-          <div class="form-field">
-            <label for="student_code">Student Code *</label>
-            <input id="student_code" name="student_code" type="text" required class="form-input" placeholder="STU001" />
-          </div>
-
-          <div class="form-field">
-            <label for="email">Email *</label>
-            <input id="email" name="email" type="email" required class="form-input" placeholder="name@example.com" />
-          </div>
-
-          <div class="form-field">
-            <label for="first_name">First Name *</label>
-            <input id="first_name" name="first_name" type="text" required class="form-input" placeholder="First name" />
-          </div>
-
-          <div class="form-field">
-            <label for="last_name">Last Name *</label>
-            <input id="last_name" name="last_name" type="text" required class="form-input" placeholder="Last name" />
-          </div>
-
-          <div class="form-field">
-            <label for="department">Department</label>
-            <input id="department" name="department" type="text" class="form-input" placeholder="Department" />
-          </div>
-
-          <div class="form-field">
-            <label for="program">Program</label>
-            <input id="program" name="program" type="text" class="form-input" placeholder="Program" />
-          </div>
-
-          <div class="form-field">
-            <label for="Gender">Gender</label>
-            <select id="Gender" name="Gender" class="form-select">
-              <option value="" disabled selected>Select gender</option>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
-          </div>
-
-          <div class="form-field">
-            <label for="CitizenID">Citizen ID</label>
-            <input id="CitizenID" name="CitizenID" type="text" class="form-input" placeholder="Citizen ID" />
-          </div>
-
-          <div class="form-field">
-            <label for="PhoneNumber">Phone Number</label>
-            <input id="PhoneNumber" name="PhoneNumber" type="tel" class="form-input" placeholder="Phone Number" />
-          </div>
-
-          <div class="form-field">
-            <label for="AdvisorCode">Advisor Code</label>
-            <input id="AdvisorCode" name="AdvisorCode" type="text" class="form-input" placeholder="Advisor Code" />
-          </div>
-
-          <div class="form-field">
-            <label for="start_date">Start Date</label>
-            <input id="start_date" name="start_date" type="date" class="form-input" />
-          </div>
-
-          <div class="form-field">
-            <label for="birth_date">Birth Date</label>
-            <input id="birth_date" name="birth_date" type="date" class="form-input" />
-          </div>
-
-          <div class="form-field" style="display:flex; gap:12px; align-items:center;">
-            <button type="submit" class="form-submit-btn">Create Student</button>
-            <button type="reset" class="form-reset-btn">Reset</button>
-            <span id="commonStudentStatus" class="status-text"></span>
-          </div>
-        </form>
-
-        <div id="commonStudentResult" class="hidden result-box"></div>
-      </main>
+    // ========= USE Style.css ========
+    header.innerHTML = `
+      <div style="margin-bottom: 24px;">
+        <a id="commonBackToMain" href="#common" class="btn-home">← Back to Common Menu</a>
+      </div>
+      <header style="margin-bottom: 24px;">
+        <h2 style="font-size: 1.5rem; font-weight: 600; color: #2d2d2d;">Add Student</h2>
+      </header>
+      <div id="formMessages"></div>
     `;
+    wrapper.appendChild(header);
 
-    const element = this.templateEngine.create(html);
-    this.templateEngine.mainContainer.appendChild(element);
+    const formContainer = document.createElement("div");
+    formContainer.id = "studentFormContainer";
+    wrapper.appendChild(formContainer);
+
+    container.appendChild(wrapper);
 
     const backBtn = document.getElementById("commonBackToMain");
-    if (backBtn) backBtn.addEventListener("click", async () => {
-      location.hash = "#common";
-      console.log("Navigating back to Common Menu");
-
-      if (window.CommonAppInstance) {
-        await window.CommonAppInstance.renderMenu();
-      } else if (this.templateEngine?.mainContainer) {
-        this.templateEngine.mainContainer.innerHTML = "";
-        const msg = document.createElement("div");
-        msg.textContent = "Common Menu not found. Please reload.";
-        msg.className = "text-center text-red-600 mt-6";
-        this.templateEngine.mainContainer.appendChild(msg);
-      }
-    });
-
-    const form = document.getElementById("commonStudentForm");
-    if (!form) return true;
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      this.#handleSubmit();
-    });
-
-    form.addEventListener("reset", () => this.#handleReset());
-
-    const firstInput = form.querySelector('input[name="student_code"]');
-    if (firstInput) setTimeout(() => firstInput.focus(), 100);
-
-    return true;
-  }
-
-  #collect(form) {
-    const fd = new FormData(form);
-    const payload = {};
-    for (const [key, value] of fd.entries()) {
-      const trimmed = String(value ?? "").trim();
-      if (trimmed !== "") payload[key] = trimmed;
-    }
-    return payload;
-  }
-
-  #validate(payload) {
-    const required = ["student_code", "email", "first_name", "last_name"];
-    const missing = required.filter((key) => !payload[key]);
-    return { ok: missing.length === 0, missing };
-  }
-
-  #transform(payload) {
-    const toRFC3339 = (ymd) => (!ymd ? null : `${ymd}T00:00:00Z`);
-    return {
-      student_code: payload.student_code,
-      email: payload.email,
-      first_name: payload.first_name,
-      last_name: payload.last_name,
-      department: payload.department || null,
-      program: payload.program || null,
-      Gender: payload.Gender || null,
-      CitizenID: payload.CitizenID || null,
-      PhoneNumber: payload.PhoneNumber || null,
-      AdvisorCode: payload.AdvisorCode || null,
-      start_date: toRFC3339(payload.start_date),
-      birth_date: toRFC3339(payload.birth_date),
-    };
-  }
-
-  async #handleSubmit() {
-    const form = document.getElementById("commonStudentForm");
-    const statusEl = document.getElementById("commonStudentStatus");
-    const resultEl = document.getElementById("commonStudentResult");
-
-    const setStatus = (msg, tone = "info") => {
-      if (!statusEl) return;
-      statusEl.textContent = msg || "";
-      statusEl.className = `text-sm ${tone === "error" ? "text-red-600" : tone === "success" ? "text-green-600" : "text-gray-600"}`;
-    };
-
-    const showResult = (html, tone = "info") => {
-      if (!resultEl) return;
-      resultEl.className = `rounded-md border p-4 text-sm ${tone === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-green-200 bg-green-50 text-green-700"}`;
-      resultEl.innerHTML = html;
-      resultEl.classList.remove("hidden");
-    };
-
-    setStatus("Saving…");
-    if (resultEl) resultEl.classList.add("hidden");
-
-    const raw = this.#collect(form);
-    const { ok, missing } = this.#validate(raw);
-    if (!ok) {
-      setStatus(`Please fill required fields: ${missing.join(", ")}`, "error");
-      return;
+    if (backBtn) {
+      backBtn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        location.hash = "#common";
+      });
     }
 
-    const payload = this.#transform(raw);
+    // ====== FORM RENDER ======
+    try {
+      this.formRenderer = new FormRenderV2(this.templateEngine, {
+        modelPath: "common/student",
+        targetSelector: "#studentFormContainer",
+        submitHandler: this.handleSubmit.bind(this),
+        autoFocus: true,
+        validateOnBlur: true,
+      });
+
+      await this.formRenderer.render();
+
+      console.log("✅ Student form rendered using FormRenderV2");
+      return true;
+    } catch (error) {
+      console.error("❌ Error rendering student form:", error);
+      this.showMessage(`Failed to load form: ${error.message}`, "error");
+      return false;
+    }
+  }
+
+  async handleSubmit(formData, _event, formInstance) {
+    this.showMessage("Saving student...", "info");
+
+    const payload = this.transformData(formData);
 
     try {
-      const res = await fetch(`${this.rootURL}/common/students`, {
+      const response = await fetch(`${this.rootURL}/common/students`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const message = data?.error?.message || data?.message || `Request failed (${res.status})`;
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const message =
+          data?.error?.message ||
+          data?.message ||
+          `Request failed (${response.status})`;
         throw new Error(message);
       }
 
-      setStatus("Saved successfully.", "success");
-      showResult(`<div><strong>Student Code:</strong> ${data?.student_code || payload.student_code}</div><pre class="mt-2 whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>`, "success");
+      // Show success message
+      this.showMessage("Student created successfully!", "success");
+      this.showResult(data, "success");
+
+      // Reset form after delay
       setTimeout(() => {
-        if (form) form.reset();
-        setStatus("Ready.");
-      }, 1200);
-    } catch (err) {
-      const message = err?.message || "Save failed.";
-      setStatus(message, "error");
-      showResult(`<div><strong>Error:</strong> ${message}</div>`, "error");
+        if (formInstance) {
+          formInstance.reset();
+        }
+        this.showMessage("Ready to add another student", "info");
+      }, 2000);
+    } catch (error) {
+      const message = error?.message || "Save failed.";
+      this.showMessage(message, "error");
+      this.showResult({ error: message }, "error");
     }
   }
 
-  #handleReset() {
-    const statusEl = document.getElementById("commonStudentStatus");
-    const resultEl = document.getElementById("commonStudentResult");
-    if (statusEl) {
-      statusEl.textContent = "Form reset";
-      statusEl.className = "text-sm text-gray-500";
-    }
-    if (resultEl) {
-      resultEl.classList.add("hidden");
-    }
-    setTimeout(() => {
-      const first = document.querySelector('#commonStudentForm input[name="student_code"]');
-      if (first) first.focus();
-    }, 100);
+  transformData(formData) {
+    // Convert date strings to RFC3339 format
+    const toRFC3339 = (dateStr) => {
+      if (!dateStr) return null;
+      return `${dateStr}T00:00:00Z`;
+    };
+
+    return {
+      student_code: formData.student_code,
+      email: formData.email,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      department: formData.department || null,
+      program: formData.program || null,
+      Gender: formData.Gender || null,
+      CitizenID: formData.CitizenID || null,
+      PhoneNumber: formData.PhoneNumber || null,
+      AdvisorCode: formData.AdvisorCode || null,
+      start_date: toRFC3339(formData.start_date),
+      birth_date: toRFC3339(formData.birth_date),
+    };
+  }
+
+  showMessage(message, type = "info") {
+    const messagesDiv = document.getElementById("formMessages");
+    if (!messagesDiv) return;
+
+    const colorClass =
+      type === "error"
+        ? "text-red-600"
+        : type === "success"
+          ? "text-green-600"
+          : "text-blue-600";
+
+    messagesDiv.innerHTML = `
+      <div class="mb-4 p-3 rounded-lg ${type === "error" ? "bg-red-50" : type === "success" ? "bg-green-50" : "bg-blue-50"}">
+        <p class="text-sm font-medium ${colorClass}">${message}</p>
+      </div>
+    `;
+  }
+
+  showResult(data, type = "info") {
+    const messagesDiv = document.getElementById("formMessages");
+    if (!messagesDiv) return;
+
+    const bgClass =
+      type === "error"
+        ? "bg-red-50 border-red-200"
+        : "bg-green-50 border-green-200";
+    const textClass = type === "error" ? "text-red-700" : "text-green-700";
+
+    messagesDiv.innerHTML += `
+      <div class="mt-3 p-4 rounded-lg border ${bgClass}">
+        <pre class="text-xs ${textClass} whitespace-pre-wrap">${JSON.stringify(data, null, 2)}</pre>
+      </div>
+    `;
   }
 }
 
@@ -245,4 +169,4 @@ if (typeof window !== "undefined") {
   window.CommonStudentFormFeature = CommonStudentFormFeature;
 }
 
-console.log("📦 CommonStudentFormFeature loaded");
+console.log("📦 CommonStudentFormFeature loaded (using FormRenderV2)");

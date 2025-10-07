@@ -106,6 +106,51 @@ class EvalValidator {
     };
   }
 
+  validateQuiz(quizData) {
+    const errors = [];
+
+    if (!quizData.title || quizData.title.trim() === '') {
+      errors.push('Quiz title is required');
+    }
+
+    if (!quizData.instructorId || isNaN(quizData.instructorId)) {
+      errors.push('Valid instructor ID is required');
+    }
+
+    if (!quizData.courseId || isNaN(quizData.courseId)) {
+      errors.push('Valid course ID is required');
+    }
+
+    if (!quizData.startDate) {
+      errors.push('Start date is required');
+    }
+
+    if (!quizData.dueDate) {
+      errors.push('Due date is required');
+    }
+
+    if (quizData.startDate && quizData.dueDate) {
+      const startDate = new Date(quizData.startDate);
+      const dueDate = new Date(quizData.dueDate);
+      if (dueDate <= startDate) {
+        errors.push('Due date must be after start date');
+      }
+    }
+
+    if (quizData.timeLimit && (isNaN(quizData.timeLimit) || quizData.timeLimit <= 0)) {
+      errors.push('Time limit must be a positive number');
+    }
+
+    if (quizData.maxScore && (isNaN(quizData.maxScore) || quizData.maxScore <= 0)) {
+      errors.push('Max score must be a positive number');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    };
+  }
+
   showErrors(errors) {
     if (errors.length > 0) {
       alert('Validation Errors:\n' + errors.join('\n'));

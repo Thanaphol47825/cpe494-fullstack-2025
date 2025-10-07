@@ -12,7 +12,7 @@ class AssignmentCreate {
 
     // Load template
     const tplText = await this.fetchTemplate(this.templatePath);
-    const html = Mustache.render(tplText, { title: 'สร้าง Assignment ใหม่' });
+    const html = Mustache.render(tplText, { title: 'Create new Assignment' });
     // insert content
     container.innerHTML = html;
 
@@ -58,8 +58,13 @@ class AssignmentCreate {
   }
 
   onReset() {
+    console.log('Clear button clicked - resetting form');
     const result = document.getElementById('result');
     if (result) result.textContent = '';
+    
+    // Also clear the assignments list
+    const allAssignments = document.getElementById('allAssignments');
+    if (allAssignments) allAssignments.textContent = '';
   }
 
   async handleSubmit(e) {
@@ -90,28 +95,56 @@ class AssignmentCreate {
 
     await this.loadAllAssignments();
     if (form) form.reset();
+    
+    // Show success message
+    this.showSuccessMessage('Assignment created successfully!');
   }
 
   async loadAllAssignments() {
-    const data = await this.apiService.getAllAssignments();
-    const container = document.getElementById('allAssignments');
-    if (!container) return;
+    try {
+      const response = await this.apiService.getAllAssignments();
+      const container = document.getElementById('allAssignments');
+      if (!container) return;
 
-    if (data && (data.isSuccess || data.success) && Array.isArray(data.result || data.data)) {
-      const list = data.result || data.data;
-      const items = list.map(a => {
-        const title = a.title || a.Title || a.Name || '';
-        const description = a.description || a.Description || '';
-        const id = a.id || a.ID || a.Id || '';
-        const due = a.dueDate || a.DueDate || '';
-        const maxScore = a.maxScore || a.MaxScore || '';
-        return `ID: ${id}\nTitle: ${title}\nDesc: ${description}\nDue: ${due}\nMax: ${maxScore}\n----`;
-      }).join('\n');
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        const list = response.result;
+        const items = list.map(a => {
+          const title = a.title || a.Title || a.Name || '';
+          const description = a.description || a.Description || '';
+          const id = a.id || a.ID || a.Id || '';
+          const due = a.dueDate || a.DueDate || '';
+          const maxScore = a.maxScore || a.MaxScore || '';
+          return `ID: ${id}\nTitle: ${title}\nDesc: ${description}\nDue: ${due}\nMax: ${maxScore}\n----`;
+        }).join('\n');
 
-      container.textContent = items || 'No assignments found.';
-    } else {
-      container.textContent = 'Error loading assignments: ' + JSON.stringify(data);
+        container.textContent = items || 'No assignments found.';
+      } else {
+        console.error('Invalid response format:', response);
+        container.textContent = 'Error loading assignments: Invalid response format';
+      }
+    } catch (error) {
+      console.error('Failed to load assignments:', error);
+      const container = document.getElementById('allAssignments');
+      if (container) {
+        container.textContent = `Error loading assignments: ${error.message}`;
+      }
     }
+  }
+
+  showSuccessMessage(message) {
+    // Create a temporary message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-green-100 text-green-800 border border-green-200';
+    messageDiv.textContent = message;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        messageDiv.parentNode.removeChild(messageDiv);
+      }
+    }, 3000);
   }
 }
 

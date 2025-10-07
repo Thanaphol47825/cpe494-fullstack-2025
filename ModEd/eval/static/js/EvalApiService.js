@@ -57,6 +57,12 @@ class EvalApiService {
     return await this.fetchJSON(`${this.baseUrl}/assignment/getAll`);
   }
 
+  async deleteAssignment(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/delete/${id}`, {
+      method: 'POST'
+    });
+  }
+
   // Quiz Submission API calls
   async createQuizSubmission(quizSubmissionData) {
     const payload = {
@@ -112,6 +118,106 @@ class EvalApiService {
 
   async getAllSubmissions() {
     return await this.fetchJSON(`${this.baseUrl}/submission/getAll`);
+  }
+
+  // Quiz API calls
+  async createQuiz(quizData) {
+    const payload = {
+      title: quizData.title,
+      description: quizData.description,
+      startDate: quizData.startDate,
+      dueDate: quizData.dueDate,
+      timeLimit: Number(quizData.timeLimit),
+      maxScore: Number(quizData.maxScore),
+      instructorId: Number(quizData.instructorId),
+      courseId: Number(quizData.courseId),
+      isReleased: quizData.isReleased,
+      isActive: quizData.isActive
+    };
+
+    return await this.fetchJSON(`${this.baseUrl}/quiz/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async getAllQuizzes() {
+    return await this.fetchJSON(`${this.baseUrl}/quiz/getAll`);
+  }
+
+  async getQuizById(id) {
+    return await this.fetchJSON(`${this.baseUrl}/quiz/get/${id}`);
+  }
+
+  async updateQuiz(quizData) {
+    return await this.fetchJSON(`${this.baseUrl}/quiz/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(quizData)
+    });
+  }
+
+  async deleteQuiz(id) {
+    return await this.fetchJSON(`${this.baseUrl}/quiz/delete/${id}`);
+  }
+
+  // Assignment Progress API calls
+  async createAssignmentProgress(progressData) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/progress/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(progressData)
+    });
+  }
+
+  async getAllAssignmentProgresses() {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/progress/getAll`);
+  }
+
+  async getAssignmentProgressById(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/progress/get/${id}`);
+  }
+
+  async updateAssignmentProgress(progressData) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/progress/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(progressData)
+    });
+  }
+
+  async deleteAssignmentProgress(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/progress/delete/${id}`);
+  }
+
+  // Evaluation API calls
+  async createEvaluation(evaluationData) {
+    return await this.fetchJSON(`${this.baseUrl}/evaluation/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(evaluationData)
+    });
+  }
+
+  async getAllEvaluations() {
+    return await this.fetchJSON(`${this.baseUrl}/evaluation/getAll`);
+  }
+
+  async getEvaluationById(id) {
+    return await this.fetchJSON(`${this.baseUrl}/evaluation/get/${id}`);
+  }
+
+  async updateEvaluation(evaluationData) {
+    return await this.fetchJSON(`${this.baseUrl}/evaluation/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(evaluationData)
+    });
+  }
+
+  async deleteEvaluation(id) {
+    return await this.fetchJSON(`${this.baseUrl}/evaluation/delete/${id}`);
   }
 }
 

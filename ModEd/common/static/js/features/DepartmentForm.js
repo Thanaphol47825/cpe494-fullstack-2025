@@ -46,7 +46,7 @@ class CommonDepartmentFormFeature {
 
     // ====== FORM RENDER ======
     try {
-      this.formRenderer = new FormRenderV2(this.templateEngine, {
+      this.formRenderer = new AdvanceFormRender(this.templateEngine, {
         modelPath: "common/department",
         targetSelector: "#departmentFormContainer",
         submitHandler: this.handleSubmit.bind(this),
@@ -56,6 +56,7 @@ class CommonDepartmentFormFeature {
 
       await this.formRenderer.render();
 
+      console.log("✅ Department form rendered using AdvanceFormRender");
       return true;
     } catch (error) {
       this.showMessage(`Failed to load form: ${error.message}`, "error");
@@ -149,4 +150,4 @@ if (typeof window !== "undefined") {
   window.CommonDepartmentFormFeature = CommonDepartmentFormFeature;
 }
 
-console.log("📦 CommonDepartmentFormFeature loaded (using FormRenderV2)");
+console.log("📦 CommonDepartmentFormFeature loaded (using AdvanceFormRender)");

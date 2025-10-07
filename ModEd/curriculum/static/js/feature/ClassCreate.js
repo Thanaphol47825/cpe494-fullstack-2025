@@ -55,8 +55,6 @@ if (typeof window !== 'undefined' && !window.ClassCreate) {
                 if (data.isSuccess) {
                     alert("Class saved!");
                     form.reset();
-                    // Redirect to Class list page
-                    window.location.hash = "#curriculum/class";
                 } else {
                     alert("Error: " + (data.result || "Failed to save"));
                 }

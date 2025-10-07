@@ -10,15 +10,15 @@ import (
 
 type Interview struct {
 	core.BaseModel
-	InstructorID         uint              `gorm:"not null"` // Foreign key referencing Instructor
-	Instructor           *model.Instructor `gorm:"foreignKey:InstructorID;references:ID"`
-	ApplicationReportID  uint              `gorm:"not null"` // Foreign key referencing ApplicationReport
-	ApplicationReport    ApplicationReport `gorm:"foreignKey:ApplicationReportID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	ScheduledAppointment time.Time
-	CriteriaScores       string
-	TotalScore           float64
-	EvaluatedAt          time.Time
-	InterviewStatus      ApplicationStatus `gorm:"type:varchar(20)"`
+	InstructorID         uint               `json:"instructor_id" gorm:"not null"`
+	Instructor           *model.Instructor  `gorm:"foreignKey:InstructorID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	ApplicationReportID  uint               `json:"application_report_id" gorm:"not null"`
+	ApplicationReport    *ApplicationReport `gorm:"foreignKey:ApplicationReportID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL"`
+	ScheduledAppointment time.Time          `json:"scheduled_appointment"`
+	CriteriaScores       string             `json:"criteria_scores"`
+	TotalScore           float64            `json:"total_score"`
+	EvaluatedAt          time.Time          `json:"evaluated_at"`
+	InterviewStatus      ApplicationStatus  `json:"interview_status" gorm:"type:varchar(20)"`
 }
 
 func (i *Interview) SetCriteriaScores(scores map[string]float64) error {

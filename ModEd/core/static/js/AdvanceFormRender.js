@@ -1,7 +1,4 @@
-/**
- * FormRenderV2 - Enhanced Dynamic Form Generator
- */
-class FormRenderV2 {
+class AdvanceFormRender {
     constructor(application, options = {}) {
         this.application = application;
         this.schema = options.schema || null;
@@ -117,7 +114,7 @@ class FormRenderV2 {
                 this.focusFirstField();
             }
 
-            console.log("✅ FormRenderV2 rendered successfully");
+            console.log("✅ AdvanceFormRender rendered successfully");
             return this.form;
 
         } catch (error) {
@@ -625,7 +622,7 @@ class FormRenderV2 {
 
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = FormRenderV2;
+    module.exports = AdvanceFormRender;
 } else {
-    window.FormRenderV2 = FormRenderV2;
+    window.AdvanceFormRender = AdvanceFormRender;
 }

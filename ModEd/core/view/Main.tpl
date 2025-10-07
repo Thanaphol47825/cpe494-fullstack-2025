@@ -8,8 +8,8 @@
   <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
   <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
   <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
-  <script src="{{ RootURL }}/core/static/js/FormRenderV2.js"></script>
-  <script src="{{ RootURL }}/core/static/js/TableRenderV2.js"></script>
+  <script src="{{ RootURL }}/core/static/js/AdvanceFormRender.js"></script>
+  <script src="{{ RootURL }}/core/static/js/AdvanceTableRender.js"></script>
   
   <link rel="stylesheet" type="text/css" href="{{ RootURL }}/core/static/css/Style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,7 +21,7 @@
     document.addEventListener("DOMContentLoaded", async () => {
       await engine.render();
 
-      // const formRender = new FormRenderV2(engine, {
+      // const formRender = new AdvanceFormRender(engine, {
       //   modelPath: "common/student",
       // }).render();
     });

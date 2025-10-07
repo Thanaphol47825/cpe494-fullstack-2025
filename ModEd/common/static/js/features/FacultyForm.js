@@ -47,7 +47,7 @@ class CommonFacultyFormFeature {
 
     // ====== FORM RENDER ======
     try {
-      this.formRenderer = new FormRenderV2(this.templateEngine, {
+      this.formRenderer = new AdvanceFormRender(this.templateEngine, {
         modelPath: "common/faculty",
         targetSelector: "#facultyFormContainer",
         submitHandler: this.handleSubmit.bind(this),
@@ -57,7 +57,7 @@ class CommonFacultyFormFeature {
 
       await this.formRenderer.render();
 
-      console.log("✅ Faculty form rendered using FormRenderV2");
+      console.log("✅ Faculty form rendered using AdvanceFormRender");
       return true;
     } catch (error) {
       console.error("❌ Error rendering faculty form:", error);
@@ -153,4 +153,4 @@ if (typeof window !== "undefined") {
   window.CommonFacultyFormFeature = CommonFacultyFormFeature;
 }
 
-console.log("📦 CommonFacultyFormFeature loaded (using FormRenderV2)");
+console.log("📦 CommonFacultyFormFeature loaded (using AdvanceFormRender)");

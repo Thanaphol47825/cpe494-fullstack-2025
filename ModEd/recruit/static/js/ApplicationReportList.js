@@ -9,10 +9,6 @@ class ApplicationReportList {
       <div class="min-h-screen bg-gray-50 p-8">
         <div class="max-w-6xl mx-auto bg-white shadow rounded-2xl p-6">
           <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <button id="btnBack" 
-                class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-                ← Back
-            </button>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
               📊 Application Reports
             </h1>
@@ -34,13 +30,6 @@ class ApplicationReportList {
     `;
 
     await this.loadList();
-
-    document.getElementById("btnBack")?.addEventListener("click", async () => {
-      await this.engine.fetchModule("/recruit/static/js/RecruitApplication.js");
-      const dashboard = new RecruitApplication(this.engine);
-      this.engine.mainContainer.innerHTML = "";
-      await dashboard.render();
-    });
 
     document.getElementById("btnCreate")?.addEventListener("click", () => this.openForm());
     document.getElementById("btnImport")?.addEventListener("click", () => this.importFromFile());
@@ -171,6 +160,4 @@ async loadList() {
   }
 }
 
-if (typeof window !== "undefined") {
-  window.ApplicationReportList = ApplicationReportList;
-}
+if (typeof window !== "undefined") window.ApplicationReportList = ApplicationReportList;

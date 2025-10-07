@@ -11,7 +11,6 @@ class RecruitApplication extends BaseModuleApplication {
       "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantList.js" },
       "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportList.js" },
       "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundList.js" },
-      "interviewcriteria/create": { title: "Create Interview Criteria", icon: "📝", script: "InterviewCriteriaCreate.js" },
       "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewCreate.js" },
       "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewList.js" },
       "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
@@ -48,11 +47,6 @@ class RecruitApplication extends BaseModuleApplication {
       "/applicationround/list",
       this.renderApplicationRoundList.bind(this),
       "ApplicationRoundList.js"
-    );
-    this.addRouteWithSubModule(
-      "/interviewcriteria/create",
-      this.renderInterviewCriteriaCreate.bind(this),
-      "InterviewCriteriaCreate.js"
     );
     this.addRouteWithSubModule(
       "/interview/create",

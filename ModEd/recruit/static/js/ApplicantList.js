@@ -15,10 +15,6 @@ class ApplicantList {
       <div class="min-h-screen bg-gray-50 p-8">
         <div class="max-w-[1200px] mx-auto bg-white shadow rounded-2xl p-6">
           <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <button id="btnBack" 
-              class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-              ← Back
-            </button>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
               🧑‍💼 Applicants
             </h1>
@@ -36,17 +32,6 @@ class ApplicantList {
     `;
 
     await this.loadList();
-
-    document.getElementById("btnBack")?.addEventListener("click", async () => {
-      try {
-        await this.engine.fetchModule("/recruit/static/js/RecruitApplication.js");
-        const dashboard = new RecruitApplication(this.engine);
-        this.engine.mainContainer.innerHTML = "";
-        await dashboard.render();
-      } catch (e) {
-        alert("Failed to go back: " + e.message);
-      }
-    });
 
     document.getElementById("btnCreate")?.addEventListener("click", () => this.#openForm());
     document.getElementById("btnImport")?.addEventListener("click", () => this.importFromFile());

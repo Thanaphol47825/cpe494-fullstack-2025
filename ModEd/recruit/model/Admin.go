@@ -5,6 +5,6 @@ import "ModEd/core"
 
 type Admin struct {
 	core.BaseModel
-	Username string `csv:"username"`
-	Password string `csv:"password"`
+	Username string `csv:"username" json:"username" form:"text" label:"username"`
+	Password string `csv:"password" json:"password" form:"password" label:"password"`
 }

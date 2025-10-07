@@ -18,10 +18,6 @@ class InterviewCriteriaList {
       <div class="min-h-screen bg-gray-50 p-8">
         <div class="max-w-6xl mx-auto bg-white shadow rounded-2xl p-6">
           <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <button id="btnBack" 
-                class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-                ← Back
-            </button>
             <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
               📋 Interview Criteria Management
             </h1>
@@ -41,13 +37,6 @@ class InterviewCriteriaList {
     `;
 
         await this.loadList();
-
-        document.getElementById("btnBack")?.addEventListener("click", async () => {
-            await this.application.fetchModule("/recruit/static/js/RecruitApplication.js");
-            const dashboard = new RecruitApplication(this.application);
-            this.application.mainContainer.innerHTML = "";
-            await dashboard.render();
-        });
 
         document.getElementById("btnCreate")?.addEventListener("click", () => this.openForm());
         document.getElementById("btnSeed")?.addEventListener("click", () => this.seedData());
@@ -253,4 +242,7 @@ Updated: ${new Date(item.UpdatedAt).toLocaleString()}
 }
 
 window.InterviewCriteriaList = InterviewCriteriaList;
+
+if (typeof window !== "undefined") window.InterviewCriteriaList = InterviewCriteriaList;
+
 }

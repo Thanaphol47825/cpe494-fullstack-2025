@@ -176,3 +176,5 @@ async render() {
     }
   }
 }
+
+if (typeof window !== "undefined") window.InterviewCriteriaCreate = InterviewCriteriaCreate;

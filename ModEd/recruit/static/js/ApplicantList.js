@@ -47,59 +47,96 @@ class ApplicantList {
     tableContainer.innerHTML = `<p class="text-gray-500 p-4">Loading...</p>`;
 
     try {
-      const res = await fetch(this.rootURL + "/recruit/GetApplicants");
-      const data = await res.json();
-      if (!data.isSuccess) throw new Error(data.message || "Load failed");
+      const listRes = await fetch(this.rootURL + "/recruit/GetApplicants");
+      const listData = await listRes.json();
+      if (!listData.isSuccess) throw new Error(listData.message || "Load failed");
+      const list = listData.result || [];
 
-      const list = data.result || [];
-      if (list.length === 0) {
-        tableContainer.innerHTML = `
-          <div class="p-8 text-center text-gray-500">
-            <p class="text-lg font-medium">No applicants found</p>
-            <p class="text-sm text-gray-400 mt-1">Try adding a new applicant.</p>
-          </div>`;
-        return;
+      let displayFields = [];
+      try {
+        const schemaUrl = `${this.rootURL}/api/modelmeta/applicant`;
+        const schemaRes = await fetch(schemaUrl);
+        if (!schemaRes.ok) throw new Error(`Schema HTTP ${schemaRes.status}`);
+        const schema = await schemaRes.json();
+        displayFields = (Array.isArray(schema) ? schema : []).filter(f => f.display !== false);
+      } catch (e) {
+
+        displayFields = [
+          { name: "ID", label: "ID" },
+          { name: "first_name", label: "First Name" },
+          { name: "last_name", label: "Last Name" },
+          { name: "email", label: "Email" },
+          { name: "phone_number", label: "Phone" },
+        ];
+        console.warn("Schema fetch failed, using fallback columns:", e.message);
       }
 
-      const rows = list.map(a => `
-        <tr class="border-b hover:bg-gray-50 transition">
-          <td class="px-4 py-2">${a.ID}</td>
-          <td class="px-4 py-2">${a.first_name || "-"}</td>
-          <td class="px-4 py-2">${a.last_name || "-"}</td>
-          <td class="px-4 py-2">${a.email || "-"}</td>
-          <td class="px-4 py-2">${a.phone_number || "-"}</td>
-          <td class="px-4 py-2 text-right">
-            <button class="text-blue-600 hover:underline" data-id="${a.ID}" data-action="edit">Edit</button>
-            <button class="text-red-600 hover:underline ml-3" data-id="${a.ID}" data-action="delete">Delete</button>
-          </td>
-        </tr>`).join("");
-
-      tableContainer.innerHTML = `
-        <table class="min-w-full text-sm text-gray-700">
-          <thead class="bg-gray-100 text-gray-800">
-            <tr>
-              <th class="px-4 py-2 text-left">ID</th>
-              <th class="px-4 py-2 text-left">First Name</th>
-              <th class="px-4 py-2 text-left">Last Name</th>
-              <th class="px-4 py-2 text-left">Email</th>
-              <th class="px-4 py-2 text-left">Phone</th>
-              <th class="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
+      this.renderSimpleTable(list, displayFields, tableContainer);
 
       tableContainer.querySelectorAll("button[data-action]").forEach(btn => {
         btn.addEventListener("click", (e) => {
-          const id = e.target.getAttribute("data-id");
-          const action = e.target.getAttribute("data-action");
-          if (action === "edit") this.#openForm(id); 
+          const id = e.currentTarget.getAttribute("data-id");
+          const action = e.currentTarget.getAttribute("data-action");
+          if (action === "edit") this.#openForm(id);
           else if (action === "delete") this.deleteItem(id);
         });
       });
 
     } catch (err) {
       tableContainer.innerHTML = `<p class="text-red-500 p-4">Error: ${err.message}</p>`;
+    }
+  }
+
+  renderSimpleTable(rows, fields, mountEl) {
+    if (!mountEl) return;
+
+    if (!rows || rows.length === 0) {
+      mountEl.innerHTML = `
+        <div class="p-8 text-center text-gray-500">
+          <p class="text-lg font-medium">No applicants found</p>
+          <p class="text-sm text-gray-400 mt-1">Try adding a new applicant.</p>
+        </div>`;
+      return;
+    }
+
+    const headerCells = fields.map(f => `<th class="px-4 py-2 text-left">${f.label || f.name}</th>`).join("");
+    const thead = `
+      <thead class="bg-gray-100 text-gray-800">
+        <tr>${headerCells}<th class="px-4 py-2 text-right">Actions</th></tr>
+      </thead>`;
+
+    const tbodyRows = rows.map(r => {
+      const tds = fields.map(f => {
+        const key = f.name;
+        const val = (r?.[key] ?? r?.[key?.toLowerCase?.()] ?? "-");
+        return `<td class="px-4 py-2">${val === "" ? "-" : val}</td>`;
+      }).join("");
+
+      return `
+        <tr class="border-b hover:bg-gray-50 transition">
+          ${tds}
+          <td class="px-4 py-2 text-right whitespace-nowrap">
+            <button class="text-blue-600 hover:underline" data-id="${r.ID}" data-action="edit">Edit</button>
+            <button class="text-red-600 hover:underline ml-3" data-id="${r.ID}" data-action="delete">Delete</button>
+          </td>
+        </tr>`;
+    }).join("");
+
+    const tableHTML = `
+      <table class="min-w-full text-sm text-gray-700">
+        ${thead}
+        <tbody>${tbodyRows}</tbody>
+      </table>`;
+
+    mountEl.innerHTML = tableHTML;
+
+    mountEl.style.width = "100%";
+    mountEl.style.overflowX = "auto";
+    mountEl.style.webkitOverflowScrolling = "touch";
+    const tbl = mountEl.querySelector("table");
+    if (tbl) {
+      tbl.style.width = "max-content";
+      tbl.querySelectorAll("th,td").forEach(el => (el.style.whiteSpace = "nowrap"));
     }
   }
 
@@ -139,7 +176,6 @@ class ApplicantList {
   }
 
   async importFromFile() {
-    
     const picker = document.createElement("input");
     picker.type = "file";
     picker.accept = ".csv,.json,text/csv,application/json";
@@ -162,7 +198,6 @@ class ApplicantList {
     tableContainer.innerHTML = `<p class="text-gray-500 p-4">Uploading & importing <b>${file.name}</b>…</p>`;
 
     try {
-
       const url = this.rootURL + "/recruit/GetApplicantsFromFile";
       const resp = await fetch(url, { method: "POST", body: formData });
 
@@ -180,7 +215,6 @@ class ApplicantList {
       alert(`Imported ${Array.isArray(data.result) ? data.result.length : 0} applicant(s) from ${file.name}.`);
       await this.loadList();
     } catch (err) {
-
       alert("Error importing file: " + err.message);
       tableContainer.innerHTML = prevHTML;
     }

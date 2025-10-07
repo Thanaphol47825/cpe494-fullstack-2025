@@ -7,11 +7,11 @@ class InterviewCreate {
     console.log("InterviewCreate: render()");
 
     const fields = [
-      { label: "Instructor ID", name: "instructor_id", type: "number", required: true },
-      { label: "Application Report ID", name: "application_report_id", type: "number", required: true },
-      { label: "Scheduled Appointment", name: "scheduled_appointment", type: "datetime-local", required: true, colSpan: "md:col-span-2" },
-      { label: "Criteria Scores", name: "criteria_scores", type: "textarea", colSpan: "md:col-span-2", placeholder: '{"communication": 8.5, "technical": 9.0, "motivation": 8.0}' },
-      { label: "Total Score", name: "total_score", type: "number", step: "0.1" },
+      { label: "Instructor ID", name: "instructor_id", type: "number", required: true, value: "1" },
+      { label: "Application Report ID", name: "application_report_id", type: "number", required: true, value: "1" },
+      { label: "Scheduled Appointment", name: "scheduled_appointment", type: "datetime-local", required: true, colSpan: "md:col-span-2", value: "2025-01-20T14:00" },
+      { label: "Criteria Scores", name: "criteria_scores", type: "textarea", colSpan: "md:col-span-2", placeholder: '{"communication": 8.5, "technical": 9.0, "motivation": 8.0}', value: '{"communication": 8.5, "technical": 9.0, "motivation": 8.0}' },
+      { label: "Total Score", name: "total_score", type: "number", step: "0.1", value: "8.5" },
       { label: "Evaluated At", name: "evaluated_at", type: "datetime-local" },
       { 
         label: "Interview Status", 
@@ -48,7 +48,7 @@ class InterviewCreate {
                              ${f.required ? 'required' : ''} 
                              rows="4"
                              placeholder="${f.placeholder || ''}"
-                             class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                             class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">${f.value || ''}</textarea>
                     ${f.name === 'criteria_scores' ? '<p class="text-sm text-gray-500 mt-1">Enter JSON format for criteria scores</p>' : ''}
                   </div>
                 `;
@@ -75,6 +75,7 @@ class InterviewCreate {
                            name="${f.name}" 
                            ${f.required ? 'required' : ''} 
                            ${f.step ? `step="${f.step}"` : ''}
+                           ${f.value ? `value="${f.value}"` : ''}
                            ${f.placeholder ? `placeholder="${f.placeholder}"` : ''}
                            class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
                   </div>
@@ -86,6 +87,10 @@ class InterviewCreate {
               <button type="submit" 
                 class="inline-flex items-center rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 Save Interview
+              </button>
+              <button type="button" id="setupTestData" 
+                class="inline-flex items-center rounded-xl bg-green-600 text-white px-4 py-2 font-medium hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                Setup Test Data
               </button>
               <button type="reset" 
                 class="inline-flex items-center rounded-xl border px-4 py-2 font-medium hover:bg-gray-50">
@@ -104,29 +109,39 @@ class InterviewCreate {
     document
       .getElementById("InterviewForm")
       .addEventListener("submit", (e) => this.submit(e));
+    
+    document
+      .getElementById("setupTestData")
+      .addEventListener("click", (e) => this.setupTestData(e));
   }
 
   async submit(e) {
     e.preventDefault();
     
     const form = e.target;
+    console.log('Form:', form); 
+    console.log('Form elements:', form.elements);
+    
     const formData = new FormData(form);
     const data = {};
     
+    console.log('FormData entries:'); 
     for (let [key, value] of formData.entries()) {
+      console.log(`  ${key} = "${value}"`); 
       if (key === 'instructor_id' || key === 'application_report_id') {
-        data[key] = parseInt(value);
-      } else if (key === 'total_score') {
-        data[key] = parseFloat(value) || 0;
-      } else if (key === 'criteria_scores') {
-        try {
-          data[key] = value ? JSON.parse(value) : {};
-        } catch (e) {
+        const parsedValue = parseInt(value);
+        if (isNaN(parsedValue) || parsedValue === 0) {
           const statusEl = document.getElementById('formStatus');
-          statusEl.textContent = 'Invalid JSON format for Criteria Scores';
+          statusEl.textContent = `Please enter a valid ${key.replace('_', ' ')}`;
           statusEl.className = 'text-sm text-red-600';
           return;
         }
+        data[key] = parsedValue;
+      } else if (key === 'total_score') {
+        data[key] = parseFloat(value) || 0;
+      } else if (key === 'criteria_scores') {
+       
+        data[key] = value || '';
       } else if (key === 'scheduled_appointment' || key === 'evaluated_at') {
         if (value) {
           data[key] = new Date(value).toISOString();
@@ -136,6 +151,21 @@ class InterviewCreate {
       }
     }
     
+   
+    if (data.criteria_scores && typeof data.criteria_scores === 'object') {
+      data.criteria_scores = JSON.stringify(data.criteria_scores);
+    }
+    
+    console.log('Final data object:', data);
+    
+    
+    if (!data.instructor_id || !data.application_report_id) {
+      const statusEl = document.getElementById('formStatus');
+      statusEl.textContent = 'Instructor ID and Application Report ID are required';
+      statusEl.className = 'text-sm text-red-600';
+      return;
+    }
+    
     const statusEl = document.getElementById('formStatus');
     const resultBox = document.getElementById('resultBox');
     
@@ -143,7 +173,7 @@ class InterviewCreate {
     statusEl.className = 'text-sm text-gray-500';
     
     try {
-      const response = await fetch(window.__ROOT_URL__ + '/recruit/CreateInterview', {
+      const response = await fetch((window.__ROOT_URL__ || 'http://localhost:8080') + '/recruit/CreateInterview', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -172,6 +202,50 @@ class InterviewCreate {
       }
     } catch (error) {
       statusEl.textContent = 'Error submitting form';
+      statusEl.className = 'text-sm text-red-600';
+      
+      resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';
+      resultBox.textContent = error.toString();
+      resultBox.classList.remove('hidden');
+    }
+  }
+
+  async setupTestData(e) {
+    e.preventDefault();
+    
+    const statusEl = document.getElementById('formStatus');
+    const resultBox = document.getElementById('resultBox');
+    
+    statusEl.textContent = 'Setting up test data...';
+    statusEl.className = 'text-sm text-gray-500';
+    
+    try {
+      const response = await fetch((window.__ROOT_URL__ || 'http://localhost:8080') + '/recruit/SetupTestData', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const result = await response.json();
+      
+      if (result.isSuccess) {
+        statusEl.textContent = 'Test data created successfully!';
+        statusEl.className = 'text-sm text-green-600';
+        
+        resultBox.className = 'mt-6 rounded-xl border border-green-300 bg-green-50 p-4 text-sm text-green-800';
+        resultBox.textContent = result.result;
+        resultBox.classList.remove('hidden');
+      } else {
+        statusEl.textContent = 'Failed to setup test data';
+        statusEl.className = 'text-sm text-red-600';
+        
+        resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';
+        resultBox.textContent = result.result || 'Unknown error';
+        resultBox.classList.remove('hidden');
+      }
+    } catch (error) {
+      statusEl.textContent = 'Error setting up test data';
       statusEl.className = 'text-sm text-red-600';
       
       resultBox.className = 'mt-6 rounded-xl border border-red-300 bg-red-50 p-4 text-sm text-red-800';

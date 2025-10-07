@@ -28,6 +28,11 @@ class RecruitApplication {
         className: "InterviewCreate",
         script: "/recruit/static/js/InterviewCreate.js",
       },
+      {
+        label: "Manage Interviews",
+        className: "InterviewManage",
+        script: "/recruit/static/js/InterviewManage.js",
+      }
     ];
 
     this.moduleIcons = {

@@ -12,6 +12,7 @@ type Department struct {
 	Name    string `gorm:"not null" csv:"name" json:"name"`
 	Faculty string `csv:"faculty" json:"parent"`
 	Budget  int    `gorm:"default:0" csv:"budget" json:"budget"`
+
 }
 
 func (Department) TableName() string {

@@ -10,6 +10,10 @@ class CommonApplication extends BaseModuleApplication {
         title: "Add Student",
         icon: "👩‍🎓",
       },
+      "student/list": {
+        title: "List Students",
+        icon: "📋",
+      },
       "instructor/create": {
         title: "Add Instructor",
         icon: "👨‍🏫",
@@ -40,6 +44,11 @@ class CommonApplication extends BaseModuleApplication {
       "/student/create",
       this.renderStudentCreate.bind(this),
       "StudentForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/student/list",
+      this.renderStudentList.bind(this),
+      "StudentList.js"
     );
     this.addRouteWithSubModule(
       "/instructor/create",
@@ -113,6 +122,19 @@ class CommonApplication extends BaseModuleApplication {
       return false;
     }
     const feature = new window.CommonStudentFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderStudentList() {
+    if (!window.CommonStudentListFeature) {
+      console.error("CommonStudentListFeature not available after loading");
+      this.renderError("Failed to load Student List");
+      return false;
+    }
+    const feature = new window.CommonStudentListFeature(
       this.templateEngine,
       this.rootURL
     );

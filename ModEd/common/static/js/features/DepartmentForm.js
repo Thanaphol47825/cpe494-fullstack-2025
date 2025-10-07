@@ -7,7 +7,6 @@ class CommonDepartmentFormFeature {
 
   async render() {
     if (!this.templateEngine || !this.templateEngine.mainContainer) {
-      console.error("❌ Template engine or main container not found");
       return false;
     }
 
@@ -57,10 +56,8 @@ class CommonDepartmentFormFeature {
 
       await this.formRenderer.render();
 
-      console.log("✅ Department form rendered using FormRenderV2");
       return true;
     } catch (error) {
-      console.error("❌ Error rendering department form:", error);
       this.showMessage(`Failed to load form: ${error.message}`, "error");
       return false;
     }

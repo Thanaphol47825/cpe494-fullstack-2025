@@ -48,12 +48,13 @@ func BuildFormSchema(db *gorm.DB, model interface{}) ([]FormField, error) {
 
 		// Build FormField
 		formField := FormField{
-			Name:        jsonName,
-			Label:       getFormValue(formConfig, "label", jsonName),
-			Placeholder: getFormValue(formConfig, "placeholder", ""),
-			Type:        getFormValue(formConfig, "type", defaultInputType(fieldTypeName)),
-			Format:      getFormValue(formConfig, "format", ""),
-			Required:    getFormValue(formConfig, "required", "") == "true",
+			Name:         jsonName,
+			Label:        getFormValue(formConfig, "label", jsonName),
+			Placeholder:  getFormValue(formConfig, "placeholder", ""),
+			Type:         getFormValue(formConfig, "type", defaultInputType(fieldTypeName)),
+			Format:       getFormValue(formConfig, "format", ""),
+			Required:     getFormValue(formConfig, "required", "") == "true",
+			TableDisplay: getFormValue(formConfig, "display", "true") == "true",
 		}
 
 		// Handle select fields with foreign key relationships

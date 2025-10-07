@@ -10,7 +10,7 @@ import (
 type Department struct {
 	core.BaseModel
 	Name    string `gorm:"not null" csv:"name" json:"name"`
-	Faculty string `csv:"faculty" json:"parent"`
+	Faculty string `csv:"faculty" json:"faculty"`
 	Budget  int    `gorm:"default:0" csv:"budget" json:"budget"`
 
 }

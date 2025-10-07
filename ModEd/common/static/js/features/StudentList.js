@@ -73,18 +73,26 @@ class CommonStudentListFeature {
       }
 
       const data = await response.json();
-      const students = data.result || []; 
+      const students = data.result || data || [];
       console.log("Students loaded:", students.length, "records");
-      console.log("First student:", students[0]);
 
-      const schemaUrl = `${this.rootURL}/api/modelmeta/common/student`;
-      console.log("Fetching schema from:", schemaUrl);
-      const schemaResponse = await fetch(schemaUrl);
-      const schema = await schemaResponse.json();
-      this.renderSimpleTable(students, schema);
+      // Check if TableRenderV2 is available
+      if (typeof TableRenderV2 === 'undefined') {
+        throw new Error("TableRenderV2 is not loaded. Please ensure core module is loaded.");
+      }
+
+      const table = new TableRenderV2(this.templateEngine, {
+          modelPath: "common/student",
+          data: students,
+          targetSelector: "#studentTableContainer"
+      });
+
+      await table.render();
 
       return true;
     } catch (error) {
+      console.error("❌ Error rendering table:", error);
+      this.showMessage(`Error: ${error.message}`, "error");
       return false;
     }
   }
@@ -93,7 +101,6 @@ class CommonStudentListFeature {
     const container = document.getElementById("studentTableContainer");
     if (!container) return;
 
-    // Filter schema to only display fields
     const displayFields = schema.filter((field) => field.display !== false);
 
     // Create table HTML

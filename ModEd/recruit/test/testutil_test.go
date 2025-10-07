@@ -7,11 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
-const testDSN = "host= user=password= dbname= port= sslmode=disable"
+const testDSN = "host=postgres user=user password=H@55P@ssw0rd dbname=moded port=5432 sslmode=disable"
 
 func openTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
-	db, err := gorm.Open(postgres.Open(testDSN), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(testDSN), &gorm.Config{})	
 	if err != nil {
 		t.Fatalf("failed to connect to test DB: %v", err)
 	}

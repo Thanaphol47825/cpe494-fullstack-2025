@@ -8,7 +8,13 @@ type EvalMigrationStrategy struct {
 // คืนค่า slice ของ model ทั้งหมดของ module eval
 func (s *EvalMigrationStrategy) GetModels() []interface{} {
 	return []interface{}{
-		&model.Assignment{}, // เพิ่ม model อื่น ๆ ของ eval ถ้ามี
+		&model.Assignment{},
+		&model.AssignmentProgress{},
+		&model.AssignmentSubmission{},
+		&model.Evaluation{},
+		&model.Quiz{},
+		&model.QuizSubmission{},
+		&model.Submission{},
 	}
 }
 

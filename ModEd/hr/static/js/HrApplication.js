@@ -56,10 +56,10 @@ class HrApplication extends BaseModuleApplication {
     
     // Initialize logger
     this.logger = {
-      info: (msg) => {},
+      info: (msg) => console.log(`[HR] ${msg}`),
       error: (msg) => console.error(`[HR] ${msg}`),
       warn: (msg) => console.warn(`[HR] ${msg}`),
-      debug: (msg) => {}
+      debug: (msg) => console.log(`[HR DEBUG] ${msg}`)
     }
     
     // Setup routes and navigation
@@ -79,6 +79,7 @@ class HrApplication extends BaseModuleApplication {
       // Check if features are already loaded
       if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
           window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature &&
+          window.HrInstructorResignationFormFeature && window.HrInstructorResignationListFeature &&
           window.HrStudentListFeature && window.HrInstructorListFeature &&
           window.HrStudentEditFeature && window.HrInstructorEditFeature &&
           window.HrStudentLeaveFormFeature && window.HrInstructorLeaveFormFeature &&
@@ -98,6 +99,7 @@ class HrApplication extends BaseModuleApplication {
       if (!window.HrInstructorFormFeature) {
         await this.loadScript('/hr/static/js/features/InstructorForm.js')
       }
+      
       // Load StudentResignationForm feature
       if (!window.HrStudentResignationFormFeature) {
         await this.loadScript('/hr/static/js/features/StudentResignationForm.js')
@@ -106,6 +108,16 @@ class HrApplication extends BaseModuleApplication {
       // Load StudentResignationList feature
       if (!window.HrStudentResignationListFeature) {
         await this.loadScript('/hr/static/js/features/StudentResignationList.js')
+      }
+      
+      // Load InstructorResignationForm feature
+      if (!window.HrInstructorResignationFormFeature) {
+        await this.loadScript('/hr/static/js/features/InstructorResignationForm.js')
+      }
+      
+      // Load InstructorResignationList feature
+      if (!window.HrInstructorResignationListFeature) {
+        await this.loadScript('/hr/static/js/features/InstructorResignationList.js')
       }
       
       // Load StudentList feature
@@ -183,6 +195,7 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/resignation/student', this.renderStudentResignation.bind(this))
     this.addRoute('/resignation/student/create', this.renderCreateStudentResignation.bind(this))
     this.addRoute('/resignation/instructor', this.renderInstructorResignation.bind(this))
+    this.addRoute('/resignation/instructor/create', this.renderCreateInstructorResignation.bind(this))
     
     // Leave Management routes
     this.addRoute('/leave', this.renderLeaveMain.bind(this))
@@ -191,6 +204,11 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/leave/instructor', this.renderInstructorLeaveList.bind(this))
     this.addRoute('/leave/instructor/create', this.renderCreateInstructorLeave.bind(this))
     this.addRoute('/leave/history', this.renderLeaveHistory.bind(this))
+
+    // Department routes
+    this.addRoute('/departments', this.renderDepartments.bind(this))
+    this.addRoute('/departments/create', this.renderCreateDepartment.bind(this))
+    this.addRoute('/departments/edit/:name', this.renderEditDepartment.bind(this))
     
     this.setDefaultRoute('')
     
@@ -1218,7 +1236,7 @@ class HrApplication extends BaseModuleApplication {
     const studentId = params.id.toUpperCase()
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-student-detail">
-        <h2>Student Details: ${studentId}</h2>
+        <h2>👨‍🎓 Student Details: ${studentId}</h2>
         
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <h3>Personal Information</h3>
@@ -1247,17 +1265,17 @@ class HrApplication extends BaseModuleApplication {
   async renderResignation() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-resignation">
-        <h2>Resignation Management</h2>
+        <h2>📝 Resignation Management</h2>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
           <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-            <h4>Student Resignations</h4>
+            <h4>👨‍🎓 Student Resignations</h4>
             <p>Handle student withdrawal requests</p>
             <a routerLink="hr/resignation/student" style="color: #007bff;">Manage Student Resignations</a>
           </div>
           
           <div class="card" style="border: 1px solid #ddd; padding: 15px; border-radius: 8px;">
-            <h4>Instructor Resignations</h4>
+            <h4>👨‍🏫 Instructor Resignations</h4>
             <p>Handle instructor resignation requests</p>
             <a routerLink="hr/resignation/instructor" style="color: #007bff;">Manage Instructor Resignations</a>
           </div>
@@ -1369,16 +1387,101 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderInstructorResignation() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="hr-instructor-resignation">
-        <h2>Instructor Resignation Requests</h2>
-        <p>Process instructor resignation requests.</p>
+    try {
+      // Load the InstructorResignationList feature
+      await this.loadFeatureModules();
+      
+      if (window.HrInstructorResignationListFeature) {
+        const listFeature = new window.HrInstructorResignationListFeature(this.templateEngine, this.rootURL);
+        await listFeature.render();
         
-        <div style="margin-top: 20px;">
-          <a routerLink="hr/resignation" style="color: #6c757d;">← Back to Resignations</a>
+        // Make it globally accessible for onclick handlers
+        window.instructorResignationList = listFeature;
+      } else {
+        throw new Error('InstructorResignationListFeature not available');
+      }
+    } catch (error) {
+      console.error('Error loading instructor resignations:', error);
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
+              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
+                <h2 class="text-2xl font-semibold text-white">Error Loading Instructor Resignations</h2>
+              </div>
+              <div class="p-8">
+                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <p class="text-red-700 mb-4">${error.message}</p>
+                  <button onclick="hrApp.renderInstructorResignation()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center mt-8">
+              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Resignations</a>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  async renderCreateInstructorResignation() {
+    // Show loading UI while feature loads
+    this.templateEngine.mainContainer.innerHTML = `
+      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
+        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center mb-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-6">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Instructor Resignation</h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
+          </div>
+          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600">
+              <h2 class="text-2xl font-semibold text-white">Loading Form...</h2>
+            </div>
+            <div class="p-8">
+              <div class="text-center py-16">
+                <div class="inline-block w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4"></div>
+                <p class="text-lg text-gray-600">Loading form components...</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    `
+    `;
+
+    if (window.HrInstructorResignationFormFeature) {
+      const feature = new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+      return
+    }
+
+    await this.loadFeatureModules()
+    let retries = 0
+    while (!window.HrInstructorResignationFormFeature && retries < 10) {
+      await new Promise(r => setTimeout(r, 100))
+      retries++
+    }
+    if (window.HrInstructorResignationFormFeature) {
+      const feature = new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    } else {
+      console.error('HrInstructorResignationFormFeature not available after loading')
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <p class="text-red-600 mt-2">Please refresh the page or try again later.</p>
+              <div class="mt-4">
+                <a routerLink="hr/resignation/instructor" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back</a>
+              </div>
+            </div>
+          </div>
+        </div>`
+    }
   }
 
   async renderLeaveMain() {
@@ -1482,6 +1585,98 @@ class HrApplication extends BaseModuleApplication {
     }
   }
 
+  async renderDepartments() {
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Departments',
+      'Manage departments and budgets'
+    )
+
+    try {
+      if (!window.HrDepartmentListFeature) {
+        await this.loadScript('/hr/static/js/features/DepartmentList.js')
+      }
+      const feature = new window.HrDepartmentListFeature(this.templateEngine, this.rootURL)
+      window.departmentList = feature
+      await feature.render()
+    } catch (err) {
+      console.error('Error loading Departments list:', err)
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Departments</h2>
+              <p class="text-red-600 mt-2">${err.message || 'Unknown error'}</p>
+              <div class="mt-4">
+                <a routerLink="hr" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to HR</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }
+
+  async renderCreateDepartment() {
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Add Department',
+      'Create a new department'
+    )
+
+    try {
+      if (!window.HrDepartmentFormFeature) {
+        await this.loadScript('/hr/static/js/features/DepartmentForm.js')
+      }
+      const feature = new window.HrDepartmentFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    } catch (err) {
+      console.error('Error loading Department form:', err)
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <p class="text-red-600 mt-2">${err.message || 'Unknown error'}</p>
+              <div class="mt-4">
+                <a routerLink="hr/departments" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to Departments</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }
+
+  async renderEditDepartment(params) {
+    const name = params?.name || ''
+    this.templateEngine.mainContainer.innerHTML = HrUiComponents.renderLoadingState(
+      'Edit Department',
+      `Updating: ${decodeURIComponent(name)}`
+    )
+
+    try {
+      if (!window.HrDepartmentEditFeature) {
+        await this.loadScript('/hr/static/js/features/DepartmentEdit.js')
+      }
+      const feature = new window.HrDepartmentEditFeature(this.templateEngine, this.rootURL, name)
+      await feature.render()
+    } catch (err) {
+      console.error('Error loading Department edit:', err)
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Department</h2>
+              <p class="text-red-600 mt-2">${err.message || 'Unknown error'}</p>
+              <div class="mt-4">
+                <a routerLink="hr/departments" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to Departments</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      `
+    }
+  }
+
   // Override the default render method
   async render() {
     try {
@@ -1578,13 +1773,6 @@ class HrApplication extends BaseModuleApplication {
     }
   }
 
-  // Debug utilities
-  debug() {
-    console.group('HrApplication Debug Info')
-    // Debug info available but not logged to console
-    console.groupEnd()
-  }
-
   async renderEditInstructor(params) {
     try {
       // Load the InstructorEdit feature
@@ -1655,6 +1843,16 @@ class HrApplication extends BaseModuleApplication {
         </div>
       `;
     }
+  }
+
+  // Debug utilities
+  debug() {
+    console.group('HrApplication Debug Info')
+    console.log('Module Info:', this.getModuleInfo())
+    console.log('Health Status:', this.getHealthStatus())
+    console.log('Template Engine:', this.templateEngine ? 'Available' : 'Not Available')
+    console.log('Main Container:', this.templateEngine?.mainContainer ? 'Available' : 'Not Available')
+    console.groupEnd()
   }
 }
 

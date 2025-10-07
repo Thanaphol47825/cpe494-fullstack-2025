@@ -6,79 +6,125 @@
 
 **Process**: `AddController()` → calls `GetModelMeta()` → registers API endpoints → serves form metadata as JSON.
 
+# 🚀 Dynamic Form Generation System - Complete Guide
+
+**🎯 Quick Setup:**
+1. Add `GetModelMeta()` to your controller returning `[]*core.ModelMeta`
+2. Use enhanced form tags: `form:"label:Name;type:text;fk:Model"`
+3. Framework auto-creates `/api/modelmeta/{path}` and `/api/formschema/{path}` endpoints
+4. Frontend fetches JSON, renders dynamic forms with **zero configuration**
+
+**🔧 Controller Pattern:**
+```go
+func (c *Controller) GetModelMeta() []*core.ModelMeta {
+    return []*core.ModelMeta{{Path: "student", Model: &Student{}}}
+}
+```
+
+**🎨 Enhanced Tags:**
+```go
+Name     string `form:"label:Full Name;placeholder:Enter name;type:text"`
+Status   Status `form:"label:Status"`
+Category uint   `form:"label:Category;type:select;fk:Category"`
+```
+
+**🌐 API Endpoints:**
+- `/api/modelmeta/common/student` 
 ---
-## Overview
->>>>>>> 478467f (feat: ModelMeta Form API)
 
-The ModEd framework provides a powerful system for automatically generating forms and tables from Go struct models. This system uses reflection to analyze struct fields and their tags to create dynamic UI components.
+## 🎯 System Overview
 
-## How Model Meta Works
+The ModEd framework provides **automatic form generation** from Go structs using reflection, struct tags, and intelligent type detection. No manual form building required!
 
-### 1. Core Components
+### 🏷️ Form Tag Format
 
-#### `ModelMeta` Struct
-```go
-type ModelMeta struct {
-    Path  string      // API endpoint path (e.g., "student", "instructor")
-    Model interface{} // The Go struct model
-}
-```
-
-#### `FieldMeta` Struct
-Will have more in future.
-```go
-type FieldMeta struct {
-    Name  string `json:"name"`  // Field name (from json tag or field name)
-    Type  string `json:"type"`  // Input type (text, number, checkbox, etc.)
-    Label string `json:"label"` // Display label (from label tag or name)
-}
-```
-
-### 2. Struct Tags for Form Generation
-
-Use these tags in your Go struct to control form generation:
-
+**Single `form` tag with key-value pairs:**
 ```go
 type Student struct {
-    ID          uint      `json:"id" form:"-" label:"Student ID"`                    // Hidden field
-    StudentCode string    `json:"student_code" form:"text" label:"Student Code"`     // Text input
-    FirstName   string    `json:"first_name" form:"text" label:"First Name"`         // Text input
-    LastName    string    `json:"last_name" form:"text" label:"Last Name"`           // Text input
-    Email       string    `json:"email" form:"email" label:"Email Address"`          // Email input
-    Age         int       `json:"age" form:"number" label:"Age"`                     // Number input
-    IsActive    bool      `json:"is_active" form:"checkbox" label:"Active Status"`   // Checkbox
-    StartDate   time.Time `json:"start_date" form:"date" label:"Start Date"`         // Date input
-    Gender      string    `json:"gender" form:"select" label:"Gender"`               // Select dropdown
+    ID           uint         `json:"id" form:"-"`                                    // Hidden
+    StudentCode  string       `json:"student_code" form:"label:Student Code;placeholder:Enter code;type:text;required:true"`
+    Name         string       `json:"name" form:"label:Full Name;placeholder:Enter full name;type:text"`
+    Email        string       `json:"email" form:"label:Email;placeholder:Enter email;type:email"`
+    DepartmentID uint         `json:"department_id" form:"label:Department;type:select;fk:Department"`
+    Status       StudentStatus `json:"status" form:"label:Status"`                   // Auto-detected enum!
+    GPA          float64      `json:"gpa" form:"label:GPA;type:number;format:decimal"`
+    BirthDate    time.Time    `json:"birth_date" form:"label:Birth Date;type:date"`
+    IsActive     bool         `json:"is_active" form:"label:Active;type:checkbox"`
+    Bio          string       `json:"bio" form:"label:Biography;type:textarea;placeholder:Tell us about yourself"`
 }
 ```
 
-#### Available Form Types:
-- `text` - Text input field
-- `email` - Email input field  
-- `password` - Password input field
-- `number` - Number input field
-- `date` - Date picker
-- `datetime-local` - Date and time picker
-- `checkbox` - Checkbox input
-- `select` - Dropdown select
-- `textarea` - Multi-line text area
-- `"-"` - Skip this field (don't include in form)
+### 🔧 Available Tag Options
 
-### 3. Setting Up Model Meta in Controllers
+| Key           | Description                                              | Example                          |
+|---------------|----------------------------------------------------------|----------------------------------|
+| `label`       | Field display label                                      | `"Full Name"`                    |
+| `placeholder` | Input placeholder text                                   | `"Enter your name"`              |
+| `type`        | Input type                                              | `text`, `select`, `email`, etc.  |
+| `format`      | Display format for tables                               | `currency`, `datetime`, etc.     |
+| `fk`          | Foreign key model name                                  | `Department`, `Category`         |
+| `fklabel`     | FK display field (default: "Name")                     | `Title`, `DisplayName`           |
+| `enum`        | Explicit enum name                                      | `UserRole`, `Priority`           |
+| `required`    | Mark field as required                                  | `true`, `false`                  |
+| `-`           | Exclude field from forms                                | `form:"-"`                       |
 
-#### Using GetModelMeta
+## 🛠️ Implementation Guide
+
+### 1. 🎮 Controller Setup
+
 ```go
-func (ctl *StudentController) GetModelMeta() []*core.ModelMeta {
-    modelMetaList := []*core.ModelMeta{
-        {
-            Path:  "student",
-            Model: &cmodel.Student{},
-        },
-        {
-            Path:  "instructor", 
-            Model: &cmodel.Instructor{},
-        },
+func (c *StudentController) GetModelMeta() []*core.ModelMeta {
+    return []*core.ModelMeta{
+        {Path: "common/student", Model: &model.Student{}},
+        {Path: "common/instructor", Model: &model.Instructor{}},
+        {Path: "common/department", Model: &model.Department{}},
     }
-    return modelMetaList
 }
+
+func (c *StudentController) SetApplication(app *core.ModEdApplication) {
+    c.application = app
+    // Auto-migrate tables
+    app.DB.AutoMigrate(&model.Student{}, &model.Instructor{})
+}
+```
+
+### 2. 🌐 Automatic API Endpoints
+
+When `AddController()` is called, the framework automatically creates:
+```
+GET /api/modelmeta/common/student 
+GET /api/modelmeta/common/instructor
+```
+
+### 3. 📊 API Response Examples
+
+**Example Endpoint (`/api/formschema/student`):**
+```json
+[
+  {
+    "label": "Student Code",
+    "placeholder": "Enter student code",
+    "name": "student_code",
+    "type": "text"
+  },
+  {
+    "label": "Department", 
+    "name": "department_id",
+    "type": "select",
+    "data": [
+      {"label": "Computer Science", "value": 1},
+      {"label": "Mathematics", "value": 2}
+    ]
+  },
+  {
+    "label": "Status",
+    "name": "status", 
+    "type": "select",
+    "data": [
+      {"label": "Active", "value": 0},
+      {"label": "Graduated", "value": 1},
+      {"label": "Dropped", "value": 2}
+    ]
+  }
+]
 ```

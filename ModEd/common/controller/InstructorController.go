@@ -180,6 +180,9 @@ func (controller *InstructorController) GetRoute() []*core.RouteItem {
 
 func (controller *InstructorController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{}
-
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "common/instructor",
+		Model: model.Instructor{},
+	})
 	return modelMetaList
 }

@@ -278,3 +278,5 @@ class ApplicantCreate {
     if (label) label.classList.remove("text-red-600")
   }
 }
+
+if (typeof window !== "undefined") window.ApplicantCreate = ApplicantCreate;

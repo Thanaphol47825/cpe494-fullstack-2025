@@ -1,73 +1,77 @@
-class CommonApplication {
+class CommonApplication extends BaseModuleApplication {
   constructor(templateEngine) {
-    this.templateEngine = templateEngine;
+    super(templateEngine);
     this.rootURL = window.__ROOT_URL__ || RootURL || "";
 
-    // Register Common module features (id => metadata)
+    this.setSubModuleBasePath("/common/static/js/features");
+
     this.features = {
       "student/create": {
         title: "Add Student",
-        load: async () => {
-          if (!window.CommonStudentFormFeature) {
-            await this.templateEngine.fetchModule(
-              "/common/static/js/features/StudentForm.js"
-            );
-          }
-          return () =>
-            new window.CommonStudentFormFeature(
-              this.templateEngine,
-              this.rootURL
-            );
-        },
+        icon: "👩‍🎓",
+      },
+      "student/list": {
+        title: "List Students",
+        icon: "📋",
       },
       "instructor/create": {
         title: "Add Instructor",
-        load: async () => {
-          if (!window.CommonInstructorFormFeature) {
-            await this.templateEngine.fetchModule(
-              "/common/static/js/features/InstructorForm.js"
-            );
-          }
-          return () =>
-            new window.CommonInstructorFormFeature(
-              this.templateEngine,
-              this.rootURL
-            );
-        },
+        icon: "👨‍🏫",
       },
       "department/create": {
         title: "Add Department",
-        load: async () => {
-          if (!window.CommonDepartmentFormFeature) {
-            await this.templateEngine.fetchModule(
-              "/common/static/js/features/DepartmentForm.js"
-            );
-          }
-          return () =>
-            new window.CommonDepartmentFormFeature(
-              this.templateEngine,
-              this.rootURL
-            );
-        },
+        icon: "📚",
       },
       "faculty/create": {
         title: "Add Faculty",
-        load: async () => {
-          if (!window.CommonFacultyFormFeature) {
-            await this.templateEngine.fetchModule(
-              "/common/static/js/features/FacultyForm.js"
-            );
-          }
-          return () =>
-            new window.CommonFacultyFormFeature(
-              this.templateEngine,
-              this.rootURL
-            );
-        },
+        icon: "🏫",
+      },
+      "department/list": {
+        title: "List Departments",
+        icon: "🗂️",
       },
     };
 
+    this.setupRoutes();
+
     console.log("CommonApplication initialized with TemplateEngine support");
+  }
+
+  setupRoutes() {
+    this.addRoute("", this.renderMenu.bind(this));
+
+    this.addRouteWithSubModule(
+      "/student/create",
+      this.renderStudentCreate.bind(this),
+      "StudentForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/student/list",
+      this.renderStudentList.bind(this),
+      "StudentList.js"
+    );
+    this.addRouteWithSubModule(
+      "/instructor/create",
+      this.renderInstructorCreate.bind(this),
+      "InstructorForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/department/create",
+      this.renderDepartmentCreate.bind(this),
+      "DepartmentForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/faculty/create",
+      this.renderFacultyCreate.bind(this),
+      "FacultyForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/department/list",
+      this.renderDepartmentList.bind(this),
+      "DepartmentList.js"
+    );
+
+    this.setDefaultRoute("");
   }
 
   async render() {
@@ -75,20 +79,7 @@ class CommonApplication {
       console.error("Template engine or main container not found");
       return false;
     }
-
-    return await this.#route();
-  }
-
-  async #route() {
-    const raw = (location.hash || "").replace(/^#\/?/, "");
-    const route = raw.startsWith("common/") ? raw.slice("common/".length) : raw;
-
-    if (route && this.features[route]) {
-      return await this.navigateTo(route);
-    }
-
-    this.renderMenu();
-    return true;
+    return await this.handleRoute(this.templateEngine.getCurrentPath());
   }
 
   renderMenu() {
@@ -96,57 +87,124 @@ class CommonApplication {
     container.innerHTML = "";
 
     const html = `
-      <div class="max-w-xl space-y-4">
-        <h2 class="text-2xl font-bold">Common Module</h2>
-        <p class="text-sm text-gray-600">Choose a task to continue.</p>
-        <ul class="space-y-2">
-          ${Object.entries(this.features)
-            .map(
-              ([id, feature]) => `
-                <li>
-                  <button data-common-action="${id}" class="text-blue-700 underline hover:text-blue-900">
-                    ${feature.title}
-                  </button>
-                </li>
-              `
-            )
-            .join("")}
-        </ul>
-      </div>
+      <section class="menu-container">
+        <div class="form-container">
+          <h1 class="menu-title">Common Module</h1>
+          <p>Manage Faculty, Department, Instructor, and Student information.</p>
+
+          <div class="module-list">
+            ${Object.entries(this.features)
+              .map(
+                ([id, feature]) => `
+                  <a href="#common/${id}" class="module-button" routerLink="common/${id}">
+                    ${feature.icon} ${feature.title}
+                  </a>
+                `
+              )
+              .join("")}
+          </div>
+        </div>
+      </section>
     `;
 
     const element = this.templateEngine.create(html);
     container.appendChild(element);
-
-    container.querySelectorAll("[data-common-action]").forEach((btn) => {
-      btn.addEventListener("click", async (event) => {
-        const id = event.currentTarget.getAttribute("data-common-action");
-        location.hash = `#common/${id}`;
-        await this.navigateTo(id);
-      });
-    });
   }
 
-  async navigateTo(id) {
-    const featureMeta = this.features[id];
-    if (!featureMeta) {
-      console.error(`Unknown Common feature: ${id}`);
-      return false;
-    }
+  getIconForFeature(id) {
+    return this.features[id]?.icon || "•";
+  }
 
-    try {
-      const getInstance = await featureMeta.load();
-      const feature = getInstance();
-      return await feature.render();
-    } catch (err) {
-      console.error(`Failed to load/render Common feature '${id}'`, err);
+  async renderStudentCreate() {
+    if (!window.CommonStudentFormFeature) {
+      console.error("CommonStudentFormFeature not available after loading");
+      this.renderError("Failed to load Student Form");
       return false;
     }
+    const feature = new window.CommonStudentFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderStudentList() {
+    if (!window.CommonStudentListFeature) {
+      console.error("CommonStudentListFeature not available after loading");
+      this.renderError("Failed to load Student List");
+      return false;
+    }
+    const feature = new window.CommonStudentListFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderInstructorCreate() {
+    if (!window.CommonInstructorFormFeature) {
+      console.error("CommonInstructorFormFeature not available after loading");
+      this.renderError("Failed to load Instructor Form");
+      return false;
+    }
+    const feature = new window.CommonInstructorFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderDepartmentCreate() {
+    if (!window.CommonDepartmentFormFeature) {
+      console.error("CommonDepartmentFormFeature not available after loading");
+      this.renderError("Failed to load Department Form");
+      return false;
+    }
+    const feature = new window.CommonDepartmentFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderFacultyCreate() {
+    if (!window.CommonFacultyFormFeature) {
+      console.error("CommonFacultyFormFeature not available after loading");
+      this.renderError("Failed to load Faculty Form");
+      return false;
+    }
+    const feature = new window.CommonFacultyFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderDepartmentList() {
+    if (!window.CommonDepartmentListFeature) {
+      console.error("CommonDepartmentListFeature not available after loading");
+      this.renderError("Failed to load Department List");
+      return false;
+    }
+    const feature = new window.CommonDepartmentListFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+  renderError(message) {
+    const container = this.templateEngine.mainContainer;
+    container.innerHTML = `
+      <div class="error-page">
+        <h2>Error</h2>
+        <p>${message}</p>
+        <a href="#common" class="btn-home" routerLink="common">Back to Common Module</a>
+      </div>
+    `;
   }
 }
 
 if (typeof window !== "undefined") {
   window.CommonApplication = CommonApplication;
 }
-
-

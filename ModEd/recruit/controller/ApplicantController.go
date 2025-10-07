@@ -4,6 +4,7 @@ import (
 	"ModEd/core"
 	"ModEd/recruit/model"
 	"path/filepath"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -85,8 +86,8 @@ func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/GetApplicantsFromFile",
-		Handler: controller.GetApplicantsFromFile,
-		Method:  core.GET,
+		Handler: controller.ImportApplicantsFromFile,
+		Method:  core.POST,
 	})
 
 	return routeList
@@ -206,6 +207,44 @@ func (controller *ApplicantController) GetApplicantsFromFile(c *fiber.Ctx) error
 		return core.SendResponse(c, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: applicants,
+	})
+}
+
+func (controller *ApplicantController) ImportApplicantsFromFile(c *fiber.Ctx) error {
+
+	file, err := c.FormFile("file")
+	if err != nil || file == nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Missing file",
+		})
+	}
+
+	tmpDir := os.TempDir()
+	tmpPath := filepath.Join(tmpDir, file.Filename)
+	if err := c.SaveFile(file, tmpPath); err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: "Cannot save uploaded file",
+		})
+	}
+	defer os.Remove(tmpPath)
+
+	applicants, parseErr := controller.ReadApplicantsFromFile(tmpPath)
+	if parseErr != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: parseErr.Error(),
+		})
+	}
+
+	if len(applicants) > 0 {
+		if err := controller.application.DB.Create(&applicants).Error; err != nil {
+			return core.SendResponse(c, core.BaseApiResponse{
+				IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
+			})
+		}
 	}
 
 	return core.SendResponse(c, core.BaseApiResponse{

@@ -241,6 +241,71 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       return result.result || result;
     }
 
+    // ==================== Instructor Resignations ====================
+
+    async fetchInstructorResignations() {
+      const candidates = [
+        `${this.rootURL}/hr/resignation-instructor-requests`, // exact path from backend controller
+      ];
+
+      for (const url of candidates) {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err?.error?.message || err?.message || `Failed to load instructor resignations: ${response.status}`);
+        }
+        const data = await response.json().catch(() => ([]));
+        return data.result || data;
+      }
+    }
+
+    async fetchInstructorResignation(resignationId) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests/${resignationId}`; // exact backend path
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || err?.message || `Failed to load instructor resignation: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.result || data;
+    }
+
+    async createInstructorResignation(payload) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    async reviewInstructorResignation(requestId, action, reason) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests/${requestId}/review`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, reason })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
     // Student CRUD operations
     async fetchStudent(studentCode) {
       const url = `${this.rootURL}/hr/students/${studentCode}`;
@@ -540,6 +605,89 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
 
       const result = await response.json();
       return result.result || result;
+    }
+
+    // ==================== Departments ====================
+
+    async fetchDepartments({ limit, offset } = {}) {
+      const params = new URLSearchParams()
+      if (Number.isFinite(limit)) params.set('limit', String(limit))
+      if (Number.isFinite(offset)) params.set('offset', String(offset))
+
+      const url = `${this.rootURL}/hr/departments${params.toString() ? `?${params}` : ''}`
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.error?.message || err?.message || `Failed to load departments: ${res.status}`)
+      }
+      const data = await res.json().catch(() => ([]))
+      return data.result || data
+    }
+
+    async fetchDepartment(name) {
+      const safe = encodeURIComponent(name)
+      const res = await fetch(`${this.rootURL}/hr/departments/${safe}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data?.error?.message || data?.message || `Failed to load department: ${res.status}`)
+      }
+      return data.result || data
+    }
+
+    async createDepartment(payload) {
+      const body = {
+        name: payload?.name?.trim() || '',
+        faculty: payload?.faculty ?? payload?.parent ?? '',  // <-- use faculty
+        budget: Number(payload?.budget ?? 0),
+      };
+
+      const res = await fetch(`${this.rootURL}/hr/departments`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error?.message || data?.message || `API Error (${res.status})`);
+      return data.result || data;
+    }
+
+    async updateDepartment(name, patch) {
+      const safe = encodeURIComponent(name);
+      const body = {};
+      if (typeof patch?.name === 'string') body.name = patch.name.trim();
+      if (patch?.faculty !== undefined || patch?.parent !== undefined) {
+        body.faculty = patch.faculty ?? patch.parent;        // <-- use faculty
+      }
+      if (patch?.budget !== undefined) body.budget = Number(patch.budget);
+
+      const res = await fetch(`${this.rootURL}/hr/departments/${safe}/update`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error?.message || data?.message || `API Error (${res.status})`);
+      return data.result || data;
+    }
+
+    async deleteDepartment(name) {
+      const safe = encodeURIComponent(name)
+      const res = await fetch(`${this.rootURL}/hr/departments/${safe}/delete`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      })
+      if (res.status === 204) return { deleted: true }
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        throw new Error(data?.error?.message || data?.message || `API Error (${res.status})`)
+      }
+      return data.result || data
     }
   }
   

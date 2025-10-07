@@ -5,7 +5,7 @@ import (
 	"ModEd/recruit/model"
 	"net/http"
 	"path/filepath"
-
+	"os"
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
 )
@@ -19,7 +19,12 @@ func NewApplicationRoundController() *ApplicationRoundController {
 }
 
 func (controller *ApplicationRoundController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
+	modelMetaList := []*core.ModelMeta{
+		{
+			Path:  "ApplicationRound",
+			Model: &model.ApplicationRound{},
+		},
+	}
 	return modelMetaList
 }
 
@@ -77,6 +82,12 @@ func (controller *ApplicationRoundController) GetRoute() []*core.RouteItem {
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/UpdateApplicationRound",
 		Handler: controller.UpdateApplicationRound,
+		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/ImportApplicationRoundsFromFile",
+		Handler: controller.ImportApplicationRoundsFromFile,
 		Method:  core.POST,
 	})
 
@@ -186,5 +197,50 @@ func (controller *ApplicationRoundController) DeleteApplicationRound(c *fiber.Ct
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    "Delete successful",
+	})
+}
+
+func (controller *ApplicationRoundController) ReadApplicationRoundsFromFile(filePath string) ([]*model.ApplicationRound, error) {
+	mapper, err := core.CreateMapper[model.ApplicationRound](filePath)
+	if err != nil {
+		return nil, err
+	}
+	return mapper.Deserialize(), nil
+}
+
+func (controller *ApplicationRoundController) ImportApplicationRoundsFromFile(c *fiber.Ctx) error {
+	file, err := c.FormFile("file")
+	if err != nil || file == nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Missing file",
+		})
+	}
+
+	tmpDir := os.TempDir()
+	tmpPath := filepath.Join(tmpDir, file.Filename)
+	if err := c.SaveFile(file, tmpPath); err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: "Cannot save uploaded file",
+		})
+	}
+	defer os.Remove(tmpPath)
+
+	rounds, parseErr := controller.ReadApplicationRoundsFromFile(tmpPath)
+	if parseErr != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: parseErr.Error(),
+		})
+	}
+
+	if len(rounds) > 0 {
+		if err := controller.application.DB.Create(&rounds).Error; err != nil {
+			return core.SendResponse(c, core.BaseApiResponse{
+				IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
+			})
+		}
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Result: rounds,
 	})
 }

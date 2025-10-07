@@ -14,7 +14,7 @@ type Evaluation struct {
 	Score          uint      `json:"score" gorm:"not null"`
 	MaxScore       uint      `json:"maxScore" gorm:"not null"`
 	Feedback       string    `json:"feedback" gorm:"type:text"`
-	EvaluatedAt    time.Time `json:"evaluatedAt" gorm:"type:datetime;not null"`
+	EvaluatedAt    time.Time `json:"evaluatedAt" gorm:"type:timestamptz;not null"`
 	Criteria       string    `json:"criteria" gorm:"type:text"`
 	Status         string    `json:"status" gorm:"type:varchar(50);default:'draft'"`
 }

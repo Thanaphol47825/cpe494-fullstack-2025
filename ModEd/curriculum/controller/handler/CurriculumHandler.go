@@ -64,7 +64,7 @@ func (h *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 	}
 
 	var result model.Curriculum
-	if err := h.Application.DB.Preload("CourseList").Where("id = ?", id).First(&result).Error; err != nil {
+	if err := h.Application.DB.Preload("CourseList").Preload("Department").Where("id = ?", id).First(&result).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculum",

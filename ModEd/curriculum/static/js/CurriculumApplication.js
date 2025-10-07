@@ -20,19 +20,20 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRoute('', this.renderMainPage.bind(this))
 
       this.addRouteWithSubModule('/curriculum', this.renderCurriculum.bind(this), 'feature/CurriculumList.js')
+      this.addRouteWithSubModule('/curriculum/:id', this.renderEditCurriculum.bind(this), 'feature/CurriculumEdit.js')
       this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'feature/CurriculumCreate.js')
 
-      this.addRouteWithSubModule('/course', this.renderCourse.bind(this))
-      this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'CourseCreate.js')
+      this.addRouteWithSubModule('/course', this.renderCourse.bind(this), 'feature/CourseList.js')
+      this.addRouteWithSubModule('/course/create', this.renderCreateCourse.bind(this), 'feature/CourseCreate.js')
 
-      this.addRouteWithSubModule('/class', this.renderClass.bind(this))
-      this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'ClassCreate.js')
+      this.addRouteWithSubModule('/class', this.renderClass.bind(this), 'feature/ClassList.js')
+      this.addRouteWithSubModule('/class/create', this.renderCreateClass.bind(this), 'feature/ClassCreate.js')
 
-      this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this))
+      this.addRouteWithSubModule('/classmaterial', this.renderClassMaterial.bind(this), 'feature/ClassMaterialList.js')
       this.addRouteWithSubModule('/classmaterial/create', this.renderCreateClassMaterial.bind(this), 'feature/ClassMaterialCreate.js')
 
-      this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this))
-      this.addRouteWithSubModule('/courseplan/create', this.renderCreateCoursePlan.bind(this), 'CoursePlanCreate.js')
+      this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this), 'feature/CoursePlanList.js')
+      this.addRouteWithSubModule('/courseplan/create', this.renderCreateCoursePlan.bind(this), 'feature/CoursePlanCreate.js')
     }
 
     async renderMainPage() {
@@ -155,6 +156,20 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       }
     }
 
+    async renderEditCurriculum() {
+      if (window.CurriculumEdit) {
+        const curriculumEdit = new window.CurriculumEdit(this.templateEngine);
+        await curriculumEdit.render();
+      } else {
+        console.error('CurriculumEdit not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
+        </div>
+      `;
+      }
+    }
+
     async renderCreateCurriculum() {
       if (window.CurriculumCreate) {
         const curriculumCreate = new window.CurriculumCreate(this.templateEngine);
@@ -170,69 +185,63 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCourse() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-courses">
-        <h2>Course Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/course/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Course</a>
-        </div>
-        
-        <div class="course-list">
-          <!-- course list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      if (window.CourseList) {
+        const courseList = new window.CourseList(this);
+        await courseList.render();
+      } else {
+        console.error('CourseList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="text-red-600">Error loading CourseList.</div>`;
+      }
     }
-    async renderCreateCourse() { }
+    async renderCreateCourse() {
+      if (window.CourseCreate) {
+        const feature = new window.CourseCreate(this);
+        await feature.render();
+      } else {
+        console.error('CourseCreate not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="text-red-600">Error loading.</div>
+        `;
+      }
+    }
 
     async renderClass() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-classes">
-        <h2>Class Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/class/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Class</a>
-        </div>
-        
-        <div class="class-list">
-          <!-- class list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      if (window.ClassList) {
+        const classList = new window.ClassList(this);
+        await classList.render();
+      } else {
+        console.error('ClassList class not found');
+        this.templateEngine.mainContainer.innerHTML = '<div>Error: ClassList module not loaded</div>';
+      }
     }
-    async renderCreateClass() { }
+
+    async renderCreateClass() {
+      if (window.ClassCreate) {
+        const classCreate = new window.ClassCreate(this);
+        await classCreate.render();
+      } else {
+        console.error('ClassCreate class not found');
+        this.templateEngine.mainContainer.innerHTML = '<div>Error: ClassCreate module not loaded</div>';
+      }
+    }
 
     async renderClassMaterial() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-classmaterials">
-        <h2>Class Material Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/classmaterial/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Class Material</a>
+      if (window.ClassMaterialList) {
+        const classMaterialList = new window.ClassMaterialList(this);
+        await classMaterialList.render();
+      } else {
+        console.error('ClassMaterialList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
         </div>
-        
-        <div class="classmaterial-list">
-          <!-- class material list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      `;
+      }
     }
     async renderCreateClassMaterial() {
       if (window.ClassMaterialCreate) {
-        const formFeature = new window.ClassMaterialCreate(this.templateEngine, this.rootURL);
+        const formFeature = new window.ClassMaterialCreate(this);
         await formFeature.render();
       } else {
         console.error('ClassMaterialCreate not available after loading');
@@ -245,25 +254,27 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCoursePlan() {
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="curriculum-courseplans">
-        <h2>Course Plan Management</h2>
-        
-        <div style="margin: 15px 0;">
-          <a routerLink="curriculum/courseplan/create" style="background: #28a745; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px;">+ Add New Course Plan</a>
+      if (window.CoursePlanList) {
+        const CoursePlanList = new window.CoursePlanList(this);
+        await CoursePlanList.render();
+      } else {
+        console.error('CoursePlanList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Eror loading.
         </div>
-        
-        <div class="courseplan-list">
-          <!-- course plan list will be rendered here -->
-        </div>
-        
-        <div style="margin-top: 20px;">
-          <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-        </div>
-      </div>
-    `
+      `;
+      }
     }
-    async renderCreateCoursePlan() { }
+    async renderCreateCoursePlan() { 
+      if (window.CoursePlanCreate) {
+        const coursePlanCreate = new window.CoursePlanCreate(this);
+        await coursePlanCreate.render();
+      } else {
+        console.error('CoursePlanCreate coursePlan not found');
+        this.templateEngine.mainContainer.innerHTML = '<div>Error: CoursePlanCreate module not loaded</div>';
+      }
+    }
 
     async render() {
       return await this.handleRoute(this.templateEngine.getCurrentPath())

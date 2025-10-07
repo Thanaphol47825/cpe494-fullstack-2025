@@ -72,7 +72,7 @@ class DOMObject{
 				if (i == relList.length-1) currentTag[relList[i]] = node;
 				currentTag = currentTag[relList[i]];
 			}
-			initAttributeEvent(relList, node);
+			object.initAttributeEvent(relList, node);
 		} else {
 			tag[rel] = node;
 			object.initAttributeEvent(rel, node);
@@ -98,6 +98,7 @@ class DOMObject{
 	}
 
 	setRequireTag(atrribute, tag){
+		let object = this;
 		if (tag.getAttribute('required') == null) return;
 		if (tag.getAttribute('required').length > 0) {
 			let name = tag.getAttribute('required');
@@ -111,6 +112,7 @@ class DOMObject{
 	}
 
 	setLocalizeTag(tag){
+		let object = this;
 		if (tag.getAttribute('localize') == null) return;
 		object.localizeTag.push(tag);
 	}

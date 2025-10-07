@@ -10,7 +10,7 @@ type AssignmentSubmission struct {
 	gorm.Model
 	AssignmentID   uint      `json:"assignmentId" gorm:"not null"`
 	StudentID      uint      `json:"studentId" gorm:"not null"`
-	SubmittedAt    time.Time `json:"submittedAt" gorm:"type:datetime;not null"`
+	SubmittedAt    time.Time `json:"submittedAt" gorm:"type:timestamptz;not null"`
 	Content        string    `json:"content" gorm:"type:text"`
 	AttachmentPath string    `json:"attachmentPath" gorm:"type:varchar(500)"`
 	Score          *uint     `json:"score" gorm:"type:int"`

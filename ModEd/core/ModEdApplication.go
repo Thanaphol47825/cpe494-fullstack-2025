@@ -3,6 +3,7 @@ package core
 import (
 	"ModEd/core/config"
 	"ModEd/core/database"
+	"ModEd/core/meta"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -48,8 +49,11 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 	}
 	for _, modelMeta := range modelMetaList {
 		application.Application.Get("/api/modelmeta/"+modelMeta.Path, func(c *fiber.Ctx) error {
-			meta := GetModelMetadata(modelMeta.Model)
-			return c.JSON(meta)
+			formSchema, err := meta.BuildFormSchema(application.DB, modelMeta.Model)
+			if err != nil {
+				return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+			}
+			return c.JSON(formSchema)
 		})
 	}
 }

@@ -10,8 +10,8 @@ type QuizSubmission struct {
 	gorm.Model
 	QuizID      uint      `json:"quizId" gorm:"not null"`
 	StudentID   uint      `json:"studentId" gorm:"not null"`
-	StartedAt   time.Time `json:"startedAt" gorm:"type:datetime;not null"`
-	SubmittedAt time.Time `json:"submittedAt" gorm:"type:datetime;not null"`
+	StartedAt   time.Time `json:"startedAt" gorm:"type:timestamptz;not null"`
+	SubmittedAt time.Time `json:"submittedAt" gorm:"type:timestamptz;not null"`
 	Answers     string    `json:"answers" gorm:"type:text"`
 	Score       *uint     `json:"score" gorm:"type:int"`
 	TimeSpent   uint      `json:"timeSpent" gorm:"type:int"`

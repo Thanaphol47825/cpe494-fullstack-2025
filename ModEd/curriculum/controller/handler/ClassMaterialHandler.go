@@ -81,7 +81,7 @@ func (h *ClassMaterialHandler) GetClassMaterialById(context *fiber.Ctx) error {
 
 func (h *ClassMaterialHandler) GetClassMaterials(context *fiber.Ctx) error {
 	var classMaterials []model.ClassMaterial
-	if err := h.Application.DB.Find(&classMaterials).Error; err != nil {
+	if err := h.Application.DB.Preload("Class.Course.Curriculum").Find(&classMaterials).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get class materials",

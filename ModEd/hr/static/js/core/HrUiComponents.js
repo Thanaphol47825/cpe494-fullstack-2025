@@ -157,6 +157,36 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
+              
+              <!-- Departments Card -->
+              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
+                <div class="p-6">
+                  <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
+                      </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900">Departments</h3>
+                  </div>
+                  <p class="text-gray-600 mb-6">Manage academic departments and budgets</p>
+                  <div class="flex flex-col space-y-2">
+                    <a routerLink="hr/departments" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      View All
+                    </a>
+                    <a routerLink="hr/departments/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
+                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                      Add New
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <!-- Back to Main Menu -->
@@ -459,6 +489,59 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
           </div>
           <h3 class="text-xl font-semibold text-gray-900 mb-2">No Student Resignations</h3>
           <p class="text-gray-600">There are currently no student resignation requests.</p>
+        </div>
+      `;
+    }
+
+    static renderInstructorResignationCard(request) {
+      const instructorCode = request.InstructorCode || 'N/A';
+      const reason = request.Reason || 'No reason provided';
+      const status = request.Status || 'Pending';
+      const requestedAt = request.CreatedAt ? new Date(request.CreatedAt).toLocaleString() : 'Unknown';
+
+      return `
+        <div class="bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-lg mb-4 p-6">
+          <div class="flex items-start justify-between">
+            <div>
+              <h4 class="text-lg font-semibold text-gray-900">Instructor: ${instructorCode}</h4>
+              <p class="text-sm text-gray-600 mt-1">Reason: ${reason}</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status === 'Approved' ? 'bg-green-100 text-green-800' : status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${status}</span>
+          </div>
+          <div class="mt-3 text-sm text-gray-500">Requested At: ${requestedAt}</div>
+          <div class="mt-4 flex gap-3">
+            <a routerLink="hr/resignation/instructor/${request.ID || request.id}" class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">View</a>
+            ${status === 'Pending' ? `
+              <button onclick="window.instructorResignationList.approveRequest(${request.ID || request.id})" 
+                      class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Approve
+              </button>
+              <button onclick="window.instructorResignationList.rejectRequest(${request.ID || request.id})" 
+                      class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Reject
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    static renderEmptyInstructorResignationsState() {
+      return `
+        <div class="text-center py-16">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Instructor Resignations</h3>
+          <p class="text-gray-600">There are currently no instructor resignation requests.</p>
         </div>
       `;
     }

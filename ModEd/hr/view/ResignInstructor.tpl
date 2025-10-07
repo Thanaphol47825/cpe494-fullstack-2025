@@ -1,104 +1,25 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>{{ title }}</title>
-  <!-- ใช้ Tailwind ผ่าน CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-  <!-- ตัวแปร ROOT_URL สำหรับ JS -->
-  <script>window.__ROOT_URL__ = "{{ RootURL }}";</script>
+  <meta charset="UTF-8" />
+  <title>Instructor Resignation</title>
+  <script src="{{RootURL}}/hr/static/js/ResignInstructor.js"></script>
 </head>
+<body>
+  <h1>Instructor Resignation Form</h1>
 
-<body class="min-h-screen bg-gray-50 text-gray-900">
-  <div class="max-w-3xl mx-auto py-10 px-4">
-    
-    <!-- Header -->
-    <header class="mb-8">
-      <h1 class="text-3xl font-bold tracking-tight">Instructor Resignation Request</h1>
-      <p class="text-gray-600">Please fill out the form to submit your resignation request.</p>
-    </header>
+  <form id="resignForm">
+    <label for="instructorCode">Instructor Code:</label><br />
+    <input type="text" id="instructorCode" name="instructorCode" required /><br /><br />
 
-    <!-- Form Section -->
-    <section class="bg-white rounded-2xl shadow p-6">
-      <form
-        id="resignationInstructorForm"
-        method="post"
-        action="{{ RootURL }}/hr/resignation-instructor-requests"
-        class="grid grid-cols-1 md:grid-cols-2 gap-4"
-      >
-        <!-- Instructor Code -->
-        <div>
-          <label class="block text-sm font-medium mb-1">
-            Instructor Code <span class="text-red-500">*</span>
-          </label>
-          <input
-            name="InstructorCode"
-            type="text"
-            required
-            class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="INS0001"
-          />
-        </div>
+    <label for="reason">Reason:</label><br />
+    <textarea id="reason" name="reason" rows="4" cols="40" required></textarea><br /><br />
 
-        <!-- Reason -->
-        <div>
-          <label class="block text-sm font-medium mb-1">
-            Reason <span class="text-red-500">*</span>
-          </label>
-          <input
-            name="Reason"
-            type="text"
-            required
-            class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            placeholder="Reason"
-          />
-        </div>
+    <button type="submit">Submit Resignation</button>
+  </form>
 
-        <!-- Optional: Date of resignation -->
-        <div>
-          <label class="block text-sm font-medium mb-1">
-            Effective Date <span class="text-gray-400">(optional)</span>
-          </label>
-          <input
-            name="EffectiveDate"
-            type="date"
-            class="w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
+  <div id="message"></div>
 
-        <!-- Form Buttons -->
-        <div class="md:col-span-2 flex items-center gap-3 pt-2">
-          <button
-            type="submit"
-            class="inline-flex items-center rounded-xl bg-indigo-600 text-white px-4 py-2 font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            Submit
-          </button>
 
-          <button
-            type="reset"
-            class="inline-flex items-center rounded-xl border px-4 py-2 font-medium hover:bg-gray-50"
-          >
-            Reset
-          </button>
-
-          <a
-            href="{{ RootURL }}/hr/resignation/instructor"
-            class="inline-flex items-center rounded-xl border px-4 py-2 font-medium hover:bg-gray-50 text-gray-700"
-          >
-            Back
-          </a>
-
-          <span id="formStatus" class="text-sm"></span>
-        </div>
-      </form>
-    </section>
-
-    <!-- Result box -->
-    <div id="resultBox" class="hidden mt-6 rounded-xl border bg-white p-4 text-sm"></div>
-  </div>
-
-  <!-- JS script สำหรับประมวลผลฟอร์ม -->
-  <script src="{{ RootURL }}/hr/static/js/ResignationInstructorCreateRequest.js?v=1" defer></script>
 </body>
 </html>

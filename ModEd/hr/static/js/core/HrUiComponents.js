@@ -492,6 +492,59 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
         </div>
       `;
     }
+
+    static renderInstructorResignationCard(request) {
+      const instructorCode = request.InstructorCode || 'N/A';
+      const reason = request.Reason || 'No reason provided';
+      const status = request.Status || 'Pending';
+      const requestedAt = request.CreatedAt ? new Date(request.CreatedAt).toLocaleString() : 'Unknown';
+
+      return `
+        <div class="bg-white rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-lg mb-4 p-6">
+          <div class="flex items-start justify-between">
+            <div>
+              <h4 class="text-lg font-semibold text-gray-900">Instructor: ${instructorCode}</h4>
+              <p class="text-sm text-gray-600 mt-1">Reason: ${reason}</p>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${status === 'Approved' ? 'bg-green-100 text-green-800' : status === 'Rejected' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}">${status}</span>
+          </div>
+          <div class="mt-3 text-sm text-gray-500">Requested At: ${requestedAt}</div>
+          <div class="mt-4 flex gap-3">
+            <a routerLink="hr/resignation/instructor/${request.ID || request.id}" class="inline-flex items-center px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors">View</a>
+            ${status === 'Pending' ? `
+              <button onclick="window.instructorResignationList.approveRequest(${request.ID || request.id})" 
+                      class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                Approve
+              </button>
+              <button onclick="window.instructorResignationList.rejectRequest(${request.ID || request.id})" 
+                      class="inline-flex items-center px-3 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                Reject
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    static renderEmptyInstructorResignationsState() {
+      return `
+        <div class="text-center py-16">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold text-gray-900 mb-2">No Instructor Resignations</h3>
+          <p class="text-gray-600">There are currently no instructor resignation requests.</p>
+        </div>
+      `;
+    }
   }
   
   window.HrUiComponents = HrUiComponents

@@ -241,6 +241,71 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       return result.result || result;
     }
 
+    // ==================== Instructor Resignations ====================
+
+    async fetchInstructorResignations() {
+      const candidates = [
+        `${this.rootURL}/hr/resignation-instructor-requests`, // exact path from backend controller
+      ];
+
+      for (const url of candidates) {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err?.error?.message || err?.message || `Failed to load instructor resignations: ${response.status}`);
+        }
+        const data = await response.json().catch(() => ([]));
+        return data.result || data;
+      }
+    }
+
+    async fetchInstructorResignation(resignationId) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests/${resignationId}`; // exact backend path
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err?.error?.message || err?.message || `Failed to load instructor resignation: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.result || data;
+    }
+
+    async createInstructorResignation(payload) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
+    async reviewInstructorResignation(requestId, action, reason) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests/${requestId}/review`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, reason })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
     // Student CRUD operations
     async fetchStudent(studentCode) {
       const url = `${this.rootURL}/hr/students/${studentCode}`;

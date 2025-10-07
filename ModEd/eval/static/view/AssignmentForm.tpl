@@ -1,6 +1,5 @@
 <div class="card">
   <h2>{{title}}</h2>
-  <p class="hint">สร้างรายการ Assignment ใหม่ (ส่งเป็น JSON ไปยัง API)</p>
 
   <form id="assignmentForm" class="grid grid-cols-1 gap-4">
     <div>

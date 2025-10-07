@@ -55,7 +55,7 @@ func (controller *AssignmentController) GetRoute() []*core.RouteItem {
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/eval/assignment/delete/:id",
 		Handler: controller.DeleteAssignment,
-		Method:  core.GET,
+		Method:  core.POST,
 	})
 
 	return routeList

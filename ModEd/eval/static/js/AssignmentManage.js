@@ -1,192 +1,146 @@
+// AssignmentManage - Simple Assignment Management Module
 class AssignmentManage {
   constructor() {
-    this.api = new EvalApiService();
-    this.templatePath = '/eval/static/view/AssignmentManage.tpl';
+    this.apiService = new EvalApiService();
+    this.assignments = [];
   }
 
   async initialize() {
-    const container = document.getElementById('assignment-manage') || document.getElementById('MainContainer') || document.body;
-    if (!container) return;
-
-    const tpl = await this.fetchTpl(this.templatePath);
-    container.innerHTML = tpl;
-
-    await this.loadAssignments();
-  }
-
-  async fetchTpl(path) {
+    const container = document.getElementById('assignment-demo') || document.getElementById('MainContainer') || document.body;
+    
     try {
-      const res = await fetch(RootURL + path);
-      return await res.text();
-    } catch (err) {
-      console.error('Failed to fetch tpl', err);
-      return '<div>Error loading manage template</div>';
+      // Load template
+      const response = await fetch('/eval/static/view/AssignmentManage.tpl');
+      const template = await response.text();
+      container.innerHTML = template;
+      
+      // Load assignments
+      await this.loadAssignments();
+      
+      console.log('AssignmentManage initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize AssignmentManage:', error);
+      container.innerHTML = '<div class="error">Failed to load assignment management</div>';
     }
   }
 
   async loadAssignments() {
-    const data = await this.api.getAllAssignments();
-    const listEl = document.getElementById('assignmentsList');
-    if (!listEl) return;
-
-    if (data.isSuccess && Array.isArray(data.result)) {
-      listEl.innerHTML = '';
-      data.result.forEach(a => {
-        const id = a.id || a.ID;
-        const title = a.title || a.Title;
-        const div = document.createElement('div');
-        div.className = 'assignment-item';
-        div.innerHTML = `<strong>${title}</strong> (ID:${id}) <button data-id="${id}" class="edit-assignment">Edit</button> <button data-id="${id}" class="view-submissions">View Submissions</button> <button data-id="${id}" class="delete-assignment">Delete</button>`;
-        listEl.appendChild(div);
-      });
-
-      // attach handlers
-      listEl.querySelectorAll('.edit-assignment').forEach(btn => btn.addEventListener('click', (e)=> this.editAssignment(e.target.dataset.id)));
-      listEl.querySelectorAll('.view-submissions').forEach(btn => btn.addEventListener('click', (e)=> this.viewSubmissions(e.target.dataset.id)));
-      listEl.querySelectorAll('.delete-assignment').forEach(btn => btn.addEventListener('click', (e)=> this.deleteAssignment(e.target.dataset.id)));
-    } else {
-      listEl.textContent = 'Error loading assignments: ' + JSON.stringify(data);
-    }
-  }
-
-  async deleteAssignment(id) {
-    if (!confirm('Are you sure you want to delete assignment ID ' + id + '?')) return;
     try {
-      const res = await fetch(RootURL + `/eval/assignment/delete/${id}`);
-      const j = await res.json();
-      if (j.isSuccess) {
-        alert('Assignment deleted');
-        // clear editor if it was editing this assignment
-        const editor = document.getElementById('assignmentEditor'); if (editor) editor.innerHTML = '';
-        await this.loadAssignments();
+      const response = await this.apiService.getAllAssignments();
+      if (response.isSuccess && Array.isArray(response.result)) {
+        this.assignments = response.result;
       } else {
-        alert('Delete failed: ' + JSON.stringify(j));
+        this.assignments = [];
+        console.error('Invalid response format:', response);
       }
-    } catch (err) {
-      console.error('Delete error', err); alert('Delete failed: ' + err.message);
+      this.renderAssignmentsList();
+    } catch (error) {
+      console.error('Failed to load assignments:', error);
+      this.assignments = [];
+      const listDiv = document.getElementById('assignmentsList');
+      if (listDiv) {
+        listDiv.innerHTML = `<div class="error">Error loading assignments: ${error.message}</div>`;
+      }
     }
   }
 
-  async editAssignment(id) {
-    const res = await fetch(RootURL + `/eval/assignment/get/${id}`);
-    const json = await res.json();
-    if (!json.isSuccess) return alert('Cannot load assignment');
-    const a = json.result;
+  renderAssignmentsList() {
+    const listDiv = document.getElementById('assignmentsList');
+    if (!listDiv) return;
 
-    const editor = document.getElementById('assignmentEditor');
-    if (!editor) return;
-    editor.innerHTML = `
-      <h3>Edit Assignment (ID: ${a.ID || a.id})</h3>
-      <div>
-        <label>Title</label>
-        <input id="editTitle" value="${(a.title||a.Title||'').replace(/"/g,'&quot;')}" />
-      </div>
-      <div>
-        <label>Description</label>
-        <textarea id="editDescription">${(a.description||a.Description||'')}</textarea>
-      </div>
-      <div>
-        <label>Start Date</label>
-        <input id="editStart" type="datetime-local" />
-      </div>
-      <div>
-        <label>Due Date</label>
-        <input id="editDue" type="datetime-local" />
-      </div>
-      <div>
-        <label>Max Score</label>
-        <input id="editMax" type="number" value="${a.maxScore||a.MaxScore||100}" />
-      </div>
-      <div style="margin-top:8px">
-        <button id="saveAssignment">Save</button>
-        <button id="deleteAssignment">Delete</button>
-        <button id="cancelEdit">Cancel</button>
-      </div>
-    `;
+    if (!this.assignments || this.assignments.length === 0) {
+      listDiv.innerHTML = '<div class="text-center py-8 text-gray-500">No assignments found</div>';
+      return;
+    }
 
-    // prefill datetime values if possible
+    const assignmentsHTML = this.assignments.map(assignment => `
+      <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+        <div class="flex justify-between items-start">
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">${assignment.title || 'Untitled Assignment'}</h3>
+            <p class="text-sm text-gray-600 mb-2">${assignment.description || 'No description'}</p>
+            <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+              ${assignment.startDate ? `<span><strong>Start:</strong> ${new Date(assignment.startDate).toLocaleDateString()}</span>` : ''}
+              ${assignment.dueDate ? `<span><strong>Due:</strong> ${new Date(assignment.dueDate).toLocaleDateString()}</span>` : ''}
+              ${assignment.maxScore ? `<span><strong>Max Score:</strong> ${assignment.maxScore}</span>` : ''}
+            </div>
+          </div>
+          <div class="flex gap-2 ml-4">
+            <button 
+              onclick="assignmentManage.editAssignment(${assignment.id})" 
+              class="px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm"
+            >
+              Edit
+            </button>
+            <button 
+              onclick="assignmentManage.deleteAssignment(${assignment.id})" 
+              class="px-3 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors text-sm"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    listDiv.innerHTML = assignmentsHTML;
+  }
+
+  async editAssignment(assignmentId) {
+    // Find the assignment
+    const assignment = this.assignments.find(a => a.id === assignmentId);
+    if (!assignment) {
+      alert('Assignment not found');
+      return;
+    }
+
+    // For now, just show an alert with assignment details
+    // In a full implementation, you would open an edit form
+    alert(`Edit Assignment: ${assignment.title}\n\nThis would open an edit form in a full implementation.`);
+  }
+
+  async deleteAssignment(assignmentId) {
+    if (!confirm('Are you sure you want to delete this assignment? This action cannot be undone.')) {
+      return;
+    }
+
     try {
-      if (a.StartDate || a.startDate) document.getElementById('editStart').value = new Date(a.StartDate||a.startDate).toISOString().slice(0,16);
-      if (a.DueDate || a.dueDate) document.getElementById('editDue').value = new Date(a.DueDate||a.dueDate).toISOString().slice(0,16);
-    } catch (e) { /* ignore */ }
-
-    document.getElementById('cancelEdit').addEventListener('click', ()=>{ editor.innerHTML = ''; });
-    document.getElementById('deleteAssignment').addEventListener('click', async ()=>{
-      if (!confirm('Delete this assignment?')) return;
-      const delRes = await fetch(RootURL + `/eval/assignment/delete/${id}`);
-      const delJson = await delRes.json();
-      if (delJson.isSuccess) { alert('Deleted'); editor.innerHTML=''; await this.loadAssignments(); }
-      else alert('Delete failed: '+JSON.stringify(delJson));
-    });
-
-    document.getElementById('saveAssignment').addEventListener('click', async ()=>{
-      const payload = {
-        ID: a.ID || a.id,
-        title: document.getElementById('editTitle').value,
-        description: document.getElementById('editDescription').value,
-        startDate: document.getElementById('editStart').value ? new Date(document.getElementById('editStart').value).toISOString() : null,
-        dueDate: document.getElementById('editDue').value ? new Date(document.getElementById('editDue').value).toISOString() : null,
-        maxScore: Number(document.getElementById('editMax').value||100),
-        // keep defaults for other fields
-      };
-
-      const updateRes = await fetch(RootURL + '/eval/assignment/update', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
-      const upJson = await updateRes.json();
-      if (upJson.isSuccess) { alert('Saved'); editor.innerHTML=''; await this.loadAssignments(); }
-      else alert('Save failed: '+JSON.stringify(upJson));
-    });
-  }
-
-  async viewSubmissions(assignmentId) {
-    // load all submissions and filter by assignmentId
-    const res = await this.api.getAllSubmissions();
-    const container = document.getElementById('assignmentSubmissions');
-    if (!container) return;
-    if (res.isSuccess && Array.isArray(res.result)) {
-      const filtered = res.result.filter(s => (s.assignmentId||s.AssignmentID||s.AssignmentId) == assignmentId);
-      if (!filtered.length) { container.textContent = 'No submissions for this assignment.'; return; }
-      container.innerHTML = '';
-      filtered.forEach(s => {
-        const student = s.studentName || s.StudentName || '';
-        const submittedAt = s.submittedAt || s.SubmittedAt || '';
-        const isLate = s.isLate || s.IsLate || false;
-        const score = s.score !== undefined ? s.score : (s.Score || 'Not graded');
-        const div = document.createElement('div');
-        div.className = 'submission-item';
-        div.innerHTML = `<div><strong>${student}</strong> - ${submittedAt} - Score: ${score} - ${isLate?'<span style="color:red">LATE</span>':'On time'} <button data-id="${s.id||s.ID||s.Id}" class="edit-submission">Edit</button></div>`;
-        container.appendChild(div);
-      });
-      // attach edit handlers
-      container.querySelectorAll('.edit-submission').forEach(btn=> btn.addEventListener('click', (e)=> this.editSubmission(e.target.dataset.id)));
-    } else {
-      container.textContent = 'Error loading submissions: ' + JSON.stringify(res);
+      await this.apiService.deleteAssignment(assignmentId);
+      
+      // Remove from local array
+      this.assignments = this.assignments.filter(a => a.id !== assignmentId);
+      
+      // Refresh the list
+      this.renderAssignmentsList();
+      
+      // Show success message
+      this.showMessage('Assignment deleted successfully', 'success');
+    } catch (error) {
+      console.error('Failed to delete assignment:', error);
+      this.showMessage(`Failed to delete assignment: ${error.message}`, 'error');
     }
   }
 
-  async editSubmission(submissionId) {
-    // fetch submission data then open a small editor (reuse submission form)
-    const res = await fetch(RootURL + `/eval/submission/get/${submissionId}`);
-    const json = await res.json();
-    if (!json.isSuccess) return alert('Cannot load submission');
-    const s = json.result;
-
-    // allow editing score and feedback via prompt (small scope)
-    const newScore = prompt('Edit Score (leave blank to keep)', s.score!==undefined?String(s.score):'');
-    if (newScore === null) return;
-    if (newScore !== '') s.score = Number(newScore);
-    const newFeedback = prompt('Edit Feedback (leave blank to keep)', s.feedback||s.Feedback||'');
-    if (newFeedback === null) return;
-    if (newFeedback !== '') s.feedback = newFeedback;
-
-    const updateRes = await fetch(RootURL + '/eval/submission/update', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(s)});
-    const upJson = await updateRes.json();
-    if (upJson.isSuccess) {
-      alert('Submission updated');
-      // refresh current view
-      const currentAssignmentBtn = document.querySelector('#assignmentsList .view-submissions');
-      await this.loadAssignments();
-    } else alert('Update failed: ' + JSON.stringify(upJson));
+  showMessage(message, type = 'info') {
+    // Create a temporary message element
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+      type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
+      type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
+      'bg-blue-100 text-blue-800 border border-blue-200'
+    }`;
+    messageDiv.textContent = message;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      if (messageDiv.parentNode) {
+        messageDiv.parentNode.removeChild(messageDiv);
+      }
+    }, 3000);
   }
 }
 
-window.AssignmentManage = AssignmentManage;
+// Make it globally accessible
+window.assignmentManage = new AssignmentManage();

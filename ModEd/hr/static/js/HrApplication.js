@@ -1152,6 +1152,7 @@ class HrApplication extends BaseModuleApplication {
     `
   }
 
+<<<<<<< Updated upstream
   async renderInstructorResignation() {
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-instructor-resignation">
@@ -1160,12 +1161,64 @@ class HrApplication extends BaseModuleApplication {
         
         <div style="margin-top: 20px;">
           <a routerLink="hr/resignation" style="color: #6c757d;">← Back to Resignations</a>
+=======
+  async renderCreateInstructorResignation() {
+  // Show loading UI
+  this.templateEngine.mainContainer.innerHTML = `
+    <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-6">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Instructor Resignation</h1>
+          <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
+        </div>
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+          <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
+            <h2 class="text-2xl font-semibold text-white">Loading Form...</h2>
+          </div>
+          <div class="p-8">
+            <div class="text-center py-16">
+              <div class="inline-block w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4"></div>
+              <p class="text-lg text-gray-600">Loading form components...</p>
+            </div>
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
-    `
+    </div>
+  `;
+
+  if (window.HrInstructorResignationFormFeature) {
+    const feature = new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL);
+    await feature.render();
+    return;
   }
 
+<<<<<<< Updated upstream
   async renderLeave() {
+=======
+  await this.loadFeatureModules();
+  let retries = 0;
+  while (!window.HrInstructorResignationFormFeature && retries < 10) {
+    await new Promise(r => setTimeout(r, 100));
+    retries++;
+  }
+
+  if (window.HrInstructorResignationFormFeature) {
+    const feature = new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL);
+    await feature.render();
+  } else {
+    console.error('HrInstructorResignationFormFeature not available after loading');
+    this.templateEngine.mainContainer.innerHTML = `<div>Error loading Instructor Resignation Form.</div>`;
+  }
+}
+
+  async renderLeaveMain() {
+>>>>>>> Stashed changes
     this.templateEngine.mainContainer.innerHTML = `
       <div class="hr-leave">
         <h2>🏖️ Leave Management</h2>

@@ -19,39 +19,18 @@ Both classes follow the same pattern:
 const form = new FormRenderV2(application, {
     modelPath: "curriculum/Student",     // API: /api/modelmeta/curriculum/Student
     targetSelector: "#form-container",   // Where to render
-    submitUrl: "/api/save/student"       // Where to submit
-});
-
-await form.render();
-```
-
-### Advanced Configuration
-
-```javascript
-const form = new FormRenderV2(application, {
-    modelPath: "hr/Employee",
-    targetSelector: "#employee-form",
-    submitUrl: "/api/employees/create",
-    method: "POST",
-    
-    // Form behavior
-    autoFocus: true,        // Focus first field
-    showErrors: true,       // Show validation errors
-    validateOnBlur: true,   // Validate on field blur
-    
-    // Custom submit handler
-    submitHandler: async (formData, event, formInstance) => {
-        console.log("Form data:", formData);
-        // Your custom submit logic
-        await saveEmployee(formData);
-        formInstance.showFormSuccess("Employee saved!");
+    submitHandler: async (formData) => {
+        console.log("Form submitted:", formData);
+        // Your submit logic here
+        await saveStudent(formData);
+        form.showFormSuccess("Student saved!");
     }
 });
 
 await form.render();
 ```
 
-### Supported Field Types
+### Supported Field Types [From Model!]
 
 - **Text inputs**: `text`, `email`, `tel`, `url`, `password`, `number`
 - **Date/time**: `date`, `datetime-local`, `time`

@@ -8,6 +8,7 @@
   <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
   <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
   <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
+  <script src="{{ RootURL }}/core/static/js/FormRenderV2.js"></script>
   
   <link rel="stylesheet" type="text/css" href="{{ RootURL }}/core/static/css/Style.css" />
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,13 +20,9 @@
     document.addEventListener("DOMContentLoaded", async () => {
       await engine.render();
 
-      const res = await fetch('/api/modelmeta/field');
-      const meta = await res.json();
-
-      const formRender = new FormRender(engine, meta, ".Form1");
-      const form = await formRender.render();
-
-      const container = document.getElementById("MainContainer");
+      // const formRender = new FormRenderV2(engine, {
+      //   modelPath: "common/student",
+      // }).render();
     });
   </script>
 </head>

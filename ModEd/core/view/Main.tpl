@@ -21,7 +21,7 @@
     document.addEventListener("DOMContentLoaded", async () => {
       await engine.render();
 
-      // const formRender = new FormRenderV2(engine, {
+      // const formRender = new AdvanceFormRender(engine, {
       //   modelPath: "common/student",
       // }).render();
     });

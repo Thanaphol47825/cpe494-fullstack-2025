@@ -114,7 +114,7 @@ class AdvanceFormRender {
                 this.focusFirstField();
             }
 
-            console.log("✅ FormRenderV2 rendered successfully");
+            console.log("✅ AdvanceFormRender rendered successfully");
             return this.form;
 
         } catch (error) {
@@ -622,7 +622,7 @@ class AdvanceFormRender {
 
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = FormRenderV2;
+    module.exports = AdvanceFormRender;
 } else {
-    window.FormRenderV2 = FormRenderV2;
+    window.AdvanceFormRender = AdvanceFormRender;
 }

@@ -1,4 +1,4 @@
-# FormRenderV2 & TableRenderV2 - Complete Usage Guide
+# AdvanceFormRender & AdvanceTableRender - Complete Usage Guide
 
 ## Overview
 
@@ -10,13 +10,13 @@ Both classes follow the same pattern:
 
 ---
 
-## FormRenderV2 - Dynamic Form Generator
+## AdvanceFormRender - Dynamic Form Generator
 
 ### Basic Usage
 
 ```javascript
 // Simple form with automatic schema loading
-const form = new FormRenderV2(application, {
+const form = new AdvanceFormRender(application, {
     modelPath: "curriculum/Student",     // API: /api/modelmeta/curriculum/Student
     targetSelector: "#form-container",   // Where to render
     submitHandler: async (formData) => {
@@ -105,13 +105,13 @@ form.destroy();
 
 ---
 
-## TableRenderV2 - Dynamic Table Generator
+## AdvanceTableRender - Dynamic Table Generator
 
 ### Basic Usage
 
 ```javascript
 // Simple table with automatic schema and data loading
-const table = new TableRenderV2(application, {
+const table = new AdvanceTableRender(application, {
     modelPath: "curriculum/Student",     // Schema: /api/modelmeta/curriculum/Student
     dataPath: "curriculum/students",     // Data: /api/data/curriculum/students
     targetSelector: "#table-container"
@@ -123,7 +123,7 @@ await table.render();
 ### With Custom Action Columns
 
 ```javascript
-const table = new TableRenderV2(application, {
+const table = new AdvanceTableRender(application, {
     modelPath: "hr/Employee",
     dataPath: "hr/employees",
     targetSelector: "#employee-table",
@@ -271,7 +271,7 @@ await table.refresh();
 
 ```javascript
 // List view (table)
-const employeeTable = new TableRenderV2(application, {
+const employeeTable = new AdvanceTableRender(application, {
     modelPath: "hr/Employee",
     dataPath: "hr/employees",
     customColumns: [{
@@ -283,7 +283,7 @@ const employeeTable = new TableRenderV2(application, {
 
 // Edit form
 async function editEmployee(id) {
-    const employeeForm = new FormRenderV2(application, {
+    const employeeForm = new AdvanceFormRender(application, {
         modelPath: "hr/Employee",
         submitHandler: async (data) => {
             await updateEmployee(id, data);
@@ -302,7 +302,7 @@ async function editEmployee(id) {
 
 ```javascript
 // Search form
-const searchForm = new FormRenderV2(application, {
+const searchForm = new AdvanceFormRender(application, {
     schema: [
         {name: "search", label: "Search", type: "text"},
         {name: "department", label: "Department", type: "select", data: departments}
@@ -315,7 +315,7 @@ const searchForm = new FormRenderV2(application, {
 });
 
 // Results table
-const employeeTable = new TableRenderV2(application, {
+const employeeTable = new AdvanceTableRender(application, {
     modelPath: "hr/Employee",
     data: [] // Start empty, populated by search
 });
@@ -332,7 +332,7 @@ class EmployeeManager {
     }
     
     setupTable() {
-        this.table = new TableRenderV2(this.application, {
+        this.table = new AdvanceTableRender(this.application, {
             modelPath: "hr/Employee",
             dataPath: "hr/employees",
             customColumns: [{
@@ -347,7 +347,7 @@ class EmployeeManager {
     }
     
     setupForm() {
-        this.form = new FormRenderV2(this.application, {
+        this.form = new AdvanceFormRender(this.application, {
             modelPath: "hr/Employee",
             submitHandler: async (data) => {
                 await this.save(data);
@@ -380,7 +380,7 @@ const employeeManager = new EmployeeManager(application);
 
 ## Quick Reference
 
-| Feature | FormRenderV2 | TableRenderV2 |
+| Feature | AdvanceFormRender | AdvanceTableRender |
 |---------|--------------|---------------|
 | **Purpose** | Create/edit forms | Display data tables |
 | **Schema** | `modelPath` → form fields | `modelPath` → table columns |

@@ -46,7 +46,7 @@ class CommonStudentListFeature {
       });
     }
 
-    // Initialize TableRenderV2
+    // Initialize AdvanceTableRender
     try {
 
       // Make sure templates are loaded
@@ -157,4 +157,4 @@ if (typeof window !== "undefined") {
   window.CommonStudentListFeature = CommonStudentListFeature;
 }
 
-console.log("📦 CommonStudentListFeature loaded (using TableRenderV2)");
+console.log("📦 CommonStudentListFeature loaded (using AdvanceTableRender)");

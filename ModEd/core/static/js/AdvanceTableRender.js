@@ -11,7 +11,7 @@ class AdvanceTableRender{
         this.isLoading = false;
     }
 
-    // Load schema from API (same as FormRenderV2)
+    // Load schema from API (same as AdvanceFormRender)
     async loadSchema(modelPath = null) {
         const path = modelPath || this.modelPath;
         if (!path) throw new Error("Model path required");
@@ -184,7 +184,7 @@ class AdvanceTableRender{
 
 // Export for use
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = TableRenderV2;
+    module.exports = AdvanceTableRender;
 } else {
-    window.TableRenderV2 = TableRenderV2;
+    window.AdvanceTableRender = AdvanceTableRender;
 }

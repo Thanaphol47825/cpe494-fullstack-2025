@@ -1,4 +1,4 @@
-class TableRenderV2 {
+class AdvanceTableRender{
     constructor(application, options = {}) {
         this.application = application;
         this.schema = options.schema || null;
@@ -112,7 +112,7 @@ class TableRenderV2 {
                 content: content
             }, false);
         } else {
-            // Regular data field
+            // Regular data field//ไม่มี template//
             const value = rowData[column.name];
             return new DOMObject(this.application.template.TableCell, {
                 template: false,

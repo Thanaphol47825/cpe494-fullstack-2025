@@ -1,7 +1,4 @@
-/**
- * FormRenderV2 - Enhanced Dynamic Form Generator
- */
-class FormRenderV2 {
+class AdvanceFormRender {
     constructor(application, options = {}) {
         this.application = application;
         this.schema = options.schema || null;

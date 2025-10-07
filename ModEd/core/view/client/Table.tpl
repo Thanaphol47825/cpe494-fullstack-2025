@@ -1,37 +1,10 @@
-<div class="form-container">
-  <h2 style="font-weight:600; font-size:1.2rem; margin-bottom:12px;">{{ Title }}</h2>
-
-  <table class="table-blue">
-    <thead>
-      <tr>
-        {{#Columns}}
-          <th>{{ Label }}</th>
-        {{/Columns}}
-      </tr>
+<div class="{{#responsive}}overflow-x-auto{{/responsive}}">
+  <table class="min-w-full bg-white border border-gray-200 {{#striped}}divide-y divide-gray-200{{/striped}}">
+    <thead class="bg-gray-50">
+      <tr rel="headerRow"></tr>
     </thead>
-
-    <tbody rel="body"></tbody>
-
-    {{! 
-    <tbody>
-      {{#Rows}}
-        <tr>
-          {{#Columns}}
-            {{#IsLink}}
-              <td><a href="{{Href}}" rel="{{Key}}">{{ Value }}</a></td>
-            {{/IsLink}}
-            {{^IsLink}}
-              <td>{{ Value }}</td>
-            {{/IsLink}}
-          {{/Columns}}
-        </tr>
-      {{/Rows}}
-      {{^Rows}}
-        <tr>
-          <td colspan="{{Colspan}}" class="ui-table-empty">No data available</td>
-        </tr>
-      {{/Rows}}
+    <tbody rel="tbody" class="bg-white {{#striped}}divide-y divide-gray-200{{/striped}}">
+      <!-- Rows will be inserted here -->
     </tbody>
-    }}
   </table>
 </div>

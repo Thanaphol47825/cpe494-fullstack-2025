@@ -1,3 +1,4 @@
+if (typeof window.InterviewCreate === 'undefined') {
 class InterviewCreate {
   constructor(engine, rootURL, interviewId = null) {
     this.engine = engine;
@@ -217,4 +218,7 @@ class InterviewCreate {
     div.textContent = msg;
     (this.engine?.mainContainer || document.body).appendChild(div);
   }
+}
+
+window.InterviewCreate = InterviewCreate;
 }

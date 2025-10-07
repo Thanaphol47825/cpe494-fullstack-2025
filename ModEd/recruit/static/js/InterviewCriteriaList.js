@@ -1,3 +1,4 @@
+if (typeof window.InterviewCriteriaList === 'undefined') {
 class InterviewCriteriaList {
     constructor(application) {
         this.application = application;
@@ -252,3 +253,4 @@ Updated: ${new Date(item.UpdatedAt).toLocaleString()}
 }
 
 window.InterviewCriteriaList = InterviewCriteriaList;
+}

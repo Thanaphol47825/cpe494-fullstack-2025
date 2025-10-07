@@ -1,3 +1,4 @@
+if (typeof window.InterviewList === 'undefined') {
 class InterviewList {
   constructor(engine, rootURL) {
     this.engine = engine;
@@ -464,4 +465,7 @@ class InterviewList {
     div.textContent = msg;
     (this.engine?.mainContainer || document.body).appendChild(div);
   }
+}
+
+window.InterviewList = InterviewList;
 }

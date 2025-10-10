@@ -1,449 +1,269 @@
-// Student Form Feature using Core Module's FormRender
+// Student Form Feature using AdvanceFormRender (V2)
 if (typeof HrStudentFormFeature === 'undefined') {
-class HrStudentFormFeature {
-  constructor(templateEngine, rootURL) {
-    this.templateEngine = templateEngine;
-    this.rootURL = rootURL || window.__ROOT_URL__ || "";
-  }
-
-  async render() {
-    if (!this.templateEngine || !this.templateEngine.mainContainer) {
-      console.error("Template engine or main container not found");
-      return false;
+  class HrStudentFormFeature {
+    constructor(templateEngine, rootURL) {
+      this.templateEngine = templateEngine;
+      this.rootURL = rootURL || window.__ROOT_URL__ || "";
+      this.formRender = null;
     }
 
-    // Prevent duplicate rendering
-    if (this._isRendering) {
-      return false;
-    }
-    
-    // Check if form is already rendered
-    if (this.templateEngine.mainContainer.querySelector('.student-form-container')) {
-      return false;
-    }
-    
-    // Check if there are multiple forms and clear if so
-    const existingForms = this.templateEngine.mainContainer.querySelectorAll('form');
-    if (existingForms.length > 0) {
-      this.templateEngine.mainContainer.innerHTML = "";
-    }
-    
-    this._isRendering = true;
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 10)); // Delay for race conditions
-      this.templateEngine.mainContainer.innerHTML = "";
-      await this.#createDynamicStudentForm();
-      return true;
-    } finally {
-      this._isRendering = false;
-    }
-  }
-
-  async #createDynamicStudentForm() {
-    try {
-      // Fetch form metadata from API
-      const response = await fetch('/api/modelmeta/hr/students');
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
-      }
-      
-      const meta = await response.json();
-      
-      if (!meta || !Array.isArray(meta)) {
-        throw new Error('Invalid form metadata received');
-      }
-
-      // Transform metadata to FormRender schema
-      const schema = meta.map(field => ({
-        type: field.type || "text",
-        name: field.name,
-        label: field.label || field.name,
-        required: ['student_code', 'first_name', 'last_name', 'email'].includes(field.name)
-      }));
-
-      // Wait for template to be loaded
-      if (!this.templateEngine.template) {
-        await this.templateEngine.fetchTemplate();
-      }
-      
-      // Create application object for FormRender
-      const application = {
-        template: this.templateEngine.template
-      };
-      
-      // Create page structure using Tailwind CSS
-      const pageHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-8">
-          <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Header Section -->
-            <div class="text-center mb-12">
-              <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-600 to-teal-600 rounded-full mb-6">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z"></path>
-                </svg>
-              </div>
-              <h1 class="text-4xl font-bold text-gray-900 mb-4">Add New Student</h1>
-              <p class="text-xl text-gray-600 max-w-2xl mx-auto">Create a new student record using our dynamic form generation system</p>
-            </div>
-
-            <!-- Form Container -->
-            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-              <div class="px-8 py-6 bg-gradient-to-r from-green-600 to-teal-600">
-                <h2 class="text-2xl font-semibold text-white flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                  Student Information
-                </h2>
-              </div>
-              
-              <div class="p-8">
-                <div class="student-form-container">
-                  <!-- Dynamic form will be inserted here -->
-                </div>
-                
-                <!-- Status Message -->
-                <div class="text-center mt-6">
-                  <span id="formStatus" class="text-sm font-medium text-gray-500"></span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Result Box -->
-            <div id="resultBox" class="hidden mt-8 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-              <div class="px-6 py-4 bg-gradient-to-r from-green-50 to-teal-50 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                  <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Form Submission Result
-                </h3>
-              </div>
-              <div class="p-6">
-                <div id="resultContent"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      const pageElement = this.templateEngine.create(pageHTML);
-      this.templateEngine.mainContainer.appendChild(pageElement);
-
-      // Clear any existing forms first
-      const existingForms = document.querySelectorAll('form');
-      existingForms.forEach(form => {
-        form.remove();
-      });
-
-      // Now create FormRender after container exists in DOM
-      const formRender = new FormRender(application, schema, '.student-form-container');
-      const formElement = await formRender.render();
-
-      // Remove any duplicate forms that might have been created
-      const allForms = document.querySelectorAll('form');
-      if (allForms.length > 1) {
-        // Keep only the first form (the one we want)
-        for (let i = 1; i < allForms.length; i++) {
-          allForms[i].remove();
-        }
-      }
-
-      // Final cleanup - remove any forms that are not in the student-form-container
-      const finalForms = document.querySelectorAll('form');
-      finalForms.forEach(form => {
-        if (!form.closest('.student-form-container')) {
-          form.remove();
-        }
-      });
-
-      // Add custom buttons to the form
-      this.#addCustomButtons();
-
-      // Attach event handlers
-      this.#attachFormHandlers();
-      this.#attachResultHandlers();
-
-    } catch (error) {
-      console.error('Error creating dynamic form:', error);
-      this.#showError('Failed to load form metadata: ' + error.message);
-    }
-  }
-
-  #addCustomButtons() {
-    const form = document.querySelector('form');
-    if (!form) return;
-
-    // Remove any existing submit buttons from FormRender
-    const existingSubmitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
-    existingSubmitButtons.forEach(btn => btn.remove());
-
-    // Create custom button container
-    const buttonContainer = document.createElement('div');
-    buttonContainer.className = 'flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200';
-    
-    // Create Submit button
-    const submitButton = document.createElement('button');
-    submitButton.type = 'submit';
-    submitButton.className = 'inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1';
-    submitButton.innerHTML = `
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-      </svg>
-      Create Student
-    `;
-
-    // Create Reset button
-    const resetButton = document.createElement('button');
-    resetButton.type = 'button'; // Changed from 'reset' to 'button' to prevent default form reset behavior
-    resetButton.className = 'inline-flex items-center justify-center px-8 py-4 bg-white text-gray-700 font-semibold rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg';
-    resetButton.innerHTML = `
-      <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-      </svg>
-      Reset Form
-    `;
-
-    // Add click handler for reset button
-    resetButton.addEventListener('click', () => {
-      this.#setStatus('✓ Form reset', 'info');
-      this.#hideResult();
-      
-      // Clear all form fields manually
-      const inputs = form.querySelectorAll('input, select, textarea');
-      inputs.forEach(input => {
-        if (input.type === 'checkbox' || input.type === 'radio') {
-          input.checked = false;
-        } else {
-          input.value = '';
-        }
-      });
-      
-      // Focus first field
-      const firstField = form.querySelector('input[name="student_code"]');
-      if (firstField) firstField.focus();
-    });
-
-    // Add buttons to container
-    buttonContainer.appendChild(submitButton);
-    buttonContainer.appendChild(resetButton);
-
-    // Add container to form
-    form.appendChild(buttonContainer);
-  }
-
-  #attachFormHandlers() {
-    // Form submit handler
-    const form = document.querySelector('form');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.#handleFormSubmit(form);
-      });
-
-      // Reset handler is now handled by the reset button's click event
-
-      // Focus first field
-      const firstField = form.querySelector('input[name="student_code"]');
-      if (firstField) setTimeout(() => firstField.focus(), 100);
-    }
-  }
-
-  async #handleFormSubmit(form) {
-    try {
-      this.#setStatus('Creating student...', 'loading');
-      this.#hideResult();
-
-      const payload = this.#collectFormData(form);
-      if (!this.#validatePayload(payload)) return;
-
-      const response = await fetch(`${this.rootURL}/hr/students`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json', 
-          'Accept': 'application/json' 
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
-      }
-
-      this.#setStatus('Student created successfully!', 'success');
-      this.#showResult(result, false);
-      
-      setTimeout(() => {
-        form.reset();
-        this.#setStatus('', 'info');
-        const firstField = form.querySelector('input[name="student_code"]');
-        if (firstField) firstField.focus();
-      }, 3000);
-
-    } catch (error) {
-      console.error('Form submission error:', error);
-      this.#setStatus(`${error.message}`, 'error');
-      this.#showResult({ error: error.message }, true);
-    }
-  }
-
-  #collectFormData(form) {
-    const formData = new FormData(form);
-    const payload = {};
-    for (const [key, value] of formData.entries()) {
-      const trimmedValue = String(value).trim();
-      if (trimmedValue !== '') {
-        payload[key] = trimmedValue;
-      }
-    }
-    return this.#transformPayload(payload);
-  }
-
-  #transformPayload(payload) {
-    const transformed = { ...payload };
-    
-    // Transform date fields to proper format
-    const dateFields = ['StartDate', 'start_date', 'BirthDate', 'birth_date'];
-    dateFields.forEach(field => {
-      if (transformed[field]) {
-        // Convert YYYY-MM-DD to RFC3339 format
-        const date = new Date(transformed[field]);
-        if (!isNaN(date.getTime())) {
-          transformed[field] = date.toISOString();
-        }
-      }
-    });
-    
-    // Set empty fields to null
-    ['department', 'Program', 'Status', 'Gender', 'AdvisorCode'].forEach(field => {
-      if (!transformed[field]) transformed[field] = null;
-    });
-    
-    return transformed;
-  }
-
-  #validatePayload(payload) {
-    // Use HrValidator if available, fallback to local validation
-    if (window.HrValidator) {
-      const validation = HrValidator.validateStudentData(payload);
-      if (!validation.isValid) {
-        this.#setStatus(`${validation.errors.join(', ')}`, 'error');
+    async render() {
+      if (!this.templateEngine || !this.templateEngine.mainContainer) {
+        console.error("Template engine or main container not found");
         return false;
       }
+
+      // Prevent duplicate rendering
+      if (this._isRendering) {
+        return false;
+      }
+
+      this._isRendering = true;
+
+      try {
+        this.templateEngine.mainContainer.innerHTML = "";
+        await this.#createStudentForm();
+        return true;
+      } finally {
+        this._isRendering = false;
+      }
+    }
+
+    async #createStudentForm() {
+      try {
+        // Create page wrapper using shared UI components
+        const pageWrapper = HrUiComponents.createFormPageWrapper({
+          title: 'Add New Student',
+          description: 'Create a new student record using our dynamic form generation system',
+          icon: HrUiComponents.iconPaths.student,
+          gradientFrom: 'green-600',
+          gradientTo: 'teal-600',
+          bgGradient: 'from-green-50 via-emerald-50 to-teal-50',
+          formTitle: 'Student Information',
+          containerSelector: '.student-form-container'
+        });
+
+        // Append page wrapper to main container
+        this.templateEngine.mainContainer.appendChild(pageWrapper);
+
+        // Initialize AdvanceFormRender (V2)
+        this.formRender = new AdvanceFormRender(this.templateEngine, {
+          modelPath: 'hr/students',
+          targetSelector: '.student-form-container',
+          submitHandler: this.#handleSubmit.bind(this),
+          config: {
+            autoFocus: true,
+            showErrors: true,
+            validateOnBlur: true
+          }
+        });
+
+        // Render the form
+        await this.formRender.render();
+
+        // Add custom action buttons
+        this.#addCustomButtons();
+
+      } catch (error) {
+        console.error('Error creating student form:', error);
+        this.#showError('Failed to load form: ' + error.message);
+      }
+    }
+
+    #addCustomButtons() {
+      const form = document.querySelector('.student-form-container form');
+      if (!form) return;
+
+      // Remove any existing submit buttons from AdvanceFormRender
+      const existingSubmitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+      existingSubmitButtons.forEach(btn => btn.remove());
+
+      // Create button container
+      const buttonContainer = document.createElement('div');
+      buttonContainer.className = 'flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200';
+
+      // Create Submit button using shared button classes
+      const submitButton = document.createElement('button');
+      submitButton.type = 'submit';
+      submitButton.className = HrUiComponents.buttonClasses.success;
+      submitButton.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${HrUiComponents.iconPaths.add}
+        </svg>
+        Create Student
+      `;
+
+      // Create Reset button using shared button classes
+      const resetButton = document.createElement('button');
+      resetButton.type = 'button';
+      resetButton.className = HrUiComponents.buttonClasses.secondary;
+      resetButton.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${HrUiComponents.iconPaths.reset}
+        </svg>
+        Reset Form
+      `;
+
+      // Add reset handler
+      resetButton.addEventListener('click', () => {
+        if (this.formRender) {
+          this.formRender.reset();
+          HrUiComponents.hideFormResult();
+          
+          // Focus first field
+          const firstField = form.querySelector('input[name="student_code"]');
+          if (firstField) {
+            setTimeout(() => firstField.focus(), 100);
+          }
+        }
+      });
+
+      // Add buttons to container
+      buttonContainer.appendChild(submitButton);
+      buttonContainer.appendChild(resetButton);
+
+      // Add container to form
+      form.appendChild(buttonContainer);
+    }
+
+    async #handleSubmit(formData, event, formInstance) {
+      try {
+        // Hide previous results
+        HrUiComponents.hideFormResult();
+
+        // Validate required fields
+        if (!this.#validateFormData(formData)) {
+          return;
+        }
+
+        // Transform payload for API
+        const transformedPayload = this.#transformPayload(formData);
+
+        // Submit to API
+        const response = await fetch(`${this.rootURL}/hr/students`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(transformedPayload)
+        });
+
+        const result = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+        }
+
+        // Show success message using shared UI components
+        HrUiComponents.showFormSuccess('Student created successfully!', result);
+
+        // Reset form after delay
+        setTimeout(() => {
+          if (this.formRender) {
+            this.formRender.reset();
+            HrUiComponents.hideFormResult();
+
+            // Focus first field
+            const form = document.querySelector('.student-form-container form');
+            const firstField = form?.querySelector('input[name="student_code"]');
+            if (firstField) firstField.focus();
+          }
+        }, 3000);
+
+      } catch (error) {
+        console.error('Form submission error:', error);
+        HrUiComponents.showFormError(error.message, error);
+      }
+    }
+
+    #validateFormData(formData) {
+      // Use HrValidator if available, fallback to local validation
+      if (window.HrValidator) {
+        const validation = HrValidator.validateStudentData(formData);
+        if (!validation.isValid) {
+          HrUiComponents.showFormError(validation.errors.join(', '));
+          return false;
+        }
+        return true;
+      }
+
+      // Fallback validation
+      const requiredFields = ['student_code', 'first_name', 'last_name', 'email'];
+      const missing = requiredFields.filter(field => !formData[field]);
+
+      if (missing.length > 0) {
+        HrUiComponents.showFormError(`Please fill required fields: ${missing.join(', ')}`);
+        return false;
+      }
+
+      // Email validation
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        HrUiComponents.showFormError('Please enter a valid email address');
+        return false;
+      }
+
       return true;
     }
 
-    // Fallback validation
-    const requiredFields = ['student_code', 'first_name', 'last_name', 'email'];
-    const missing = requiredFields.filter(field => !payload[field]);
-    if (missing.length > 0) {
-      this.#setStatus(`Please fill required fields: ${missing.join(', ')}`, 'error');
-      return false;
+    #transformPayload(payload) {
+      const transformed = { ...payload };
+
+      // Transform date fields to RFC3339 format
+      const dateFields = ['StartDate', 'start_date', 'BirthDate', 'birth_date'];
+      dateFields.forEach(field => {
+        if (transformed[field]) {
+          const date = new Date(transformed[field]);
+          if (!isNaN(date.getTime())) {
+            transformed[field] = date.toISOString();
+          }
+        }
+      });
+
+      // Set empty fields to null
+      ['department', 'Program', 'Status', 'Gender', 'AdvisorCode'].forEach(field => {
+        if (!transformed[field]) {
+          transformed[field] = null;
+        }
+      });
+
+      return transformed;
     }
-    if (payload.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
-      this.#setStatus('Please enter a valid email address', 'error');
-      return false;
-    }
-    return true;
-  }
 
-  #setStatus(message, type = 'info') {
-    const statusEl = document.getElementById('formStatus');
-    if (!statusEl) return;
-    statusEl.textContent = message;
-    const classes = {
-      error: 'text-red-600 font-semibold',
-      success: 'text-green-600 font-semibold',
-      loading: 'text-blue-600 font-medium animate-pulse',
-      info: 'text-gray-600'
-    };
-    statusEl.className = `text-sm ${classes[type] || classes.info}`;
-  }
-
-  async #showResult(data, isError = false) {
-    const resultBox = document.getElementById('resultBox');
-    if (!resultBox) return;
-    
-    resultBox.classList.remove('hidden');
-    const resultContent = resultBox.querySelector('#resultContent');
-    
-    if (isError) {
-      const safeMessage = data?.error || data?.message || 'Unknown error occurred';
-      resultContent.innerHTML = `
-        <div class="flex items-center p-4 bg-red-50 border border-red-200 rounded-lg">
-          <svg class="w-6 h-6 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <div>
-            <h3 class="text-lg font-semibold text-red-800">Error</h3>
-            <p class="text-red-600">${safeMessage}</p>
-          </div>
-        </div>
-      `;
-    } else {
-      resultContent.innerHTML = `
-        <div class="flex items-center p-4 bg-green-50 border border-green-200 rounded-lg">
-          <svg class="w-6 h-6 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <div>
-            <h3 class="text-lg font-semibold text-green-800">Success!</h3>
-            <p class="text-green-600">Student created successfully</p>
-            <details class="mt-2">
-              <summary class="cursor-pointer text-sm text-green-700 hover:text-green-800">View Details</summary>
-              <pre class="mt-2 text-xs text-gray-700 bg-gray-100 p-2 rounded overflow-auto">${JSON.stringify(data, null, 2)}</pre>
-            </details>
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  #hideResult() {
-    const resultBox = document.getElementById('resultBox');
-    if (resultBox) {
-      resultBox.classList.add('hidden');
-    }
-  }
-
-  #attachResultHandlers() {
-    // Auto-hide result after 5 seconds
-    setTimeout(() => {
-      this.#hideResult();
-    }, 5000);
-  }
-
-  async #showError(message) {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gray-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-            <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-            <p class="text-red-600 mt-2">${message}</p>
-            <div class="mt-4">
-              <button onclick="window.location.reload()" 
-                      class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-800 bg-red-100 border border-red-300 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors">
-                Retry
-              </button>
-              <button onclick="window.location.href='${this.rootURL}/hr'" 
-                      class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors ml-3">
-                Back to Main
-              </button>
+    #showError(message) {
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <p class="text-red-600 mt-2">${message}</p>
+              <div class="mt-4">
+                <button onclick="window.location.reload()" 
+                        class="${HrUiComponents.buttonClasses.danger}">
+                  Retry
+                </button>
+                <button onclick="window.location.href='${this.rootURL}/hr'" 
+                        class="${HrUiComponents.buttonClasses.secondary} ml-3">
+                  Back to Main
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
+
+    // Cleanup method
+    destroy() {
+      if (this.formRender) {
+        this.formRender.destroy();
+        this.formRender = null;
+      }
+    }
   }
-}
 
-// Make available globally
-if (typeof window !== 'undefined') {
-  window.HrStudentFormFeature = HrStudentFormFeature;
-}
-
+  // Make available globally
+  if (typeof window !== 'undefined') {
+    window.HrStudentFormFeature = HrStudentFormFeature;
+  }
 }

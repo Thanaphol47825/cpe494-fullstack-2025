@@ -1,5 +1,12 @@
 // Load HR Core Modules
 if (typeof window !== 'undefined') {
+  // Load templates first (required by UI components)
+  if (!window.HrTemplates) {
+    const templatesScript = document.createElement('script');
+    templatesScript.src = '/hr/static/js/core/HrTemplates.js';
+    document.head.appendChild(templatesScript);
+  }
+  
   // Load error handler
   if (!window.HrErrorHandler) {
     const errorScript = document.createElement('script');
@@ -302,26 +309,14 @@ class HrApplication extends BaseModuleApplication {
       }
     } catch (error) {
       console.error('Error loading instructors:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Instructors</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderInstructors()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Instructors',
+        message: error.message,
+        hasRetry: true,
+        retryAction: 'hrApp.renderInstructors()',
+        backLink: 'hr',
+        backLabel: 'Back to HR Menu'
+      });
     }
   }
 
@@ -394,64 +389,16 @@ class HrApplication extends BaseModuleApplication {
 
 
   renderInstructorsError(errorMessage) {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <!-- Header Section -->
-          <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-600 to-pink-600 rounded-full mb-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Error Loading Instructors</h1>
-            <p class="text-lg text-red-600">Failed to load instructor data</p>
-          </div>
-
-          <!-- Error Content -->
-          <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-            <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-              <h2 class="text-2xl font-semibold text-white flex items-center">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Error Details
-              </h2>
-            </div>
-            
-            <div class="p-8">
-              <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <div class="flex items-start">
-                  <svg class="w-6 h-6 text-red-600 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <div>
-                    <h3 class="text-lg font-semibold text-red-800 mb-2">Failed to Load Instructors</h3>
-                    <p class="text-red-700 mb-4">${errorMessage}</p>
-                    <button onclick="hrApp.renderInstructors()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                      </svg>
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Back to HR Menu -->
-          <div class="text-center mt-8">
-            <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-              </svg>
-              Back to HR Menu
-            </a>
-          </div>
-        </div>
-      </div>
-    `;
+    this.templateEngine.mainContainer.innerHTML = HrTemplates.render('detailedErrorPage', {
+      title: 'Error Loading Instructors',
+      subtitle: 'Failed to load instructor data',
+      errorTitle: 'Failed to Load Instructors',
+      errorMessage: errorMessage,
+      hasRetry: true,
+      retryAction: 'hrApp.renderInstructors()',
+      backLink: 'hr',
+      backLabel: 'Back to HR Menu'
+    });
   }
 
   async viewInstructor(instructorCode) {
@@ -952,40 +899,18 @@ class HrApplication extends BaseModuleApplication {
     await new Promise(resolve => setTimeout(resolve, 10));
     
     try {
-      // Show loading state first
-      this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-12">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-              </svg>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Instructor</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
-          </div>
-          
-          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-            <div class="px-8 py-6 bg-gradient-to-r from-blue-600 to-purple-600">
-              <h2 class="text-2xl font-semibold text-white flex items-center">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Loading Form...
-              </h2>
-            </div>
-            
-            <div class="p-8">
-              <div class="text-center py-16">
-                <div class="inline-block w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4"></div>
-                <p class="text-lg text-gray-600">Loading form components...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+      // Show loading state using template
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
+        bgGradient: 'from-blue-50 via-indigo-50 to-purple-50',
+        gradientFrom: 'blue-600',
+        gradientTo: 'purple-600',
+        icon: HrTemplates.iconPaths.instructor,
+        title: 'Create Instructor',
+        message: 'Form feature is loading, please wait...',
+        loadingTitle: 'Loading Form...',
+        loadingMessage: 'Loading form components...',
+        colorName: 'blue'
+      });
     
     // Check if feature is already available
     if (window.HrInstructorFormFeature) {
@@ -1010,39 +935,13 @@ class HrApplication extends BaseModuleApplication {
       await formFeature.render();
     } else {
       console.error('HrInstructorFormFeature not available after loading');
-      // Show error message
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
-          <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-              <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-6">
-                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Instructor</h1>
-              <p class="text-xl text-red-600 max-w-2xl mx-auto">Error: Form feature could not be loaded. Please refresh the page.</p>
-            </div>
-            
-            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Error Loading Form
-                </h2>
-              </div>
-              
-              <div class="p-8">
-                <div class="text-center py-16">
-                  <p class="text-lg text-gray-600">Please try refreshing the page or contact support.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      // Show error using template
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureErrorPage', {
+        bgGradient: 'from-blue-50 via-indigo-50 to-purple-50',
+        title: 'Create Instructor',
+        errorMessage: 'Error: Form feature could not be loaded. Please refresh the page.',
+        helpMessage: 'Please try refreshing the page or contact support.'
+      });
     }
     } finally {
       this._renderingInstructorForm = false;
@@ -1065,26 +964,14 @@ class HrApplication extends BaseModuleApplication {
       }
     } catch (error) {
       console.error('Error loading students:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Students</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderStudents()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to HR Menu</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Students',
+        message: error.message,
+        hasRetry: true,
+        retryAction: 'hrApp.renderStudents()',
+        backLink: 'hr',
+        backLabel: 'Back to HR Menu'
+      });
     }
   }
 
@@ -1157,102 +1044,31 @@ class HrApplication extends BaseModuleApplication {
   }
 
   renderStudentsError(errorMessage) {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <!-- Header Section -->
-          <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-red-600 to-pink-600 rounded-full mb-4">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-2">Error Loading Students</h1>
-            <p class="text-lg text-red-600">Failed to load student data</p>
-          </div>
-
-          <!-- Error Content -->
-          <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-            <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-              <h2 class="text-2xl font-semibold text-white flex items-center">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Error Details
-              </h2>
-            </div>
-            
-            <div class="p-8">
-              <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <div class="flex items-start">
-                  <svg class="w-6 h-6 text-red-600 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  <div>
-                    <h3 class="text-lg font-semibold text-red-800 mb-2">Failed to Load Students</h3>
-                    <p class="text-red-700 mb-4">${errorMessage}</p>
-                    <button onclick="hrApp.renderStudents()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                      </svg>
-                      Try Again
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Back to HR Menu -->
-          <div class="text-center mt-8">
-            <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-              </svg>
-              Back to HR Menu
-            </a>
-          </div>
-        </div>
-      </div>
-    `;
+    this.templateEngine.mainContainer.innerHTML = HrTemplates.render('detailedErrorPage', {
+      title: 'Error Loading Students',
+      subtitle: 'Failed to load student data',
+      errorTitle: 'Failed to Load Students',
+      errorMessage: errorMessage,
+      hasRetry: true,
+      retryAction: 'hrApp.renderStudents()',
+      backLink: 'hr',
+      backLabel: 'Back to HR Menu'
+    });
   }
 
   async renderCreateStudent() {
-    // Show loading state first
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-8">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-12">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-600 to-teal-600 rounded-full mb-6">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z"></path>
-              </svg>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Student</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
-          </div>
-          
-          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-            <div class="px-8 py-6 bg-gradient-to-r from-green-600 to-teal-600">
-              <h2 class="text-2xl font-semibold text-white flex items-center">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Loading Form...
-              </h2>
-            </div>
-            
-            <div class="p-8">
-              <div class="text-center py-16">
-                <div class="inline-block w-12 h-12 border-4 border-green-200 border-t-green-600 rounded-full animate-spin mb-4"></div>
-                <p class="text-lg text-gray-600">Loading form components...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    // Show loading state using template
+    this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
+      bgGradient: 'from-green-50 via-emerald-50 to-teal-50',
+      gradientFrom: 'green-600',
+      gradientTo: 'teal-600',
+      icon: HrTemplates.iconPaths.student,
+      title: 'Create Student',
+      message: 'Form feature is loading, please wait...',
+      loadingTitle: 'Loading Form...',
+      loadingMessage: 'Loading form components...',
+      colorName: 'green'
+    });
     
     // Check if feature is already available
     if (window.HrStudentFormFeature) {
@@ -1277,39 +1093,13 @@ class HrApplication extends BaseModuleApplication {
       await formFeature.render();
     } else {
       console.error('HrStudentFormFeature not available after loading');
-      // Show error message
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-8">
-          <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
-              <div class="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-6">
-                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Student</h1>
-              <p class="text-xl text-red-600 max-w-2xl mx-auto">Error: Form feature could not be loaded. Please refresh the page.</p>
-            </div>
-            
-            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white flex items-center">
-                  <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  Error Loading Form
-                </h2>
-              </div>
-              
-              <div class="p-8">
-                <div class="text-center py-16">
-                  <p class="text-lg text-gray-600">Please try refreshing the page or contact support.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      // Show error using template
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureErrorPage', {
+        bgGradient: 'from-green-50 via-emerald-50 to-teal-50',
+        title: 'Create Student',
+        errorMessage: 'Error: Form feature could not be loaded. Please refresh the page.',
+        helpMessage: 'Please try refreshing the page or contact support.'
+      });
     }
   }
 
@@ -1385,55 +1175,30 @@ class HrApplication extends BaseModuleApplication {
       }
     } catch (error) {
       console.error('Error loading student resignations:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Student Resignations</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderStudentResignation()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Resignations</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Student Resignations',
+        message: error.message,
+        hasRetry: true,
+        retryAction: 'hrApp.renderStudentResignation()',
+        backLink: 'hr/resignation',
+        backLabel: 'Back to Resignations'
+      });
     }
   }
 
   async renderCreateStudentResignation() {
-    // Show loading UI while feature loads
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-12">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mb-6">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Student Resignation</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
-          </div>
-          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-            <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-orange-600">
-              <h2 class="text-2xl font-semibold text-white">Loading Form...</h2>
-            </div>
-            <div class="p-8">
-              <div class="text-center py-16">
-                <div class="inline-block w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4"></div>
-                <p class="text-lg text-gray-600">Loading form components...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    // Show loading using template
+    this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
+      bgGradient: 'from-orange-50 via-amber-50 to-yellow-50',
+      gradientFrom: 'orange-500',
+      gradientTo: 'orange-600',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>',
+      title: 'Create Student Resignation',
+      message: 'Form feature is loading, please wait...',
+      loadingTitle: 'Loading Form...',
+      loadingMessage: 'Loading form components...',
+      colorName: 'amber'
+    });
 
     if (window.HrStudentResignationFormFeature) {
       const feature = new window.HrStudentResignationFormFeature(this.templateEngine, this.rootURL)
@@ -1452,18 +1217,12 @@ class HrApplication extends BaseModuleApplication {
       await feature.render()
     } else {
       console.error('HrStudentResignationFormFeature not available after loading')
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gray-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-              <p class="text-red-600 mt-2">Please refresh the page or try again later.</p>
-              <div class="mt-4">
-                <a routerLink="hr/resignation/student" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back</a>
-              </div>
-            </div>
-          </div>
-        </div>`
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureErrorPage', {
+        bgGradient: 'from-orange-50 via-amber-50 to-yellow-50',
+        title: 'Create Student Resignation',
+        errorMessage: 'Error: Form feature could not be loaded.',
+        helpMessage: 'Please refresh the page or try again later.'
+      });
     }
   }
 
@@ -1483,55 +1242,30 @@ class HrApplication extends BaseModuleApplication {
       }
     } catch (error) {
       console.error('Error loading instructor resignations:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Instructor Resignations</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderInstructorResignation()" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/resignation" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Resignations</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Instructor Resignations',
+        message: error.message,
+        hasRetry: true,
+        retryAction: 'hrApp.renderInstructorResignation()',
+        backLink: 'hr/resignation',
+        backLabel: 'Back to Resignations'
+      });
     }
   }
 
   async renderCreateInstructorResignation() {
-    // Show loading UI while feature loads
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="text-center mb-12">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-500 to-red-600 rounded-full mb-6">
-              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-4">Create Instructor Resignation</h1>
-            <p class="text-xl text-gray-600 max-w-2xl mx-auto">Form feature is loading, please wait...</p>
-          </div>
-          <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-            <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600">
-              <h2 class="text-2xl font-semibold text-white">Loading Form...</h2>
-            </div>
-            <div class="p-8">
-              <div class="text-center py-16">
-                <div class="inline-block w-12 h-12 border-4 border-amber-200 border-t-amber-600 rounded-full animate-spin mb-4"></div>
-                <p class="text-lg text-gray-600">Loading form components...</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
+    // Show loading using template
+    this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
+      bgGradient: 'from-orange-50 via-amber-50 to-yellow-50',
+      gradientFrom: 'orange-500',
+      gradientTo: 'red-600',
+      icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>',
+      title: 'Create Instructor Resignation',
+      message: 'Form feature is loading, please wait...',
+      loadingTitle: 'Loading Form...',
+      loadingMessage: 'Loading form components...',
+      colorName: 'amber'
+    });
 
     if (window.HrInstructorResignationFormFeature) {
       const feature = new window.HrInstructorResignationFormFeature(this.templateEngine, this.rootURL)
@@ -1550,18 +1284,12 @@ class HrApplication extends BaseModuleApplication {
       await feature.render()
     } else {
       console.error('HrInstructorResignationFormFeature not available after loading')
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gray-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-              <p class="text-red-600 mt-2">Please refresh the page or try again later.</p>
-              <div class="mt-4">
-                <a routerLink="hr/resignation/instructor" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back</a>
-              </div>
-            </div>
-          </div>
-        </div>`
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureErrorPage', {
+        bgGradient: 'from-orange-50 via-amber-50 to-yellow-50',
+        title: 'Create Instructor Resignation',
+        errorMessage: 'Error: Form feature could not be loaded.',
+        helpMessage: 'Please refresh the page or try again later.'
+      });
     }
   }
 
@@ -1867,26 +1595,14 @@ class HrApplication extends BaseModuleApplication {
       }
     } catch (error) {
       console.error('Error loading instructor edit:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Instructor Edit</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderEditInstructor({code: '${params.code}'})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/instructors" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Instructors</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Instructor Edit',
+        message: error.message,
+        hasRetry: true,
+        retryAction: `hrApp.renderEditInstructor({code: '${params.code}'})`,
+        backLink: 'hr/instructors',
+        backLabel: 'Back to Instructors'
+      });
     }
   }
 
@@ -1903,26 +1619,14 @@ class HrApplication extends BaseModuleApplication {
       }
     } catch (error) {
       console.error('Error loading student edit:', error);
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gradient-to-br from-red-50 via-pink-50 to-purple-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden">
-              <div class="px-8 py-6 bg-gradient-to-r from-red-600 to-pink-600">
-                <h2 class="text-2xl font-semibold text-white">Error Loading Student Edit</h2>
-              </div>
-              <div class="p-8">
-                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <p class="text-red-700 mb-4">${error.message}</p>
-                  <button onclick="hrApp.renderEditStudent({code: '${params.code}'})" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Try Again</button>
-                </div>
-              </div>
-            </div>
-            <div class="text-center mt-8">
-              <a routerLink="hr/students" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">← Back to Students</a>
-            </div>
-          </div>
-        </div>
-      `;
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Student Edit',
+        message: error.message,
+        hasRetry: true,
+        retryAction: `hrApp.renderEditStudent({code: '${params.code}'})`,
+        backLink: 'hr/students',
+        backLabel: 'Back to Students'
+      });
     }
   }
 

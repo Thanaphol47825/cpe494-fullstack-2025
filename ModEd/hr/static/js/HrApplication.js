@@ -87,8 +87,24 @@ class HrApplication extends BaseModuleApplication {
     this.logger.info(`HrApplication v${this.moduleVersion} initialized`)
   }
 
+  async ensureTemplatesLoaded() {
+    // Wait for HrTemplates to be loaded
+    let retries = 0;
+    while (!window.HrTemplates && retries < 20) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      retries++;
+    }
+    
+    if (!window.HrTemplates) {
+      throw new Error('HrTemplates failed to load');
+    }
+  }
+
   async loadFeatureModules() {
     try {
+      // Ensure templates are loaded first
+      await this.ensureTemplatesLoaded();
+      
       // Check if already loading to prevent duplicate loading
       if (this._loadingFeatures) {
         return
@@ -899,6 +915,9 @@ class HrApplication extends BaseModuleApplication {
     await new Promise(resolve => setTimeout(resolve, 10));
     
     try {
+      // Ensure templates are loaded first
+      await this.ensureTemplatesLoaded();
+      
       // Show loading state using template
       this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
         bgGradient: 'from-blue-50 via-indigo-50 to-purple-50',
@@ -1057,6 +1076,9 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderCreateStudent() {
+    // Ensure templates are loaded first
+    await this.ensureTemplatesLoaded();
+    
     // Show loading state using template
     this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
       bgGradient: 'from-green-50 via-emerald-50 to-teal-50',
@@ -1187,6 +1209,9 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderCreateStudentResignation() {
+    // Ensure templates are loaded first
+    await this.ensureTemplatesLoaded();
+    
     // Show loading using template
     this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
       bgGradient: 'from-orange-50 via-amber-50 to-yellow-50',
@@ -1254,6 +1279,9 @@ class HrApplication extends BaseModuleApplication {
   }
 
   async renderCreateInstructorResignation() {
+    // Ensure templates are loaded first
+    await this.ensureTemplatesLoaded();
+    
     // Show loading using template
     this.templateEngine.mainContainer.innerHTML = HrTemplates.render('featureLoadingPage', {
       bgGradient: 'from-orange-50 via-amber-50 to-yellow-50',

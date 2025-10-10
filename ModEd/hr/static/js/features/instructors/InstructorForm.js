@@ -53,13 +53,19 @@ if (typeof HrInstructorFormFeature === 'undefined') {
           submitHandler: this.#handleSubmit.bind(this),
           config: {
             autoFocus: true,
-            showErrors: true,
-            validateOnBlur: true
+            showErrors: false,  // Disable built-in errors, use HrUiComponents instead
+            validateOnBlur: false
           }
         });
 
         // Render the form
         await this.formRender.render();
+
+        // Override validation methods to bypass buggy built-in errors
+        this.formRender.validateForm = () => true;  // Skip built-in validation
+        this.formRender.showFormError = (message) => {
+          HrUiComponents.showFormError(message);
+        };
 
         // Add custom action buttons
         this.#addCustomButtons();

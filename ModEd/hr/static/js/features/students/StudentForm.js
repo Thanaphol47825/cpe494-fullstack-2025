@@ -53,13 +53,19 @@ if (typeof HrStudentFormFeature === 'undefined') {
           submitHandler: this.#handleSubmit.bind(this),
           config: {
             autoFocus: true,
-            showErrors: true,
-            validateOnBlur: true
+            showErrors: false,  // Disable built-in errors, use HrUiComponents instead
+            validateOnBlur: false
           }
         });
 
         // Render the form
         await this.formRender.render();
+
+        // Override validation methods to bypass buggy built-in errors
+        this.formRender.validateForm = () => true;  // Skip built-in validation
+        this.formRender.showFormError = (message) => {
+          HrUiComponents.showFormError(message);
+        };
 
         // Add custom action buttons
         this.#addCustomButtons();
@@ -209,6 +215,30 @@ if (typeof HrStudentFormFeature === 'undefined') {
     #transformPayload(payload) {
       const transformed = { ...payload };
 
+      // Transform program to int or null (if exists and not empty)
+      if (transformed.program !== undefined || transformed.Program !== undefined) {
+        const programValue = transformed.program || transformed.Program;
+        if (programValue && programValue !== '' && programValue !== 'Select Program') {
+          const programInt = parseInt(programValue, 10);
+          transformed.Program = !isNaN(programInt) ? programInt : null;
+        } else {
+          transformed.Program = null;
+        }
+        if (transformed.program !== undefined) delete transformed.program;
+      }
+
+      // Transform year to int or null (if exists and not empty)
+      if (transformed.year !== undefined || transformed.Year !== undefined) {
+        const yearValue = transformed.year || transformed.Year;
+        if (yearValue && yearValue !== '' && yearValue !== 'Select Year') {
+          const yearInt = parseInt(yearValue, 10);
+          transformed.Year = !isNaN(yearInt) ? yearInt : null;
+        } else {
+          transformed.Year = null;
+        }
+        if (transformed.year !== undefined) delete transformed.year;
+      }
+
       // Transform date fields to RFC3339 format
       const dateFields = ['StartDate', 'start_date', 'BirthDate', 'birth_date'];
       dateFields.forEach(field => {
@@ -220,9 +250,45 @@ if (typeof HrStudentFormFeature === 'undefined') {
         }
       });
 
-      // Set empty fields to null
-      ['department', 'Program', 'Status', 'Gender', 'AdvisorCode'].forEach(field => {
-        if (!transformed[field]) {
+      // Transform Status to int or null
+      if (transformed.status !== undefined || transformed.Status !== undefined) {
+        const statusValue = transformed.status || transformed.Status;
+        if (statusValue && statusValue !== '' && !statusValue.startsWith('Select')) {
+          const statusInt = parseInt(statusValue, 10);
+          transformed.Status = !isNaN(statusInt) ? statusInt : null;
+        } else {
+          transformed.Status = null;
+        }
+        if (transformed.status !== undefined) delete transformed.status;
+      }
+
+      // Transform Gender to int or null
+      if (transformed.gender !== undefined || transformed.Gender !== undefined) {
+        const genderValue = transformed.gender || transformed.Gender;
+        if (genderValue && genderValue !== '' && !genderValue.startsWith('Select')) {
+          const genderInt = parseInt(genderValue, 10);
+          transformed.Gender = !isNaN(genderInt) ? genderInt : null;
+        } else {
+          transformed.Gender = null;
+        }
+        if (transformed.gender !== undefined) delete transformed.gender;
+      }
+
+      // Transform AdvisorCode to int or null
+      if (transformed.advisor_code !== undefined || transformed.AdvisorCode !== undefined) {
+        const advisorValue = transformed.advisor_code || transformed.AdvisorCode;
+        if (advisorValue && advisorValue !== '' && !advisorValue.startsWith('Select')) {
+          const advisorInt = parseInt(advisorValue, 10);
+          transformed.AdvisorCode = !isNaN(advisorInt) ? advisorInt : null;
+        } else {
+          transformed.AdvisorCode = null;
+        }
+        if (transformed.advisor_code !== undefined) delete transformed.advisor_code;
+      }
+
+      // Set remaining text fields to null if empty
+      ['department', 'Department'].forEach(field => {
+        if (transformed[field] !== undefined && (!transformed[field] || transformed[field] === '')) {
           transformed[field] = null;
         }
       });

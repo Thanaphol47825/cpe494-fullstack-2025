@@ -17,5 +17,9 @@ func (s *RecuitMigrationStrategy) GetModels() []interface{} {
 }
 
 func (s *RecuitMigrationStrategy) GetSeedPath() []SeedPath {
-	return []SeedPath{}
+	return []SeedPath{
+		{Path: "data/recruit/Admin.csv", Model: &[]model.Admin{}},
+		{Path: "data/recruit/Applicant.csv", Model: &[]model.Applicant{}},
+		{Path: "data/recruit/ApplicationRound.csv", Model: &[]model.ApplicationRound{}},
+	}
 }

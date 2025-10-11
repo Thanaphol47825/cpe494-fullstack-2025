@@ -1,0 +1,11 @@
+first_name,last_name,email,birth_date,address,phone_number,gpax,high_school_program,tgat1,tgat2,tgat3,tpat1,tpat2,tpat3,tpat4,tpat5,portfolio_url,family_income,math_grade,science_grade,english_grade
+Anucha,Phumchai,anucha.phumchai@example.com,2004-12-05T00:00:00Z,123 Sukhumvit Rd Bangkok,812345678,3.45,Science,78.5,65.2,82.3,70.1,68.9,74,80.5,77.2,https://portfolio.com/anucha,45000,88,76,90
+Kanyarat,Srisuk,kanyarat.srisuk@example.com,2005-02-20T00:00:00Z,45 Silom Rd Bangkok,823456789,3.8,Arts,85,79.5,91.2,88.1,84.3,82.5,79,86.7,https://portfolio.com/kanyarat,60000,92,89,95
+Pongsak,Janthra,pongsak.janthra@example.com,2004-11-03T00:00:00Z,78 Ratchada Rd Bangkok,834567890,2.95,Math-Science,65,70.5,60.2,58.1,62.4,66,59.3,64.5,https://portfolio.com/pongsak,38000,70,68,65
+Sasithorn,Meesuk,sasithorn.meesuk@example.com,2005-07-15T00:00:00Z,12 Ladprao Rd Bangkok,845678901,3.6,Science,88,85,90,83.2,81.5,86.4,84.3,87.9,https://portfolio.com/sasithorn,72000,95,91,93
+Wichai,Boonsong,wichai.boonsong@example.com,2004-09-25T00:00:00Z,55 Rama 9 Rd Bangkok,856789012,2.5,Arts,50,55.5,48.3,52.1,49.2,54,50.7,53.6,https://portfolio.com/wichai,20000,55,50,58
+Nattapong,Chaisri,nattapong.chaisri@example.com,2005-01-08T00:00:00Z,89 Paholyothin Rd Bangkok,867890123,3.2,Math-Science,72.3,68.7,75,71.4,70.1,73.2,69.8,74.5,https://portfolio.com/nattapong,50000,82,80,78
+Oranicha,Thongdee,oranicha.thongdee@example.com,2004-03-18T00:00:00Z,100 Sathorn Rd Bangkok,878901234,3.95,Science,95,93.2,97.1,92.5,94.6,96,91.3,95.8,https://portfolio.com/oranicha,80000,99,98,97
+Chalerm,Phongchai,chalerm.phongchai@example.com,2005-06-22T00:00:00Z,32 Bangna Rd Bangkok,889012345,2.75,Arts,60.1,62.5,58.3,61.4,59,57.5,60.8,63.2,https://portfolio.com/chalerm,30000,66,64,62
+Supaporn,Kaewkam,supaporn.kaewkam@example.com,2004-08-10T00:00:00Z,77 Praram 2 Rd Bangkok,890123456,3.1,Science,70.5,73,68.4,72.1,71.3,69.5,74,70.7,https://portfolio.com/supaporn,42000,79,75,77
+Prasert,Khunying,prasert.khunying@example.com,2005-04-05T00:00:00Z,21 Wongwianyai Rd Bangkok,801234567,3.55,Math-Science,82.2,80.5,84.3,79.1,81.7,83.5,80,82.8,https://portfolio.com/prasert,55000,87,85,88

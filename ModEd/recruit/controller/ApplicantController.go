@@ -3,8 +3,8 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
-	"path/filepath"
 	"os"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -21,10 +21,9 @@ func NewApplicantController() *ApplicantController {
 func (controller *ApplicantController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{
 		{
-            Path: "Applicant",
-            Model: &model.Applicant{},
-        },
-
+			Path:  "recruit/applicant",
+			Model: &model.Applicant{},
+		},
 	}
 	return modelMetaList
 }

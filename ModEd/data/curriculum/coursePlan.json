@@ -1,0 +1,258 @@
+[
+    {
+        "CourseId": 1,
+        "Week": 1,
+        "Date": "2024-10-14T08:00:00Z",
+        "InstructorId": 12565160,
+        "Topic": "Introduction to Programming",
+        "Description": "Understand basic programming concepts and environment setup."
+    },
+    {
+        "CourseId": 1,
+        "Week": 2,
+        "Date": "2024-10-16T08:00:00Z",
+        "InstructorId": 12565160,
+        "Topic": "Variables and Data Types",
+        "Description": "Learn about variables, constants, and basic data types in C language."
+    },
+    {
+        "CourseId": 1,
+        "Week": 3,
+        "Date": "2024-10-21T08:00:00Z",
+        "InstructorId": 12565160,
+        "Topic": "Control Structures",
+        "Description": "Learn about if statements, loops, and control flow in programming."
+    },
+    {
+        "CourseId": 1,
+        "Week": 4,
+        "Date": "2024-10-23T08:00:00Z",
+        "InstructorId": 12565160,
+        "Topic": "Functions and Modular Programming",
+        "Description": "Understand how to create and use functions for modular code."
+    },
+    {
+        "CourseId": 1,
+        "Week": 5,
+        "Date": "2024-10-28T08:00:00Z",
+        "InstructorId": 12565160,
+        "Topic": "Arrays and Strings",
+        "Description": "Introduction to arrays and string manipulation in C."
+    },
+    {
+        "CourseId": 1,
+        "Week": 6,
+        "Date": "2024-10-30T08:00:00Z",
+        "InstructorId": 12565160,
+        "Topic": "Pointers and Memory Management",
+        "Description": "Understanding pointers and dynamic memory allocation."
+    },
+    {
+        "CourseId": 2,
+        "Week": 1,
+        "Date": "2024-10-15T08:00:00Z",
+        "InstructorId": 12565161,
+        "Topic": "Sets and Relations",
+        "Description": "Introduction to set theory, relations, and functions."
+    },
+    {
+        "CourseId": 2,
+        "Week": 2,
+        "Date": "2024-10-17T08:00:00Z",
+        "InstructorId": 12565161,
+        "Topic": "Propositional Logic",
+        "Description": "Learn about propositional logic and truth tables."
+    },
+    {
+        "CourseId": 2,
+        "Week": 3,
+        "Date": "2024-10-22T08:00:00Z",
+        "InstructorId": 12565161,
+        "Topic": "Predicate Logic",
+        "Description": "Understanding predicate logic and quantifiers."
+    },
+    {
+        "CourseId": 2,
+        "Week": 4,
+        "Date": "2024-10-24T08:00:00Z",
+        "InstructorId": 12565161,
+        "Topic": "Mathematical Proof Techniques",
+        "Description": "Learn various proof techniques including direct proof and proof by contradiction."
+    },
+    {
+        "CourseId": 2,
+        "Week": 5,
+        "Date": "2024-10-29T08:00:00Z",
+        "InstructorId": 12565161,
+        "Topic": "Mathematical Induction",
+        "Description": "Understanding mathematical induction and strong induction."
+    },
+    {
+        "CourseId": 2,
+        "Week": 6,
+        "Date": "2024-10-31T08:00:00Z",
+        "InstructorId": 12565161,
+        "Topic": "Counting and Combinatorics",
+        "Description": "Learn about permutations, combinations, and counting principles."
+    },
+    {
+        "CourseId": 3,
+        "Week": 1,
+        "Date": "2024-10-14T10:00:00Z",
+        "InstructorId": 12565162,
+        "Topic": "Introduction to Data Structures",
+        "Description": "Overview of data structures and their importance in programming."
+    },
+    {
+        "CourseId": 3,
+        "Week": 2,
+        "Date": "2024-10-16T10:00:00Z",
+        "InstructorId": 12565162,
+        "Topic": "Arrays and Dynamic Arrays",
+        "Description": "Understanding static and dynamic arrays implementation."
+    },
+    {
+        "CourseId": 3,
+        "Week": 3,
+        "Date": "2024-10-21T10:00:00Z",
+        "InstructorId": 12565162,
+        "Topic": "Linked Lists",
+        "Description": "Implementation of singly and doubly linked lists."
+    },
+    {
+        "CourseId": 3,
+        "Week": 4,
+        "Date": "2024-10-23T10:00:00Z",
+        "InstructorId": 12565162,
+        "Topic": "Stacks and Queues",
+        "Description": "Understanding stack and queue data structures and their applications."
+    },
+    {
+        "CourseId": 3,
+        "Week": 5,
+        "Date": "2024-10-28T10:00:00Z",
+        "InstructorId": 12565162,
+        "Topic": "Trees and Binary Trees",
+        "Description": "Introduction to tree structures and binary tree operations."
+    },
+    {
+        "CourseId": 3,
+        "Week": 6,
+        "Date": "2024-10-30T10:00:00Z",
+        "InstructorId": 12565162,
+        "Topic": "Hash Tables",
+        "Description": "Understanding hash functions and collision resolution techniques."
+    },
+    {
+        "CourseId": 4,
+        "Week": 1,
+        "Date": "2024-10-15T10:00:00Z",
+        "InstructorId": 12565163,
+        "Topic": "Basic Circuit Elements",
+        "Description": "Introduction to resistors, capacitors, and inductors."
+    },
+    {
+        "CourseId": 4,
+        "Week": 2,
+        "Date": "2024-10-17T10:00:00Z",
+        "InstructorId": 12565163,
+        "Topic": "Ohm's Law and Power",
+        "Description": "Understanding Ohm's law and power calculations in circuits."
+    },
+    {
+        "CourseId": 4,
+        "Week": 3,
+        "Date": "2024-10-22T10:00:00Z",
+        "InstructorId": 12565163,
+        "Topic": "Kirchhoff's Laws",
+        "Description": "Learn about Kirchhoff's voltage and current laws."
+    },
+    {
+        "CourseId": 4,
+        "Week": 4,
+        "Date": "2024-10-24T10:00:00Z",
+        "InstructorId": 12565163,
+        "Topic": "Circuit Analysis Techniques",
+        "Description": "Node voltage and mesh current analysis methods."
+    },
+    {
+        "CourseId": 4,
+        "Week": 5,
+        "Date": "2024-10-29T10:00:00Z",
+        "InstructorId": 12565163,
+        "Topic": "AC Circuit Analysis",
+        "Description": "Introduction to alternating current and phasors."
+    },
+    {
+        "CourseId": 4,
+        "Week": 6,
+        "Date": "2024-10-31T10:00:00Z",
+        "InstructorId": 12565163,
+        "Topic": "Frequency Response",
+        "Description": "Understanding frequency domain analysis and Bode plots."
+    },
+    {
+        "CourseId": 5,
+        "Week": 1,
+        "Date": "2024-10-14T08:00:00Z",
+        "InstructorId": 12565164,
+        "Topic": "Introduction to Programming (International)",
+        "Description": "Basic programming concepts taught in English for international program."
+    },
+    {
+        "CourseId": 5,
+        "Week": 2,
+        "Date": "2024-10-16T08:00:00Z",
+        "InstructorId": 12565164,
+        "Topic": "Variables and Data Types (International)",
+        "Description": "Learning variables and data types in C programming language."
+    },
+    {
+        "CourseId": 5,
+        "Week": 3,
+        "Date": "2024-10-21T08:00:00Z",
+        "InstructorId": 12565164,
+        "Topic": "Control Flow (International)",
+        "Description": "Understanding conditional statements and loops."
+    },
+    {
+        "CourseId": 5,
+        "Week": 4,
+        "Date": "2024-10-23T08:00:00Z",
+        "InstructorId": 12565164,
+        "Topic": "Functions (International)",
+        "Description": "Creating and using functions in C programming."
+    },
+    {
+        "CourseId": 6,
+        "Week": 1,
+        "Date": "2024-10-15T08:00:00Z",
+        "InstructorId": 12565165,
+        "Topic": "Discrete Mathematics (International)",
+        "Description": "Introduction to discrete mathematics for international students."
+    },
+    {
+        "CourseId": 6,
+        "Week": 2,
+        "Date": "2024-10-17T08:00:00Z",
+        "InstructorId": 12565165,
+        "Topic": "Logic and Proofs (International)",
+        "Description": "Mathematical logic and proof techniques in English."
+    },
+    {
+        "CourseId": 6,
+        "Week": 3,
+        "Date": "2024-10-22T08:00:00Z",
+        "InstructorId": 12565165,
+        "Topic": "Set Theory (International)",
+        "Description": "Advanced set theory concepts for international program."
+    },
+    {
+        "CourseId": 6,
+        "Week": 4,
+        "Date": "2024-10-24T08:00:00Z",
+        "InstructorId": 12565165,
+        "Topic": "Combinatorics (International)",
+        "Description": "Counting principles and combinatorial analysis."
+    }
+]

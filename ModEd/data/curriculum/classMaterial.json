@@ -1,0 +1,137 @@
+[
+    {
+        "ClassId": 1,
+        "FileName": "CPE100_Syllabus.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Syllabus.pdf"
+    },
+    {
+        "ClassId": 1,
+        "FileName": "CPE100_Lecture01_Introduction.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Lecture01_Introduction.pdf"
+    },
+    {
+        "ClassId": 2,
+        "FileName": "CPE100_Lecture02_Variables.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Lecture02_Variables.pdf"
+    },
+    {
+        "ClassId": 2,
+        "FileName": "CPE100_Lab01_BasicProgram.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Lab01_BasicProgram.pdf"
+    },
+    {
+        "ClassId": 3,
+        "FileName": "CPE100_Lecture03_Control_Structures.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Lecture03_Control_Structures.pdf"
+    },
+    {
+        "ClassId": 4,
+        "FileName": "CPE100_Lecture04_Functions.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Lecture04_Functions.pdf"
+    },
+    {
+        "ClassId": 5,
+        "FileName": "CPE100_Syllabus_Section2.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Syllabus_Section2.pdf"
+    },
+    {
+        "ClassId": 6,
+        "FileName": "CPE100_Lecture01_Introduction_Section2.pdf",
+        "FilePath": "uploads/materials/cpe100/CPE100_Lecture01_Introduction_Section2.pdf"
+    },
+    {
+        "ClassId": 9,
+        "FileName": "CPE111_Syllabus.pdf",
+        "FilePath": "uploads/materials/cpe111/CPE111_Syllabus.pdf"
+    },
+    {
+        "ClassId": 9,
+        "FileName": "CPE111_Lecture01_Sets_Relations.pdf",
+        "FilePath": "uploads/materials/cpe111/CPE111_Lecture01_Sets_Relations.pdf"
+    },
+    {
+        "ClassId": 10,
+        "FileName": "CPE111_Lecture02_Logic.pdf",
+        "FilePath": "uploads/materials/cpe111/CPE111_Lecture02_Logic.pdf"
+    },
+    {
+        "ClassId": 11,
+        "FileName": "CPE111_Lecture03_Proof_Techniques.pdf",
+        "FilePath": "uploads/materials/cpe111/CPE111_Lecture03_Proof_Techniques.pdf"
+    },
+    {
+        "ClassId": 12,
+        "FileName": "CPE111_Lecture04_Mathematical_Induction.pdf",
+        "FilePath": "uploads/materials/cpe111/CPE111_Lecture04_Mathematical_Induction.pdf"
+    },
+    {
+        "ClassId": 17,
+        "FileName": "CPE112_Syllabus.pdf",
+        "FilePath": "uploads/materials/cpe112/CPE112_Syllabus.pdf"
+    },
+    {
+        "ClassId": 17,
+        "FileName": "CPE112_Lecture01_Arrays.pdf",
+        "FilePath": "uploads/materials/cpe112/CPE112_Lecture01_Arrays.pdf"
+    },
+    {
+        "ClassId": 18,
+        "FileName": "CPE112_Lecture02_Linked_Lists.pdf",
+        "FilePath": "uploads/materials/cpe112/CPE112_Lecture02_Linked_Lists.pdf"
+    },
+    {
+        "ClassId": 19,
+        "FileName": "CPE112_Lecture03_Stacks_Queues.pdf",
+        "FilePath": "uploads/materials/cpe112/CPE112_Lecture03_Stacks_Queues.pdf"
+    },
+    {
+        "ClassId": 20,
+        "FileName": "CPE112_Lecture04_Trees.pdf",
+        "FilePath": "uploads/materials/cpe112/CPE112_Lecture04_Trees.pdf"
+    },
+    {
+        "ClassId": 25,
+        "FileName": "CPE121_Syllabus.pdf",
+        "FilePath": "uploads/materials/cpe121/CPE121_Syllabus.pdf"
+    },
+    {
+        "ClassId": 25,
+        "FileName": "CPE121_Lecture01_Basic_Circuits.pdf",
+        "FilePath": "uploads/materials/cpe121/CPE121_Lecture01_Basic_Circuits.pdf"
+    },
+    {
+        "ClassId": 26,
+        "FileName": "CPE121_Lecture02_Ohms_Law.pdf",
+        "FilePath": "uploads/materials/cpe121/CPE121_Lecture02_Ohms_Law.pdf"
+    },
+    {
+        "ClassId": 27,
+        "FileName": "CPE121_Lecture03_Kirchoffs_Laws.pdf",
+        "FilePath": "uploads/materials/cpe121/CPE121_Lecture03_Kirchoffs_Laws.pdf"
+    },
+    {
+        "ClassId": 28,
+        "FileName": "CPE121_Lecture04_Circuit_Analysis.pdf",
+        "FilePath": "uploads/materials/cpe121/CPE121_Lecture04_Circuit_Analysis.pdf"
+    },
+    {
+        "ClassId": 33,
+        "FileName": "CPE100_International_Syllabus.pdf",
+        "FilePath": "uploads/materials/cpe100_intl/CPE100_International_Syllabus.pdf"
+    },
+    {
+        "ClassId": 34,
+        "FileName": "CPE100_International_Lecture01.pdf",
+        "FilePath": "uploads/materials/cpe100_intl/CPE100_International_Lecture01.pdf"
+    },
+    {
+        "ClassId": 37,
+        "FileName": "CPE111_International_Syllabus.pdf",
+        "FilePath": "uploads/materials/cpe111_intl/CPE111_International_Syllabus.pdf"
+    },
+    {
+        "ClassId": 38,
+        "FileName": "CPE111_International_Lecture01.pdf",
+        "FilePath": "uploads/materials/cpe111_intl/CPE111_International_Lecture01.pdf"
+    }
+]

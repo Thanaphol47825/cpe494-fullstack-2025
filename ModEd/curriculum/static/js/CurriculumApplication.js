@@ -13,7 +13,15 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     constructor(templateEngine) {
       super(templateEngine)
       this.setSubModuleBasePath('/curriculum/static/js')
+      this.loadFormTemplate()
       this.setupRoutes()
+    }
+
+    async loadFormTemplate() {
+      // โหลด FormTemplate ถ้ายังไม่ได้โหลด
+      if (!window.FormTemplate) {
+        await this.loadSubModule('template/FormTemplate.js')
+      }
     }
 
     setupRoutes() {

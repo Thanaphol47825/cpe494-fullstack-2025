@@ -385,3 +385,46 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
 
     window.CoursePlanList = CoursePlanList;
 }
+
+if (typeof window !== 'undefined' && !window.CoursePlanList) {
+    class CoursePlanList {
+        constructor(application) {
+            this.application = application;
+        }
+
+        async render() {
+            this.application.mainContainer.innerHTML = "";
+            const wrapper = this.application.create(`
+                <div class="max-w-4xl mx-auto py-8">
+                    <h1 class="text-2xl font-bold text-center mb-6">Course Plans</h1>
+                    <div id="courseplan-list">Loading...</div>
+                    <div style="margin-top:16px; text-align:center;">
+                        <a routerLink="curriculum" style="color:#6c757d;">← Back to Curriculum Menu</a>
+                    </div>
+                </div>
+            `);
+            this.application.mainContainer.appendChild(wrapper);
+
+            // basic fetch & render table
+            const listEl = wrapper.querySelector('#courseplan-list');
+            try {
+                const ROOT = (typeof RootURL !== 'undefined' ? RootURL : (window.__ROOT_URL__ || ""));
+                const res = await fetch(`${ROOT}/curriculum/CoursePlan/getCoursePlans`);
+                const data = await res.json().catch(() => ({}));
+                const items = (data.result || []);
+                if (!items.length) {
+                    if (listEl) listEl.innerText = "No course plans found.";
+                    return;
+                }
+                const rows = items.map(it => `<li class="py-2 border-b"><strong>${it.Topic || ''}</strong> — ${it.Date || ''}</li>`).join('');
+                if (listEl) listEl.innerHTML = `<ul>${rows}</ul>`;
+            } catch (e) {
+                if (listEl) listEl.innerText = "Failed to load course plans.";
+            }
+        }
+    }
+
+    if (typeof window !== 'undefined') {
+        window.CoursePlanList = CoursePlanList;
+    }
+}

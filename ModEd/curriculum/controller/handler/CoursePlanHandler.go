@@ -44,6 +44,9 @@ func (h *CoursePlanHandler) CreateCoursePlan(context *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	// ensure any client-supplied ID is ignored so DB will assign an auto-increment value
+	payload.ID = 0
+
 	if err := h.Application.DB.Create(payload).Error; err != nil {
 		return context.JSON(
 			fiber.Map{

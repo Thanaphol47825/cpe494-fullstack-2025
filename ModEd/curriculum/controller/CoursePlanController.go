@@ -3,6 +3,7 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/curriculum/controller/handler"
+	"ModEd/curriculum/model"
 )
 
 type CoursePlanController struct {
@@ -54,6 +55,10 @@ func (controller *CoursePlanController) GetRoute() []*core.RouteItem {
 
 func (controller *CoursePlanController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{}
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "curriculum/courseplan",
+		Model: model.CoursePlan{},
+	})
 	return modelMetaList
 }
 

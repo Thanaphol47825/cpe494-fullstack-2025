@@ -35,6 +35,17 @@ func (controller *InternStudentHandler) GetInternStudent(context *fiber.Ctx) err
 				"error":     "failed to fetch intern students",
 			})
 		}
+
+		// If preload didn't work, manually load student data
+		for i := range internStudents {
+			if internStudents[i].Student.ID == 0 && internStudents[i].StudentID != 0 {
+				var student commonModel.Student
+				if err := controller.DB.First(&student, "id = ?", internStudents[i].StudentID).Error; err == nil {
+					internStudents[i].Student = student
+				}
+			}
+		}
+
 		return context.JSON(fiber.Map{
 			"isSuccess": true,
 			"result":    internStudents,
@@ -50,12 +61,19 @@ func (controller *InternStudentHandler) GetInternStudent(context *fiber.Ctx) err
 		})
 	}
 
+	// If preload didn't work, manually load student data
+	if internStudent.Student.ID == 0 && internStudent.StudentID != 0 {
+		var student commonModel.Student
+		if err := controller.DB.First(&student, "id = ?", internStudent.StudentID).Error; err == nil {
+			internStudent.Student = student
+		}
+	}
+
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    internStudent,
 	})
 }
-
 func (controller *InternStudentHandler) CreateInternStudent(context *fiber.Ctx) error {
 	// Parse the request body to get student_code
 	var requestBody map[string]interface{}

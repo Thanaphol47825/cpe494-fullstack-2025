@@ -15,7 +15,8 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internshipmentor', this.renderInternshipMentor.bind(this), 'InternshipMentorCreate.js')
             this.addRouteWithSubModule('/internshipattendance', this.renderInternshipAttendance.bind(this), 'InternshipAttendanceCreate.js')
             this.addRouteWithSubModule('/internshipcriteria', this.renderInternshipCriteria.bind(this), 'InternshipCriteriaCreate.js')
-            this.addRouteWithSubModule('/internstudent', this.renderInternStudent.bind(this), 'InternStudentCreate.js')
+            this.addRouteWithSubModule('/internstudent', this.renderInternStudentList.bind(this), 'InternStudentList.js')
+            this.addRouteWithSubModule('/internstudent/create', this.renderInternStudentCreate.bind(this), 'InternStudentCreate.js')
             
             this.setDefaultRoute('')
         }
@@ -29,6 +30,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Internship Attendance", route: "/internshipattendance" },
             { label: "Internship Criteria", route: "/internshipcriteria" },
             { label: "Intern Student", route: "/internstudent" },
+            { label: "Intern Student Create", route: "/internstudent/create"}
 
         ]
 
@@ -161,11 +163,21 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             }
         }
 
-        async renderInternStudent() {
+        async renderInternStudentCreate() {
             console.log("Rendering Intern Student")
             if (window.InternStudentCreate) {
                 const internStudentCreate = new window.InternStudentCreate(this.templateEngine)
                 await internStudentCreate.render()
+            } else {
+                console.error("InternStudentCreate class not found")
+            }
+        }
+
+        async renderInternStudentList() {
+            console.log("Rendering Intern Student List")
+            if (window.InternStudentList) {
+                const internStudentList = new window.InternStudentList(this.templateEngine)
+                await internStudentList.render()
             } else {
                 console.error("InternStudentCreate class not found")
             }

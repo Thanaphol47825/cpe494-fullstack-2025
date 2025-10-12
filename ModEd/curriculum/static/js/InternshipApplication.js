@@ -16,6 +16,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internshipattendance', this.renderInternshipAttendance.bind(this), 'InternshipAttendanceCreate.js')
             this.addRouteWithSubModule('/internshipcriteria', this.renderInternshipCriteria.bind(this), 'InternshipCriteriaCreate.js')
             this.addRouteWithSubModule('/internstudent', this.renderInternStudent.bind(this), 'InternStudentCreate.js')
+            this.addRouteWithSubModule('/internworkexperience', this.renderInternshipWorkExperience.bind(this), 'InternWorkExperienceCreate.js')
             
             this.setDefaultRoute('')
         }
@@ -28,6 +29,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Internship Mentor", route: "/internshipmentor" },
             { label: "Internship Attendance", route: "/internshipattendance" },
             { label: "Internship Criteria", route: "/internshipcriteria" },
+            { label: "Intern Student", route: "/internstudent" },
             { label: "Internship Work Experience", route: "/internworkexperience" },
         ]
 
@@ -197,6 +199,16 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
                 await criteriaCreate.render()
             } else {
                 console.error("InternshipCriteriaCreate class not found")
+            }
+        }
+
+        async renderInternshipWorkExperience() {
+            console.log("Rendering Internship Work Experience")
+            if (window.InternWorkExperienceCreate) {
+                const workExperienceCreate = new window.InternWorkExperienceCreate(this.templateEngine)
+                await workExperienceCreate.render()
+            } else {
+                console.error("InternWorkExperienceCreate class not found")
             }
         }
 

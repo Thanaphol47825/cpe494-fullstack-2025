@@ -15,6 +15,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internshipmentor', this.renderInternshipMentor.bind(this), 'InternshipMentorCreate.js')
             this.addRouteWithSubModule('/internshipattendance', this.renderInternshipAttendance.bind(this), 'InternshipAttendanceCreate.js')
             this.addRouteWithSubModule('/internshipcriteria', this.renderInternshipCriteria.bind(this), 'InternshipCriteriaCreate.js')
+            this.addRouteWithSubModule('/internstudent', this.renderInternStudent.bind(this), 'InternStudentCreate.js')
             
             this.setDefaultRoute('')
         }
@@ -27,6 +28,8 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Internship Mentor", route: "/internshipmentor" },
             { label: "Internship Attendance", route: "/internshipattendance" },
             { label: "Internship Criteria", route: "/internshipcriteria" },
+            { label: "Intern Student", route: "/internstudent" },
+
         ]
 
         async renderMainPage() {
@@ -155,6 +158,16 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
                 await companyCreate.render()
             } else {
                 console.error("CompanyCreate class not found")
+            }
+        }
+
+        async renderInternStudent() {
+            console.log("Rendering Intern Student")
+            if (window.InternStudentCreate) {
+                const internStudentCreate = new window.InternStudentCreate(this.templateEngine)
+                await internStudentCreate.render()
+            } else {
+                console.error("InternStudentCreate class not found")
             }
         }
 

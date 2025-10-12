@@ -24,6 +24,8 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 		&model.InternshipMentor{},
 		&model.InternshipAttendance{},
 		&model.InternshipCriteria{},
+		&model.InternCertificate{},
+		&model.Certificate{},
 		&model.SupervisorReview{},
 	}
 }
@@ -37,13 +39,15 @@ func (s *CurriculumMigrationStrategy) GetSeedPath() []SeedPath {
 		// {Path: "data/common/DepartmentList.csv", Model: &model.CoursePlan{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.Advisor{}},
 		{Path: "data/curriculum/company.json", Model: &[]model.Company{}},
-		{Path: "data/common/internshipReport.json", Model: &model.InternshipReport{}},
+		// {Path: "data/common/internshipReport.json", Model: &model.InternshipReport{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipMentor{}},
 		// {Path: "data/curriculum/internStudent.json", Model: &[]model.InternStudent{}},
 		{Path: "data/curriculum/internshipMentor.json", Model: &[]model.InternshipMentor{}},
 		// {Path: "data/curriculum/internshipInformation.json", Model: &[]model.InternshipInformation{}},
 		// {Path: "data/common/DepartmentList.csv", Model: &model.InternshipAttendance{}},
 		{Path: "data/curriculum/internshipApplication.json", Model: &[]model.InternshipApplication{}},
-		{Path: "data/curriculum/internshipCriteria.json", Model: &[]model.InternshipCriteria{}},
+		// {Path: "data/curriculum/internshipCriteria.json", Model: &[]model.InternshipCriteria{}},
+		// {Path: "data/curriculum/internCertificate.json", Model: &[]model.InternCertificate{}},
+		// {Path: "data/curriculum/certificate.json", Model: &[]model.Certificate{}},
 	}
 }

@@ -1,74 +1,94 @@
 if (!window.CommonDepartmentListFeature) {
-    class CommonDepartmentListFeature {
-        constructor(templateEngine, rootURL) {
-            this.templateEngine = templateEngine;
-            this.rootURL = rootURL || "";
-        }
+  class CommonDepartmentListFeature {
+    constructor(templateEngine, rootURL) {
+      this.templateEngine = templateEngine;
+      this.rootURL = rootURL || "";
+    }
 
-        async render() {
-            if (!this.templateEngine || !this.templateEngine.mainContainer) {
-                console.error("❌ Template engine or main container not found");
-                return false;
-            }
+    async render() {
+      // ตรวจสอบ container
+      if (!this.templateEngine?.mainContainer) {
+        console.error("❌ Template engine or main container not found");
+        return false;
+      }
 
-            const container = this.templateEngine.mainContainer;
-            if (!container) return false;
-
-            container.innerHTML = `
+      const container = this.templateEngine.mainContainer;
+      container.innerHTML = `
         <div class="min-h-screen bg-gray-50 py-10 px-6">
-          <div class="max-w-5xl mx-auto">
+          <div class="max-w-6xl mx-auto">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-3xl font-bold text-gray-800">Department List</h2>
               <a href="#common" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">← Back</a>
             </div>
-            <div id="departmentList" class="bg-white rounded-xl shadow p-4 overflow-x-auto">
+            <div id="departmentTable" class="bg-white rounded-xl shadow p-4 overflow-x-auto">
               <p class="text-gray-500">Loading departments...</p>
             </div>
           </div>
         </div>
       `;
 
-            const listEl = document.getElementById("departmentList");
+    
+      try {
+        const table = new AdvanceTableRender(this.templateEngine, {
+          modelPath: "common/department", // โหลด schema: /api/modelmeta/common/Department
+          dataPath: "common/departments/getall", // โหลดข้อมูลจริง
+          targetSelector: "#departmentTable",
 
-            try {
-                const res = await fetch(`${this.rootURL}/common/departments/getall`);
-                const data = await res.json();
-
-                if (data.length > 0) {
-                    // สร้างตาราง
-                    const tableHTML = `
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-100">
-                <tr>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">#</th>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">Department Name</th>
-                  <th class="px-6 py-3 text-left text-sm font-medium text-gray-700">Budget</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                ${data.map((d, i) => `
-                  <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 text-sm text-gray-600">${i + 1}</td>
-                    <td class="px-6 py-4 text-sm text-gray-800">${d.name}</td>
-                    <td class="px-6 py-4 text-sm text-gray-600">${d.budget || "-"}</td>
-
-                  </tr>
-                `).join("")}
-              </tbody>
-            </table>
-          `;
-                    listEl.innerHTML = tableHTML;
-                } else {
-                    listEl.innerHTML = `<p class="text-gray-500">No departments found.</p>`;
-                }
-            } catch (err) {
-                console.error(err);
-                listEl.innerHTML = `<p class="text-red-600">Error loading departments.</p>`;
+      
+          customColumns: [
+            {
+              name: "actions",
+              label: "Actions",
+              template: `
+                <div class="flex space-x-2">
+                  <button onclick="editDepartment({id})"
+                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                    Edit
+                  </button>
+                  <button onclick="viewDepartment({id})"
+                          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                    View
+                  </button>
+                  <button onclick="deleteDepartment({id})"
+                          class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                    Delete
+                  </button>
+                </div>
+              `
             }
+          ]
+        });
 
-            return true;
-        }
+        await table.render();
+      } catch (err) {
+        console.error("❌ Error rendering table:", err);
+        const tableEl = document.getElementById("departmentTable");
+        if (tableEl)
+          tableEl.innerHTML = `<p class="text-red-600">Error loading department data.</p>`;
+      }
+
+      return true;
     }
+  }
 
-    window.CommonDepartmentListFeature = CommonDepartmentListFeature;
+  window.CommonDepartmentListFeature = CommonDepartmentListFeature;
+}
+
+
+async function editDepartment(id) {
+  alert(`✏️ Edit department ID: ${id}`);
+  
+}
+
+async function viewDepartment(id) {
+  alert(`👁 View department ID: ${id}`);
+
+}
+
+async function deleteDepartment(id) {
+  if (confirm(`⚠️ Delete department ID ${id}?`)) {
+    await fetch(`/common/departments/delete/${id}`, { method: "DELETE" });
+    alert("✅ Department deleted!");
+  
+  }
 }

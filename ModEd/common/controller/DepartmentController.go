@@ -146,7 +146,7 @@ func (controller *DepartmentController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/departments/getall",
+		Route:   "api/data/common/departments/getall",
 		Handler: controller.GetAllDepartments,
 		Method:  core.GET,
 	})

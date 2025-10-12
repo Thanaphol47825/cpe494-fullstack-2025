@@ -4,7 +4,8 @@ class RecruitApplication extends BaseModuleApplication {
     this.rootURL = window.__ROOT_URL__ || RootURL || "";
 
     this.setSubModuleBasePath("/recruit/static/js");
-
+    this.loadRecruitFormTemplate();
+    
     this.features = {
       "admin/create": { title: "Create Admin", icon: "👤", script: "AdminCreate.js" },
       "applicant/create": { title: "Create Applicant", icon: "🧑‍💼", script: "ApplicantCreate.js" },
@@ -18,6 +19,12 @@ class RecruitApplication extends BaseModuleApplication {
 
     this.setupRoutes();
     this.setDefaultRoute("");
+  }
+
+  async loadRecruitFormTemplate() {
+    if (!window.RecruitFormTemplate) {
+      await this.loadSubModule("template/RecruitFormTemplate.js");
+    }
   }
 
   setupRoutes() {

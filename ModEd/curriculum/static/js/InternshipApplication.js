@@ -28,8 +28,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Internship Mentor", route: "/internshipmentor" },
             { label: "Internship Attendance", route: "/internshipattendance" },
             { label: "Internship Criteria", route: "/internshipcriteria" },
-            { label: "Intern Student", route: "/internstudent" },
-
+            { label: "Internship Work Experience", route: "/internworkexperience" },
         ]
 
         async renderMainPage() {

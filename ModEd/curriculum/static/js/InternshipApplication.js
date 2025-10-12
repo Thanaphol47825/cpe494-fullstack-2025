@@ -17,6 +17,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internshipcriteria', this.renderInternshipCriteria.bind(this), 'InternshipCriteriaCreate.js')
             this.addRouteWithSubModule('/internstudent', this.renderInternStudentList.bind(this), 'InternStudentList.js')
             this.addRouteWithSubModule('/internstudent/create', this.renderInternStudentCreate.bind(this), 'InternStudentCreate.js')
+            this.addRouteWithSubModule('/internshipworkexperience/create', this.renderInternshipWorkExperience.bind(this), 'InternWorkExperienceCreate.js')
             
             this.setDefaultRoute('')
         }
@@ -30,7 +31,8 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Internship Attendance", route: "/internshipattendance" },
             { label: "Internship Criteria", route: "/internshipcriteria" },
             { label: "Intern Student", route: "/internstudent" },
-            { label: "Intern Student Create", route: "/internstudent/create"}
+            { label: "Intern Student Create", route: "/internstudent/create"},
+            { label: "Internship Work Experience Create", route: "/internshipworkexperience/create" }
 
         ]
 

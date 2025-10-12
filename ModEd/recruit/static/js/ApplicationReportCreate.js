@@ -1,274 +1,165 @@
 class ApplicationReportCreate {
-  constructor(engine, rootURL, reportId = null) {
-    this.engine = engine;
-    this.rootURL = rootURL || window.RootURL || window.__ROOT_URL__ || "";
-    this.reportId = reportId;
+  constructor(templateEngine, rootURL) {
+    this.templateEngine = templateEngine;
+    this.rootURL = rootURL || window.__ROOT_URL__ || "";
+    this.formRenderer = null;
   }
 
   async render() {
-    if (!this.engine?.mainContainer) return false;
-    this.engine.mainContainer.innerHTML = "";
+    const container = document.getElementById("applicationReportFormContainer");
+    if (!container) {
+      console.error("Form container not found");
+      return;
+    }
+
+    container.classList.remove("hidden");
+    container.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.className = "mb-4 flex justify-between items-center";
+    header.innerHTML = `
+      <h2 class="text-xl font-semibold text-gray-800">Create Application Report</h2>
+      <a href="#recruit/applicationreportmanager" class="text-blue-600 hover:underline text-sm">← Back to list</a>
+    `;
+    container.appendChild(header);
+
+    const messageBox = document.createElement("div");
+    messageBox.id = "applicationReportMessages";
+    messageBox.className = "mb-4";
+    container.appendChild(messageBox);
+
+    const formSection = document.createElement("div");
+    formSection.id = "applicationReportFormContainerInner";
+    formSection.className = "bg-white rounded-xl shadow-sm border p-6";
+    container.appendChild(formSection);
+
+    const resultBox = document.createElement("div");
+    resultBox.id = "applicationReportResult";
+    resultBox.className = "mt-6";
+    container.appendChild(resultBox);
+
     try {
-      await this.#createDynamicReportForm();
-      if (this.reportId) await this.#loadExistingData(this.reportId);
-      return true;
+      this.formRenderer = new AdvanceFormRender(this.templateEngine, {
+        modelPath: "recruit/applicationreport",
+        targetSelector: "#applicationReportFormContainerInner",
+        submitHandler: this.handleSubmit.bind(this),
+        autoFocus: true,
+        validateOnBlur: true,
+      });
+
+      await this.formRenderer.render();
+      console.log("Application Report form rendered");
     } catch (err) {
-      console.error(err);
-      this.#showError("Failed to initialize ApplicationReport form: " + err.message);
+      console.error("Error rendering form:", err);
+      this.showMessage(`Failed to render form: ${err.message}`, "error");
+    }
+  }
+
+  async handleSubmit(formData, _event, _formInstance) {
+    this.showMessage("Saving report...", "info");
+    const payload = this.transformData(formData);
+
+    try {
+      const resp = await fetch(`${this.rootURL}/recruit/CreateApplicationReport`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await resp.json();
+
+      if (!resp.ok || data?.isSuccess !== true) {
+        const msg = data?.message || `Request failed (${resp.status} ${resp.statusText})`;
+        this.showMessage(msg, "error");
+        this.renderResult(data, "error");
+        return false;
+      }
+
+      const result = data.result ?? {};
+      const id =
+        result?.ID ?? result?.Id ?? result?.id ??
+        (Array.isArray(result) ? result[0]?.ID ?? result[0]?.Id ?? result[0]?.id : undefined);
+
+      this.showMessage(`Application Report created successfully! ID: ${id || "-"}`, "success");
+      this.renderResult(result, "success");
+
+      this.safeFormReset();
+
+      return true;
+    } catch (error) {
+      console.error("Error saving report:", error);
+      this.showMessage("Network error while saving report.", "error");
       return false;
     }
   }
 
-  async #createDynamicReportForm() {
-    const metaURL = this.rootURL + "/api/modelmeta/applicationreport";
-    const res = await fetch(metaURL);
-    if (!res.ok) throw new Error(`API Error: ${res.status} ${res.statusText}`);
-    const meta = await res.json();
-    if (!Array.isArray(meta)) throw new Error("Invalid metadata format");
+  transformData(formData) {
+    const toRFC3339 = (dateStr) => {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? `${dateStr}T00:00:00Z` : d.toISOString();
+    };
 
-    const numericFieldNames = new Set(meta.filter(f => f.type === "number").map(f => f.name));
-    const schema = meta.map(f => ({
-      type: f.type || "text",
-      name: f.name,
-      label: f.label || f.name
-    }));
+    return {
+      ...formData,
+      report_date: toRFC3339(formData.report_date),
+      created_at: toRFC3339(formData.created_at),
+    };
+  }
 
-    if (!this.engine.template && typeof this.engine.fetchTemplate === "function") 
-      await this.engine.fetchTemplate();
-    if (!this.engine.template) throw new Error("Template not loaded");
+  showMessage(message, type = "info") {
+    const box = document.getElementById("applicationReportMessages");
+    if (!box) return;
 
-    const application = { template: this.engine.template };
+    const colors = {
+      info: "bg-blue-50 text-blue-700 border border-blue-200",
+      error: "bg-red-50 text-red-700 border border-red-200",
+      success: "bg-green-50 text-green-700 border border-green-200",
+    };
 
-    const pageHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50 to-cyan-50 py-10 px-6">
-        <div class="max-w-6xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
-          <div class="px-8 py-6 bg-gradient-to-r from-indigo-600 to-cyan-600 flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                      d="M12 4v16m8-8H4"></path>
-              </svg>
-              ${this.reportId ? "Edit Application Report" : "Create Application Report"}
-            </h1>
-            <button id="btnBack"
-              class="text-white bg-white/10 px-4 py-2 rounded-lg hover:bg-white/20 transition">
-              ← Back
-            </button>
-          </div>
-
-          <div class="p-8">
-            <div class="report-form-container"></div>
-
-            <div class="flex justify-end gap-3 mt-6">
-              <button id="btnReset"
-                class="inline-flex items-center justify-center rounded-xl border px-4 py-2 text-gray-700 hover:bg-gray-100 transition">
-                Reset
-              </button>
-            </div>
-
-            <div class="text-center mt-4">
-              <span id="formStatus" class="text-sm font-medium text-gray-500"></span>
-            </div>
-          </div>
-
-          <div id="resultBox" class="hidden mt-8 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 bg-gradient-to-r from-indigo-50 to-cyan-50 border-b border-gray-200">
-              <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                Form Submission Result
-              </h3>
-            </div>
-            <div class="p-6">
-              <pre id="resultContent" class="text-sm"></pre>
-            </div>
-          </div>
-        </div>
+    box.innerHTML = `
+      <div class="p-3 mb-4 rounded ${colors[type] || colors.info}">
+        <p class="text-sm font-medium">${this.escapeHtml(String(message))}</p>
       </div>
     `;
-
-    const pageEl = this.engine.create(pageHTML);
-    this.engine.mainContainer.appendChild(pageEl);
-
-    const formRender = new FormRender(application, schema, ".report-form-container");
-    await formRender.render();
-
-    requestAnimationFrame(() => {
-      this.#applyTailwindStyles();
-      this.#styleSubmitButton();
-      this.#enforceRequiredFields();
-    });
-
-    const container = this.engine.mainContainer.querySelector(".report-form-container");
-
-    document.getElementById("btnReset")?.addEventListener("click", () => {
-      const f = container?.querySelector("form");
-      if (f) f.reset();
-      this.#setStatus("", "");
-      this.#hideResult();
-    });
-
-    document.getElementById("btnBack")?.addEventListener("click", () => this.#goBack());
-
-    container?.addEventListener("submit", (e) => this.#submit(e, numericFieldNames), true);
   }
 
-  async #loadExistingData(id) {
-    try {
-      const res = await fetch(`${this.rootURL}/recruit/GetApplicationReport/${id}`);
-      const data = await res.json();
-      if (data.isSuccess && data.result) {
-        const formEl = this.engine.mainContainer.querySelector("form");
-        Object.keys(data.result).forEach((key) => {
-          if (formEl.elements[key]) formEl.elements[key].value = data.result[key];
-        });
-      }
-    } catch (err) {
-      console.error("Error loading report:", err);
-    }
-  }
+  renderResult(data, type = "info") {
+    const box = document.getElementById("applicationReportResult");
+    if (!box) return;
 
-  async #submit(e, numericFieldNames) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('input[type="submit"], button[type="submit"]');
-    const resultBox = document.getElementById("resultBox");
-    const resultContent = document.getElementById("resultContent");
+    box.innerHTML = "";
+    const tone =
+      type === "error"
+        ? { bg: "bg-red-50 border-red-200", text: "text-red-700" }
+        : { bg: "bg-green-50 border-green-200", text: "text-green-700" };
 
-    if (!submitBtn.dataset.confirmed) {
-      const valid = form.checkValidity();
-      if (!valid) {
-        this.#setStatus("Please complete all required fields.", "text-red-600");
-        resultBox.classList.add("hidden");
-        return;
-      }
-      this.#setStatus("Press submit again to confirm.", "text-yellow-600");
-      submitBtn.classList.remove("bg-indigo-600", "hover:bg-indigo-700");
-      submitBtn.classList.add("bg-yellow-500", "hover:bg-yellow-600");
-      submitBtn.dataset.confirmed = "true";
-      return;
-    }
-
-    submitBtn.dataset.confirmed = "";
-    submitBtn.classList.remove("bg-yellow-500", "hover:bg-yellow-600");
-    submitBtn.classList.add("bg-indigo-600", "hover:bg-indigo-700");
-
-    const fd = new FormData(form);
-    const data = Object.fromEntries(fd.entries());
-
-    for (const key of Object.keys(data)) {
-      if (numericFieldNames.has(key) && data[key] !== "" && !Number.isNaN(Number(data[key]))) {
-        data[key] = Number(data[key]);
-      }
-    }
-
-    if (this.reportId) data.id = Number(this.reportId);
-
-    const url = this.rootURL + (
-      this.reportId
-        ? "/recruit/UpdateApplicationReport"
-        : "/recruit/CreateApplicationReport"
-    );
-
-    this.#setStatus(this.reportId ? "Updating..." : "Submitting...", "text-gray-600");
+    const pre = document.createElement("pre");
+    pre.className = `mt-1 p-4 rounded-lg border ${tone.bg} text-xs ${tone.text} whitespace-pre-wrap overflow-auto`;
+    pre.style.maxHeight = "400px";
 
     try {
-      const resp = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await resp.json().catch(() => ({}));
-
-      if (result?.isSuccess) {
-        this.#setStatus(this.reportId ? "✅ Updated successfully!" : "✅ Saved successfully!", "text-green-600");
-        resultBox.classList.remove("hidden");
-        resultContent.innerHTML = JSON.stringify(result.result, null, 2);
-        setTimeout(() => this.#goBack(), 1000);
-      } else {
-        this.#setStatus("❌ Operation failed.", "text-red-600");
-        resultBox.classList.add("hidden");
-      }
-    } catch (err) {
-      console.error("Error submitting:", err);
-      this.#setStatus("Error submitting form.", "text-red-600");
-      resultBox.classList.add("hidden");
+      pre.textContent = JSON.stringify(data, null, 2);
+    } catch {
+      pre.textContent = String(data);
     }
+
+    box.appendChild(pre);
   }
 
-  async #goBack() {
-    await this.engine.fetchModule("/recruit/static/js/ApplicationReportList.js");
-    const list = new ApplicationReportList(this.engine, this.rootURL);
-    this.engine.mainContainer.innerHTML = "";
-    await list.render();
+  safeFormReset() {
+    const form = document.querySelector("#applicationReportFormContainerInner form");
+    if (form && typeof form.reset === "function") form.reset();
   }
 
-  #applyTailwindStyles() {
-    const root = this.engine.mainContainer.querySelector(".report-form-container");
-    if (!root) return;
-    root.querySelectorAll("label").forEach(l => {
-      l.classList.add("block", "text-sm", "font-medium", "text-gray-700", "mb-1");
-    });
-    root.querySelectorAll("input, select, textarea").forEach(el => {
-      el.classList.add(
-        "mt-1", "block", "w-full",
-        "rounded-md", "border-gray-300", "shadow-sm",
-        "focus:ring-indigo-500", "focus:border-indigo-500", "sm:text-sm", "mb-3"
-      );
-    });
-  }
-
-  #styleSubmitButton() {
-    const root = this.engine.mainContainer.querySelector(".report-form-container");
-    if (!root) return;
-    const submitBtn = root.querySelector('input[type="submit"], button[type="submit"]');
-    if (submitBtn) {
-      submitBtn.classList.add(
-        "mt-4", "inline-flex", "items-center", "justify-center",
-        "rounded-xl", "px-4", "py-2", "bg-indigo-600",
-        "text-white", "font-medium", "shadow-md",
-        "hover:bg-indigo-700", "hover:shadow-lg", "transition", "duration-200", "ease-in-out"
-      );
-      submitBtn.value = submitBtn.value || "Submit";
-    }
-  }
-
-  #enforceRequiredFields() {
-    const root = this.engine.mainContainer.querySelector(".report-form-container");
-    if (!root) return;
-    root.querySelectorAll("input, select, textarea").forEach(el => {
-      const type = (el.getAttribute("type") || "").toLowerCase();
-      if (["submit", "button", "reset", "hidden"].includes(type)) return;
-      if (el.disabled) return;
-      el.required = true;
-    });
-  }
-
-  #setStatus(text, cls) {
-    const el = document.getElementById("formStatus");
-    if (!el) return;
-    el.textContent = text || "";
-    el.className = "text-sm font-medium " + (cls || "text-gray-500");
-  }
-
-  #hideResult() {
-    const box = document.getElementById("resultBox");
-    const content = document.getElementById("resultContent");
-    if (content) content.textContent = "";
-    if (box) box.classList.add("hidden");
-  }
-
-  #showError(msg) {
-    const div = document.createElement("div");
-    div.className = "max-w-3xl mx-auto my-8 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800";
-    div.textContent = msg;
-    (this.engine?.mainContainer || document.body).appendChild(div);
+  escapeHtml(str) {
+    return str
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 }
 
-if (typeof window !== "undefined" && !window.ApplicationReportCreate) {
-  window.ApplicationReportCreate = ApplicationReportCreate;
-}
+if (typeof window !== "undefined") window.ApplicationReportCreate = ApplicationReportCreate;

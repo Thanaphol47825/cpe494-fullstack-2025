@@ -29,7 +29,10 @@ func InitialCurriculum() {
 	application.AddController(controller.NewSupervisorReviewController())
 	application.AddController(controller.NewCertificateController(application))
 	application.AddController(controller.NewInternCertificateController(application))
+	application.AddController(controller.NewInternSkillController(application))
 
 	application.AddController(controller.NewAdvisorController())
 	application.AddController(controller.NewInternWorkExperienceController(application))
+
+
 }

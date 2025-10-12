@@ -213,6 +213,16 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             }
         }
 
+        async renderInternshipWorkExperience() {
+            console.log("Rendering Internship Work Experience")
+            if (window.InternWorkExperienceCreate) {
+                const workExperienceCreate = new window.InternWorkExperienceCreate(this.templateEngine)
+                await workExperienceCreate.render()
+            } else {
+                console.error("InternWorkExperienceCreate class not found")
+            }
+        }
+
         async render() {
             try {
                 const handled = await this.handleRoute(this.templateEngine.getCurrentPath())

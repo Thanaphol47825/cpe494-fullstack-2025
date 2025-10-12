@@ -28,4 +28,5 @@ func InitialCurriculum() {
 	application.AddController(controller.NewInternshipInformationController())
 	application.AddController(controller.NewSupervisorReviewController())
 	application.AddController(controller.NewAdvisorController())
+	application.AddController(controller.NewInternWorkExperienceController(application))
 }

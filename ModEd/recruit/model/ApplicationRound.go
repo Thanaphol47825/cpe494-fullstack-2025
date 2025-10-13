@@ -7,5 +7,5 @@ import (
 
 type ApplicationRound struct {
 	core.BaseModel
-	RoundName string `csv:"round_name" json:"round_name" label:"Round Name" form:"text"`
+	RoundName string `gorm:"not null" json:"round_name" csv:"round_name" form:"label:Round Name;placeholder:Enter round name;type:text;required:true"`
 }

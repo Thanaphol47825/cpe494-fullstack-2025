@@ -1,179 +1,349 @@
-class ApplicationRoundList {
-  constructor(engine, rootURL) {
-    this.engine = engine;
-    this.rootURL = rootURL || window.__ROOT_URL__ || "";
-  }
+if (typeof window !== 'undefined' && !window.ApplicationRoundList) {
+  class ApplicationRoundList {
 
-  async render() {
-    this.engine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gray-50 p-8">
-        <div class="max-w-6xl mx-auto bg-white shadow rounded-2xl p-6">
-          <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <button id="btnBack"
-              class="bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 flex items-center gap-2">
-              ← Back
-            </button>
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              🗓️ Application Rounds
-            </h1>
-            <div class="flex flex-wrap gap-2">
-              <button id="btnImport"
-                class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200">📥 Import</button>
-              <button id="btnCreate"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">＋ Create New</button>
-            </div>
-          </div>
-          <div id="tableContainer" class="overflow-x-auto border rounded-lg"></div>
-        </div>
-      </div>
-    `;
+    constructor(applicationOrEngine, rootURL) {
+      this.app = applicationOrEngine || {};
 
-    await this.loadList();
+      this.engine =
+        this.app.templateEngine
+          ? this.app.templateEngine
+          : this.app;
 
-    document.getElementById("btnBack")?.addEventListener("click", async () => {
-      await this.engine.fetchModule("/recruit/static/js/RecruitApplication.js");
-      const dashboard = new RecruitApplication(this.engine);
-      this.engine.mainContainer.innerHTML = "";
-      await dashboard.render();
-    });
+      this.container =
+        this.engine?.mainContainer ||
+        this.app?.mainContainer ||
+        document.querySelector('#app') ||
+        null;
 
-    document.getElementById("btnCreate")?.addEventListener("click", () => this.#openForm());
-    document.getElementById("btnImport")?.addEventListener("click", () => this.importFromFile());
-  }
+      this.rootURL =
+        rootURL ??
+        this.app?.rootURL ??
+        window.RootURL ??
+        window.__ROOT_URL__ ??
+        '';
 
-  async loadList() {
-    const tableContainer = document.getElementById("tableContainer");
-    tableContainer.innerHTML = `<p class="text-gray-500 p-4">Loading...</p>`;
+      this.ENDPOINT_LIST    = `${this.rootURL}/recruit/GetApplicationRounds`;
+      this.ENDPOINT_GET_ONE = (id) => `${this.rootURL}/recruit/GetApplicationRound/${id}`;
+      this.ENDPOINT_CREATE  = `${this.rootURL}/recruit/CreateApplicationRound`;
+      this.ENDPOINT_UPDATE  = `${this.rootURL}/recruit/UpdateApplicationRound`;
+      this.ENDPOINT_DELETE  = `${this.rootURL}/recruit/DeleteApplicationRound`;
+      this.ENDPOINT_IMPORT  = `${this.rootURL}/recruit/ImportApplicationRoundsFromFile`;
 
-    try {
-      const res = await fetch(this.rootURL + "/recruit/GetApplicationRounds");
-      const data = await res.json();
-      if (!data.isSuccess) throw new Error(data.message || "Load failed");
+      this.table = null;
+      this.form  = null;
+      this.currentEditId = null;
+      this.ui = null;
+      this.$tableHost = null;
+      this.$panelHost = null;
+    }
 
-      const list = data.result || [];
-      if (list.length === 0) {
-        tableContainer.innerHTML = `
-          <div class="p-8 text-center text-gray-500">
-            <p class="text-lg font-medium">No application rounds found</p>
-            <p class="text-sm text-gray-400 mt-1">Try adding a new one.</p>
-          </div>`;
-        return;
+    _assertDeps() {
+      const missing = [];
+      if (typeof window.RecruitTableTemplate?.getTable !== 'function') missing.push('RecruitTableTemplate');
+      if (typeof window.AdvanceTableRender !== 'function') missing.push('AdvanceTableRender');
+      if (typeof window.AdvanceFormRender !== 'function') missing.push('AdvanceFormRender');
+      if (missing.length) {
+        console.error('Missing dependencies:', missing.join(', '));
+        if (this.container) {
+          this.container.innerHTML = `
+            <div class="p-4 rounded border border-red-200 bg-red-50 text-red-700">
+              Missing dependencies: ${missing.join(', ')}.
+            </div>`;
+        }
+        return false;
       }
+      return true;
+    }
 
-      const rows = list.map(r => `
-        <tr class="border-b hover:bg-gray-50 transition">
-          <td class="px-4 py-2">${r.ID}</td>
-          <td class="px-4 py-2">${r.round_name || "-"}</td>
-          <td class="px-4 py-2 text-right">
-            <button class="text-blue-600 hover:underline" data-id="${r.ID}" data-action="edit">Edit</button>
-            <button class="text-red-600 hover:underline ml-3" data-id="${r.ID}" data-action="delete">Delete</button>
-          </td>
-        </tr>`).join("");
+    _assertContainer() {
+      if (!this.container) {
+        console.error('ApplicationRoundList: mainContainer not found.');
+        return false;
+      }
+      return true;
+    }
 
-      tableContainer.innerHTML = `
-        <table class="min-w-full text-sm text-gray-700">
-          <thead class="bg-gray-100 text-gray-800">
-            <tr>
-              <th class="px-4 py-2 text-left">ID</th>
-              <th class="px-4 py-2 text-left">Round Name</th>
-              <th class="px-4 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>`;
+    async render() {
+      if (!this._assertContainer() || !this._assertDeps()) return false;
 
-      tableContainer.querySelectorAll("button[data-action]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const id = e.target.getAttribute("data-id");
-          const action = e.target.getAttribute("data-action");
-          if (action === "edit") this.#openForm(id);
-          else if (action === "delete") this.deleteItem(id);
-        });
+      this.container.innerHTML = '';
+
+      const root = await window.RecruitTableTemplate.getTable({
+        title: '🗓️ Application Rounds',
+        subtitle: 'Manage and import application rounds',
+        tableId: 'applicationround-table',
+        panelTitle: 'Application Round Form',
+        backLink: 'recruit',
+        backText: 'Back to Recruit Menu',
+        colorPrimary: '#059669',
+        colorAccent: '#0d9488',
+        iconPath: 'M12 6v6l4 2'
+      }, 'manage');
+
+      this.container.appendChild(root);
+
+      this.ui = window.RecruitTableTemplate.mountMessageAndResult(root, {
+        messagesId: 'applicationRoundMessages',
+        resultId: 'applicationRoundResult'
       });
-    } catch (err) {
-      tableContainer.innerHTML = `<p class="text-red-500 p-4">Error: ${err.message}</p>`;
+
+      this.$tableHost = root.querySelector('#recruit-table-container');
+      this.$panelHost = root.querySelector('#recruit-sidepanel-container');
+
+      if (this.$tableHost) {
+        this.$tableHost.style.overflowY = 'auto';
+        this.$tableHost.style.maxHeight = '60vh';
+      }
+      if (this.$panelHost) {
+        this.$panelHost.style.overflowY = 'auto';
+        this.$panelHost.style.maxHeight = '60vh';
+      }
+
+      root.querySelector('[data-action="import"]')?.addEventListener('click', () => this.importFromFile());
+      root.querySelector('[data-action="reset"]')?.addEventListener('click', () => this.resetForm());
+
+      this.setupTable();
+      this.setupForm();
+
+      await this.renderTable();
+      await this.renderForm();
+
+      this._bindTableActions();
+
+      return true;
     }
-  }
 
-  async #openForm(id = null) {
-    try {
-      await this.engine.fetchModule("/recruit/static/js/ApplicationRoundCreate.js");
-    } catch (e) {
-      alert("Failed to load form module: " + e.message);
-      return;
+    setupTable() {
+      this.table = new window.AdvanceTableRender(this.engine, {
+        modelPath: 'recruit/applicationround',
+        data: [],
+        targetSelector: '#recruit-table-container',
+        customColumns: [
+          {
+            name: 'actions',
+            label: 'Actions',
+            template: `
+              <div style="white-space:nowrap;">
+                <button class="al-btn-edit text-blue-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
+                <button class="al-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}">Delete</button>
+              </div>
+            `
+          }
+        ]
+      });
     }
 
-    const FormClass = window.ApplicationRoundCreate;
-    if (typeof FormClass !== "function") {
-      alert("Form class not found. Make sure ApplicationRoundCreate.js sets window.ApplicationRoundCreate.");
-      return;
+    async renderTable() {
+      if (!this.$tableHost) return;
+      this.$tableHost.innerHTML = `<p style="padding:8px; color:#6b7280;">Loading application rounds…</p>`;
+
+      await this.table.loadSchema();
+
+      this.table.targetSelector = '#recruit-table-container';
+      await this.table.render();
+
+      await this.refreshTable();
     }
 
-    const form = new FormClass(this.engine, this.rootURL, id);
-    this.engine.mainContainer.innerHTML = "";
-    await form.render();
-  }
-
-  async deleteItem(id) {
-    if (!confirm("Are you sure you want to delete this application round?")) return;
-    const res = await fetch(this.rootURL + "/recruit/DeleteApplicationRound", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: Number(id) }),
-    });
-    const result = await res.json();
-    if (result.isSuccess) {
-      alert("Deleted successfully");
-      await this.loadList();
-    } else {
-      alert("Delete failed: " + result.message);
-    }
-  }
-
-  async importFromFile() {
-    const picker = document.createElement("input");
-    picker.type = "file";
-    picker.accept = ".csv,.json,text/csv,application/json";
-    picker.style.display = "none";
-    document.body.appendChild(picker);
-
-    const file = await new Promise((resolve) => {
-      picker.onchange = () => resolve(picker.files?.[0] || null);
-      picker.click();
-    });
-    document.body.removeChild(picker);
-
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file, file.name);
-
-    const tableContainer = document.getElementById("tableContainer");
-    const prevHTML = tableContainer.innerHTML;
-    tableContainer.innerHTML = `<p class="text-gray-500 p-4">Uploading & importing <b>${file.name}</b>…</p>`;
-
-    try {
-      const url = this.rootURL + "/recruit/ImportApplicationRoundsFromFile";
-      const resp = await fetch(url, { method: "POST", body: formData });
-
-      let data = {};
+    async refreshTable() {
       try {
-        data = await resp.json();
+        const resp = await fetch(this.ENDPOINT_LIST);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.message || 'Failed to load application rounds');
+        }
+        const rows = (data?.result || []).map(r => ({ ...r, ID: r.ID ?? r.Id ?? r.id }));
+        this.table.setData(rows);
+      } catch (err) {
+        this.ui?.showMessage(`Error loading application rounds: ${err.message}`, 'error');
+      }
+    }
+
+    setupForm() {
+      this.form = new window.AdvanceFormRender(this.engine, {
+        modelPath: 'recruit/applicationround',
+        targetSelector: '#recruit-sidepanel-container',
+        submitHandler: (formData) => this.handleFormSubmit(formData),
+        autoFocus: true,
+        validateOnBlur: true
+      });
+    }
+
+    async renderForm() {
+      await this.form.render();
+      this.resetForm();
+    }
+
+    async handleFormSubmit(formData) {
+      this.ui?.showMessage('Saving application round...', 'info');
+
+      const resolvedId =
+        formData?.ID ?? formData?.Id ?? formData?.id ?? this.currentEditId ?? null;
+
+      const payload = {
+        ...formData,
+        ...(resolvedId != null ? { ID: Number(resolvedId), id: Number(resolvedId) } : {})
+      };
+
+      const isUpdate = resolvedId != null;
+      const url = isUpdate ? this.ENDPOINT_UPDATE : this.ENDPOINT_CREATE;
+
+      let resp, data;
+      try {
+        resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
       } catch {
-        throw new Error(`HTTP ${resp.status} (non-JSON response)`);
+        this.ui?.showMessage('Network error while saving application round.', 'error');
+        return false;
       }
 
-      if (!resp.ok || data?.isSuccess === false) {
-        throw new Error(data?.message || `Import failed (HTTP ${resp.status})`);
+      try { data = await resp.json(); } catch { data = {}; }
+
+      if (!resp.ok || data?.isSuccess !== true) {
+        const msg =
+          data?.message || `Request failed (${resp.status}${resp.statusText ? ' ' + resp.statusText : ''})`;
+        this.ui?.showMessage(msg, 'error');
+        return false;
       }
 
-      alert(`Imported ${Array.isArray(data.result) ? data.result.length : 0} record(s) from ${file.name}.`);
-      await this.loadList();
-    } catch (err) {
-      alert("Error importing file: " + err.message);
-      tableContainer.innerHTML = prevHTML;
+      const result = data.result ?? {};
+      const id =
+        result?.ID ?? result?.Id ?? result?.id ??
+        (Array.isArray(result) ? result[0]?.ID ?? result[0]?.Id ?? result[0]?.id : resolvedId);
+
+      this.ui?.showMessage(
+        `Application round ${isUpdate ? 'updated' : 'created'} successfully! ID: ${id || '?'}`,
+        'success'
+      );
+
+      await this.refreshTable();
+      this.resetForm();
+      return true;
+    }
+
+    async edit(id) {
+      if (!id) return;
+      try {
+        this.currentEditId = Number(id);
+        const resp = await fetch(this.ENDPOINT_GET_ONE(id));
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok || payload?.isSuccess === false) {
+          throw new Error(payload?.message || `Unable to load application round #${id}`);
+        }
+        const item = payload?.result || payload || {};
+        await this.form.render();
+        this.form.setData(item);
+        this.ui?.showMessage(`Editing application round ID ${id}`, 'info');
+      } catch (err) {
+        this.ui?.showMessage(`Edit error: ${err.message}`, 'error');
+      }
+    }
+
+    async delete(id) {
+      if (!id) return;
+      if (!confirm('Delete this application round?')) return;
+
+      try {
+        const resp = await fetch(this.ENDPOINT_DELETE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(id) })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.message || 'Delete failed');
+        }
+
+        this.ui?.showMessage(`Application round ID ${id} deleted successfully.`, 'success');
+        await this.refreshTable();
+      } catch (err) {
+        this.ui?.showMessage(`Delete error: ${err.message}`, 'error');
+      }
+    }
+
+    async importFromFile() {
+      const picker = document.createElement('input');
+      picker.type = 'file';
+      picker.accept = '.csv,.json,text/csv,application/json';
+      picker.style.display = 'none';
+      document.body.appendChild(picker);
+
+      const file = await new Promise((resolve) => {
+        picker.onchange = () => resolve(picker.files?.[0] || null);
+        picker.click();
+      });
+
+      document.body.removeChild(picker);
+      if (!file) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file, file.name);
+
+        const resp = await fetch(this.ENDPOINT_IMPORT, { method: 'POST', body: formData });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.message || 'Import failed');
+        }
+
+        const count = Array.isArray(data?.result)
+          ? data.result.length
+          : (data?.result?.count ?? 0);
+
+        this.ui?.showMessage(`Imported ${count} application round(s) from ${file.name}.`, 'success');
+        await this.refreshTable();
+      } catch (err) {
+        this.ui?.showMessage(`Import error: ${err.message}`, 'error');
+      }
+    }
+
+    resetForm() {
+      this.currentEditId = null;
+      try {
+        const formRoot = this.form?.form?.html || this.form?.html;
+        if (!formRoot) return;
+
+        if (typeof formRoot.reset === 'function') {
+          formRoot.reset();
+          return;
+        }
+
+        const fields = formRoot.querySelectorAll('input, select, textarea');
+        fields.forEach((el) => {
+          const tag = (el.tagName || '').toLowerCase();
+          const type = (el.type || '').toLowerCase();
+          if (tag === 'input') {
+            if (type === 'checkbox' || type === 'radio') el.checked = false;
+            else el.value = '';
+          } else if (tag === 'select') {
+            el.selectedIndex = 0;
+          } else if (tag === 'textarea') {
+            el.value = '';
+          }
+        });
+      } catch (err) {
+        this.ui?.showMessage('Error resetting form: ' + err.message, 'error');
+      }
+    }
+
+    _bindTableActions() {
+      if (!this.$tableHost) return;
+      this.$tableHost.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+
+        const action = btn.getAttribute('data-action');
+        const id = btn.getAttribute('data-id') || btn.dataset.id;
+        if (!action || !id) return;
+
+        if (action === 'edit') this.edit(id);
+        else if (action === 'delete') this.delete(id);
+      });
     }
   }
-}
 
-window.ApplicationRoundList = ApplicationRoundList;
+  window.ApplicationRoundList = ApplicationRoundList;
+}

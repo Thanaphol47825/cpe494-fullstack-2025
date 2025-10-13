@@ -6,6 +6,9 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             this.internData = null;
             this.students = [];
             this.workExperiences = [];
+            this.skills = [];
+            this.certificates = [];
+            this.projects = [];
         }
 
         async render() {
@@ -42,8 +45,11 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                     this.internData = internData.result;
                     this.students = this.internData.Student ? [this.internData.Student] : [];
                     
-                    // Load work experiences for this student
+                    // Load work experiences, skills, certificates, and projects for this student
                     await this.loadWorkExperiences();
+                    await this.loadSkills();
+                    await this.loadCertificates();
+                    await this.loadProjects();
                 } else {
                     throw new Error(internData.error || 'Failed to load intern student data');
                 }
@@ -74,10 +80,73 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             }
         }
 
+        async loadSkills() {
+            try {
+                // Get skills for this student
+                const studentId = this.internData.StudentID || this.internData.student_id;
+                if (!studentId) return;
+
+                const response = await fetch(`/curriculum/internSkill/getByStudentID/${studentId}`);
+                const data = await response.json();
+                
+                if (data.isSuccess) {
+                    this.skills = data.result || [];
+                } else {
+                    console.warn('Failed to load skills:', data.error);
+                    this.skills = [];
+                }
+            } catch (error) {
+                console.error('Error loading skills:', error);
+                this.skills = [];
+            }
+        }
+
+        async loadCertificates() {
+            try {
+                // Get certificates for this student
+                const studentId = this.internData.StudentID || this.internData.student_id;
+                if (!studentId) return;
+
+                const response = await fetch(`/curriculum/internCertificate/getByStudentID/${studentId}`);
+                const data = await response.json();
+                
+                if (data.isSuccess) {
+                    this.certificates = data.result || [];
+                } else {
+                    console.warn('Failed to load certificates:', data.error);
+                    this.certificates = [];
+                }
+            } catch (error) {
+                console.error('Error loading certificates:', error);
+                this.certificates = [];
+            }
+        }
+
+        async loadProjects() {
+            try {
+                // Get projects for this student
+                const studentId = this.internData.StudentID || this.internData.student_id;
+                if (!studentId) return;
+
+                const response = await fetch(`/curriculum/internProject/getByStudentID/${studentId}`);
+                const data = await response.json();
+                
+                if (data.isSuccess) {
+                    this.projects = data.result || [];
+                } else {
+                    console.warn('Failed to load projects:', data.error);
+                    this.projects = [];
+                }
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                this.projects = [];
+            }
+        }
+
         createPageHTML() {
             return `
                 <div class="bg-gray-100 min-h-screen py-8">
-                    <div class="max-w-4xl mx-auto px-4">
+                    <div class="max-w-7xl mx-auto px-4">
                         <!-- Header -->
                         <div class="mb-6">
                             <button id="back-to-list" class="text-blue-600 hover:text-blue-800 text-sm flex items-center mb-4">
@@ -114,7 +183,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                         </div>
 
                         <!-- Main Content Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             <!-- Left Column: Basic Info -->
                             <div id="edit-form-container" class="hidden bg-white rounded-lg shadow">
                                 <div class="p-6">
@@ -182,31 +251,117 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                                 </div>
                             </div>
 
-                            <!-- Right Column: Work Experience -->
-                            <div id="work-experience-section" class="hidden bg-white rounded-lg shadow">
-                                <div class="p-6">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <h2 class="text-lg font-semibold text-gray-900">Work Experiences</h2>
-                                        <button id="add-work-experience-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
-                                            <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                            </svg>
-                                            Add Work Experience
-                                        </button>
-                                    </div>
-                                    
-                                    <!-- Work Experience List -->
-                                    <div id="work-experience-list">
-                                        <div id="work-experience-empty" class="text-center py-8 text-gray-500">
-                                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
-                                            </svg>
-                                            <p class="text-sm">No work experiences added yet</p>
-                                            <button id="add-first-experience-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                Add your first work experience
+                            <!-- Right Column: Work Experience, Project, Skill, Certificate -->
+                            <div class="col-span-2 grid grid-cols-2 gap-4">
+                                <div id="work-experience-section" class="hidden bg-white rounded-lg shadow">
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h2 class="text-lg font-semibold text-gray-900">Work Experiences</h2>
+                                            <button id="add-work-experience-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Add
                                             </button>
                                         </div>
-                                        <!-- Work experience items will be added here -->
+                                        
+                                        <!-- Work Experience List -->
+                                        <div id="work-experience-list">
+                                            <div id="work-experience-empty" class="text-center py-8 text-gray-500">
+                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
+                                                </svg>
+                                                <p class="text-sm">No work experiences added yet</p>
+                                                <button id="add-first-experience-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                    Add your first work experience
+                                                </button>
+                                            </div>
+                                            <!-- Work experience items will be added here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="project-section" class="hidden bg-white rounded-lg shadow">
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h2 class="text-lg font-semibold text-gray-900">Projects</h2>
+                                            <button id="add-project-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Project List -->
+                                        <div id="project-list">
+                                            <div id="project-empty" class="text-center py-8 text-gray-500">
+                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
+                                                </svg>
+                                                <p class="text-sm">No project added yet</p>
+                                                <button id="add-first-project-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                    Add your first project
+                                                </button>
+                                            </div>
+                                            <!-- Project items will be added here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="skill-section" class="hidden bg-white rounded-lg shadow">
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h2 class="text-lg font-semibold text-gray-900">Skills</h2>
+                                            <button id="add-skill-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Skill List -->
+                                        <div id="skill-list">
+                                            <div id="skill-empty" class="text-center py-8 text-gray-500">
+                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
+                                                </svg>
+                                                <p class="text-sm">No skills added yet</p>
+                                                <button id="add-first-skill-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                    Add your first skill
+                                                </button>
+                                            </div>
+                                            <!-- Skill items will be added here -->
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="certificate-section" class="hidden bg-white rounded-lg shadow">
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center mb-4">
+                                            <h2 class="text-lg font-semibold text-gray-900">Certificates</h2>
+                                            <button id="add-certificate-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
+                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                </svg>
+                                                Add
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Certificate List -->
+                                        <div id="certificate-list">
+                                            <div id="certificate-empty" class="text-center py-8 text-gray-500">
+                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
+                                                </svg>
+                                                <p class="text-sm">No certificates added yet</p>
+                                                <button id="add-first-certificate-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                    Add your first certificate
+                                                </button>
+                                            </div>
+                                            <!-- Certificate items will be added here -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -243,9 +398,15 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             // Form submission
             document.getElementById('intern-student-edit-form')?.addEventListener('submit', (e) => this.handleSubmit(e));
 
-            // Work Experience buttons
+            // Work Experience, Project, Skill, Certificate buttons
             document.getElementById('add-work-experience-btn')?.addEventListener('click', () => this.navigateToCreateWorkExperience());
             document.getElementById('add-first-experience-btn')?.addEventListener('click', () => this.navigateToCreateWorkExperience());
+            document.getElementById('add-project-btn')?.addEventListener('click', () => this.navigateToCreateProject());
+            document.getElementById('add-first-project-btn')?.addEventListener('click', () => this.navigateToCreateProject());
+            document.getElementById('add-skill-btn')?.addEventListener('click', () => this.navigateToCreateSkill());
+            document.getElementById('add-first-skill-btn')?.addEventListener('click', () => this.navigateToCreateSkill());
+            document.getElementById('add-certificate-btn')?.addEventListener('click', () => this.navigateToCreateCertificate());
+            document.getElementById('add-first-certificate-btn')?.addEventListener('click', () => this.navigateToCreateCertificate());
         }
 
         populateForm() {
@@ -269,13 +430,19 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                 document.getElementById('intern_status').value = this.internData.intern_status || 'NOT_STARTED';
                 document.getElementById('overview').value = this.internData.overview || '';
 
-                // Show the form and work experience section
+                // Show the form and work experience, project, skill, and certificate sections
                 document.getElementById('loading-form')?.classList.add('hidden');
                 document.getElementById('edit-form-container')?.classList.remove('hidden');
                 document.getElementById('work-experience-section')?.classList.remove('hidden');
+                document.getElementById('project-section')?.classList.remove('hidden');
+                document.getElementById('skill-section')?.classList.remove('hidden');
+                document.getElementById('certificate-section')?.classList.remove('hidden');
 
-                // Render work experiences
+                // Render work experiences, skills, certificates, and projects
                 this.renderWorkExperiences();
+                this.renderSkills();
+                this.renderCertificates();
+                this.renderProjects();
 
             } catch (error) {
                 console.error('Error populating form:', error);
@@ -337,6 +504,167 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             return div;
         }
 
+        renderSkills() {
+            const listContainer = document.getElementById('skill-list');
+            const emptyState = document.getElementById('skill-empty');
+            
+            if (!this.skills || this.skills.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Clear existing items (except empty state)
+            const existingItems = listContainer.querySelectorAll('.skill-item');
+            existingItems.forEach(item => item.remove());
+            
+            // Add skill items
+            this.skills.forEach(skill => {
+                const skillElement = this.createSkillItem(skill);
+                listContainer.appendChild(skillElement);
+            });
+        }
+
+        createSkillItem(skill) {
+            const div = document.createElement('div');
+            div.className = 'skill-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="mb-2">
+                            <h4 class="text-sm font-semibold text-gray-900">
+                                ${skill.skill_name || 'Unnamed Skill'}
+                            </h4>
+                            <p class="text-xs text-gray-600">Level: ${skill.skill_level || 'N/A'}</p>
+                        </div>
+                        <div class="text-sm text-gray-700">
+                            <p class="line-clamp-2">${skill.description || 'No description provided'}</p>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <button onclick="window.internStudentEdit.navigateToEditSkill(${skill.ID})" 
+                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        renderCertificates() {
+            const listContainer = document.getElementById('certificate-list');
+            const emptyState = document.getElementById('certificate-empty');
+            
+            if (!this.certificates || this.certificates.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Clear existing items (except empty state)
+            const existingItems = listContainer.querySelectorAll('.certificate-item');
+            existingItems.forEach(item => item.remove());
+            
+            // Add certificate items
+            this.certificates.forEach(cert => {
+                const certElement = this.createCertificateItem(cert);
+                listContainer.appendChild(certElement);
+            });
+        }
+
+        createCertificateItem(certificate) {
+            const div = document.createElement('div');
+            div.className = 'certificate-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
+            
+            const issueDate = certificate.issue_date ? new Date(certificate.issue_date).toLocaleDateString() : 'N/A';
+            const expiryDate = certificate.expiry_date ? new Date(certificate.expiry_date).toLocaleDateString() : 'No Expiry';
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="mb-2">
+                            <h4 class="text-sm font-semibold text-gray-900">
+                                ${certificate.certificate_name || 'Unnamed Certificate'}
+                            </h4>
+                            <p class="text-xs text-gray-600">Issued: ${issueDate} | Expires: ${expiryDate}</p>
+                            <p class="text-xs text-gray-500">Issuer: ${certificate.issuing_organization || 'N/A'}</p>
+                        </div>
+                        <div class="text-sm text-gray-700">
+                            <p class="line-clamp-2">${certificate.description || 'No description provided'}</p>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <button onclick="window.internStudentEdit.navigateToEditCertificate(${certificate.ID})" 
+                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        renderProjects() {
+            const listContainer = document.getElementById('project-list');
+            const emptyState = document.getElementById('project-empty');
+            
+            if (!this.projects || this.projects.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Clear existing items (except empty state)
+            const existingItems = listContainer.querySelectorAll('.project-item');
+            existingItems.forEach(item => item.remove());
+            
+            // Add project items
+            this.projects.forEach(project => {
+                const projectElement = this.createProjectItem(project);
+                listContainer.appendChild(projectElement);
+            });
+        }
+
+        createProjectItem(project) {
+            const div = document.createElement('div');
+            div.className = 'project-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
+            
+            const startDate = project.start_date ? new Date(project.start_date).toLocaleDateString() : 'N/A';
+            const endDate = project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Ongoing';
+            
+            div.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <div class="mb-2">
+                            <h4 class="text-sm font-semibold text-gray-900">
+                                ${project.project_name || 'Unnamed Project'}
+                            </h4>
+                            <p class="text-xs text-gray-600">${startDate} - ${endDate}</p>
+                            <p class="text-xs text-gray-500">Status: ${project.status || 'N/A'}</p>
+                        </div>
+                        <div class="text-sm text-gray-700">
+                            <p class="line-clamp-2">${project.description || 'No description provided'}</p>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <button onclick="window.internStudentEdit.navigateToEditProject(${project.ID})" 
+                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                            Edit
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
         async navigateToCreateWorkExperience() {
             try {
                 // Load the InternWorkExperienceCreate module
@@ -373,6 +701,123 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             } catch (error) {
                 console.error('Error loading work experience edit form:', error);
                 this.showError('Failed to load work experience edit form: ' + error.message);
+            }
+        }
+
+        async navigateToCreateProject() {
+            try {
+                // Load the InternProjectCreate module
+                await this.application.fetchModule('/curriculum/static/js/InternProjectCreate.js');
+
+                if (window.InternProjectCreate) {
+                    // Pass the InternStudent ID (this.internId)
+                    const createForm = new window.InternProjectCreate(this.application, this.internId);
+                    await createForm.render();
+                } else {
+                    console.error('InternProjectCreate class not found');
+                    this.showError('Failed to load project form');
+                }
+            } catch (error) {
+                console.error('Error loading project create form:', error);
+                this.showError('Failed to load project form: ' + error.message);
+            }
+        }
+
+        async navigateToEditProject(projectId) {
+            try {
+                // Load the InternProjectCreate module for editing
+                await this.application.fetchModule('/curriculum/static/js/InternProjectCreate.js');
+
+                if (window.InternProjectCreate) {
+                    const studentId = this.internData.StudentID || this.internData.student_id;
+                    // Pass the project ID and student ID to edit mode
+                    const editForm = new window.InternProjectCreate(this.application, studentId, projectId);
+                    await editForm.render();
+                } else {
+                    console.error('InternProjectCreate class not found');
+                    this.showError('Failed to load project edit form');
+                }
+            } catch (error) {
+                console.error('Error loading project edit form:', error);
+                this.showError('Failed to load project edit form: ' + error.message);
+            }
+        }
+
+        async navigateToCreateSkill() {
+            try {
+                // Load the InternSkillCreate module
+                await this.application.fetchModule('/curriculum/static/js/InternStudentSkillCreate.js');
+
+                if (window.InternStudentSkillCreate) {
+                    // Pass the InternStudent ID (this.internId)
+                    const createForm = new window.InternStudentSkillCreate(this.application, this.internId);
+                    await createForm.render();
+                } else {
+                    console.error('InternStudentSkillCreate class not found');
+                    this.showError('Failed to load skill form');
+                }
+            } catch (error) {
+                console.error('Error loading skill create form:', error);
+                this.showError('Failed to load skill form: ' + error.message);
+            }
+        }
+
+        async navigateToEditSkill(skillId) {
+            try {
+                // Load the InternStudentSkillCreate module for editing
+                await this.application.fetchModule('/curriculum/static/js/InternStudentSkillCreate.js');
+
+                if (window.InternStudentSkillCreate) {
+                    const studentId = this.internData.StudentID || this.internData.student_id;
+                    // Pass the skill ID and student ID to edit mode
+                    const editForm = new window.InternStudentSkillCreate(this.application, studentId, skillId);
+                    await editForm.render();
+                } else {
+                    console.error('InternStudentSkillCreate class not found');
+                    this.showError('Failed to load skill edit form');
+                }
+            } catch (error) {
+                console.error('Error loading skill edit form:', error);
+                this.showError('Failed to load skill edit form: ' + error.message);
+            }
+        }
+
+        async navigateToCreateCertificate() {
+            try {
+                // Load the InternCertificateCreate module
+                await this.application.fetchModule('/curriculum/static/js/InternCertificateCreate.js');
+
+                if (window.InternCertificateCreate) {
+                    // Pass the InternStudent ID (this.internId)
+                    const createForm = new window.InternCertificateCreate(this.application, this.internId);
+                    await createForm.render();
+                } else {
+                    console.error('InternCertificateCreate class not found');
+                    this.showError('Failed to load certificate form');
+                }
+            } catch (error) {
+                console.error('Error loading certificate create form:', error);
+                this.showError('Failed to load certificate form: ' + error.message);
+            }
+        }
+
+        async navigateToEditCertificate(certificateId) {
+            try {
+                // Load the InternCertificateCreate module for editing
+                await this.application.fetchModule('/curriculum/static/js/InternCertificateCreate.js');
+
+                if (window.InternCertificateCreate) {
+                    const studentId = this.internData.StudentID || this.internData.student_id;
+                    // Pass the certificate ID and student ID to edit mode
+                    const editForm = new window.InternCertificateCreate(this.application, studentId, certificateId);
+                    await editForm.render();
+                } else {
+                    console.error('InternCertificateCreate class not found');
+                    this.showError('Failed to load certificate edit form');
+                }
+            } catch (error) {
+                console.error('Error loading certificate edit form:', error);
+                this.showError('Failed to load certificate edit form: ' + error.message);
             }
         }
 
@@ -428,9 +873,15 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                 
                 if (result.isSuccess) {
                     this.showSuccess('Intern student updated successfully!');
-                    // Optionally refresh work experiences
+                    // Optionally refresh work experiences, skills, certificates, and projects
                     await this.loadWorkExperiences();
+                    await this.loadSkills();
+                    await this.loadCertificates();
+                    await this.loadProjects();
                     this.renderWorkExperiences();
+                    this.renderSkills();
+                    this.renderCertificates();
+                    this.renderProjects();
                 } else {
                     throw new Error(result.error || 'Failed to update intern student');
                 }

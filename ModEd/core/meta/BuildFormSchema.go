@@ -55,6 +55,7 @@ func BuildFormSchema(db *gorm.DB, model interface{}) ([]FormField, error) {
 			Format:       getFormValue(formConfig, "format", ""),
 			Required:     getFormValue(formConfig, "required", "") == "true",
 			TableDisplay: getFormValue(formConfig, "display", "true") == "true",
+			APIUrl:       getFormValue(formConfig, "apiurl", ""),
 		}
 
 		// Handle select fields with foreign key relationships

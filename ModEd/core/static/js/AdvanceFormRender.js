@@ -101,7 +101,7 @@ class AdvanceFormRender {
             await this.createForm();
 
             // Render form fields
-            this.renderFields();
+            await this.renderFields();
 
             // Setup form events
             this.setupFormEvents();
@@ -143,7 +143,7 @@ class AdvanceFormRender {
     /**
      * Render individual form fields based on schema
      */
-    renderFields() {
+    async renderFields() {
         for (const fieldSchema of this.schema) {
             // Skip hidden or excluded fields
             if (fieldSchema.type === 'hidden' || fieldSchema.type === '-') {
@@ -151,7 +151,7 @@ class AdvanceFormRender {
             }
 
             try {
-                const fieldElement = this.createField(fieldSchema);
+                const fieldElement = await this.createField(fieldSchema);
                 if (fieldElement) {
                     this.form.dom.inputContainer.append(fieldElement);
                 }
@@ -164,18 +164,18 @@ class AdvanceFormRender {
     /**
      * Create individual form field based on type
      */
-    createField(fieldSchema) {
+    async createField(fieldSchema) {
         const fieldType = fieldSchema.type || 'text';
 
         switch (fieldType) {
             case 'select':
-                return this.createSelectField(fieldSchema);
+                return await this.createSelectField(fieldSchema);
             case 'textarea':
                 return this.createTextareaField(fieldSchema);
             case 'checkbox':
-                return this.createCheckboxField(fieldSchema);
+                return  this.createCheckboxField(fieldSchema);
             case 'radio':
-                return this.createRadioField(fieldSchema);
+                return await this.createRadioField(fieldSchema);
             case 'date':
             case 'datetime-local':
             case 'time':
@@ -213,9 +213,9 @@ class AdvanceFormRender {
     /**
      * Create select field with options
      */
-    createSelectField(fieldSchema) {
+    async createSelectField(fieldSchema) {
         const { name, label, required } = fieldSchema;
-        const options = this.transformSelectData(fieldSchema);
+        const options = await this.transformSelectData(fieldSchema); 
 
         const field = new DOMObject(this.application.template.SelectInput, {
             Id: name,
@@ -263,9 +263,9 @@ class AdvanceFormRender {
     /**
      * Create radio field group
      */
-    createRadioField(fieldSchema) {
+    async createRadioField(fieldSchema) {
         const { name, label, required } = fieldSchema;
-        const options = this.transformSelectData(fieldSchema);
+        const options = await this.transformSelectData(fieldSchema);
 
         return new DOMObject(this.application.template.RadioInput, {
             name,
@@ -294,10 +294,13 @@ class AdvanceFormRender {
     /**
      * Transform select data from different formats
      */
-    transformSelectData(fieldSchema) {
+    async transformSelectData(fieldSchema) {
         let options = [];
 
-        if (fieldSchema.data && Array.isArray(fieldSchema.data)) {
+        if(fieldSchema.apiurl) {
+            // Fetch options from API
+            options = await this.fetchOptionsFromAPI(fieldSchema.apiurl);
+        } else if (fieldSchema.data && Array.isArray(fieldSchema.data)) {
             // Enhanced format: [{label: "...", value: "..."}]
             options = fieldSchema.data;
         } else if (fieldSchema.option_list && Array.isArray(fieldSchema.option_list)) {
@@ -309,6 +312,21 @@ class AdvanceFormRender {
         }
 
         return options;
+    }
+
+    async fetchOptionsFromAPI(apiUrl) {
+        try {
+            const response = await fetch(`${RootURL}${apiUrl}`);
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            return data.map(item => ({
+                label: item.label || item.name,
+                value: item.value || item.id
+            }));
+        } catch (error) {
+            console.error('Error fetching options from API:', error);
+            return [];
+        }
     }
 
     /**

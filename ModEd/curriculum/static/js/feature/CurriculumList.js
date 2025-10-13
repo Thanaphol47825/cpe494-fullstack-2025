@@ -3,6 +3,20 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
         constructor(application) {
             this.application = application;
             window._deleteCurriculum = this.handleDelete.bind(this);
+            window._editCurriculum = this.handleEdit.bind(this);
+        }
+
+        async getCurriculumById(id) {
+            const res = await fetch(
+                `${RootURL}/curriculum/Curriculum/getCurriculum/${id}`,
+                {
+                    method: "GET",
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
+            const data = await res.json().catch(() => []);
+
+            return data.result || {};
         }
 
         async getAllCurriculums() {
@@ -40,6 +54,56 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
             }
         }
 
+        async handleSubmit(formData) {
+            try {
+                formData.ID = parseInt(this.curriculumData.ID);
+                console.log("Submitting form data:", formData);
+                if (!formData.DepartmentId) {
+                    alert("Please select a department.");
+                    return;
+                }
+                formData.DepartmentId = parseInt(formData.DepartmentId);
+
+                if (formData.ProgramType != 0 && formData.ProgramType != 1) {
+                    alert("Please select a program type.");
+                    return;
+                }
+                formData.ProgramType = parseInt(formData.ProgramType);
+
+                const resp = await fetch(
+                    RootURL + "/curriculum/Curriculum/updateCurriculum",
+                    {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(formData),
+                    }
+                );
+
+                const data = await resp.json();
+                if (data.isSuccess) {
+                    alert("Curriculum saved!");
+                } else {
+                    alert("Error: " + (data.result || "Failed to save"));
+                }
+            } catch (error) {
+                alert("Error: " + (error || "Failed to save"));
+            }
+
+            return false;
+        }
+
+        async handleEdit(curriculumId) {
+            if (!curriculumId) return;
+
+            try {
+                this.curriculumData = await this.getCurriculumById(curriculumId);
+            } catch (err) {
+                alert(`Delete failed: ${err?.message || err}`);
+            }
+
+            await this.renderFormEdit();
+        }
+
         async refreshTable() {
             const curriculums = await this.getAllCurriculums();
             this.table.setData(curriculums);
@@ -52,9 +116,28 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
             this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
             const curriculums = await this.getAllCurriculums();
+            this.setupTable();
+            this.table.setData(curriculums);
+            await this.table.render();
+
+            this.setupForm();
+        }
+
+        async renderFormEdit() {
+            this.application.templateEngine.mainContainer.innerHTML = ""
+            const formElement = await FormTemplate.getForm('CurriculumForm', 'create');
+            this.application.templateEngine.mainContainer.appendChild(formElement);
+
+            await this.form.render();
+
+            this.curriculumData.ProgramType = this.curriculumData.ProgramType.toString();
+            await this.form.setData(this.curriculumData);
+        }
+
+        setupTable() {
             this.table = new AdvanceTableRender(this.application.templateEngine, {
                 modelPath: "curriculum/curriculum",
-                data: curriculums,
+                data: [],
                 targetSelector: "#curriculum-table",
                 schema: [
                     {
@@ -95,7 +178,10 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
                         label: "Actions",
                         template: `
                             <div class="flex space-x-2">
-                                <a routerLink="curriculum/curriculum/{ID}" class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2">Edit</a>
+                                <button id="curriculum-del-btn" onclick="_editCurriculum({ID})" 
+                                        class="bg-red-500 text-white px-3 py-1 rounded text-sm">
+                                    Edit
+                                </button>
                                 <button id="curriculum-del-btn" onclick="_deleteCurriculum({ID})" 
                                         class="bg-red-500 text-white px-3 py-1 rounded text-sm">
                                     Delete
@@ -106,11 +192,15 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
 
                 ]
             });
+        }
 
-            await this.table.render();
+        setupForm() {
+            this.form = new AdvanceFormRender(this.application.templateEngine, {
+                modelPath: "curriculum/curriculum",
+                targetSelector: "#curriculum-form",
+                submitHandler: this.handleSubmit.bind(this),
 
-            // let formHandler = document.getElementById("curriculum-del-btn");
-            // formHandler.addEventListener('click', this.handleDelete.bind(this));
+            });
         }
 
 

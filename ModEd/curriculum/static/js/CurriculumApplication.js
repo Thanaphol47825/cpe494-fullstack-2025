@@ -34,7 +34,6 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       this.addRoute('', this.renderMainPage.bind(this))
 
       this.addRouteWithSubModule('/curriculum', this.renderCurriculum.bind(this), 'feature/CurriculumList.js')
-      this.addRouteWithSubModule('/curriculum/:id', this.renderEditCurriculum.bind(this), 'feature/CurriculumEdit.js')
       this.addRouteWithSubModule('/curriculum/create', this.renderCreateCurriculum.bind(this), 'feature/CurriculumCreate.js')
 
       this.addRouteWithSubModule('/course', this.renderCourse.bind(this), 'feature/CourseList.js')
@@ -74,20 +73,6 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await curriculumList.render();
       } else {
         console.error('CurriculumList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Eror loading.
-        </div>
-      `;
-      }
-    }
-
-    async renderEditCurriculum() {
-      if (window.CurriculumEdit) {
-        const curriculumEdit = new window.CurriculumEdit(this.templateEngine);
-        await curriculumEdit.render();
-      } else {
-        console.error('CurriculumEdit not available after loading');
         this.templateEngine.mainContainer.innerHTML = `
         <div class="red-text-600">
           Eror loading.

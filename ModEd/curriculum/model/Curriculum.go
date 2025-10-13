@@ -13,7 +13,7 @@ type Curriculum struct {
 	DepartmentId uint               `json:"DepartmentId" gorm:"not null" csv:"department_id" form:"label:Department;type:select;required:true;fk:Department;fklabel:name"`
 	Department   model.Department   `json:"Department" gorm:"foreignKey:DepartmentId;references:ID" csv:"-" form:"-"`
 	ProgramType  *model.ProgramType `json:"ProgramType" gorm:"type:int;not null" csv:"program_type" form:"label:ProgramType;enum:ProgramType;type:select"`
-	CourseList   []Course           `gorm:"foreignKey:CurriculumId;references:ID" form:"-"`
+	CourseList   []Course           `gorm:"foreignKey:CurriculumId;references:ID" csv:"-" form:"-"`
 }
 
 func (Curriculum) TableName() string {

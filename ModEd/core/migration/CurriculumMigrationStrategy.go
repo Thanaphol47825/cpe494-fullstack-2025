@@ -35,7 +35,7 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 
 func (s *CurriculumMigrationStrategy) GetSeedPath() []SeedPath {
 	return []SeedPath{
-		{Path: "data/curriculum/curriculum.json", Model: &[]model.Curriculum{}},
+		{Path: "data/curriculum/curriculum.csv", Model: &[]model.Curriculum{}},
 		{Path: "data/curriculum/course.json", Model: &[]model.Course{}},
 		{Path: "data/curriculum/class.json", Model: &[]model.Class{}},
 		{Path: "data/curriculum/classMaterial.json", Model: &[]model.ClassMaterial{}},

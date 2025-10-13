@@ -18,7 +18,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internstudent', this.renderInternStudentList.bind(this), 'InternStudentList.js')
             this.addRouteWithSubModule('/internstudent/create', this.renderInternStudentCreate.bind(this), 'InternStudentCreate.js')
             this.addRouteWithSubModule('/internshipworkexperience/create', this.renderInternshipWorkExperience.bind(this), 'InternWorkExperienceCreate.js')
-            this.addRouteWithSubModule('/internskill', this.renderInternSkill.bind(this), 'InternSkillCreate.js')
+            this.addRouteWithSubModule('/internskill/create', this.renderInternSkill.bind(this), 'InternSkillCreate.js')
             this.addRouteWithSubModule('/internstudent/edit/:id', this.renderInternStudentEdit.bind(this), 'InternStudentEdit.js');
 
             this.setDefaultRoute('')
@@ -35,7 +35,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Intern Student", route: "/internstudent" },
             { label: "Intern Student Create", route: "/internstudent/create"},
             { label: "Internship Work Experience Create", route: "/internshipworkexperience/create" },
-            { label: "Intern Skill", route: "/internskill" },
+            { label: "Intern Skill Create", route: "/internskill/create" },
 
         ]
 

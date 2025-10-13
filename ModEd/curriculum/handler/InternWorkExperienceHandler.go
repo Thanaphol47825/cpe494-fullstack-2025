@@ -4,11 +4,8 @@ import (
 	"ModEd/core"
 	"ModEd/curriculum/model"
 	"fmt"
-	"net/http"
-	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/hoisie/mustache"
 	"gorm.io/gorm"
 )
 
@@ -65,27 +62,6 @@ func (controller *InternWorkExperienceHandler) CreateInternWorkExperience(contex
 		"isSuccess": true,
 		"result":    newInternWorkExperience,
 	})
-}
-
-func (controller *InternWorkExperienceHandler) RenderCreateInternWorkExperience(context *fiber.Ctx) error {
-	fmt.Print(controller.Application)
-	fmt.Print("\n===========================\n")
-	// fmt.Print(controller.Application.RootPath)
-	fmt.Print("\n========================\n\n\n")
-	if controller.Application == nil {
-		return context.SendStatus(fiber.StatusInternalServerError)
-	}
-	path := filepath.Join(controller.Application.RootPath, "curriculum", "view", "Company.tpl")
-	template, err := mustache.ParseFile(path)
-	if err != nil {
-		return context.SendStatus(http.StatusInternalServerError)
-	}
-	rendered := template.Render(map[string]string{
-		"title":   "ModEd Company",
-		"RootURL": controller.Application.RootURL,
-	})
-	context.Set("Content-Type", "text/html")
-	return context.SendString(rendered)
 }
 
 func (controller *InternWorkExperienceHandler) GetInternWorkExperienceByID(context *fiber.Ctx) error {

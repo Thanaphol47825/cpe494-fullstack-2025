@@ -45,11 +45,6 @@ func (controller *InternWorkExperienceController) GetRoute() []*core.RouteItem {
 		Handler: controller.handler.DeleteInternWorkExperienceByID,
 		Method:  core.POST,
 	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/internWorkExperience/createRender",
-		Handler: controller.handler.RenderCreateInternWorkExperience,
-		Method:  core.GET,
-	})
 	return routeList
 }
 

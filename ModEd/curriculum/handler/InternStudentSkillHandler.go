@@ -50,7 +50,7 @@ func (h *InternStudentSkillHandler) CreateInternStudentSkill(c *fiber.Ctx) error
 
 	// ป้องกันซ้ำ StudentID + SkillID
 	var exists model.InternStudentSkill
-	if err := h.DB.Where("student_id = ? AND skill_id = ?", body.StudentID, body.SkillID).First(&exists).Error; err == nil {
+	if err := h.DB.Where("student_id = ? AND skill_id = ?", body.StudentId, body.SkillId).First(&exists).Error; err == nil {
 		return c.Status(409).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "student skill already exists",
@@ -81,11 +81,11 @@ func (h *InternStudentSkillHandler) UpdateInternStudentSkill(c *fiber.Ctx) error
 	}
 
 	data := map[string]interface{}{}
-	if input.StudentID != 0 {
-		data["student_id"] = input.StudentID
+	if input.StudentId != 0 {
+		data["student_id"] = input.StudentId
 	}
-	if input.SkillID != 0 {
-		data["skill_id"] = input.SkillID
+	if input.SkillId != 0 {
+		data["skill_id"] = input.SkillId
 	}
 	if input.Level != 0 {
 		data["level"] = input.Level

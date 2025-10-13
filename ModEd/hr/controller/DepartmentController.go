@@ -44,33 +44,27 @@ func (ctl *DepartmentController) SetApplication(app *core.ModEdApplication) {
 }
 
 func (ctl *DepartmentController) List(c *fiber.Ctx) error {
-	var rows []map[string]interface{}
-	tx := ctl.application.DB.Table("departments")
-	if l := c.QueryInt("limit"); l > 0 {
-		tx = tx.Limit(l)
-	}
-	if o := c.QueryInt("offset"); o > 0 {
-		tx = tx.Offset(o)
-	}
-	if err := tx.Find(&rows).Error; err != nil {
-		return fiber.NewError(http.StatusInternalServerError, err.Error())
-	}
-	return c.Status(http.StatusOK).JSON(rows)
+    var rows []map[string]interface{}
+    tx := ctl.application.DB.Table("departments")
+    if l := c.QueryInt("limit"); l > 0 { tx = tx.Limit(l) }
+    if o := c.QueryInt("offset"); o > 0 { tx = tx.Offset(o) }
+    if err := tx.Find(&rows).Error; err != nil {
+        return fiber.NewError(http.StatusInternalServerError, err.Error())
+    }
+    return c.Status(http.StatusOK).JSON(fiber.Map{"result": rows})
 }
 
 func (ctl *DepartmentController) GetByName(c *fiber.Ctx) error {
-	name := c.Params("name")
-	var row map[string]interface{}
-	q := ctl.application.DB.Table("departments").
-		Where("name = ?", strings.Replace(name, "%20", " ", -1)).
-		Take(&row)
-	if err := q.Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return fiber.NewError(http.StatusNotFound, "department not found")
-		}
-		return fiber.NewError(http.StatusInternalServerError, err.Error())
-	}
-	return c.Status(http.StatusOK).JSON(row)
+    name := strings.ReplaceAll(c.Params("name"), "%20", " ")
+    var row map[string]interface{}
+    q := ctl.application.DB.Table("departments").Where("name = ?", name).Take(&row)
+    if err := q.Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            return fiber.NewError(http.StatusNotFound, "department not found")
+        }
+        return fiber.NewError(http.StatusInternalServerError, err.Error())
+    }
+    return c.Status(http.StatusOK).JSON(fiber.Map{"result": row})
 }
 
 func (ctl *DepartmentController) Create(c *fiber.Ctx) error {
@@ -97,69 +91,70 @@ func (ctl *DepartmentController) Create(c *fiber.Ctx) error {
         }
     }
 
-    if payload["name"] == nil || strings.TrimSpace(payload["name"].(string)) == "" {
+    name, _ := payload["name"].(string)
+    faculty, _ := payload["faculty"].(string)
+    if strings.TrimSpace(name) == "" {
         return fiber.NewError(http.StatusBadRequest, "department name is required")
     }
-    if payload["faculty"] == nil || strings.TrimSpace(payload["faculty"].(string)) == "" {
+    if strings.TrimSpace(faculty) == "" {
         return fiber.NewError(http.StatusBadRequest, "faculty is required")
     }
 
     if err := ctl.application.DB.Table("departments").Create(&payload).Error; err != nil {
         return fiber.NewError(http.StatusInternalServerError, err.Error())
     }
-    return c.Status(http.StatusCreated).JSON(payload)
+    return c.Status(http.StatusCreated).JSON(fiber.Map{"result": payload})
 }
 
 func (ctl *DepartmentController) UpdateByName(c *fiber.Ctx) error {
-	name := strings.TrimSpace(c.Params("name"))
+    name := strings.ReplaceAll(strings.TrimSpace(c.Params("name")), "%20", " ")
 
-	var patch map[string]interface{}
-	if err := c.BodyParser(&patch); err != nil {
-		return fiber.NewError(http.StatusBadRequest, err.Error())
-	}
-	delete(patch, "id")
-	if v, ok := patch["parent"]; ok {
-		patch["faculty"] = v
-		delete(patch, "parent")
-	}
-	if v, ok := patch["budget"]; ok {
-		switch b := v.(type) {
-		case float64:
-			patch["budget"] = int(b)
-		case string:
-			if n, err := strconv.Atoi(b); err == nil {
-				patch["budget"] = n
-			} else {
-				return fiber.NewError(http.StatusBadRequest, "budget must be a number")
-			}
-		}
-	}
+    var patch map[string]interface{}
+    if err := c.BodyParser(&patch); err != nil {
+        return fiber.NewError(http.StatusBadRequest, err.Error())
+    }
+    delete(patch, "id")
+    if v, ok := patch["parent"]; ok {
+        patch["faculty"] = v
+        delete(patch, "parent")
+    }
+    if v, ok := patch["budget"]; ok {
+        switch b := v.(type) {
+        case float64:
+            patch["budget"] = int(b)
+        case string:
+            if n, err := strconv.Atoi(b); err == nil {
+                patch["budget"] = n
+            } else {
+                return fiber.NewError(http.StatusBadRequest, "budget must be a number")
+            }
+        }
+    }
 
-	var dept model.Department
-	if err := ctl.application.DB.
-		Where("name = ?", strings.Replace(name, "%20", " ", -1)).
-		First(&dept).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return fiber.NewError(http.StatusNotFound, "department not found")
-		}
-		return fiber.NewError(http.StatusInternalServerError, err.Error())
-	}
+    var dept model.Department
+    if err := ctl.application.DB.Where("name = ?", name).First(&dept).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            return fiber.NewError(http.StatusNotFound, "department not found")
+        }
+        return fiber.NewError(http.StatusInternalServerError, err.Error())
+    }
 
-	if err := ctl.application.DB.Model(&dept).Updates(patch).Error; err != nil {
-		return fiber.NewError(http.StatusInternalServerError, err.Error())
-	}
+    if err := ctl.application.DB.Model(&dept).Updates(patch).Error; err != nil {
+        return fiber.NewError(http.StatusInternalServerError, err.Error())
+    }
 
-	return c.Status(http.StatusOK).JSON(fiber.Map{"updated": true, "id": dept.ID})
+    return c.Status(http.StatusOK).JSON(fiber.Map{"result": fiber.Map{"updated": true, "id": dept.ID}})
 }
 
 func (ctl *DepartmentController) DeleteByName(c *fiber.Ctx) error {
-	name := c.Params("name")
-	res := ctl.application.DB.Exec("DELETE FROM departments WHERE name = ?", name)
-	if err := res.Error; err != nil {
-		return fiber.NewError(http.StatusInternalServerError, err.Error())
-	}
-	if res.RowsAffected == 0 {
-		return fiber.NewError(http.StatusNotFound, "department not found")
-	}
-	return c.SendStatus(http.StatusNoContent)
+    name := strings.ReplaceAll(c.Params("name"), "%20", " ")
+    res := ctl.application.DB.Exec("DELETE FROM departments WHERE name = ?", name)
+    if err := res.Error; err != nil {
+        return fiber.NewError(http.StatusInternalServerError, err.Error())
+    }
+    if res.RowsAffected == 0 {
+        return fiber.NewError(http.StatusNotFound, "department not found")
+    }
+    // Return JSON envelope instead of 204 so the client never reads from null
+    return c.Status(http.StatusOK).JSON(fiber.Map{"result": true})
 }

@@ -609,85 +609,60 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
 
     // ==================== Departments ====================
 
-    async fetchDepartments({ limit, offset } = {}) {
-      const params = new URLSearchParams()
-      if (Number.isFinite(limit)) params.set('limit', String(limit))
-      if (Number.isFinite(offset)) params.set('offset', String(offset))
-
-      const url = `${this.rootURL}/hr/departments${params.toString() ? `?${params}` : ''}`
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-      })
+    async fetchJSON(url, options = {}) {
+      const res = await fetch(url, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...options });
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err?.error?.message || err?.message || `Failed to load departments: ${res.status}`)
+        let msg = `${res.status} ${res.statusText}`;
+        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+        throw new Error(msg);
       }
-      const data = await res.json().catch(() => ([]))
-      return data.result || data
+      // 204 No Content check
+      if (res.status === 204) return null;
+      return res.json();
+    }
+
+    async fetchDepartments({ limit, offset } = {}) {
+      const qs = new URLSearchParams();
+      if (limit) qs.set('limit', String(limit));
+      if (offset) qs.set('offset', String(offset));
+      const qstr = qs.toString() ? `?${qs.toString()}` : '';
+      return this.fetchJSON(`${this.rootURL}/hr/departments${qstr}`);
     }
 
     async fetchDepartment(name) {
-      const safe = encodeURIComponent(name)
-      const res = await fetch(`${this.rootURL}/hr/departments/${safe}`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        throw new Error(data?.error?.message || data?.message || `Failed to load department: ${res.status}`)
-      }
-      return data.result || data
+      const encoded = encodeURIComponent(name);
+      return this.fetchJSON(`${this.rootURL}/hr/departments/${encoded}`);
     }
 
     async createDepartment(payload) {
-      const body = {
-        name: payload?.name?.trim() || '',
-        faculty: payload?.faculty ?? payload?.parent ?? '',  // <-- use faculty
-        budget: Number(payload?.budget ?? 0),
-      };
-
-      const res = await fetch(`${this.rootURL}/hr/departments`, {
+      return this.fetchJSON(`${this.rootURL}/hr/departments`, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message || data?.message || `API Error (${res.status})`);
-      return data.result || data;
     }
 
     async updateDepartment(name, patch) {
-      const safe = encodeURIComponent(name);
-      const body = {};
-      if (typeof patch?.name === 'string') body.name = patch.name.trim();
-      if (patch?.faculty !== undefined || patch?.parent !== undefined) {
-        body.faculty = patch.faculty ?? patch.parent;        // <-- use faculty
-      }
-      if (patch?.budget !== undefined) body.budget = Number(patch.budget);
-
-      const res = await fetch(`${this.rootURL}/hr/departments/${safe}/update`, {
+      const encoded = encodeURIComponent(name);
+      return this.fetchJSON(`${this.rootURL}/hr/departments/${encoded}/update`, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify(patch),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message || data?.message || `API Error (${res.status})`);
-      return data.result || data;
     }
 
     async deleteDepartment(name) {
-      const safe = encodeURIComponent(name)
-      const res = await fetch(`${this.rootURL}/hr/departments/${safe}/delete`, {
+      const encoded = encodeURIComponent(name);
+      // Controller returns 204; treat as ok
+      const res = await fetch(`${this.rootURL}/hr/departments/${encoded}/delete`, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }
-      })
-      if (res.status === 204) return { deleted: true }
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        throw new Error(data?.error?.message || data?.message || `API Error (${res.status})`)
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok && res.status !== 204) {
+        let msg = `${res.status} ${res.statusText}`;
+        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+        throw new Error(msg);
       }
-      return data.result || data
+      return true;
     }
   }
   

@@ -55,6 +55,12 @@ func (controller *ClassController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/Class/getClassOptions",
+		Handler: controller.handler.GetClassOptions,
+		Method:  core.GET,
+	})
+
 	return routeList
 }
 

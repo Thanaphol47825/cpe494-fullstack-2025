@@ -122,3 +122,24 @@ func (h *ClassHandler) DeleteClass(context *fiber.Ctx) error {
 		"result":    "Class deleted successfully",
 	})
 }
+
+func (h *ClassHandler) GetClassOptions(context *fiber.Ctx) error {
+    var classes []model.Class
+    var results []map[string]any
+    if err := h.Application.DB.Preload("Course").Find(&classes).Error; err != nil {
+        return context.JSON(fiber.Map{
+            "isSuccess": false,
+            "result":    "failed to get classes",
+        })
+    }
+    for _, class := range classes {
+        results = append(results, map[string]any{
+            "value": class.ID,
+            "label": class.Course.Name[:6] + " | " + class.Schedule.Format("2006-01-02 15:04"),
+        })
+    }
+    return context.JSON(fiber.Map{
+        "isSuccess": true,
+        "result":    results,
+    })
+}

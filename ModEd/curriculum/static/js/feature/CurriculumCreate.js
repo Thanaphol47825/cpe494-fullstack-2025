@@ -5,26 +5,11 @@ if (typeof window !== 'undefined' && !window.CurriculumCreate) {
     }
 
     async render() {
-      this.application.mainContainer.innerHTML = ""
-      const formWrapper = this.application.create(`
-                <div class="bg-gray-100 min-h-screen py-8">
-                    <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
-                        Curriculum
-                    </h1>
-                    <form method="POST" id="curriculum-form">
-                        <div id="form-fields"></div>
-                        <button type="submit" class="form-submit-btn">
-                            Create Curriculum
-                        </button>
-                    </form>
-                    <div style="margin-top: 20px;">
-                        <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-                    </div>
-                </div>
-            `);
-      this.application.mainContainer.appendChild(formWrapper);
+      this.application.templateEngine.mainContainer.innerHTML = ""
+      const formElement = await FormTemplate.getForm('CurriculumForm', 'create');
+      this.application.templateEngine.mainContainer.appendChild(formElement);
 
-      this.form = new AdvanceFormRender(this.application, {
+      this.form = new AdvanceFormRender(this.application.templateEngine, {
         modelPath: "curriculum/curriculum",
         targetSelector: "#curriculum-form",
         submitHandler: async (formData) => {

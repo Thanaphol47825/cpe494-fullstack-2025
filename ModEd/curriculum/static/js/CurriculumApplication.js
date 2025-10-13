@@ -94,7 +94,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
 
     async renderCreateCurriculum() {
       if (window.CurriculumCreate) {
-        const curriculumCreate = new window.CurriculumCreate(this.templateEngine);
+        const curriculumCreate = new window.CurriculumCreate(this);
         await curriculumCreate.render();
       } else {
         console.error('CurriculumCreate not available after loading');
@@ -188,7 +188,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       `;
       }
     }
-    async renderCreateCoursePlan() { 
+    async renderCreateCoursePlan() {
       if (window.CoursePlanCreate) {
         const coursePlanCreate = new window.CoursePlanCreate(this);
         await coursePlanCreate.render();

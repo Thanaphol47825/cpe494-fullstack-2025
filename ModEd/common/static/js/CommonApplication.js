@@ -90,6 +90,7 @@ class CommonApplication extends BaseModuleApplication {
       <section class="menu-container">
         <div class="form-container">
           <h1 class="menu-title">Common Module</h1>
+          <a href='#' class="btn-home">🏠 Back to ModEd</a>
           <p>Manage Faculty, Department, Instructor, and Student information.</p>
 
           <div class="module-list">

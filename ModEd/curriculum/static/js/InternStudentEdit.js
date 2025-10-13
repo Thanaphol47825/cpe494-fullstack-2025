@@ -535,9 +535,9 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                     <div class="flex-1">
                         <div class="mb-2">
                             <h4 class="text-sm font-semibold text-gray-900">
-                                ${skill.skill_name || 'Unnamed Skill'}
+                                ${(skill.Skill && skill.Skill.skill_name) || 'Unnamed Skill'}
                             </h4>
-                            <p class="text-xs text-gray-600">Level: ${skill.skill_level || 'N/A'}</p>
+                            <p class="text-xs text-gray-600">Level: ${skill.level ?? 'N/A'}</p>
                         </div>
                         <div class="text-sm text-gray-700">
                             <p class="line-clamp-2">${skill.description || 'No description provided'}</p>

@@ -1,229 +1,164 @@
-if (typeof window !== 'undefined' && !window.InternSkillCreate) {
+if (typeof window !== "undefined" && !window.InternSkillCreate) {
   class InternSkillCreate {
     constructor(application) {
       this.application = application;
-
-      this.rootURL = (window.__InternSkillConfig && window.__InternSkillConfig.rootURL) || '';
+      this.rootURL = (window.__InternSkillConfig && window.__InternSkillConfig.rootURL) || "";
       this.endpoints = {
-        list: this.rootURL + '/curriculum/InternSkill',
-        create: this.rootURL + '/curriculum/CreateInternSkill',
-        update: (id) => this.rootURL + '/curriculum/UpdateInternSkill/' + id,
-        remove: (id) => this.rootURL + '/curriculum/DeleteInternSkill/' + id,
+        create: this.rootURL + "/curriculum/CreateInternSkill",
       };
     }
 
-    // ---------------------- utilities ----------------------
-    getId(obj) { return obj?.ID ?? obj?.id ?? obj?.Id ?? null; }
-    getName(obj) { return obj?.skill_name ?? obj?.SkillName ?? ''; }
+    async loadInternshipPageTemplate() {
+      if (!window.InternshipPageTemplate) {
+        const script = document.createElement("script");
+        script.src = `${RootURL}/curriculum/static/js/template/InternshipPageTemplate.js`;
+        document.head.appendChild(script);
 
-    makeSpinner(id = 'loading-indicator') {
-      const wrap = document.createElement('div');
-      wrap.id = id;
-      wrap.className = 'flex items-center justify-center my-4';
-      wrap.innerHTML = `
-        <div style="
-            width:28px;height:28px;border:3px solid #d1d5db;border-top-color:#2563eb;
-            border-radius:50%;animation: spin 0.8s linear infinite;"></div>
-        <span style="margin-left:10px;color:#374151">Loading...</span>
-      `;
-      return wrap;
+        await new Promise((resolve, reject) => {
+          script.onload = () => window.InternshipPageTemplate ? resolve() : reject(new Error("InternshipPageTemplate failed to load"));
+          script.onerror = () => reject(new Error("Failed to load InternshipPageTemplate script"));
+        });
+      }
     }
 
-    toast(type, msg) {
-      const color =
-        type === 'success' ? { bg: '#dcfce7', border: '#86efac', text: '#166534' } :
-          type === 'error' ? { bg: '#fee2e2', border: '#fecaca', text: '#991b1b' } :
-            { bg: '#e0f2fe', border: '#bae6fd', text: '#0c4a6e' };
-      const el = this.application.create(`
-        <div style="
-            background:${color.bg};border:1px solid ${color.border};
-            color:${color.text};padding:12px 14px;border-radius:10px;margin-bottom:16px;">
-          <strong style="margin-right:6px;text-transform:capitalize;">${type}!</strong> ${msg}
-        </div>
-      `);
-      return el;
+    preparePageConfig() {
+      return {
+        title: "Create Intern Skill",
+        description: "Add a new skill to the internship system.",
+        showBackButton: true,
+        backButtonText: "Back to Skill List",
+        backButtonRoute: "/#curriculum/internskill",
+        pageClass: "internship-create-page",
+        headerClass: "internship-header",
+        contentClass: "internship-content",
+      };
     }
 
-    // ---------------------- render ----------------------
-    async render() {
-      this.application.mainContainer.innerHTML = '';
+    async createFormContent() {
+      const fieldsHTML = await this.generateFormFields();
+      return `
+        <form id="intern-skill-form" class="space-y-6">
+          <div id="form-fields" class="space-y-4">
+            ${fieldsHTML}
+          </div>
 
-      const page = this.application.create(`
-        <div class="bg-gray-100 min-h-screen py-8">
-          <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">Create Intern Skill</h1>
-          <!-- form -->
-          <form id="intern-skill-form" class="form-container">
-            <input type="hidden" id="editing_id" name="editing_id" />
-            <div class="form-field">
-              <label for="skill_name" class="block text-sm font-medium text-gray-700 mb-1">Skill Name</label>
-              <input id="skill_name" name="skill_name" type="text" required placeholder="Enter Skill Name" class="form-input" />
-            </div>
-            <button id="submit-btn" type="submit" class="form-submit-btn" style="width:100%;">
+          <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+            <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+              Cancel
+            </button>
+            <button id="submit-btn" type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
               Create Intern Skill
             </button>
-          </form>
-
-          <!-- table area -->
-          <div id="intern-skill-table" class="form-container" style="margin-top:24px;">
-            <div id="table-host"></div>
           </div>
-        </div>
-
-      `);
-
-      this.application.mainContainer.appendChild(page);
-
-      document.getElementById('intern-skill-form').addEventListener('submit', this.handleSubmit.bind(this));
-
-      await this.renderTable();
-      this.bindTableActions();
-    }
-    async fetchList() {
-      const res = await fetch(this.endpoints.list);
-      const data = await res.json();
-      if (!data.isSuccess) throw new Error(data.error || 'failed to load');
-      return Array.isArray(data.result) ? data.result : [];
+        </form>
+      `;
     }
 
-    async renderTable() {
-      const host = document.getElementById('table-host');
-      host.innerHTML = '';
-      const spinner = this.makeSpinner();
-      host.appendChild(spinner);
+    async generateFormFields() {
+      const field = {
+        Id: "skill_name",
+        Label: "Skill Name",
+        Type: "text",
+        Name: "skill_name",
+         Required: true,
+        Placeholder: "Enter Skill Name",
+      };
 
+      let inputHTML = "";
       try {
-        const rows = await this.fetchList();
-        spinner.remove();
-
-        const tbl = document.createElement('table');
-        tbl.className = 'table-blue';
-        tbl.innerHTML = `
-          <thead>
-            <tr>
-              <th style="width:120px">ID</th>
-              <th>Skill Name</th>
-              <th style="width:200px">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${
-          rows.length
-            ? rows.map(r => {
-              const id = this.getId(r);
-              const name = this.getName(r);
-              return `
-                      <tr data-id="${id}">
-                        <td>${id}</td>
-                        <td>${name}</td>
-                        <td>
-                          <a href="#" data-action="edit" data-id="${id}" class="button">Edit</a>
-                          <a href="#" data-action="delete" data-id="${id}" class="button" style="background:#ef4444">Delete</a>
-                        </td>
-                      </tr>
-                    `;
-                }).join('')
-          : `<tr><td colspan="3" class="ui-table-empty">No data available</td></tr>`
-          }
-          </tbody>
-        `;
-        host.appendChild(tbl);
-      } catch (e) {
-        spinner.remove();
-        host.appendChild(this.toast('error', e.message || 'Load table failed'));
-      }
-    }
-
-    bindTableActions() {
-      const wrapper = document.getElementById('intern-skill-table');
-      wrapper.addEventListener('click', (e) => {
-        const a = e.target.closest('a[data-action]');
-        if (!a) return;
-        e.preventDefault();
-        const action = a.getAttribute('data-action');
-        const id = a.getAttribute('data-id');
-        if (action === 'edit') this.prefillForm(id);
-        if (action === 'delete') this.handleDelete(id);
-      });
-    }
-
-    prefillForm(id) {
-      const row = document.querySelector(`#intern-skill-table tr[data-id="${id}"]`);
-      const name = row?.children?.[1]?.textContent?.trim() || '';
-      document.getElementById('editing_id').value = id;
-      document.getElementById('skill_name').value = name;
-      document.getElementById('submit-btn').textContent = 'Update Intern Skill';
-      // focus UX
-      document.getElementById('skill_name').focus();
-    }
-
-    resetForm() {
-      const form = document.getElementById('intern-skill-form');
-      form.reset();
-      document.getElementById('editing_id').value = '';
-      document.getElementById('submit-btn').textContent = 'Create Intern Skill';
-    }
-
-    async handleSubmit(e) {
-      e.preventDefault();
-      const form = e.target;
-
-      const editingId = (document.getElementById('editing_id').value || '').trim();
-      const skill_name = (document.getElementById('skill_name').value || '').trim();
-      if (!skill_name) {
-        form.parentNode.insertBefore(this.toast('error', 'Please input skill name'), form);
-        return;
-      }
-
-      const btn = document.getElementById('submit-btn');
-      const oldLabel = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = editingId ? 'Updating...' : 'Creating...';
-
-      try {
-        const payload = { skill_name };
-        const res = await fetch(
-          editingId ? this.endpoints.update(editingId) : this.endpoints.create,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          }
-        );
-        const data = await res.json();
-        if (!res.ok || !data.isSuccess) {
-          throw new Error(data.error || 'Request failed');
+        const template = this.application.template?.Input;
+        if (template && window.Mustache) {
+          inputHTML = Mustache.render(template, field);
+        } else {
+          inputHTML = `
+            <div class="form-field">
+              <label for="${field.Id}" class="block text-sm font-medium text-gray-700 mb-1">${field.Label}</label>
+              <input id="${field.Id}" name="${field.Name}" type="text" required placeholder="${field.Placeholder}" class="form-input" />
+            </div>
+          `;
         }
-
-        const toast = this.toast('success', editingId ? 'Skill updated.' : 'Skill created.');
-        form.parentNode.insertBefore(toast, form);
-
-        this.resetForm();
-        await this.renderTable();
-        setTimeout(() => toast.remove(), 2500);
       } catch (err) {
-        const toast = this.toast('error', err.message || 'Request error');
-        form.parentNode.insertBefore(toast, form);
-        setTimeout(() => toast.remove(), 3500);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = oldLabel;
+        console.error("Error creating field:", err);
+      }
+      return inputHTML;
+    }
+
+    setupEventListeners() {
+      const backButton = document.querySelector("[data-back-button]");
+      if (backButton) backButton.addEventListener("click", (e) => { e.preventDefault(); this.goBack(); });
+
+      const cancelButton = document.getElementById("cancel-btn");
+      if (cancelButton) cancelButton.addEventListener("click", (e) => { e.preventDefault(); this.goBack(); });
+
+      const form = document.getElementById("intern-skill-form");
+      if (form) form.addEventListener("submit", this.handleSubmit.bind(this));
+    }
+
+    goBack() {
+      if (this.application.navigate) {
+        this.application.navigate("/curriculum/internskill");
+      } else {
+        window.location.hash = "#/curriculum/internskill";
       }
     }
 
-    async handleDelete(id) {
-      if (!confirm(`Delete skill #${id}?`)) return;
-      const host = document.getElementById('table-host');
-      const spin = this.makeSpinner('delete-spinner');
-      host.appendChild(spin);
+    async render() {
+      console.log("Create Intern Skill Form");
       try {
-        const res = await fetch(this.endpoints.remove(id), { method: 'POST' });
-        const data = await res.json();
-        if (!data.isSuccess) throw new Error(data.error || 'Delete failed');
-        await this.renderTable();
+        await this.loadInternshipPageTemplate();
+        this.application.mainContainer.innerHTML = "";
+
+        const pageConfig = this.preparePageConfig();
+        const formContent = await this.createFormContent();
+
+        const pageElement = await window.InternshipPageTemplate.render(
+          pageConfig,
+          formContent,
+          this.application
+        );
+
+        this.application.mainContainer.appendChild(pageElement);
+        this.setupEventListeners();
+      } catch (error) {
+        console.error("Error rendering InternSkillCreate:", error);
+        this.showError("Failed to load form: " + error.message);
+      }
+    }
+
+    async handleSubmit(event) {
+      event.preventDefault();
+      const form = event.target;
+      const formData = new FormData(form);
+      const payload = Object.fromEntries(formData.entries());
+
+      window.InternshipPageTemplate.showLoading(form, "Creating...");
+
+      try {
+        const res = await fetch(this.endpoints.create, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (!res.ok || !result.isSuccess) throw new Error(result.error || "Failed to create skill");
+
+        window.InternshipPageTemplate.showSuccess("Skill created successfully!", this.application.mainContainer);
+        setTimeout(() => form.reset(), 1200);
       } catch (err) {
-        host.appendChild(this.toast('error', err.message || 'Delete error'));
+        window.InternshipPageTemplate.showError(err.message || "Request error", this.application.mainContainer);
       } finally {
-        spin.remove();
+        window.InternshipPageTemplate.hideLoading(form, "Create Intern Skill");
+      }
+    }
+
+    showError(message) {
+      if (window.InternshipPageTemplate) {
+        window.InternshipPageTemplate.showError(message, this.application.mainContainer);
+      } else {
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4";
+        errorDiv.textContent = message;
+        this.application.mainContainer.prepend(errorDiv);
       }
     }
   }

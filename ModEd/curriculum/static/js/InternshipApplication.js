@@ -55,16 +55,22 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderInternSkill.bind(this),
         "InternSkillCreate.js"
       );
-      this.addRouteWithSubModule(
-        "/internstudentskill/create",
-        this.renderInternStudentSkill.bind(this),
-        "InternStudentSkillCreate.js"
-      );
+      // this.addRouteWithSubModule(
+      //   "/internstudentskill/create",
+      //   this.renderInternStudentSkill.bind(this),
+      //   "InternStudentSkillCreate.js"
+      // );
       this.addRouteWithSubModule(
         "/internstudent/edit/:id",
         this.renderInternStudentEdit.bind(this),
         "InternStudentEdit.js"
       );
+      this.addRouteWithSubModule(
+      "/internstudentskill/create/:internStudentId",
+      this.renderInternStudentSkill.bind(this),
+      "InternStudentSkillCreate.js"
+      );
+      
 
       this.setDefaultRoute("");
     }
@@ -82,10 +88,10 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         route: "/internshipworkexperience/create",
       },
       { label: "Intern Skill Create", route: "/internskill/create" },
-      {
-        label: "Intern Student Skill Create",
-        route: "/internstudentskill/create",
-      },
+      // {
+      //   label: "Intern Student Skill Create",
+      //   route: "/internstudentskill/create",
+      // },
     ];
 
     async renderMainPage() {
@@ -257,10 +263,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       }
     }
 
-    async renderInternStudentSkill() {
-      console.log("Rendering Intern Student Skill");
+    async renderInternStudentSkill(params = {}) {
+      console.log("Rendering Intern Student Skill Create", params);
+      const internStudentId = params?.internStudentId || null;
       if (window.InternStudentSkillCreate) {
-        const page = new window.InternStudentSkillCreate(this.templateEngine);
+        const page = new window.InternStudentSkillCreate(this, internStudentId, null);
         await page.render();
       } else {
         console.error("InternStudentSkillCreate class not found");

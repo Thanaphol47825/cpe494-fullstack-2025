@@ -40,6 +40,12 @@ func (c *InternStudentSkillController) GetRoute() []*core.RouteItem {
 			Handler: c.handler.DeleteInternStudentSkill,
 			Method:  core.POST,
 		},
+		{
+		Route:   "/curriculum/internSkill/getByStudentID/:studentID",
+		Handler: c.handler.GetInternStudentSkillByStudentID,
+		Method:  core.GET,
+		},
+
 	}
 	return routes
 }

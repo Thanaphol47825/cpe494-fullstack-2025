@@ -100,7 +100,6 @@ func (h *InternStudentSkillHandler) UpdateInternStudentSkill(c *fiber.Ctx) error
 	return c.JSON(fiber.Map{"isSuccess": true, "result": updated})
 }
 
-// POST /curriculum/DeleteInternStudentSkill/:id
 func (h *InternStudentSkillHandler) DeleteInternStudentSkill(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -121,3 +120,20 @@ func (h *InternStudentSkillHandler) DeleteInternStudentSkill(c *fiber.Ctx) error
 		},
 	})
 }
+func (h *InternStudentSkillHandler) GetInternStudentSkillByStudentID(c *fiber.Ctx) error {
+	studentID := c.Params("studentID")
+	if studentID == "" {
+		return c.Status(400).JSON(fiber.Map{"isSuccess": false, "error": "studentID is required"})
+	}
+
+	var list []model.InternStudentSkill
+	if err := h.DB.Preload("Student").Preload("Skill").
+		Where("student_id = ?", studentID).
+		Find(&list).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"isSuccess": false, "error": "failed to fetch skills for student"})
+	}
+
+	return c.JSON(fiber.Map{"isSuccess": true, "result": list})
+}
+
+

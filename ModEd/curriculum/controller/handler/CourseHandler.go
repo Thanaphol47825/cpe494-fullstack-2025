@@ -4,6 +4,8 @@ import (
 	"ModEd/core"
 	"ModEd/curriculum/model"
 	"path/filepath"
+	"sort"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -73,6 +75,28 @@ func (h *CourseHandler) GetCourseById(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    result,
+	})
+}
+
+func (h *CourseHandler) GetCourseStatusOptions(c *fiber.Ctx) error {
+	keys := make([]int, 0, len(model.CourseStatusLabel))
+	for k := range model.CourseStatusLabel {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+
+	options := make([]map[string]interface{}, 0, len(keys))
+	for _, v := range keys {
+		cs := model.CourseStatus(v)
+		options = append(options, map[string]interface{}{
+			"value": strconv.Itoa(v),
+			"label": cs.String(),
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    options,
 	})
 }
 

@@ -2,144 +2,66 @@ class CourseCreate {
    constructor(application) {
      this.application = application;
    }
-   getCurriculumsOption = async () => {
-    const res = await fetch(`${RootURL}/curriculum/Curriculum/getCurriculums`, {
-      method: "GET",
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json().catch(() => ([]));
-    const list = Array.isArray(data?.result) ? data.result : (Array.isArray(data) ? data : []);
 
-    return list.map(item => ({
-      value: item.ID,
-      label: item.Name || `#${item.ID}`
-    }));
-  };
-
-  handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const form = document.getElementById("curriculum-form");
-    const btn = form.querySelector('button[type="submit"]');
-    const original = btn?.textContent;
-    btn?.setAttribute("disabled", "true");
-    if (btn) btn.textContent = "Saving...";
+  async handleSubmit(formData) {
     try {
-      const formData = new FormData(form);
-      const payload = {
-        Name: (formData.get('Name') || '').toString().trim(),
-        Description: (formData.get('Description') || '').toString().trim(),
-        CurriculumId: parseInt(formData.get('CurriculumId') || '0', 10),
-        Optional: (formData.get('Optional') || '') === 'true',
-        CourseStatus: parseInt(formData.get('CourseStatus') || '0', 10),
-      };
 
-      if (!payload.Name) {
-        alert('Please enter course name');
-        return;
-      }
-      if (!Number.isInteger(payload.CurriculumId) || payload.CurriculumId <= 0) {
-        alert('Please select a curriculum');
-        return;
-      }
-      if (![0,1].includes(payload.CourseStatus)) {
-        alert('Please select course status');
-        return;
-      }
+    console.log("Submitting form data:", formData);
+    if (!formData.Name || !formData.Name.toString().trim()) {
+      alert("Please enter course name.");
+      return;
+    }
+    if (!formData.Description || !formData.Description.toString().trim()) {
+      alert("Please enter description.");
+      return;
+    }
+    if (!formData.CurriculumId) {
+      alert("Please select a curriculum.");
+      return;
+    }
+    if (formData.CourseStatus != 0 && formData.CourseStatus != 1) {
+      alert("Please select a course status.");
+       return;
+    }
 
-      const resp = await fetch(`${RootURL}/curriculum/Course/createCourse`, {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    formData.CurriculumId = parseInt(formData.CurriculumId);
+    formData.CourseStatus = parseInt(formData.CourseStatus);
+    formData.Optional = !!formData.Optional;
 
-      let data = {};
-      try { data = await resp.json(); } catch {}
+    const resp = await fetch(RootURL + "/curriculum/Course/createCourse", {
+      method: 'POST',
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
 
-      if (!resp.ok) {
-        const msg = data?.message || data?.error?.message || data?.error || `Request failed (${resp.status})`;
-        alert('Error: ' + msg);
-        return;
-      }
-
-      if (!data.isSuccess) {
-        alert('Error: ' + (data.result || 'failed to create course'));
+    const data = await resp.json();
+      if (data.isSuccess) {
+        alert("Course saved!");
       } else {
-        alert('Save: success');
-        form.reset();
+        alert("Error: " + (data.result || "Failed to save"));
       }
     } catch (err) {
-      alert('Network error');
-    } finally {
-      btn?.removeAttribute("disabled");
-      if (btn) btn.textContent = original || "Create Course";
+      alert("Error: " + (error || "Failed to save"));
     } 
+    return false;
   }
 
-  formWrapperTemplate = `
-    <div class="bg-gray-100 min-h-screen py-8">
-      <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">Course</h1>
-      <form method="POST" id="curriculum-form" class="form-container">
-        <div id="form-fields"></div>
-        <button type="submit" class="form-submit-btn">Create Course</button>
-      </form>
-      <div class="text-center mt-12">
-        <a routerLink="curriculum" class="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:bg-white/90 border border-gray-200/50 font-medium">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-          </svg>
-          Back to Curriculum Menu
-        </a>
-      </div>
-    </div>
-  `;
-
-  render = async () => {
+  async render() {
     this.application.templateEngine.mainContainer.innerHTML = "";
-    const view = this.application.templateEngine.create(Mustache.render(this.formWrapperTemplate, {}));
-    this.application.templateEngine.mainContainer.append(view);
+    const formElement = await FormTemplate.getForm("CourseForm", "create");
+    this.application.templateEngine.mainContainer.appendChild(formElement);
 
-    const curriculumsOption = await this.getCurriculumsOption();
-    const fields = [
-      { Id: "name", Label: "Name", Type: "text", Name: "Name", Placeholder: "Enter Course Name" },
-      { Id: "description", Label: "Description", Type: "text", Name: "Description", Placeholder: "Enter Course Description" },
-      { Id: "curriculum_id", Label: "Curriculum", Type: "select", Name: "CurriculumId", options: curriculumsOption },
-      {
-        Id: "optional", Label: "Optional", Type: "select", Name: "Optional",
-        options: [
-          { label: "Required", value: "false" },
-          { label: "Optional", value: "true" }
-        ]
-      },
-      {
-        Id: "status", Label: "Course Status", Type: "select", Name: "CourseStatus",
-        options: [
-          { label: "Active", value: 1 },
-          { label: "Inactive", value: 0 }
-        ]
-      },
-    ];
-
-    const fieldsContainer = document.getElementById('form-fields');
-    fields.forEach(field => {
-      let inputHTML = '';
-
-      if (field.Type === "select" && this.application.templateEngine.template?.Select) {
-        inputHTML = Mustache.render(this.application.templateEngine.template.Select, field);
-      } else if (field.Type === "select" && this.application.templateEngine.template?.SelectInput) {
-        inputHTML = Mustache.render(this.application.templateEngine.template.SelectInput, field);
-      } else if (this.application.templateEngine.template?.Input) {
-        inputHTML = Mustache.render(this.application.templateEngine.template.Input, field);
-      }
-
-      if (inputHTML) {
-        fieldsContainer.appendChild(this.application.templateEngine.create(inputHTML));
+    this.form = new AdvanceFormRender(this.application.templateEngine, {
+      modelPath: "curriculum/Course",
+      targetSelector: "#course-form",
+      submitHandler: async (formData) => {
+        console.log("Form submitted:", formData);
+        await this.handleSubmit(formData);
       }
     });
 
-    const formHandler = document.getElementById('curriculum-form');
-    formHandler.addEventListener('submit', this.handleSubmit.bind(this));
-  };
+    await this.form.render();
+  }
 }
 
 if (typeof window !== 'undefined') {

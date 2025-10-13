@@ -19,6 +19,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internstudent/create', this.renderInternStudentCreate.bind(this), 'InternStudentCreate.js')
             this.addRouteWithSubModule('/internshipworkexperience/create', this.renderInternshipWorkExperience.bind(this), 'InternWorkExperienceCreate.js')
             this.addRouteWithSubModule('/internskill/create', this.renderInternSkill.bind(this), 'InternSkillCreate.js')
+            this.addRouteWithSubModule('/internstudentskill/create',this.renderInternStudentSkill.bind(this),'InternStudentSkillCreate.js')
             this.addRouteWithSubModule('/internstudent/edit/:id', this.renderInternStudentEdit.bind(this), 'InternStudentEdit.js');
 
             this.setDefaultRoute('')
@@ -36,6 +37,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             { label: "Intern Student Create", route: "/internstudent/create"},
             { label: "Internship Work Experience Create", route: "/internshipworkexperience/create" },
             { label: "Intern Skill Create", route: "/internskill/create" },
+            { label: "Intern Student Skill Create", route: "/internstudentskill/create" }
 
         ]
 
@@ -243,16 +245,23 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
         }
 
         async renderInternSkill() {
-  console.log("Rendering Intern Skill")
-  if (window.InternSkillCreate) {
-    const page = new window.InternSkillCreate(this.templateEngine)
-    await page.render()
-  } else {
-    console.error("InternSkillCreate class not found")
-  }
-}
-
-
+            console.log("Rendering Intern Skill")
+            if (window.InternSkillCreate) {
+                const page = new window.InternSkillCreate(this.templateEngine)
+                await page.render()
+            } else {
+                console.error("InternSkillCreate class not found")
+            }
+        }
+        async renderInternStudentSkill() {
+            console.log("Rendering Intern Student Skill")
+            if (window.InternStudentSkillCreate) {
+                const page = new window.InternStudentSkillCreate(this.templateEngine)
+                await page.render()
+            } else {
+                console.error("InternStudentSkillCreate class not found")
+            }
+        }
         async render() {
             try {
                 const handled = await this.handleRoute(this.templateEngine.getCurrentPath())

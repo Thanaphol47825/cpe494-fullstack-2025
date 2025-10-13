@@ -1,170 +1,189 @@
-// SubmissionCreate - General submission creation feature
+// SubmissionCreate - Using AdvanceFormRender from core
 class SubmissionCreate {
-  constructor() {
+  constructor(application) {
+    this.application = application;
     this.apiService = new EvalApiService();
-    this.validator = new EvalValidator();
-    this.tplPath = '/eval/static/view/SubmissionForm.tpl';
+    this.form = null;
   }
 
   async initialize() {
-    const container = document.getElementById('submission-demo') || document.getElementById('MainContainer') || document.body;
-    if (!container) return;
-
-    // load tpl
-    const tpl = await this.fetchTpl(this.tplPath);
-    container.innerHTML = tpl.replace('{{title}}','Submit Assignment');
-
-    const form = document.getElementById('submissionForm');
-    if (form) form.addEventListener('submit', (e)=> this.handleSubmit(e));
-
-    // populate assignment select
-    await this.populateAssignmentSelect();
-
-    // Load initial submissions list
-    await this.loadAllSubmissions();
-  }
-
-  async fetchTpl(path){
-    const candidates = [];
-    try{ if (typeof RootURL !== 'undefined' && RootURL !== null) candidates.push(String(RootURL).replace(/\/$/, '') + path); }catch(e){}
-    candidates.push(path);
-
-    let lastErr = null;
-    for (const url of candidates) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('HTTP ' + res.status + ' for ' + url);
-        return await res.text();
-      } catch (err) {
-        lastErr = err;
-        console.warn('fetchTpl attempt failed for', url, err);
-      }
+    const container = this.application.templateEngine.mainContainer;
+    if (!container) {
+      console.error('MainContainer not found');
+      return;
     }
 
-    console.error('All fetchTpl attempts failed. Tried:', candidates, 'lastErr:', lastErr);
-    // return a small inline fallback so UI still works
-    return `
-      <div class="card">
-        <h2>Submit Assignment</h2>
-        <form id="submissionForm">
-          <label>Assignment</label>
-          <div id="assignmentSelectContainer"></div>
-          <label>Student ID</label>
-          <input type="number" name="studentId" />
-          <label>Student Name</label>
-          <input type="text" name="studentName" />
-          <label>Submitted At</label>
-          <input type="datetime-local" name="submittedAt" />
-          <label>Content</label>
-          <textarea name="content"></textarea>
-          <div style="margin-top:8px"><button type="submit">Submit</button></div>
-        </form>
-        <pre id="submissionResult"></pre>
-        <div id="allSubmissions"></div>
+    // Clear container and add wrapper
+    container.innerHTML = `
+      <div class="min-h-screen bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 py-8">
+        <div class="max-w-4xl mx-auto px-4">
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Submission</h1>
+            <p class="text-lg text-gray-600">Fill in the form below to create a new submission</p>
+          </div>
+          
+          <!-- Back Button -->
+          <div class="mb-6">
+            <a routerLink="eval" class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </a>
+          </div>
+
+          <!-- Form Container -->
+          <div id="submission-form-container"></div>
+
+          <!-- Submissions List -->
+          <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Submissions</h2>
+            <div id="submission-table-container" class="bg-white rounded-lg shadow-md p-6"></div>
+          </div>
+        </div>
       </div>
     `;
-  }
 
-  async populateAssignmentSelect(){
-    const data = await this.apiService.getAllAssignments();
-    const container = document.getElementById('assignmentSelectContainer');
-    if (!container) return;
-    // cache assignments for quick lookup when autofilling
-    this.assignments = {};
-    const select = document.createElement('select');
-    select.name = 'assignmentId';
-    select.className = 'w-full rounded-md border border-gray-300 px-3 py-2';
-    select.innerHTML = '<option value="">Please select assignment</option>';
-    if (data.isSuccess && Array.isArray(data.result)){
-      data.result.forEach(a=>{
-        const id = a.id||a.ID; const title = a.title||a.Title||`Assignment ${id}`;
-        const opt = document.createElement('option'); opt.value = id; opt.textContent = title; select.appendChild(opt);
-        this.assignments[id] = a;
-      })
+    // Initialize AdvanceFormRender
+    // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
+    // We need to pass templateEngine instead
+    this.form = new AdvanceFormRender(this.application.templateEngine, {
+      modelPath: "eval/submission",
+      targetSelector: "#submission-form-container",
+      submitHandler: async (formData) => await this.handleSubmit(formData),
+      autoFocus: true,
+      validateOnBlur: true
+    });
+
+    try {
+      await this.form.render();
+      await this.loadSubmissions();
+    } catch (error) {
+      console.error('Error rendering form:', error);
+      this.showError('Failed to load form: ' + error.message);
     }
-    container.innerHTML = '';
-    container.appendChild(select);
   }
 
-  async handleSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    // coerce types
-    if (data.assignmentId) data.assignmentId = Number(data.assignmentId);
-    if (data.studentId) data.studentId = Number(data.studentId);
-
-    // If an assignment is selected, auto-fill submission type/title/maxScore from cached assignment
-    if (data.assignmentId) {
-      let a = this.assignments && this.assignments[data.assignmentId];
-      if (!a) {
-        // fallback: try fetching single assignment (do not block submission on failure)
-        try {
-          const res = await fetch(RootURL + `/eval/assignment/get/${data.assignmentId}`);
-          const j = await res.json();
-          if (j.isSuccess) a = j.result;
-        } catch (err) {
-          console.warn('Failed to auto-fill from assignment (fetch)', err);
-        }
+  async handleSubmit(formData) {
+    try {
+      // Convert dates to RFC3339 format if needed
+      if (formData.submittedAt) {
+        formData.submittedAt = this.apiService.formatToRFC3339(new Date(formData.submittedAt));
+      }
+      if (formData.lastModified) {
+        formData.lastModified = this.apiService.formatToRFC3339(new Date(formData.lastModified));
       }
 
-      if (a) {
-        data.type = 'assignment';
-        data.title = a.title || a.Title || data.title || '';
-        data.maxScore = a.maxScore || a.MaxScore || data.maxScore || 100;
-        // determine late by comparing submittedAt to assignment due date if available
-        try {
-          const due = a.dueDate || a.DueDate || a.Due || null;
-          if (due) {
-            const dueDate = new Date(due);
-            const submitted = new Date(data.submittedAt || new Date().toISOString());
-            data.isLate = submitted.getTime() > dueDate.getTime();
-          }
-        } catch (e) { console.warn('Cannot compute isLate', e); }
+      // Ensure numeric fields
+      if (formData.studentId) formData.studentId = Number(formData.studentId);
+      if (formData.maxScore) formData.maxScore = Number(formData.maxScore);
+      if (formData.score) formData.score = Number(formData.score);
+
+      // Convert checkbox values
+      formData.isLate = formData.isLate === 'on' || formData.isLate === true;
+
+      const result = await this.apiService.createSubmission(formData);
+      
+      if (result && result.isSuccess) {
+        this.showSuccess('Submission created successfully!');
+        this.form.reset();
+        await this.loadSubmissions();
       } else {
-        console.warn('Assignment data not available for autofill, continuing without assignment autofill');
+        throw new Error(result?.message || 'Failed to create submission');
       }
+    } catch (error) {
+      console.error('Submit error:', error);
+      this.showError('Failed to create submission: ' + error.message);
+      throw error;
     }
-
-  // set submittedAt to current time if not present
-  if (!data.submittedAt) data.submittedAt = new Date().toISOString();
-
-  // ensure status default
-  if (!data.status) data.status = 'submitted';
-
-    // Validate
-  const validation = this.validator.validateSubmission ? this.validator.validateSubmission(data) : { errors: [] };
-  if (this.validator && !this.validator.showErrors(validation.errors)) return;
-
-    // create submission
-    const result = await this.apiService.createSubmission(data);
-    document.getElementById('submissionResult').textContent = JSON.stringify(result, null, 2);
-    await this.loadAllSubmissions();
-    form.reset();
   }
 
-  async loadAllSubmissions() {
-    const data = await this.apiService.getAllSubmissions();
-    const container = document.getElementById('allSubmissions');
+  async loadSubmissions() {
+    const container = document.getElementById('submission-table-container');
     if (!container) return;
-    if (data.isSuccess && Array.isArray(data.result)){
-      container.innerHTML = '';
-      data.result.forEach(s=>{
-        const assignment = s.assignmentId || s.AssignmentID || '';
-        const student = s.studentName || s.StudentName || '';
-        const submittedAt = s.submittedAt || s.SubmittedAt || '';
-        const isLate = s.isLate || s.IsLate || false;
-        const score = s.score !== undefined ? s.score : (s.Score || 'Not graded');
-        const div = document.createElement('div');
-        div.className = 'submission-item';
-        div.innerHTML = `<strong>Assignment:${assignment}</strong> ${student} - ${submittedAt} - Score:${score} ${isLate?'<span style="color:red">LATE</span>':''}`;
-        container.appendChild(div);
-      })
-    } else container.textContent = 'Error loading submissions: ' + JSON.stringify(data);
+
+    try {
+      const response = await this.apiService.getAllSubmissions();
+      
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        const submissions = response.result;
+        
+        if (submissions.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 text-center py-8">No submissions created yet</p>';
+          return;
+        }
+
+        const tableHTML = `
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                ${submissions.slice(0, 5).map(s => `
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      ${s.title || s.Title || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${s.type || s.Type || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${s.studentName || s.StudentName || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${s.submittedAt || s.SubmittedAt ? new Date(s.submittedAt || s.SubmittedAt).toLocaleDateString() : '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s.isLate || s.IsLate ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                        ${s.isLate || s.IsLate ? 'Late' : 'On Time'}
+                      </span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        container.innerHTML = tableHTML;
+      } else {
+        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading submissions</p>';
+      }
+    } catch (error) {
+      console.error('Error loading submissions:', error);
+      container.innerHTML = `<p class="text-red-500 text-center py-4">Error: ${error.message}</p>`;
+    }
+  }
+
+  showSuccess(message) {
+    const div = document.createElement('div');
+    div.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-green-100 text-green-800 border border-green-200 transition-opacity duration-300';
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => {
+      div.style.opacity = '0';
+      setTimeout(() => div.remove(), 300);
+    }, 3000);
+  }
+
+  showError(message) {
+    const div = document.createElement('div');
+    div.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-red-100 text-red-800 border border-red-200';
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => div.remove(), 5000);
   }
 }
 
-// Make it globally available
+// Expose globally
 window.SubmissionCreate = SubmissionCreate;

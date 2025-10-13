@@ -17,8 +17,9 @@ func NewAssignmentController() *AssignmentController {
 }
 
 func (controller *AssignmentController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "eval/assignment", Model: &model.Assignment{}},
+	}
 }
 
 func (controller *AssignmentController) SetApplication(application *core.ModEdApplication) {

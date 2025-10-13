@@ -17,8 +17,9 @@ func NewAssignmentProgressController() *AssignmentProgressController {
 }
 
 func (controller *AssignmentProgressController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "eval/assignmentprogress", Model: &model.AssignmentProgress{}},
+	}
 }
 
 func (controller *AssignmentProgressController) SetApplication(application *core.ModEdApplication) {

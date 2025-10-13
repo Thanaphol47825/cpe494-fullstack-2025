@@ -17,8 +17,9 @@ func NewQuizSubmissionController() *QuizSubmissionController {
 }
 
 func (controller *QuizSubmissionController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "eval/quizsubmission", Model: &model.QuizSubmission{}},
+	}
 }
 
 func (controller *QuizSubmissionController) SetApplication(application *core.ModEdApplication) {

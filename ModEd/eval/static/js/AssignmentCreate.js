@@ -1,152 +1,186 @@
-// AssignmentCreate - Assignment creation feature
+// AssignmentCreate - Using AdvanceFormRender from core
 class AssignmentCreate {
-  constructor() {
+  constructor(application) {
+    this.application = application;
     this.apiService = new EvalApiService();
-    this.validator = new EvalValidator();
-    this.templatePath = '/eval/static/view/AssignmentForm.tpl';
+    this.form = null;
   }
 
   async initialize() {
-    const container = document.getElementById('assignment-demo') || document.getElementById('MainContainer') || document.body;
-    if (!container) return;
-
-    // Load template
-    const tplText = await this.fetchTemplate(this.templatePath);
-    const html = Mustache.render(tplText, { title: 'Create new Assignment' });
-    // insert content
-    container.innerHTML = html;
-
-    // Attach event listeners
-    const form = document.getElementById('assignmentForm');
-    if (form) {
-      form.addEventListener('submit', (e) => this.handleSubmit(e));
-      form.addEventListener('reset', () => this.onReset());
+    const container = document.getElementById('MainContainer') || document.body;
+    if (!container) {
+      console.error('MainContainer not found');
+      return;
     }
 
-    const loadBtn = document.getElementById('loadAllBtn');
-    if (loadBtn) loadBtn.addEventListener('click', () => this.loadAllAssignments());
+    // Clear container and add wrapper
+    container.innerHTML = `
+      <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8">
+        <div class="max-w-4xl mx-auto px-4">
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Create Assignment</h1>
+            <p class="text-lg text-gray-600">Fill in the form below to create a new assignment</p>
+          </div>
+          
+          <!-- Back Button -->
+          <div class="mb-6">
+            <a routerLink="eval" class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Back
+            </a>
+          </div>
 
-    await this.loadAllAssignments();
-  }
+          <!-- Form Container -->
+          <div id="assignment-form-container"></div>
 
-  async fetchTemplate(path) {
-    const candidates = [];
+          <!-- Assignments List -->
+          <div class="mt-12">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Assignments</h2>
+            <div id="assignment-table-container" class="bg-white rounded-lg shadow-md p-6"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Initialize AdvanceFormRender
+    // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
+    // We need to pass templateEngine instead
+    this.form = new AdvanceFormRender(this.application.templateEngine, {
+      modelPath: "eval/assignment",
+      targetSelector: "#assignment-form-container",
+      submitHandler: async (formData) => await this.handleSubmit(formData),
+      autoFocus: true,
+      validateOnBlur: true
+    });
+
     try {
-      if (typeof RootURL !== 'undefined' && RootURL !== null) {
-        candidates.push(String(RootURL).replace(/\/$/, '') + path);
-      }
-    } catch (e) {
-      // ignore
+      await this.form.render();
+      await this.loadAssignments();
+    } catch (error) {
+      console.error('Error rendering form:', error);
+      this.showError('Failed to load form: ' + error.message);
     }
-    candidates.push(path);
-
-    let lastErr = null;
-    for (const url of candidates) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Template fetch failed: ' + res.status + ' for ' + url);
-        return await res.text();
-      } catch (err) {
-        lastErr = err;
-        console.warn('Attempt to fetch template failed for', url, err);
-        // try next candidate
-      }
-    }
-
-    console.error('All attempts to load template failed. Tried:', candidates, 'last error:', lastErr);
-    return '<div>Error loading template</div>';
   }
 
-  onReset() {
-    console.log('Clear button clicked - resetting form');
-    const result = document.getElementById('result');
-    if (result) result.textContent = '';
-    
-    // Also clear the assignments list
-    const allAssignments = document.getElementById('allAssignments');
-    if (allAssignments) allAssignments.textContent = '';
-  }
-
-  async handleSubmit(e) {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
-
-    // convert types
-    if (data.startDate) data.startDate = new Date(data.startDate).toISOString();
-    if (data.dueDate) data.dueDate = new Date(data.dueDate).toISOString();
-    data.maxScore = Number(data.maxScore || 100);
-
-  // normalize field names: validator expects `name`, template uses `title`
-  if (!data.name && data.title) data.name = data.title;
-  // also ensure title exists for display/use downstream
-  if (!data.title && data.name) data.title = data.name;
-
-    // Validate data (validator may be optional)
-    if (this.validator && typeof this.validator.validateAssignment === 'function') {
-      const validation = this.validator.validateAssignment(data);
-      if (!this.validator.showErrors(validation.errors)) return;
-    }
-
-    const result = await this.apiService.createAssignment(data);
-    const resultEl = document.getElementById('result');
-    if (resultEl) resultEl.textContent = JSON.stringify(result, null, 2);
-
-    await this.loadAllAssignments();
-    if (form) form.reset();
-    
-    // Show success message
-    this.showSuccessMessage('Assignment created successfully!');
-  }
-
-  async loadAllAssignments() {
+  async handleSubmit(formData) {
     try {
-      const response = await this.apiService.getAllAssignments();
-      const container = document.getElementById('allAssignments');
-      if (!container) return;
+      // Convert dates to RFC3339 format if needed
+      if (formData.startDate) {
+        formData.startDate = this.apiService.formatToRFC3339(new Date(formData.startDate));
+      }
+      if (formData.dueDate) {
+        formData.dueDate = this.apiService.formatToRFC3339(new Date(formData.dueDate));
+      }
 
-      if (response && response.isSuccess && Array.isArray(response.result)) {
-        const list = response.result;
-        const items = list.map(a => {
-          const title = a.title || a.Title || a.Name || '';
-          const description = a.description || a.Description || '';
-          const id = a.id || a.ID || a.Id || '';
-          const due = a.dueDate || a.DueDate || '';
-          const maxScore = a.maxScore || a.MaxScore || '';
-          return `ID: ${id}\nTitle: ${title}\nDesc: ${description}\nDue: ${due}\nMax: ${maxScore}\n----`;
-        }).join('\n');
+      // Ensure numeric fields
+      if (formData.maxScore) formData.maxScore = Number(formData.maxScore);
+      if (formData.instructorId) formData.instructorId = Number(formData.instructorId);
+      if (formData.courseId) formData.courseId = Number(formData.courseId);
 
-        container.textContent = items || 'No assignments found.';
+      // Convert checkbox values
+      formData.isReleased = formData.isReleased === 'on' || formData.isReleased === true;
+      formData.isActive = formData.isActive === 'on' || formData.isActive === true;
+
+      const result = await this.apiService.createAssignment(formData);
+      
+      if (result && result.isSuccess) {
+        this.showSuccess('Assignment created successfully!');
+        this.form.reset();
+        await this.loadAssignments();
       } else {
-        console.error('Invalid response format:', response);
-        container.textContent = 'Error loading assignments: Invalid response format';
+        throw new Error(result?.message || 'Failed to create assignment');
       }
     } catch (error) {
-      console.error('Failed to load assignments:', error);
-      const container = document.getElementById('allAssignments');
-      if (container) {
-        container.textContent = `Error loading assignments: ${error.message}`;
-      }
+      console.error('Submit error:', error);
+      this.showError('Failed to create assignment: ' + error.message);
+      throw error;
     }
   }
 
-  showSuccessMessage(message) {
-    // Create a temporary message element
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-green-100 text-green-800 border border-green-200';
-    messageDiv.textContent = message;
-    
-    document.body.appendChild(messageDiv);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      if (messageDiv.parentNode) {
-        messageDiv.parentNode.removeChild(messageDiv);
+  async loadAssignments() {
+    const container = document.getElementById('assignment-table-container');
+    if (!container) return;
+
+    try {
+      const response = await this.apiService.getAllAssignments();
+      
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        const assignments = response.result;
+        
+        if (assignments.length === 0) {
+          container.innerHTML = '<p class="text-gray-500 text-center py-8">No assignments created yet</p>';
+          return;
+        }
+
+        const tableHTML = `
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Score</th>
+                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                ${assignments.slice(0, 5).map(a => `
+                  <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      ${a.title || a.Title || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${a.dueDate || a.DueDate ? new Date(a.dueDate || a.DueDate).toLocaleDateString() : '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      ${a.maxScore || a.MaxScore || '-'}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${(a.isActive || a.IsActive) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                        ${(a.isActive || a.IsActive) ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        
+        container.innerHTML = tableHTML;
+      } else {
+        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading assignments</p>';
       }
+    } catch (error) {
+      console.error('Error loading assignments:', error);
+      container.innerHTML = `<p class="text-red-500 text-center py-4">Error: ${error.message}</p>`;
+    }
+  }
+
+  showSuccess(message) {
+    const div = document.createElement('div');
+    div.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-green-100 text-green-800 border border-green-200 transition-opacity duration-300';
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => {
+      div.style.opacity = '0';
+      setTimeout(() => div.remove(), 300);
     }, 3000);
+  }
+
+  showError(message) {
+    const div = document.createElement('div');
+    div.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-red-100 text-red-800 border border-red-200';
+    div.textContent = message;
+    document.body.appendChild(div);
+    
+    setTimeout(() => div.remove(), 5000);
   }
 }
 
-// Expose globally for TemplateEngine
+// Expose globally
 window.AssignmentCreate = AssignmentCreate;

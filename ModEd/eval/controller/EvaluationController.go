@@ -17,8 +17,9 @@ func NewEvaluationController() *EvaluationController {
 }
 
 func (controller *EvaluationController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "eval/evaluation", Model: &model.Evaluation{}},
+	}
 }
 
 func (controller *EvaluationController) SetApplication(application *core.ModEdApplication) {

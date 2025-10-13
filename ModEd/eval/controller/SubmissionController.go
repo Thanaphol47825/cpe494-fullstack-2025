@@ -17,8 +17,9 @@ func NewSubmissionController() *SubmissionController {
 }
 
 func (controller *SubmissionController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "eval/submission", Model: &model.Submission{}},
+	}
 }
 
 func (controller *SubmissionController) SetApplication(application *core.ModEdApplication) {

@@ -38,8 +38,9 @@ func (controller *AssignmentSubmissionController) RenderMain(context *fiber.Ctx)
 }
 
 func (controller *AssignmentSubmissionController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "eval/assignmentsubmission", Model: &model.AssignmentSubmission{}},
+	}
 }
 
 func (controller *AssignmentSubmissionController) SetApplication(application *core.ModEdApplication) {

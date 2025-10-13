@@ -221,152 +221,32 @@ class EvalApplication extends BaseModuleApplication {
 
 
   async renderAssignmentCreate() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">Create New Assignment</h2>
-            </div>
-            <div class="p-8">
-              <div id="assignment-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.assignmentCreate) this.assignmentCreate = new AssignmentCreate();
+    if (!this.assignmentCreate) this.assignmentCreate = new AssignmentCreate(this);
     await this.assignmentCreate.initialize();
   }
 
   async renderQuizCreate() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">Create New Quiz</h2>
-            </div>
-            <div class="p-8">
-              <div id="quiz-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.quizCreate) this.quizCreate = new QuizCreate();
+    if (!this.quizCreate) this.quizCreate = new QuizCreate(this);
     await this.quizCreate.initialize();
   }
 
   async renderQuizList() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">Quiz Management</h2>
-            </div>
-            <div class="p-8">
-              <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-semibold text-gray-800">All Quizzes</h3>
-                <a routerLink="eval/quiz/create" class="inline-flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Create Quiz
-                </a>
-              </div>
-              <div id="quiz-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.quizManage) this.quizManage = new QuizManage();
+    if (!this.quizManage) this.quizManage = new QuizManage(this);
     await this.quizManage.initialize();
   }
 
   async renderQuizSubmissionCreate() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">Submit Quiz</h2>
-            </div>
-            <div class="p-8">
-              <div id="quiz-submission-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.quizSubmissionCreate) this.quizSubmissionCreate = new QuizSubmissionCreate();
+    if (!this.quizSubmissionCreate) this.quizSubmissionCreate = new QuizSubmissionCreate(this);
     await this.quizSubmissionCreate.initialize();
   }
 
   async renderSubmissionCreate() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">Create New Submission</h2>
-            </div>
-            <div class="p-8">
-              <div id="submission-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.submissionCreate) this.submissionCreate = new SubmissionCreate();
+    if (!this.submissionCreate) this.submissionCreate = new SubmissionCreate(this);
     await this.submissionCreate.initialize();
   }
 
   async renderAssignmentList() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">Assignment Management</h2>
-            </div>
-            <div class="p-8">
-              <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-semibold text-gray-800">All Assignments</h3>
-                <a routerLink="eval/assignment/create" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Create Assignment
-                </a>
-              </div>
-              <div id="assignment-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.assignmentManage) this.assignmentManage = new AssignmentManage();
+    if (!this.assignmentManage) this.assignmentManage = new AssignmentManage(this);
     await this.assignmentManage.initialize();
   }
 
@@ -402,33 +282,7 @@ class EvalApplication extends BaseModuleApplication {
   }
 
   async renderSubmissionList() {
-    this.templateEngine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gradient-to-br from-purple-50 via-violet-50 to-indigo-50 py-8">
-        <div class="max-w-4xl mx-auto px-4">
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="px-8 py-6 bg-gray-50 border-b border-gray-200">
-              <h2 class="text-2xl font-semibold text-gray-800">General Submissions</h2>
-            </div>
-            <div class="p-8">
-              <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-semibold text-gray-800">All Submissions</h3>
-                <a routerLink="eval/submission/create" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
-                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  Create Submission
-                </a>
-              </div>
-              <div id="submission-demo"></div>
-              <div class="text-center mt-8">
-                <a routerLink="eval" class="px-6 py-2 text-gray-400 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer">← Back</a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    if (!this.submissionManage) this.submissionManage = new SubmissionManage();
+    if (!this.submissionManage) this.submissionManage = new SubmissionManage(this);
     await this.submissionManage.initialize();
   }
 }

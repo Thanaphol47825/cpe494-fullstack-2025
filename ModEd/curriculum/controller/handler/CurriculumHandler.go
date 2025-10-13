@@ -1,10 +1,13 @@
 package handler
 
 import (
+	common "ModEd/common/model"
 	"ModEd/core"
 	"ModEd/curriculum/model"
 	"net/http"
 	"path/filepath"
+	"sort"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -74,6 +77,28 @@ func (h *CurriculumHandler) GetCurriculum(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    result,
+	})
+}
+
+func (h *CurriculumHandler) GetProgramTypeOptions(context *fiber.Ctx) error {
+	keys := make([]int, 0, len(common.ProgramTypeLabel))
+	for k := range common.ProgramTypeLabel {
+		keys = append(keys, int(k))
+	}
+	sort.Ints(keys)
+
+	options := make([]map[string]interface{}, 0, len(keys))
+	for _, v := range keys {
+		pt := common.ProgramType(v)
+		options = append(options, map[string]interface{}{
+			"value": strconv.Itoa(v),
+			"label": pt.String(),
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    options,
 	})
 }
 

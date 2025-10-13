@@ -26,6 +26,11 @@ func (controller *CurriculumController) GetRoute() []*core.RouteItem {
 		Handler: controller.handler.RenderCreateForm,
 		Method:  core.GET,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/Curriculum/getProgramTypeOptions",
+		Handler: controller.handler.GetProgramTypeOptions,
+		Method:  core.GET,
+	})
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/Curriculum/createCurriculum",

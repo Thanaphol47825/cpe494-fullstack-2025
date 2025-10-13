@@ -4,25 +4,7 @@ if (typeof window !== 'undefined' && !window.CurriculumCreate) {
       this.application = application;
     }
 
-    async render() {
-      this.application.templateEngine.mainContainer.innerHTML = ""
-      const formElement = await FormTemplate.getForm('CurriculumForm', 'create');
-      this.application.templateEngine.mainContainer.appendChild(formElement);
-
-      this.form = new AdvanceFormRender(this.application.templateEngine, {
-        modelPath: "curriculum/curriculum",
-        targetSelector: "#curriculum-form",
-        submitHandler: async (formData) => {
-          console.log("Form submitted:", formData);
-          await this.handleSubmit(formData);
-        }
-
-      });
-
-      await this.form.render();
-    }
-
-    async handleSubmit(formData) {
+    async handleSubmitCurriculum(formData) {
 
       try {
         console.log("Submitting form data:", formData);
@@ -32,7 +14,6 @@ if (typeof window !== 'undefined' && !window.CurriculumCreate) {
         }
         formData.DepartmentId = parseInt(formData.DepartmentId);
 
-        formData.ProgramType = 1
         if (formData.ProgramType != 0 && formData.ProgramType != 1) {
           alert("Please select a program type.");
           return;
@@ -57,6 +38,23 @@ if (typeof window !== 'undefined' && !window.CurriculumCreate) {
 
       return false;
     }
+
+    async render() {
+      this.application.templateEngine.mainContainer.innerHTML = ""
+      const formElement = await FormTemplate.getForm('CurriculumForm', 'create');
+      this.application.templateEngine.mainContainer.appendChild(formElement);
+
+      this.form = new AdvanceFormRender(this.application.templateEngine, {
+        modelPath: "curriculum/curriculum",
+        targetSelector: "#curriculum-form",
+        submitHandler: this.handleSubmitCurriculum.bind(this),
+
+      });
+
+      await this.form.render();
+    }
+
+
   }
 
   if (typeof window !== 'undefined') {

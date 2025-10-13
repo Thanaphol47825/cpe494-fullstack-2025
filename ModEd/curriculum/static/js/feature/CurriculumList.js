@@ -14,7 +14,7 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
 
             let curriculums = []
             data.result.forEach(item => {
-                curriculums.push({ ID: item.ID, Name: item.Name, StartYear: item.StartYear, EndYear: item.EndYear, DepartmentId: item.Department.name, ProgramType: item.ProgramType });
+                curriculums.push({ ID: item.ID, Name: item.Name, StartYear: item.StartYear, EndYear: item.EndYear, DepartmentId: item.Department.ID, Department: item.Department.name, ProgramType: item.ProgramType, ProgramTypeName: item.ProgramType === 0 ? 'Regular' : (item.ProgramType === 1 ? 'International' : 'N/A') });
             });
 
             return curriculums;
@@ -47,33 +47,49 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
         }
 
         async render() {
-            this.application.mainContainer.innerHTML = ""
-            const tableWrapper = this.application.create(`
-                <div class="bg-gray-100 min-h-screen py-8">
-                    <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
-                        Curriculum
-                    </h1>
-                    <div id="curriculum-table"></div>
-                    <div style="margin-top: 20px;">
-                        <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-                    </div>
-                </div>
-            `);
-            this.application.mainContainer.appendChild(tableWrapper);
-
+            this.application.templateEngine.mainContainer.innerHTML = ""
+            const listWrapper = await ListTemplate.getList('CurriculumList');
+            this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
             const curriculums = await this.getAllCurriculums();
-            this.table = new AdvanceTableRender(this.application, {
+            this.table = new AdvanceTableRender(this.application.templateEngine, {
                 modelPath: "curriculum/curriculum",
                 data: curriculums,
                 targetSelector: "#curriculum-table",
-
+                schema: [
+                    {
+                        name: "ID",
+                        label: "No.",
+                        type: "number",
+                    },
+                    {
+                        name: "Name",
+                        label: "Name",
+                        type: "text",
+                    },
+                    {
+                        name: "StartYear",
+                        label: "Start Year",
+                        type: "text",
+                    },
+                    {
+                        name: "EndYear",
+                        label: "End Year",
+                        type: "text",
+                    },
+                    {
+                        name: "Department",
+                        label: "Department",
+                        type: "text",
+                    },
+                    {
+                        name: "ProgramTypeName",
+                        label: "Program Type",
+                        type: "text",
+                    },
+                ],
                 // Add custom columns (actions, computed fields, etc.)
                 customColumns: [
-                    // {
-                    //     name: "Department",
-                    //     label: "Department",
-                    // },
                     {
                         name: "actions",
                         label: "Actions",

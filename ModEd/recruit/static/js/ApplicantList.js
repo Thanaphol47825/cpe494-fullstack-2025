@@ -4,17 +4,20 @@
       this.application = application;
       this.rootURL = rootURL || global.__ROOT_URL__ || global.RootURL || "";
 
-      this.ENDPOINT_LIST     = `${this.rootURL}/recruit/GetApplicants`;
-      this.ENDPOINT_GET_ONE  = (id) => `${this.rootURL}/recruit/GetApplicant/${id}`;
-      this.ENDPOINT_CREATE   = `${this.rootURL}/recruit/CreateApplicant`;
-      this.ENDPOINT_UPDATE   = `${this.rootURL}/recruit/UpdateApplicant`;
-      this.ENDPOINT_DELETE   = `${this.rootURL}/recruit/DeleteApplicant`;
-      this.ENDPOINT_IMPORT   = `${this.rootURL}/recruit/ImportApplicantsFromFile`;
+      this.ENDPOINT_LIST    = `${this.rootURL}/recruit/GetApplicants`;
+      this.ENDPOINT_GET_ONE = (id) => `${this.rootURL}/recruit/GetApplicant/${id}`;
+      this.ENDPOINT_CREATE  = `${this.rootURL}/recruit/CreateApplicant`;
+      this.ENDPOINT_UPDATE  = `${this.rootURL}/recruit/UpdateApplicant`;
+      this.ENDPOINT_DELETE  = `${this.rootURL}/recruit/DeleteApplicant`;
+      this.ENDPOINT_IMPORT  = `${this.rootURL}/recruit/ImportApplicantsFromFile`;
 
       this.table = null;
       this.form  = null;
+
       this.currentEditId = null;
       this.ui = null;
+
+      this.HIDDEN_COLUMNS = []; 
 
       global.applicantManager = this;
     }
@@ -22,18 +25,32 @@
     async render() {
       const container = this.application?.mainContainer;
       if (!container) {
-        console.error("❌ mainContainer not found");
+        console.error("ApplicantList: mainContainer not found");
+        return false;
+      }
+      if (!global.RecruitTableTemplate) {
+        console.error("RecruitTableTemplate not loaded — ensure it’s included before ApplicantList.");
         return false;
       }
 
-      if (!global.RecruitTableTemplate) {
-        console.error("RecruitTableTemplate not loaded — ensure RecruitApplication preloads it.");
-        return false;
-      }
+      container.innerHTML = "";
 
       try {
-        container.innerHTML = "";
-        const root = await global.RecruitTableTemplate.getTable("ApplicantTable", "manage");
+        const root = await global.RecruitTableTemplate.getTable(
+          {
+            title: "🧑‍💼 Applicant Management",
+            subtitle: "Browse, import, and edit applicants",
+            tableId: "applicant-table",
+            panelTitle: "Applicant Form",
+            backLink: "recruit",
+            backText: "Back to Recruit Menu",
+            colorPrimary: "#2563eb",
+            colorAccent: "#1e40af",
+            iconPath: "M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zm3 4h8v2H8V7zm0 4h8v2H8v-2zm0 4h5v2H8v-2z"
+          },
+          "manage"
+        );
+
         container.appendChild(root);
 
         this.ui = global.RecruitTableTemplate.mountMessageAndResult(root, {
@@ -44,6 +61,15 @@
         this.$tableHost = root.querySelector("#recruit-table-container");
         this.$panelHost = root.querySelector("#recruit-sidepanel-container");
 
+        if (this.$tableHost) {
+          this.$tableHost.style.overflowY = "auto";
+          this.$tableHost.style.maxHeight = "60vh";
+        }
+        if (this.$panelHost) {
+          this.$panelHost.style.overflowY = "auto";
+          this.$panelHost.style.maxHeight = "60vh";
+        }
+
         root.querySelector('[data-action="import"]')?.addEventListener("click", () => this.importFromFile());
         root.querySelector('[data-action="reset"]')?.addEventListener("click", () => this.resetForm());
 
@@ -52,9 +78,10 @@
 
         await this.renderTable();
         await this.renderForm();
+
         return true;
       } catch (err) {
-        console.error(err);
+        console.error("ApplicantList render error:", err);
         this.ui?.showMessage?.(`Load error: ${err.message}`, "error");
         return false;
       }
@@ -89,13 +116,13 @@
       if (Array.isArray(this.HIDDEN_COLUMNS) && this.HIDDEN_COLUMNS.length > 0 && this.table.schema) {
         this.table.schema = this.table.schema.filter(col =>
           !this.HIDDEN_COLUMNS.includes(col.name) &&
-          col.type !== 'hidden' && col.type !== '-' && col.display !== false
+          col.type !== "hidden" && col.type !== "-" && col.display !== false
         );
       }
 
       this.table.targetSelector = "#recruit-table-container";
-
       await this.table.render();
+
       await this.refreshTable();
     }
 
@@ -165,7 +192,8 @@
       try { data = await resp.json(); } catch { data = {}; }
 
       if (!resp.ok || data?.isSuccess !== true) {
-        const msg = data?.message || `Request failed (${resp.status}${resp.statusText ? " " + resp.statusText : ""})`;
+        const msg =
+          data?.message || `Request failed (${resp.status}${resp.statusText ? " " + resp.statusText : ""})`;
         this.ui?.showMessage(msg, "error");
         return false;
       }
@@ -195,39 +223,11 @@
           throw new Error(payload?.message || `Unable to load applicant #${id}`);
         }
         const applicant = payload?.result || payload || {};
-        await this.form.render();
+        await this.form.render(); // ensure form exists/fresh
         this.form.setData(applicant);
         this.ui?.showMessage(`Editing applicant ID ${id}`, "info");
       } catch (err) {
         this.ui?.showMessage(`Edit error: ${err.message}`, "error");
-      }
-    }
-
-    resetForm() {
-      this.currentEditId = null;
-      try {
-        const formRoot = this.form?.form?.html || this.form?.html;
-        if (!formRoot) return;
-
-        if (typeof formRoot.reset === "function") {
-          formRoot.reset();
-        } else {
-          const fields = formRoot.querySelectorAll("input, select, textarea");
-          fields.forEach(el => {
-            const tag = (el.tagName || "").toLowerCase();
-            const type = (el.type || "").toLowerCase();
-            if (tag === "input") {
-              if (["checkbox", "radio"].includes(type)) el.checked = false;
-              else el.value = "";
-            } else if (tag === "select") {
-              el.selectedIndex = 0;
-            } else if (tag === "textarea") {
-              el.value = "";
-            }
-          });
-        }
-      } catch (err) {
-        this.ui?.showMessage("Error resetting form: " + err.message, "error");
       }
     }
 
@@ -273,8 +273,9 @@
 
         const resp = await fetch(this.ENDPOINT_IMPORT, { method: "POST", body: formData });
         const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || data?.isSuccess === false)
+        if (!resp.ok || data?.isSuccess === false) {
           throw new Error(data?.message || "Import failed");
+        }
 
         const count = Array.isArray(data?.result)
           ? data.result.length
@@ -284,6 +285,35 @@
         await this.refreshTable();
       } catch (err) {
         this.ui?.showMessage(`Import error: ${err.message}`, "error");
+      }
+    }
+
+    resetForm() {
+      this.currentEditId = null;
+      try {
+        const formRoot = this.form?.form?.html || this.form?.html;
+        if (!formRoot) return;
+
+        if (typeof formRoot.reset === "function") {
+          formRoot.reset();
+          return;
+        }
+
+        const fields = formRoot.querySelectorAll("input, select, textarea");
+        fields.forEach((el) => {
+          const tag = (el.tagName || "").toLowerCase();
+          const type = (el.type || "").toLowerCase();
+          if (tag === "input") {
+            if (type === "checkbox" || type === "radio") el.checked = false;
+            else el.value = "";
+          } else if (tag === "select") {
+            el.selectedIndex = 0;
+          } else if (tag === "textarea") {
+            el.value = "";
+          }
+        });
+      } catch (err) {
+        this.ui?.showMessage("Error resetting form: " + err.message, "error");
       }
     }
   }

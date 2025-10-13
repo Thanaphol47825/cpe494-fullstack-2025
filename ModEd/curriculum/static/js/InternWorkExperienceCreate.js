@@ -2,11 +2,31 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
     class InternWorkExperienceCreate {
         constructor(application, internStudentId = null, experienceId = null) {
             this.application = application;
-            this.internStudentId = internStudentId; // The InternStudent ID
-            this.experienceId = experienceId; // For editing existing experience
+            this.internStudentId = internStudentId;
+            this.experienceId = experienceId;
             this.isEditMode = experienceId !== null;
             this.internStudentData = null;
             this.experienceData = null;
+        }
+
+        async loadInternshipPageTemplate() {
+            if (!window.InternshipPageTemplate) {
+                const script = document.createElement("script");
+                script.src = `${RootURL}/curriculum/static/js/template/InternshipPageTemplate.js`;
+                document.head.appendChild(script);
+
+                await new Promise((resolve, reject) => {
+                    script.onload = () => {
+                        if (window.InternshipPageTemplate) {
+                            resolve();
+                        } else {
+                            reject(new Error("InternshipPageTemplate failed to load"));
+                        }
+                    };
+                    script.onerror = () =>
+                        reject(new Error("Failed to load InternshipPageTemplate script"));
+                });
+            }
         }
 
         async render() {
@@ -15,17 +35,47 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
             console.log("Experience ID:", this.experienceId);
 
             try {
-                // Load required data
+                await this.loadInternshipPageTemplate();
                 await this.loadData();
-                
-                // Clear container and create form
-                this.application.mainContainer.innerHTML = '';
-                await this.createForm();
-                
+
+                this.application.mainContainer.innerHTML = "";
+
+                const pageConfig = this.preparePageConfig();
+                const formContent = await this.createFormContent();
+
+                const pageElement = await window.InternshipPageTemplate.render(
+                    pageConfig,
+                    formContent,
+                    this.application
+                );
+
+                this.application.mainContainer.appendChild(pageElement);
+
+                this.setupEventListeners();
             } catch (error) {
-                console.error('Error rendering form:', error);
-                this.showError('Failed to load form: ' + error.message);
+                console.error("Error rendering InternWorkExperienceCreate:", error);
+                this.showError("Failed to load form: " + error.message);
             }
+        }
+
+        preparePageConfig() {
+            const title = this.isEditMode ? "Edit Work Experience" : "Add Work Experience";
+            const description = this.internStudentData ? 
+                `For: ${this.internStudentData.Student?.first_name || ''} ${this.internStudentData.Student?.last_name || ''}` :
+                "Add or edit internship work experience details.";
+            
+            return {
+                title: title,
+                description: description,
+                showBackButton: true,
+                backButtonText: "Back to Intern Student",
+                backButtonRoute: this.internStudentId ? 
+                    `/#internship/internstudent/edit/${this.internStudentId}` : 
+                    "/#internship/internstudent/",
+                pageClass: "internship-work-experience-page",
+                headerClass: "internship-header",
+                contentClass: "internship-content",
+            };
         }
 
         async loadData() {
@@ -59,65 +109,28 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
             }
         }
 
-        async createForm() {
-            const formHTML = `
-                <div class="bg-gray-100 min-h-screen py-8">
-                    <div class="max-w-2xl mx-auto px-4">
-                        <div class="mb-6">
-                            <button id="back-btn" class="text-blue-600 hover:text-blue-800 text-sm flex items-center mb-4">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                </svg>
-                                Back to Intern Student
-                            </button>
-                            <h1 class="text-2xl font-bold text-gray-700">
-                                ${this.isEditMode ? 'Edit' : 'Add'} Work Experience
-                            </h1>
-                            ${this.internStudentData ? `
-                                <p class="text-sm text-gray-600 mt-2">
-                                    For: ${this.internStudentData.Student?.first_name || ''} ${this.internStudentData.Student?.last_name || ''}
-                                </p>
-                            ` : ''}
-                        </div>
+        async createFormContent() {
+            const formFields = await this.generateFormFields();
 
-                        <div class="bg-white rounded-lg shadow p-6">
-                            <form id="workExperienceForm" class="space-y-6">
-                                <div id="form-fields"></div>
-                                
-                                <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                                    <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                                        Cancel
-                                    </button>
-                                    <button type="submit" id="submit-btn" class="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700">
-                                        <span id="submit-text">${this.isEditMode ? 'Update' : 'Create'} Work Experience</span>
-                                        <svg id="submit-spinner" class="hidden animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </form>
-                            
-                            <div id="response-message" class="mt-4 hidden"></div>
-                        </div>
+            return `
+                <form id="work-experience-form" class="space-y-6">
+                    <div id="form-fields" class="space-y-4">
+                        ${formFields}
                     </div>
-                </div>
+                    
+                    <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                        <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                            ${this.isEditMode ? 'Update' : 'Create'} Work Experience
+                        </button>
+                    </div>
+                </form>
             `;
-
-            const formWrapper = this.application.create(formHTML);
-            this.application.mainContainer.appendChild(formWrapper);
-
-            // Create form fields
-            await this.createFormFields();
-            
-            // Setup event listeners
-            this.setupEventListeners();
         }
 
-        async createFormFields() {
-            const fieldsContainer = document.getElementById('form-fields');
-            
-            // Define form fields with conditional logic
+        async generateFormFields() {
             const fields = [
                 {
                     Id: "student_id",
@@ -127,16 +140,17 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
                     Type: "number",
                     Name: "student_id",
                     Value: this.internStudentData?.StudentID || this.experienceData?.student_id || "",
-                    Disabled: !!this.internStudentData, // Lock if we have intern student data
-                    Required: true
+                    Required: true,
+                    Disabled: !!this.internStudentData,
                 },
                 {
                     Id: "company_name",
                     Label: "Company Name",
                     Type: "text",
                     Name: "company_name",
-                    Value: this.experienceData?.company_name || "",
-                    Required: true
+                    Value: this.experienceData?.Company?.company_name || "",
+                    Required: true,
+                    Placeholder: "Enter company name..."
                 },
                 {
                     Id: "detail",
@@ -145,7 +159,8 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
                     Name: "detail",
                     Value: this.experienceData?.detail || "",
                     Placeholder: "Describe the work experience, responsibilities, and achievements...",
-                    Required: true
+                    Required: true,
+                    rows: 4
                 },
                 {
                     Id: "start_date",
@@ -167,60 +182,104 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
                 }
             ];
 
-            // Create each field using the template system
-            fields.forEach(field => {
-                if (this.application.template && this.application.template.Input) {
-                    // Use textarea template for detail field
-                    const templateName = field.Type === 'textarea' ? 'Textarea' : 'Input';
+            let fieldsHTML = "";
+            fields.forEach((field) => {
+                let inputHTML = "";
+                try {
+                    const templateName = field.Type === "textarea" ? "Textarea" : "Input";
                     const template = this.application.template[templateName];
-                    
+
                     if (template) {
-                        const inputHTML = Mustache.render(template, field);
-                        const inputElement = this.application.create(inputHTML);
-                        fieldsContainer.appendChild(inputElement);
+                        inputHTML = Mustache.render(template, field);
+                    }
+
+                    if (inputHTML) {
+                        fieldsHTML += `<div class="form-field">${inputHTML}</div>`;
                         
-                        // Set value and disabled state after creation
-                        const inputField = inputElement.querySelector(`[name="${field.Name}"]`);
-                        if (inputField) {
-                            if (field.Value) inputField.value = field.Value;
-                            if (field.Disabled) {
-                                inputField.disabled = true;
-                                inputField.classList.add('bg-gray-100', 'cursor-not-allowed');
-                            }
+                        // Handle disabled state after rendering
+                        if (field.Disabled) {
+                            // This will be handled in setupEventListeners after DOM is ready
                         }
+                    }
+                } catch (error) {
+                    console.error("Error creating field:", field.Label, error);
+                }
+            });
+            return fieldsHTML;
+        }
+
+        setupEventListeners() {
+            const backButton = document.querySelector("[data-back-button]");
+            if (backButton) {
+                backButton.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    this.goBack();
+                });
+            }
+
+            const cancelButton = document.getElementById("cancel-btn");
+            if (cancelButton) {
+                cancelButton.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    this.goBack();
+                });
+            }
+
+            const form = document.getElementById("work-experience-form");
+            if (form) {
+                form.addEventListener("submit", this.handleSubmit.bind(this));
+            }
+
+            // Handle disabled fields
+            if (this.internStudentData) {
+                const studentIdField = document.querySelector('[name="student_id"]');
+                if (studentIdField) {
+                    studentIdField.disabled = true;
+                    studentIdField.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
+            }
+
+            // Set field values for edit mode
+            if (this.experienceData) {
+                this.populateFormFields();
+            }
+        }
+
+        populateFormFields() {
+            const fields = ['student_id', 'company_name', 'detail', 'start_date', 'end_date'];
+            
+            fields.forEach(fieldName => {
+                const field = document.querySelector(`[name="${fieldName}"]`);
+                if (field && this.experienceData) {
+                    let value = this.experienceData[fieldName];
+                    
+                    if (fieldName === 'company_name' && this.experienceData.Company) {
+                        value = this.experienceData.Company.company_name;
+                    } else if ((fieldName === 'start_date' || fieldName === 'end_date') && value) {
+                        value = new Date(value).toISOString().split('T')[0];
+                    }
+                    
+                    if (value) {
+                        field.value = value;
                     }
                 }
             });
         }
 
-        setupEventListeners() {
-            // Back button
-            document.getElementById('back-btn')?.addEventListener('click', () => this.goBack());
-            
-            // Cancel button
-            document.getElementById('cancel-btn')?.addEventListener('click', () => this.goBack());
-            
-            // Form submission
-            document.getElementById('workExperienceForm')?.addEventListener('submit', (e) => this.handleFormSubmit(e));
-        }
-
-        async handleFormSubmit(event) {
+        async handleSubmit(event) {
             event.preventDefault();
-
             const form = event.target;
             const formData = new FormData(form);
-            const submitBtn = document.getElementById('submit-btn');
-            const submitText = document.getElementById('submit-text');
-            const submitSpinner = document.getElementById('submit-spinner');
 
-            // Show loading state
-            submitBtn.disabled = true;
-            submitText.textContent = this.isEditMode ? 'Updating...' : 'Creating...';
-            submitSpinner.classList.remove('hidden');
+            window.InternshipPageTemplate.showLoading(
+                form, 
+                this.isEditMode ? "Updating..." : "Creating..."
+            );
 
             try {
                 const jsonData = {};
 
+                // Handle internStudentId if provided
                 if (this.internStudentId) {
                     jsonData['student_id'] = parseInt(this.internStudentId, 10);
                 }
@@ -242,7 +301,7 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
 
                 console.log('Submitting data:', jsonData);
 
-                // Determine endpoint and method
+                // Determine endpoint
                 const url = this.isEditMode ? 
                     `/curriculum/internWorkExperience/update/${this.experienceId}` :
                     '/curriculum/internWorkExperience/create';
@@ -257,26 +316,28 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
 
                 const result = await response.json();
 
-                if (response.ok && result.isSuccess) {
-                    this.showMessage(
-                        `Work Experience ${this.isEditMode ? 'updated' : 'created'} successfully!`, 
-                        'success'
-                    );
-                    
-                    // Navigate back after a short delay
-                    setTimeout(() => this.goBack(), 1500);
-                } else {
+                if (!response.ok || !result.isSuccess) {
                     throw new Error(result.error || `Failed to ${this.isEditMode ? 'update' : 'create'} work experience`);
                 }
 
+                window.InternshipPageTemplate.showSuccess(
+                    `Work Experience ${this.isEditMode ? 'updated' : 'created'} successfully!`,
+                    this.application.mainContainer
+                );
+
+                setTimeout(() => this.goBack(), 1500);
+
             } catch (error) {
                 console.error('Error:', error);
-                this.showMessage(error.message || 'Network error occurred', 'error');
+                window.InternshipPageTemplate.showError(
+                    error.message,
+                    this.application.mainContainer
+                );
             } finally {
-                // Restore button state
-                submitBtn.disabled = false;
-                submitText.textContent = `${this.isEditMode ? 'Update' : 'Create'} Work Experience`;
-                submitSpinner.classList.add('hidden');
+                window.InternshipPageTemplate.hideLoading(
+                    form,
+                    `${this.isEditMode ? 'Update' : 'Create'} Work Experience`
+                );
             }
         }
 
@@ -284,19 +345,17 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
             try {
                 if (this.internStudentId) {
                     // Go back to InternStudentEdit
-                    await this.application.fetchModule('/curriculum/static/js/InternStudentEdit.js');
-                    
-                    if (window.InternStudentEdit) {
-                        const editView = new window.InternStudentEdit(this.application, this.internStudentId);
-                        await editView.render();
+                    if (this.application.navigate) {
+                        this.application.navigate(`/internship/internstudent/edit/${this.internStudentId}`);
+                    } else {
+                        window.location.hash = `#internship/internstudent/edit/${this.internStudentId}`;
                     }
                 } else {
                     // Go to list or main page
-                    await this.application.fetchModule('/curriculum/static/js/InternStudentList.js');
-                    
-                    if (window.InternStudentList) {
-                        const listView = new window.InternStudentList(this.application);
-                        await listView.render();
+                    if (this.application.navigate) {
+                        this.application.navigate("/internship/internstudent");
+                    } else {
+                        window.location.hash = "#internship/internstudent";
                     }
                 }
             } catch (error) {
@@ -305,31 +364,22 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
         }
 
         showError(message) {
-            this.application.mainContainer.innerHTML = `
-                <div class="bg-gray-100 min-h-screen py-8">
-                    <div class="max-w-2xl mx-auto px-4">
-                        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-                            <h3 class="font-medium">Error</h3>
-                            <p class="mt-1 text-sm">${message}</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        showMessage(message, type) {
-            const responseDiv = document.getElementById('response-message');
-            if (responseDiv) {
-                responseDiv.className = `mt-4 p-3 rounded ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
-                responseDiv.textContent = message;
-                responseDiv.classList.remove('hidden');
-
-                // Hide message after 5 seconds
-                setTimeout(() => {
-                    responseDiv.classList.add('hidden');
-                }, 5000);
+            if (window.InternshipPageTemplate) {
+                window.InternshipPageTemplate.showError(
+                    message,
+                    this.application.mainContainer
+                );
+            } else {
+                const errorDiv = document.createElement("div");
+                errorDiv.className =
+                    "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4";
+                errorDiv.textContent = message;
+                this.application.mainContainer.prepend(errorDiv);
             }
         }
     }
-    window.InternWorkExperienceCreate = InternWorkExperienceCreate;
+
+    if (typeof window !== "undefined") {
+        window.InternWorkExperienceCreate = InternWorkExperienceCreate;
+    }
 }

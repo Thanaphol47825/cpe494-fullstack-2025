@@ -118,7 +118,7 @@ class HrApplication extends BaseModuleApplication {
           window.HrStudentEditFeature && window.HrInstructorEditFeature &&
           window.HrStudentLeaveFormFeature && window.HrInstructorLeaveFormFeature &&
           window.HrStudentLeaveListFeature && window.HrInstructorLeaveListFeature &&
-          window.HrLeaveHistoryFeature) {
+          window.HrStudentLeaveEditFeature && window.HrLeaveHistoryFeature) {
         return
       }
       
@@ -187,6 +187,10 @@ class HrApplication extends BaseModuleApplication {
         await this.loadScript('/hr/static/js/features/leaveManagement/StudentLeaveList.js?v=' + Date.now())
       }
       
+      if (!window.HrStudentLeaveEditFeature) {
+        await this.loadScript('/hr/static/js/features/leaveManagement/StudentLeaveEdit.js?v=' + Date.now())
+      }
+      
       if (!window.HrInstructorLeaveListFeature) {
         await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveList.js?v=' + Date.now())
       }
@@ -235,6 +239,7 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/leave', this.renderLeaveMain.bind(this))
     this.addRoute('/leave/student', this.renderStudentLeaveList.bind(this))
     this.addRoute('/leave/student/create', this.renderCreateStudentLeave.bind(this))
+    this.addRoute('/leave/student/edit/:id', this.renderEditStudentLeave.bind(this))
     this.addRoute('/leave/instructor', this.renderInstructorLeaveList.bind(this))
     this.addRoute('/leave/instructor/create', this.renderCreateInstructorLeave.bind(this))
     this.addRoute('/leave/history', this.renderLeaveHistory.bind(this))
@@ -1386,6 +1391,14 @@ class HrApplication extends BaseModuleApplication {
     await this.loadFeatureModules()
     if (window.HrStudentLeaveFormFeature) {
       const feature = new window.HrStudentLeaveFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
+  }
+
+  async renderEditStudentLeave(params = {}) {
+    await this.loadFeatureModules()
+    if (window.HrStudentLeaveEditFeature) {
+      const feature = new window.HrStudentLeaveEditFeature(this.templateEngine, this.rootURL, params?.id)
       await feature.render()
     }
   }

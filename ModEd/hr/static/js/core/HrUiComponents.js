@@ -338,6 +338,167 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
     }
 
     // ========================================
+    // Leave Management Helpers
+    // ========================================
+
+    static renderStudentLeaveListPage(requests = []) {
+      const parsedRequests = (requests || []).map((request) => {
+        const idValue = request.ID ?? request.id ?? request.Id ?? null;
+        const id = idValue !== null && idValue !== undefined ? String(idValue) : '';
+        const studentCode = request.student_code || request.StudentCode || request.studentCode || 'N/A';
+        const leaveType = request.leave_type || request.LeaveType || 'N/A';
+        const leaveDateRaw = request.leave_date || request.LeaveDate || request.leaveDate || '';
+        const status = request.Status || request.status || 'Pending';
+
+        const baseActionClasses = 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200';
+        const actions = [
+          {
+            isLink: true,
+            route: `hr/leave/student/edit/${id}`,
+            label: 'Edit',
+            className: `${baseActionClasses} bg-yellow-50 text-yellow-700 hover:bg-yellow-100`,
+            id
+          },
+          {
+            isButton: true,
+            action: 'delete',
+            actionType: 'delete',
+            label: 'Delete',
+            className: `${baseActionClasses} js-delete-btn bg-red-50 text-red-700 hover:bg-red-100`,
+            id
+          }
+        ];
+
+        if (status === 'Pending') {
+          actions.unshift({
+            isButton: true,
+            action: 'reject',
+            actionType: 'review',
+            label: 'Reject',
+            className: `${baseActionClasses} review-btn js-review-btn bg-rose-50 text-rose-700 hover:bg-rose-100`,
+            id
+          });
+          actions.unshift({
+            isButton: true,
+            action: 'approve',
+            actionType: 'review',
+            label: 'Approve',
+            className: `${baseActionClasses} review-btn js-review-btn bg-blue-50 text-blue-700 hover:bg-blue-100`,
+            id
+          });
+        }
+
+        return {
+          id,
+          personLabel: studentCode,
+          leaveType,
+          leaveDate: HrTemplates.formatDate(leaveDateRaw),
+          status,
+          statusClass: HrTemplates.getStatusClass(status),
+          actions
+        };
+      });
+
+      const data = {
+        bgGradient: 'from-slate-50 via-blue-50 to-indigo-100',
+        gradientFrom: 'blue-600',
+        gradientTo: 'indigo-600',
+        title: 'Student Leave Requests',
+        description: 'View and manage student leave requests',
+        icon: HrTemplates.iconPaths.student,
+        actions: [
+          {
+            route: 'hr/leave/student/create',
+            label: 'New Leave Request',
+            className: 'inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200',
+            icon: HrTemplates.iconPaths.add
+          }
+        ],
+        showRefresh: true,
+        refreshId: 'refreshBtn',
+        refreshClass: 'inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200',
+        refreshLabel: 'Refresh',
+        hasRequests: parsedRequests.length > 0,
+        requests: parsedRequests,
+        columns: [
+          { label: 'ID' },
+          { label: 'Student' },
+          { label: 'Leave Type' },
+          { label: 'Leave Date' },
+          { label: 'Status' },
+          { label: 'Actions' }
+        ],
+        emptyTitle: 'No Leave Requests Yet',
+        emptyMessage: 'There are no student leave requests to display.',
+        emptyActionRoute: 'hr/leave/student/create',
+        emptyActionLabel: 'Create First Request',
+        backRoute: 'hr/leave',
+        modalId: 'reviewModal',
+        modalTitle: 'Review Leave Request',
+        modalMessageId: 'reviewModalMessage',
+        modalMessage: 'Are you sure you want to review this leave request?',
+        reasonFieldId: 'reviewReason',
+        reasonPlaceholder: 'Optional: add a reason for your decision...',
+        confirmButtonId: 'confirmReview',
+        confirmLabel: 'Confirm',
+        cancelButtonId: 'cancelReview',
+        cancelLabel: 'Cancel'
+      };
+
+      return HrTemplates.render('leaveListPage', data);
+    }
+
+    static renderStudentLeaveForm(options = {}) {
+      const { students = [], initialData = {} } = options;
+      const selectedStudent = initialData.student_code || initialData.StudentCode || options.selectedStudent || '';
+      const selectedLeaveType = initialData.leave_type || initialData.LeaveType || options.selectedLeaveType || '';
+
+      const mappedStudents = students.map((student) => {
+        const code = student.student_code || student.StudentCode || student.code;
+        const firstName = student.first_name || student.firstName || '';
+        const lastName = student.last_name || student.lastName || '';
+        return {
+          value: code,
+          label: `${code} - ${firstName} ${lastName}`.trim(),
+          selected: code === selectedStudent
+        };
+      });
+
+      const leaveTypes = ['Sick', 'Vacation', 'Personal', 'Maternity', 'Other'].map((type) => ({
+        value: type,
+        label: type,
+        selected: type === selectedLeaveType
+      }));
+
+      const data = {
+        formId: options.formId || 'studentLeaveForm',
+        students: mappedStudents,
+        leaveTypes,
+        leaveDate: HrUiComponents.formatDateForInput(initialData.leave_date || initialData.LeaveDate || ''),
+        reason: (initialData.reason || initialData.Reason || '').trim(),
+        statusContainerId: options.statusContainerId || 'formStatus',
+        submitLabel: options.submitLabel || (initialData && initialData.ID ? 'Update Leave Request' : 'Submit Leave Request'),
+        cancelLabel: options.cancelLabel || 'Cancel',
+        cancelRoute: options.cancelRoute || 'hr/leave/student',
+        showDelete: options.showDelete || false,
+        deleteButtonId: options.deleteButtonId || 'deleteRequestBtn',
+        deleteLabel: options.deleteLabel || 'Delete Request'
+      };
+
+      return HrTemplates.render('studentLeaveForm', data);
+    }
+
+    static formatDateForInput(dateValue) {
+      if (!dateValue) return '';
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return '';
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // ========================================
     // Shared Form Page Utilities (V2 + Templates)
     // ========================================
 

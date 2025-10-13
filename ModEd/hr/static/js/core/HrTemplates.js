@@ -21,6 +21,7 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
         loading: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>',
         view: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>',
         back: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>',
+        trash: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>',
         department: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>',
         email: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>',
         calendar: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>',
@@ -337,6 +338,252 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
       `;
 
       // ========================================
+      // Leave Management Templates
+      // ========================================
+
+      this.templates.leaveListPage = `
+        <div class="min-h-screen bg-gradient-to-br {{bgGradient}} py-8">
+          <div class="max-w-7xl mx-auto px-4">
+            {{> pageHeader}}
+
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+              <div class="flex flex-wrap gap-3">
+                {{#actions}}
+                <a routerLink="{{route}}" class="{{className}}">
+                  {{#icon}}
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {{{icon}}}
+                  </svg>
+                  {{/icon}}
+                  {{label}}
+                </a>
+                {{/actions}}
+              </div>
+              {{#showRefresh}}
+              <button id="{{refreshId}}" class="{{refreshClass}}">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {{{iconReset}}}
+                </svg>
+                {{refreshLabel}}
+              </button>
+              {{/showRefresh}}
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+              {{#hasRequests}}
+                {{> leaveRequestsTable}}
+              {{/hasRequests}}
+              {{^hasRequests}}
+                {{> leaveRequestsEmpty}}
+              {{/hasRequests}}
+            </div>
+
+            <div class="mt-6 text-center">
+              <a routerLink="{{backRoute}}" class="text-blue-600 hover:underline">
+                ← Back to Leave Management
+              </a>
+            </div>
+          </div>
+        </div>
+        {{> leaveReviewModal}}
+      `;
+
+      this.templates.leaveRequestsTable = `
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+              <tr>
+                {{#columns}}
+                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">{{label}}</th>
+                {{/columns}}
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              {{#requests}}
+                {{> leaveRequestRow}}
+              {{/requests}}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      this.templates.leaveRequestRow = `
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm text-gray-900">#{{id}}</td>
+          <td class="px-6 py-4 text-sm font-medium text-gray-900">{{personLabel}}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{leaveType}}</td>
+          <td class="px-6 py-4 text-sm text-gray-700">{{leaveDate}}</td>
+          <td class="px-6 py-4">
+            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{statusClass}}">
+              {{status}}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            <div class="flex flex-wrap gap-2">
+              {{#actions}}
+                {{#isLink}}
+                  <a routerLink="{{route}}" class="{{className}}" data-id="{{id}}">
+                    {{label}}
+                  </a>
+                {{/isLink}}
+                {{#isButton}}
+                  <button 
+                    class="{{className}}" 
+                    data-id="{{id}}" 
+                    data-action="{{action}}" 
+                    {{#actionType}}data-action-type="{{actionType}}"{{/actionType}}
+                  >
+                    {{label}}
+                  </button>
+                {{/isButton}}
+              {{/actions}}
+            </div>
+          </td>
+        </tr>
+      `;
+
+      this.templates.leaveRequestsEmpty = `
+        <div class="p-12 text-center">
+          <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-700 mb-2">{{emptyTitle}}</h3>
+          <p class="text-gray-500 mb-6">{{emptyMessage}}</p>
+          <a 
+            routerLink="{{emptyActionRoute}}" 
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700"
+          >
+            {{emptyActionLabel}}
+          </a>
+        </div>
+      `;
+
+      this.templates.leaveReviewModal = `
+        <div id="{{modalId}}" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full mx-4">
+            <h3 class="text-2xl font-bold text-gray-900 mb-4">{{modalTitle}}</h3>
+            <p id="{{modalMessageId}}" class="text-gray-600 mb-4">{{modalMessage}}</p>
+            <textarea 
+              id="{{reasonFieldId}}" 
+              placeholder="{{reasonPlaceholder}}" 
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            ></textarea>
+            <div class="flex gap-3 pt-4">
+              <button 
+                id="{{confirmButtonId}}" 
+                class="flex-1 bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700"
+              >
+                {{confirmLabel}}
+              </button>
+              <button 
+                id="{{cancelButtonId}}" 
+                class="flex-1 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300"
+              >
+                {{cancelLabel}}
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      this.templates.studentLeaveForm = `
+        <form id="{{formId}}" class="space-y-6">
+          <div>
+            <label for="student_code" class="block text-sm font-medium text-gray-700 mb-2">
+              Student <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="student_code" 
+              name="student_code" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select a student</option>
+              {{#students}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>
+                  {{label}}
+                </option>
+              {{/students}}
+            </select>
+          </div>
+
+          <div>
+            <label for="leave_type" class="block text-sm font-medium text-gray-700 mb-2">
+              Leave Type <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="leave_type" 
+              name="leave_type" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select leave type</option>
+              {{#leaveTypes}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>
+                  {{label}}
+                </option>
+              {{/leaveTypes}}
+            </select>
+          </div>
+
+          <div>
+            <label for="leave_date" class="block text-sm font-medium text-gray-700 mb-2">
+              Leave Date <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="date" 
+              id="leave_date" 
+              name="leave_date" 
+              value="{{leaveDate}}"
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
+              Reason <span class="text-red-500">*</span>
+            </label>
+            <textarea 
+              id="reason" 
+              name="reason" 
+              rows="4" 
+              required
+              placeholder="Please provide a detailed reason for the leave request..."
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            >{{reason}}</textarea>
+          </div>
+
+          <div id="{{statusContainerId}}" class="hidden"></div>
+
+          <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <button 
+              type="submit" 
+              class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200"
+            >
+              {{submitLabel}}
+            </button>
+            <a 
+              routerLink="{{cancelRoute}}" 
+              class="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200 text-center"
+            >
+              {{cancelLabel}}
+            </a>
+            {{#showDelete}}
+            <button 
+              type="button" 
+              id="{{deleteButtonId}}" 
+              class="flex-1 bg-red-100 text-red-700 font-semibold py-3 px-6 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all duration-200"
+            >
+              {{deleteLabel}}
+            </button>
+            {{/showDelete}}
+          </div>
+        </form>
+      `;
+
+      // ========================================
       // Resignation Card Templates
       // ========================================
 
@@ -570,6 +817,7 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
         iconLoading: this.iconPaths.loading,
         iconView: this.iconPaths.view,
         iconBack: this.iconPaths.back,
+        iconTrash: this.iconPaths.trash,
         iconDepartment: this.iconPaths.department,
         iconEmail: this.iconPaths.email,
         iconCalendar: this.iconPaths.calendar,

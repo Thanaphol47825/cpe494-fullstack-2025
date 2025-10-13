@@ -21,7 +21,7 @@ func NewApplicationRoundController() *ApplicationRoundController {
 func (controller *ApplicationRoundController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{
 		{
-			Path:  "ApplicationRound",
+			Path:  "recruit/applicationround",
 			Model: &model.ApplicationRound{},
 		},
 	}

@@ -17,12 +17,10 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async loadTemplates() {
-      // โหลด CurriculumHomeTemplate ถ้ายังไม่ได้โหลด
       if (!window.CurriculumHomeTemplate) {
         await this.loadSubModule('template/CurriculumHomeTemplate.js')
       }
 
-      // โหลด FormTemplate ถ้ายังไม่ได้โหลด
       if (!window.FormTemplate) {
         await this.loadSubModule('template/FormTemplate.js')
       }
@@ -69,6 +67,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCurriculum() {
+      await this.loadTemplates();
+      
       if (window.CurriculumList) {
         const curriculumList = new window.CurriculumList(this.templateEngine);
         await curriculumList.render();
@@ -97,6 +97,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCreateCurriculum() {
+      await this.loadTemplates();
+      
       if (window.CurriculumCreate) {
         const curriculumCreate = new window.CurriculumCreate(this);
         await curriculumCreate.render();
@@ -111,6 +113,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCourse() {
+      await this.loadTemplates();
+      
       if (window.CourseList) {
         const courseList = new window.CourseList(this);
         await courseList.render();
@@ -121,6 +125,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       }
     }
     async renderCreateCourse() {
+      await this.loadTemplates();
+      
       if (window.CourseCreate) {
         const feature = new window.CourseCreate(this);
         await feature.render();
@@ -133,6 +139,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderClass() {
+      await this.loadTemplates();
+      
       if (window.ClassList) {
         const classList = new window.ClassList(this);
         await classList.render();
@@ -143,6 +151,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCreateClass() {
+      await this.loadTemplates();
+      
       if (window.ClassCreate) {
         const classCreate = new window.ClassCreate(this);
         await classCreate.render();
@@ -153,6 +163,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderClassMaterial() {
+      await this.loadTemplates();
+      
       if (window.ClassMaterialList) {
         const classMaterialList = new window.ClassMaterialList(this);
         await classMaterialList.render();
@@ -166,6 +178,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       }
     }
     async renderCreateClassMaterial() {
+      await this.loadTemplates();
+      
       if (window.ClassMaterialCreate) {
         const formFeature = new window.ClassMaterialCreate(this);
         await formFeature.render();
@@ -180,6 +194,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async renderCoursePlan() {
+      await this.loadTemplates();
+      
       if (window.CoursePlanList) {
         const CoursePlanList = new window.CoursePlanList(this);
         await CoursePlanList.render();
@@ -193,6 +209,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       }
     }
     async renderCreateCoursePlan() {
+      await this.loadTemplates();
+      
       if (window.CoursePlanCreate) {
         const coursePlanCreate = new window.CoursePlanCreate(this);
         await coursePlanCreate.render();

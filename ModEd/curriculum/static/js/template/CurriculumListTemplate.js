@@ -87,7 +87,7 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
 
             try {
                 // โหลด template จากไฟล์
-                const response = await fetch(`${RootURL}/curriculum/static/view/ListTemplate.tpl`);
+                const response = await fetch(`${RootURL}/curriculum/static/view/CurriculumListTemplate.tpl`);
                 const templateContent = await response.text();
 
                 // เตรียมข้อมูลสำหรับ Mustache

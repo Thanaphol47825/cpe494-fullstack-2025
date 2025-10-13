@@ -24,6 +24,9 @@ type Instructor struct {
 	Salary             *float64 `json:"Salary"             csv:"salary" form:"number" label:"Salary (THB)"`
 	AcademicPosition   *int     `json:"AcademicPosition"   csv:"academic_position" form:"select" label:"Academic Position"`     // 0=NONE,1=ASSISTANT_PROF,2=ASSOCIATE_PROF,3=PROFESSOR
 	DepartmentPosition *int     `json:"DepartmentPosition" csv:"department_position" form:"select" label:"Department Position"` // 0=NONE,1=HEAD,2=DEPUTY,3=SECRETARY
+
+	// FK → User
+	UserId *uint `gorm:"index"`
 }
 
 func (Instructor) TableName() string {

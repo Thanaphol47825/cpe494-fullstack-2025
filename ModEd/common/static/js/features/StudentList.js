@@ -77,11 +77,11 @@ class CommonStudentListFeature {
       console.log("Students loaded:", students.length, "records");
 
       // Check if TableRenderV2 is available
-      if (typeof TableRenderV2 === 'undefined') {
+      if (typeof AdvanceTableRender === 'undefined') {
         throw new Error("TableRenderV2 is not loaded. Please ensure core module is loaded.");
       }
 
-      const table = new TableRenderV2(this.templateEngine, {
+      const table = new AdvanceTableRender(this.templateEngine, {
           modelPath: "common/student",
           data: students,
           targetSelector: "#studentTableContainer"

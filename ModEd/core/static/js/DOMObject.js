@@ -49,6 +49,12 @@ class DOMObject{
 			const table = document.createElement('table');
 			table.insertAdjacentHTML('beforeend', text);
 			return table.firstChild.firstChild;
+		} else if (text.indexOf('<th') == 0 || text.indexOf('<td') == 0) {
+			const table = document.createElement('table');
+			const tr = document.createElement('tr');
+			tr.insertAdjacentHTML('beforeend', text);
+			table.appendChild(tr);
+			return tr.firstChild;
 		} else {
 			const div = document.createElement('div');
 			div.innerHTML = text;

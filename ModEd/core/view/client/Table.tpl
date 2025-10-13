@@ -1,4 +1,4 @@
-<div class="{{#responsive}}overflow-x-auto{{/responsive}}">
+<div class="{{#responsive}}overflow-x-auto{{/responsive}}" rel="Table">
   <table class="min-w-full bg-white border border-gray-200 {{#striped}}divide-y divide-gray-200{{/striped}}">
     <thead class="bg-gray-50">
       <tr rel="headerRow"></tr>

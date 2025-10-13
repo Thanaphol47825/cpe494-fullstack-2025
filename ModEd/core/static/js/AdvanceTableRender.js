@@ -47,7 +47,7 @@ class AdvanceTableRender{
     // Main render method
     async render() {
         if (!this.schema) await this.loadSchema();
-        if (!this.data || this.data.length === 0) await this.loadData();
+        if (!this.data) await this.loadData();
 
         // Make sure templates are loaded
         if (!this.application.template) {
@@ -95,7 +95,7 @@ class AdvanceTableRender{
             // Add cells to row
             for (const column of columns) {
                 const cell = this.createCell(column, rowData, index);
-                row.dom.cells.append(cell);
+                row.html.appendChild(cell.html);
             }
             
             this.table.dom.tbody.append(row);
@@ -149,7 +149,7 @@ class AdvanceTableRender{
 
     // Get all columns (schema + custom)
     getAllColumns() {
-        const schemaColumns = this.schema.filter(col => 
+        const schemaColumns = this.schema.filter(col =>
             col.type !== 'hidden' && col.type !== '-' && col.display !== false
         );
         return [...schemaColumns, ...this.customColumns];

@@ -26,6 +26,10 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       if (!window.FormTemplate) {
         await this.loadSubModule('template/FormTemplate.js')
       }
+
+      if (!window.ListTemplate) {
+        await this.loadSubModule('template/ListTemplate.js')
+      }
     }
 
     setupRoutes() {

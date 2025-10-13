@@ -39,6 +39,12 @@ func (controller *InternshipMentorController) GetRoute() []*core.RouteItem {
 	})
 
 	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/GetInternshipMentors",
+		Handler: controller.handler.GetAllInternshipMentor,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/CreateInternshipMentor",
 		Handler: controller.handler.CreateInternshipMentor,
 		Method:  core.POST,
@@ -47,7 +53,7 @@ func (controller *InternshipMentorController) GetRoute() []*core.RouteItem {
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/CreateInternshipMentorRender",
 		Handler: controller.handler.CreateInternshipMentorRender,
-		Method:  core.GET,
+		Method:  core.POST,
 	})
 
 	routeList = append(routeList, &core.RouteItem{
@@ -58,7 +64,7 @@ func (controller *InternshipMentorController) GetRoute() []*core.RouteItem {
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/DeleteInternshipMentor/:id",
 		Handler: controller.handler.DeleteInternshipMentor,
-		Method:  core.POST,
+		Method:  core.GET,
 	})
 	return routeList
 }

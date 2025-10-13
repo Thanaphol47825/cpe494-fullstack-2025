@@ -60,6 +60,20 @@ func (controller *InternshipMentorHandler) GetInternshipMentor(context *fiber.Ct
 	})
 }
 
+func (controller *InternshipMentorHandler) GetAllInternshipMentor(context *fiber.Ctx) error {
+	var mentor []model.InternshipMentor
+	if err := controller.DB.Find(&mentor).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to fetch internship mentor",
+		})
+	}
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    mentor,
+	})
+}
+
 func (controller *InternshipMentorHandler) CreateInternshipMentorRender(context *fiber.Ctx) error {
 	path := filepath.Join(controller.application.RootPath, "curriculum", "view", "InternshipMentor.tpl")
 	template, err := mustache.ParseFile(path)

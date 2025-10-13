@@ -109,7 +109,8 @@ class CommonFacultyFormFeature {
 
   transformData(formData) {
     return {
-      faculty_name: formData.faculty_name,
+      name: formData.name,
+      budget: formData.budget ? parseFloat(formData.budget) : null,
     };
   }
 

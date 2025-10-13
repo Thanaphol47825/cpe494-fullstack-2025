@@ -18,17 +18,25 @@ class CommonApplication extends BaseModuleApplication {
         title: "Add Instructor",
         icon: "👨‍🏫",
       },
+      "instructor/list": {
+        title: "List Instructors",
+        icon: "📋",
+      },
       "department/create": {
         title: "Add Department",
         icon: "📚",
+      },
+      "department/list": {
+        title: "List Departments",
+        icon: "🗂️",
       },
       "faculty/create": {
         title: "Add Faculty",
         icon: "🏫",
       },
-      "department/list": {
-        title: "List Departments",
-        icon: "🗂️",
+      "faculty/list": {
+        title: "List Faculty",
+        icon: "📋",
       },
     };
 
@@ -70,6 +78,16 @@ class CommonApplication extends BaseModuleApplication {
       this.renderDepartmentList.bind(this),
       "DepartmentList.js"
     );
+    this.addRouteWithSubModule(
+      "/faculty/list",
+      this.renderFacultyList.bind(this),
+      "FacultyList.js"
+    );
+    this.addRouteWithSubModule(
+      "/instructor/list",
+      this.renderInstructorList.bind(this),
+      "InstructorList.js"
+    );
 
     this.setDefaultRoute("");
   }
@@ -95,14 +113,14 @@ class CommonApplication extends BaseModuleApplication {
 
           <div class="module-list">
             ${Object.entries(this.features)
-              .map(
-                ([id, feature]) => `
+        .map(
+          ([id, feature]) => `
                   <a href="#common/${id}" class="module-button" routerLink="common/${id}">
                     ${feature.icon} ${feature.title}
                   </a>
                 `
-              )
-              .join("")}
+        )
+        .join("")}
           </div>
         </div>
       </section>
@@ -136,6 +154,32 @@ class CommonApplication extends BaseModuleApplication {
       return false;
     }
     const feature = new window.CommonStudentListFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+   async renderInstructorList() {
+    if (!window.CommonInstructorListFeature) {
+      console.error("CommonInstructorListFeature not available after loading");
+      this.renderError("Failed to load Instructor List");
+      return false;
+    }
+    const feature = new window.CommonInstructorListFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
+  }
+
+   async renderFacultyList() {
+    if (!window.CommonFacultyListFeature) {
+      console.error("CommonFacultyListFeature not available after loading");
+      this.renderError("Failed to load Faculty List");
+      return false;
+    }
+    const feature = new window.CommonFacultyListFeature(
       this.templateEngine,
       this.rootURL
     );

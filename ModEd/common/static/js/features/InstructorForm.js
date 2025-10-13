@@ -120,13 +120,14 @@ class CommonInstructorFormFeature {
       first_name: formData.first_name,
       last_name: formData.last_name,
       department: formData.department || null,
-      salary: formData.salary ? parseFloat(formData.salary) : null,
+      Salary: formData.Salary ? parseFloat(formData.Salary) : null,
       start_date: toRFC3339(formData.start_date),
       Gender: formData.Gender || null,
       CitizenID: formData.CitizenID || null,
       PhoneNumber: formData.PhoneNumber || null,
       AcademicPosition: formData.AcademicPosition || null,
       DepartmentPosition: formData.DepartmentPosition || null,
+      userid : formData.userid || null,
     };
   }
 

@@ -27,14 +27,20 @@ if (!window.CommonDepartmentListFeature) {
         </div>
       `;
 
-    
+
       try {
+
+        const response = await fetch(`${this.rootURL}/common/departments/getall`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+
         const table = new AdvanceTableRender(this.templateEngine, {
           modelPath: "common/department", // โหลด schema: /api/modelmeta/common/Department
-          dataPath: "common/departments/getall", // โหลดข้อมูลจริง
+          dataPath: "common/departments/getall",
+          data: data || [], // โหลดข้อมูลจริง
           targetSelector: "#departmentTable",
 
-      
+
           customColumns: [
             {
               name: "actions",
@@ -77,7 +83,7 @@ if (!window.CommonDepartmentListFeature) {
 
 async function editDepartment(id) {
   alert(`✏️ Edit department ID: ${id}`);
-  
+
 }
 
 async function viewDepartment(id) {
@@ -89,6 +95,6 @@ async function deleteDepartment(id) {
   if (confirm(`⚠️ Delete department ID ${id}?`)) {
     await fetch(`/common/departments/delete/${id}`, { method: "DELETE" });
     alert("✅ Department deleted!");
-  
+
   }
 }

@@ -48,24 +48,15 @@ if (typeof window !== 'undefined' && !window.ClassList) {
 
         async render() {
             this.application.templateEngine.mainContainer.innerHTML = ""
-            const tableWrapper = this.application.templateEngine.create(`
-                <div class="bg-gray-100 min-h-screen py-8">
-                    <h1 class="text-2xl font-bold text-center text-gray-700 mb-8">
-                        Class
-                    </h1>
-                    <div id="class-table"></div>
-                    <div style="margin-top: 20px;">
-                        <a routerLink="curriculum" style="color: #6c757d;">← Back to Curriculum Menu</a>
-                    </div>
-                </div>
-            `);
-            this.application.templateEngine.mainContainer.appendChild(tableWrapper);
-
+            
+            // Use ListTemplate to generate the wrapper
+            const listWrapper = await ListTemplate.getList('ClassList');
+            this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
             const classes = await this.getAllClasses();
             this.table = new AdvanceTableRender(this.application.templateEngine, {
-                modelPath: "curriculum/Class",
                 data: classes,
+                modelPath: "curriculum/Class",
                 targetSelector: "#class-table",
 
                 // Add custom columns (actions, computed fields, etc.)

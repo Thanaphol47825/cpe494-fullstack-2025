@@ -62,7 +62,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
         async loadWorkExperiences() {
             try {
                 // Get work experiences for this student
-                const studentId = this.internData.StudentID || this.internData.student_id;
+                const studentId = this.internData.ID;
                 if (!studentId) return;
 
                 const response = await fetch(`/curriculum/internWorkExperience/getByStudentID/${studentId}`);
@@ -83,7 +83,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
         async loadSkills() {
             try {
                 // Get skills for this student
-                const studentId = this.internData.StudentID || this.internData.student_id;
+                const studentId = this.internData.ID;
                 if (!studentId) return;
 
                 const response = await fetch(`/curriculum/internSkill/getByStudentID/${studentId}`);
@@ -104,7 +104,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
         async loadCertificates() {
             try {
                 // Get certificates for this student
-                const studentId = this.internData.StudentID || this.internData.student_id;
+                const studentId = this.internData.ID;
                 if (!studentId) return;
 
                 const response = await fetch(`/curriculum/internCertificate/getByStudentID/${studentId}`);
@@ -125,7 +125,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
         async loadProjects() {
             try {
                 // Get projects for this student
-                const studentId = this.internData.StudentID || this.internData.student_id;
+                const studentId = this.internData.ID;
                 if (!studentId) return;
 
                 const response = await fetch(`/curriculum/internProject/getByStudentID/${studentId}`);

@@ -4,7 +4,7 @@
   class ApplicantCreate {
     constructor(templateEngine, rootURL) {
       this.templateEngine = templateEngine;
-      this.rootURL = rootURL || global.__ROOT_URL__ || global.RootURL || "";
+      this.rootURL = rootURL || window.RootURL || window.__ROOT_URL__ || "";
       this.formRenderer = null;
       this.ui = null;
     }

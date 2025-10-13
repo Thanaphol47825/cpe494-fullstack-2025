@@ -1,239 +1,292 @@
-class ApplicantList {
-  constructor(engine, rootURL) {
-    this.engine = engine;
-    this.rootURL = rootURL || window.__ROOT_URL__ || "";
+(function (global) {
+  class ApplicantList {
+    constructor(application, rootURL) {
+      this.application = application;
+      this.rootURL = rootURL || global.__ROOT_URL__ || global.RootURL || "";
 
-    this.ENDPOINT_LIST = this.rootURL + "/recruit/GetApplicants";
-    this.ENDPOINT_DELETE = this.rootURL + "/recruit/DeleteApplicant";
-    this.ENDPOINT_IMPORT = this.rootURL + "/recruit/ImportApplicantsFromFile";
-    this.ENDPOINT_SCHEMA = this.rootURL + "/api/modelmeta/applicant";
-    this.FORM_MODULE = "/recruit/static/js/ApplicantList_Create.js";
-  }
+      this.ENDPOINT_LIST     = `${this.rootURL}/recruit/GetApplicants`;
+      this.ENDPOINT_GET_ONE  = (id) => `${this.rootURL}/recruit/GetApplicant/${id}`;
+      this.ENDPOINT_CREATE   = `${this.rootURL}/recruit/CreateApplicant`;
+      this.ENDPOINT_UPDATE   = `${this.rootURL}/recruit/UpdateApplicant`;
+      this.ENDPOINT_DELETE   = `${this.rootURL}/recruit/DeleteApplicant`;
+      this.ENDPOINT_IMPORT   = `${this.rootURL}/recruit/ImportApplicantsFromFile`;
 
-  async render() {
-    this.engine.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gray-50 p-8">
-        <div class="max-w-[1200px] mx-auto bg-white shadow rounded-2xl p-6">
-          <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              🧑‍💼 Applicants
-            </h1>
-            <div class="flex flex-wrap gap-2">
-              <button id="btnImport"
-                class="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-lg hover:bg-indigo-200">📥 Import</button>
-              <button id="btnCreate"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">＋ Create New</button>
-            </div>
-          </div>
+      this.table = null;
+      this.form  = null;
+      this.currentEditId = null;
+      this.ui = null;
 
-          <div id="tableContainer" class="overflow-x-auto border rounded-lg"></div>
-        </div>
-      </div>
-    `;
+      global.applicantManager = this;
+    }
 
-    await this.loadList();
-
-    document.getElementById("btnCreate")?.addEventListener("click", () => this.#openForm());
-    document.getElementById("btnImport")?.addEventListener("click", () => this.importFromFile());
-  }
-
-  async loadList() {
-    const mount = document.getElementById("tableContainer");
-    mount.innerHTML = `<p class="text-gray-500 p-4">Loading...</p>`;
-
-    try {
-      const listRes = await fetch(this.ENDPOINT_LIST);
-      const listData = await listRes.json();
-      if (!listRes.ok || listData?.isSuccess === false) {
-        throw new Error(listData?.message || `Load failed (HTTP ${listRes.status})`);
+    async render() {
+      const container = this.application?.mainContainer;
+      if (!container) {
+        console.error("❌ mainContainer not found");
+        return false;
       }
-      const rows = Array.isArray(listData?.result) ? listData.result : [];
 
-      let displayFields = [];
+      if (!global.RecruitTableTemplate) {
+        console.error("RecruitTableTemplate not loaded — ensure RecruitApplication preloads it.");
+        return false;
+      }
+
       try {
-        const schemaRes = await fetch(this.ENDPOINT_SCHEMA);
-        if (!schemaRes.ok) throw new Error(`Schema HTTP ${schemaRes.status}`);
-        const schema = await schemaRes.json();
-        displayFields = (Array.isArray(schema) ? schema : []).filter(f => f.display !== false);
-      } catch (e) {
-        console.warn("Schema fetch failed, using fallback columns:", e.message);
-        displayFields = [
-          { name: "first_name", label: "First Name" },
-          { name: "last_name", label: "Last Name" },
-          { name: "email", label: "Email" },
-          { name: "phone_number", label: "Phone" },
-        ];
-      }
+        container.innerHTML = "";
+        const root = await global.RecruitTableTemplate.getTable("ApplicantTable", "manage");
+        container.appendChild(root);
 
-      const idIndex = displayFields.findIndex(f => String(f.name).toLowerCase() === "id");
-      if (idIndex === -1) {
-        displayFields.unshift({ name: "ID", label: "ID" });
-      } else {
-        const idField = displayFields.splice(idIndex, 1)[0];
-        displayFields.unshift({ name: "ID", label: idField.label || "ID" });
-      }
-
-      this.renderSimpleTable(rows, displayFields, mount);
-
-      mount.querySelectorAll("button[data-action]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const id = e.currentTarget.getAttribute("data-id");
-          const action = e.currentTarget.getAttribute("data-action");
-          if (action === "edit") this.#openForm(id);
-          else if (action === "delete") this.deleteItem(id);
+        this.ui = global.RecruitTableTemplate.mountMessageAndResult(root, {
+          messagesId: "applicantMessages",
+          resultId: "applicantResult"
         });
-      });
-    } catch (err) {
-      mount.innerHTML = `<p class="text-red-500 p-4">Error: ${err.message}</p>`;
-    }
-  }
 
-  getIdFromRow(row) {
-    return row?.ID ?? row?.Id ?? row?.id ?? null;
-  }
+        this.$tableHost = root.querySelector("#recruit-table-container");
+        this.$panelHost = root.querySelector("#recruit-sidepanel-container");
 
-  getCellValue(row, fieldName) {
-    const n = String(fieldName);
-    if (n.toLowerCase() === "id") return this.getIdFromRow(row) ?? "-";
-    return row?.[n] ?? row?.[n.toLowerCase?.()] ?? "-";
-  }
+        root.querySelector('[data-action="import"]')?.addEventListener("click", () => this.importFromFile());
+        root.querySelector('[data-action="reset"]')?.addEventListener("click", () => this.resetForm());
 
-  renderSimpleTable(rows, fields, mountEl) {
-    if (!mountEl) return;
+        this.setupTable();
+        this.setupForm();
 
-    if (!rows || rows.length === 0) {
-      mountEl.innerHTML = `
-        <div class="p-8 text-center text-gray-500">
-          <p class="text-lg font-medium">No applicants found</p>
-          <p class="text-sm text-gray-400 mt-1">Try adding a new applicant.</p>
-        </div>`;
-      return;
-    }
-
-    const headerCells = fields.map(f => `<th class="px-4 py-2 text-left">${f.label || f.name}</th>`).join("");
-    const thead = `
-      <thead class="bg-gray-100 text-gray-800">
-        <tr>${headerCells}<th class="px-4 py-2 text-right">Actions</th></tr>
-      </thead>`;
-
-    const tbodyRows = rows.map(r => {
-      const tds = fields.map(f => {
-        const val = this.getCellValue(r, f.name);
-        return `<td class="px-4 py-2">${val === "" ? "-" : val}</td>`;
-      }).join("");
-
-      const rowId = this.getIdFromRow(r);
-      return `
-        <tr class="border-b hover:bg-gray-50 transition">
-          ${tds}
-          <td class="px-4 py-2 text-right whitespace-nowrap">
-            <button class="text-blue-600 hover:underline" data-id="${rowId}" data-action="edit">Edit</button>
-            <button class="text-red-600 hover:underline ml-3" data-id="${rowId}" data-action="delete">Delete</button>
-          </td>
-        </tr>`;
-    }).join("");
-
-    const tableHTML = `
-      <table class="min-w-full text-sm text-gray-700">
-        ${thead}
-        <tbody>${tbodyRows}</tbody>
-      </table>`;
-
-    mountEl.innerHTML = tableHTML;
-
-    mountEl.style.width = "100%";
-    mountEl.style.overflowX = "auto";
-    mountEl.style.webkitOverflowScrolling = "touch";
-    const tbl = mountEl.querySelector("table");
-    if (tbl) {
-      tbl.style.width = "max-content";
-      tbl.querySelectorAll("th,td").forEach(el => (el.style.whiteSpace = "nowrap"));
-    }
-  }
-
-  async #openForm(id = null) {
-    try {
-      await this.engine.fetchModule(this.FORM_MODULE);
-    } catch (e) {
-      alert("Failed to load form module: " + e.message);
-      return;
-    }
-
-    const FormClass = window.ApplicantListCreate;
-    if (typeof FormClass !== "function") {
-      alert("Form class not found. Make sure ApplicantList_Create.js sets window.ApplicantListCreate.");
-      return;
-    }
-
-    const form = new FormClass(this.engine, this.rootURL, id);
-    this.engine.mainContainer.innerHTML = "";
-    await form.render();
-  }
-
-  async deleteItem(id) {
-    if (!id) return alert("Missing ID");
-    if (!confirm("Are you sure you want to delete this applicant?")) return;
-
-    try {
-      const res = await fetch(this.ENDPOINT_DELETE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: Number(id) }),
-      });
-      const result = await res.json();
-      if (res.ok && result?.isSuccess !== false) {
-        alert("Deleted successfully");
-        await this.loadList();
-      } else {
-        throw new Error(result?.message || `Delete failed (HTTP ${res.status})`);
+        await this.renderTable();
+        await this.renderForm();
+        return true;
+      } catch (err) {
+        console.error(err);
+        this.ui?.showMessage?.(`Load error: ${err.message}`, "error");
+        return false;
       }
-    } catch (e) {
-      alert("Delete error: " + e.message);
     }
-  }
 
-  async importFromFile() {
-    const picker = document.createElement("input");
-    picker.type = "file";
-    picker.accept = ".csv,.json,text/csv,application/json";
-    picker.style.display = "none";
-    document.body.appendChild(picker);
+    setupTable() {
+      this.table = new global.AdvanceTableRender(this.application, {
+        modelPath: "recruit/applicant",
+        data: [],
+        targetSelector: "#recruit-table-container",
+        customColumns: [
+          {
+            name: "actions",
+            label: "Actions",
+            template: `
+              <div style="white-space:nowrap;">
+                <button onclick="applicantManager.edit({ID})" class="text-blue-600 hover:underline" style="margin-right:8px;">Edit</button>
+                <button onclick="applicantManager.delete({ID})" class="text-red-600 hover:underline">Delete</button>
+              </div>
+            `
+          }
+        ]
+      });
+    }
 
-    const file = await new Promise((resolve) => {
-      picker.onchange = () => resolve(picker.files?.[0] || null);
-      picker.click();
-    });
-    document.body.removeChild(picker);
+    async renderTable() {
+      if (!this.$tableHost) return;
+      this.$tableHost.innerHTML = `<p style="padding:8px; color:#6b7280;">Loading applicants…</p>`;
 
-    if (!file) return;
+      await this.table.loadSchema();
 
-    const formData = new FormData();
-    formData.append("file", file, file.name);
-
-    const mount = document.getElementById("tableContainer");
-    const prevHTML = mount.innerHTML;
-    mount.innerHTML = `<p class="text-gray-500 p-4">Uploading & importing <b>${file.name}</b>…</p>`;
-
-    try {
-      const resp = await fetch(this.ENDPOINT_IMPORT, { method: "POST", body: formData });
-
-      let data = {};
-      try { data = await resp.json(); } catch { /* non-JSON */ }
-
-      if (!resp.ok || data?.isSuccess === false) {
-        throw new Error(data?.message || `Import failed (HTTP ${resp.status})`);
+      if (Array.isArray(this.HIDDEN_COLUMNS) && this.HIDDEN_COLUMNS.length > 0 && this.table.schema) {
+        this.table.schema = this.table.schema.filter(col =>
+          !this.HIDDEN_COLUMNS.includes(col.name) &&
+          col.type !== 'hidden' && col.type !== '-' && col.display !== false
+        );
       }
 
-      const count = Array.isArray(data?.result) ? data.result.length : (data?.result?.count ?? 0);
-      alert(`Imported ${count} applicant(s) from ${file.name}.`);
-      await this.loadList();
-    } catch (err) {
-      alert("Error importing file: " + err.message);
-      mount.innerHTML = prevHTML;
+      this.table.targetSelector = "#recruit-table-container";
+
+      await this.table.render();
+      await this.refreshTable();
+    }
+
+    async refreshTable() {
+      try {
+        const resp = await fetch(this.ENDPOINT_LIST);
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.message || "Failed to load applicants");
+        }
+        const rows = (data?.result || []).map(r => ({ ...r, ID: r.ID ?? r.Id ?? r.id }));
+        this.table.setData(rows);
+      } catch (err) {
+        this.ui?.showMessage(`Error loading applicants: ${err.message}`, "error");
+      }
+    }
+
+    setupForm() {
+      this.form = new global.AdvanceFormRender(this.application, {
+        modelPath: "recruit/applicant",
+        targetSelector: "#recruit-sidepanel-container",
+        submitHandler: async (formData) => await this.handleFormSubmit(formData),
+        autoFocus: true,
+        validateOnBlur: true
+      });
+    }
+
+    async renderForm() {
+      await this.form.render();
+      this.resetForm();
+    }
+
+    async handleFormSubmit(formData) {
+      this.ui?.showMessage("Saving applicant...", "info");
+
+      const toRFC3339 = (dateStr) => {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        return isNaN(d.getTime()) ? `${dateStr}T00:00:00Z` : d.toISOString();
+      };
+
+      const resolvedId =
+        formData?.ID ?? formData?.Id ?? formData?.id ?? this.currentEditId ?? null;
+
+      const payload = {
+        ...formData,
+        ...(resolvedId != null ? { ID: Number(resolvedId), id: Number(resolvedId) } : {}),
+        birth_date: toRFC3339(formData.birth_date),
+        start_date: toRFC3339(formData.start_date),
+      };
+
+      const isUpdate = resolvedId != null;
+      const url = isUpdate ? this.ENDPOINT_UPDATE : this.ENDPOINT_CREATE;
+
+      let resp, data;
+      try {
+        resp = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch {
+        this.ui?.showMessage("Network error while saving applicant.", "error");
+        return false;
+      }
+
+      try { data = await resp.json(); } catch { data = {}; }
+
+      if (!resp.ok || data?.isSuccess !== true) {
+        const msg = data?.message || `Request failed (${resp.status}${resp.statusText ? " " + resp.statusText : ""})`;
+        this.ui?.showMessage(msg, "error");
+        return false;
+      }
+
+      const result = data.result ?? {};
+      const id =
+        result?.ID ?? result?.Id ?? result?.id ??
+        (Array.isArray(result) ? result[0]?.ID ?? result[0]?.Id ?? result[0]?.id : resolvedId);
+
+      this.ui?.showMessage(
+        `Applicant ${isUpdate ? "updated" : "created"} successfully! ID: ${id || "?"}`,
+        "success"
+      );
+
+      await this.refreshTable();
+      this.resetForm();
+      return true;
+    }
+
+    async edit(id) {
+      if (!id) return;
+      try {
+        this.currentEditId = Number(id);
+        const resp = await fetch(this.ENDPOINT_GET_ONE(id));
+        const payload = await resp.json().catch(() => ({}));
+        if (!resp.ok || payload?.isSuccess === false) {
+          throw new Error(payload?.message || `Unable to load applicant #${id}`);
+        }
+        const applicant = payload?.result || payload || {};
+        await this.form.render();
+        this.form.setData(applicant);
+        this.ui?.showMessage(`Editing applicant ID ${id}`, "info");
+      } catch (err) {
+        this.ui?.showMessage(`Edit error: ${err.message}`, "error");
+      }
+    }
+
+    resetForm() {
+      this.currentEditId = null;
+      try {
+        const formRoot = this.form?.form?.html || this.form?.html;
+        if (!formRoot) return;
+
+        if (typeof formRoot.reset === "function") {
+          formRoot.reset();
+        } else {
+          const fields = formRoot.querySelectorAll("input, select, textarea");
+          fields.forEach(el => {
+            const tag = (el.tagName || "").toLowerCase();
+            const type = (el.type || "").toLowerCase();
+            if (tag === "input") {
+              if (["checkbox", "radio"].includes(type)) el.checked = false;
+              else el.value = "";
+            } else if (tag === "select") {
+              el.selectedIndex = 0;
+            } else if (tag === "textarea") {
+              el.value = "";
+            }
+          });
+        }
+      } catch (err) {
+        this.ui?.showMessage("Error resetting form: " + err.message, "error");
+      }
+    }
+
+    async delete(id) {
+      if (!id) return;
+      if (!confirm("Delete this applicant?")) return;
+
+      try {
+        const resp = await fetch(this.ENDPOINT_DELETE, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: Number(id) })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.message || "Delete failed");
+        }
+
+        this.ui?.showMessage(`Applicant ID ${id} deleted successfully.`, "success");
+        await this.refreshTable();
+      } catch (err) {
+        this.ui?.showMessage(`Delete error: ${err.message}`, "error");
+      }
+    }
+
+    async importFromFile() {
+      const picker = document.createElement("input");
+      picker.type = "file";
+      picker.accept = ".csv,.json,text/csv,application/json";
+      picker.style.display = "none";
+      document.body.appendChild(picker);
+
+      const file = await new Promise((resolve) => {
+        picker.onchange = () => resolve(picker.files?.[0] || null);
+        picker.click();
+      });
+      document.body.removeChild(picker);
+      if (!file) return;
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file, file.name);
+
+        const resp = await fetch(this.ENDPOINT_IMPORT, { method: "POST", body: formData });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data?.isSuccess === false)
+          throw new Error(data?.message || "Import failed");
+
+        const count = Array.isArray(data?.result)
+          ? data.result.length
+          : (data?.result?.count ?? 0);
+
+        this.ui?.showMessage(`Imported ${count} applicant(s) from ${file.name}.`, "success");
+        await this.refreshTable();
+      } catch (err) {
+        this.ui?.showMessage(`Import error: ${err.message}`, "error");
+      }
     }
   }
-}
 
-if (typeof window !== "undefined") {
-  window.ApplicantList = ApplicantList;
-}
+  if (typeof window !== "undefined") window.ApplicantList = ApplicantList;
+})(window);

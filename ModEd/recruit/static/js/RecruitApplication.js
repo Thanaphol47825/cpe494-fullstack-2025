@@ -5,6 +5,7 @@ class RecruitApplication extends BaseModuleApplication {
 
     this.setSubModuleBasePath("/recruit/static/js");
     this.loadRecruitFormTemplate();
+    this.loadRecruitTableTemplate();
     
     this.features = {
       "admin/create": { title: "Create Admin", icon: "👤", script: "AdminCreate.js" },
@@ -24,6 +25,12 @@ class RecruitApplication extends BaseModuleApplication {
   async loadRecruitFormTemplate() {
     if (!window.RecruitFormTemplate) {
       await this.loadSubModule("template/RecruitFormTemplate.js");
+    }
+  }
+
+  async loadRecruitTableTemplate() {
+    if (!window.RecruitTableTemplate) {
+      await this.loadSubModule("template/RecruitTableTemplate.js");
     }
   }
 

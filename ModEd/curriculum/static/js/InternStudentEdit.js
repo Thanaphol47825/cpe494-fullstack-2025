@@ -646,11 +646,9 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                             <h4 class="text-sm font-semibold text-gray-900">
                                 ${project.project_name || 'Unnamed Project'}
                             </h4>
-                            <p class="text-xs text-gray-600">${startDate} - ${endDate}</p>
-                            <p class="text-xs text-gray-500">Status: ${project.status || 'N/A'}</p>
                         </div>
                         <div class="text-sm text-gray-700">
-                            <p class="line-clamp-2">${project.description || 'No description provided'}</p>
+                            <p class="line-clamp-2">${project.detail || 'No description provided'}</p>
                         </div>
                     </div>
                     <div class="ml-4">

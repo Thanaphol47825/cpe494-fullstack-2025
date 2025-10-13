@@ -80,6 +80,22 @@ func (controller *InternProjectHandler) GetInternProjectByID(context *fiber.Ctx)
 		"result":    internProject,
 	})
 }
+func (controller *InternProjectHandler) GetInternProjectByStudentID(context *fiber.Ctx) error {
+	studentID := context.Params("student_id")
+	var internProjects []model.InternProject
+
+	if err := controller.DB.Where("student_id = ?", studentID).Find(&internProjects).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to get intern projects for the student",
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    internProjects,
+	})
+}
 
 func (controller *InternProjectHandler) UpdateInternProjectByID(context *fiber.Ctx) error {
 	id := context.Params("id")

@@ -47,40 +47,6 @@
       </p>
     </div>
 
-    <!-- actions -->
-    <div class="max-w-6xl mx-auto mb-8">
-      <div
-        class="bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-6"
-      >
-        <div
-          class="flex flex-col sm:flex-row gap-4 justify-between items-center"
-        >
-          <div class="flex items-center gap-3">{{{ HeaderContent }}}</div>
-          {{^ShowBackButton}}
-          <a
-            routerLink="{{ create_link }}"
-            class="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300"
-          >
-            <svg
-              class="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-              />
-            </svg>
-            Add New {{ model_name }}
-          </a>
-          {{/ShowBackButton}}
-        </div>
-      </div>
-    </div>
-
     <!-- main content -->
     <div class="max-w-6xl mx-auto">
       <div

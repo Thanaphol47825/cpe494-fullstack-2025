@@ -45,6 +45,11 @@ func (controller *InternProjectController) GetRoute() []*core.RouteItem {
 		Handler: controller.handler.DeleteInternProjectByID,
 		Method:  core.POST,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/internProject/getByStudentID/:student_id",
+		Handler: controller.handler.GetInternProjectByStudentID,
+		Method:  core.GET,
+	})
 
 	return routeList
 }

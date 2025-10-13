@@ -21,7 +21,7 @@ func NewInternStudentController(app *core.ModEdApplication) *InternStudentContro
 func (controller *InternStudentController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/InternStudent",
+		Route:   "/curriculum/InternStudent/:id?",
 		Handler: controller.handler.GetInternStudent,
 		Method:  core.GET,
 	})

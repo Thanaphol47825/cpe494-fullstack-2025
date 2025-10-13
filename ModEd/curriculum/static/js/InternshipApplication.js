@@ -19,6 +19,7 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
             this.addRouteWithSubModule('/internstudent/create', this.renderInternStudentCreate.bind(this), 'InternStudentCreate.js')
             this.addRouteWithSubModule('/internshipworkexperience/create', this.renderInternshipWorkExperience.bind(this), 'InternWorkExperienceCreate.js')
             this.addRouteWithSubModule('/internskill', this.renderInternSkill.bind(this), 'InternSkillCreate.js')
+            this.addRouteWithSubModule('/internstudent/edit/:id', this.renderInternStudentEdit.bind(this), 'InternStudentEdit.js');
 
             this.setDefaultRoute('')
         }
@@ -184,6 +185,20 @@ if (typeof window !== 'undefined' && !window.InternshipApplication) {
                 await internStudentList.render()
             } else {
                 console.error("InternStudentCreate class not found")
+            }
+        }
+        
+        async renderInternStudentEdit() {
+            console.log("Rendering Intern Student Edit Form");
+            const currentPath = this.templateEngine.getCurrentPath();
+            const pathParts = currentPath.split('/');
+            const internId = pathParts[pathParts.length - 1];
+            
+            if (window.InternStudentEdit) {
+                const internStudentEdit = new window.InternStudentEdit(this.templateEngine, internId);
+                await internStudentEdit.render();
+            } else {
+                console.error("InternStudentEdit class not found");
             }
         }
 

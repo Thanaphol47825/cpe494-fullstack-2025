@@ -9,4 +9,5 @@ type FormField struct {
 	Data         []map[string]interface{} `json:"data,omitempty"`
 	Required     bool                     `json:"required,omitempty"`
 	TableDisplay bool                     `json:"display,omitempty"`
+	APIUrl       string                   `json:"apiurl,omitempty"`
 }

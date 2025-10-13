@@ -16,6 +16,7 @@ class RecruitApplication extends BaseModuleApplication {
       "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewCreate.js" },
       "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewList.js" },
       "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
+      "interviewcriteria/create": { title: "Create Interview Criteria", icon: "✏️", script: "InterviewCriteriaCreate.js" },
     };
 
     this.setupRoutes();
@@ -76,6 +77,11 @@ class RecruitApplication extends BaseModuleApplication {
       "/interviewcriteria/list",
       this.renderInterviewCriteriaList.bind(this),
       "InterviewCriteriaList.js"
+    );
+    this.addRouteWithSubModule(
+      "/interviewcriteria/create",
+      this.renderInterviewCriteriaCreate.bind(this),
+      "InterviewCriteriaCreate.js"
     );
   }
 
@@ -167,6 +173,12 @@ class RecruitApplication extends BaseModuleApplication {
   async renderInterviewCriteriaList() {
     if (!window.InterviewCriteriaList) return this.renderError("Failed to load InterviewCriteriaList");
     const feature = new window.InterviewCriteriaList(this.templateEngine, this.rootURL);
+    return await feature.render();
+  }
+
+  async renderInterviewCriteriaCreate() {
+    if (!window.InterviewCriteriaCreate) return this.renderError("Failed to load InterviewCriteriaCreate");
+    const feature = new window.InterviewCriteriaCreate(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 

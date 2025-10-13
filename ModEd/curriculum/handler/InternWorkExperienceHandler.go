@@ -147,3 +147,21 @@ func (controller *InternWorkExperienceHandler) DeleteInternWorkExperienceByID(co
 		"result":    "successfully deleted intern work experience",
 	})
 }
+
+func (controller *InternWorkExperienceHandler) GetInternWorkExperienceByStudentID(context *fiber.Ctx) error {
+	studentId := context.Params("student_id")
+
+	var internWorkExperiences []model.InternWorkExperience
+
+	if err := controller.DB.Where("student_id = ?", studentId).Preload("Company").Find(&internWorkExperiences).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to get intern work experiences",
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    internWorkExperiences,
+	})
+}

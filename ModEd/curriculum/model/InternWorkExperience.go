@@ -8,7 +8,7 @@ import (
 type InternWorkExperience struct {
 	core.BaseModel
 	StudentId uint          `gorm:"not null" json:"student_id"`
-	Student   InternStudent `gorm:"foreignKey:StudentId;references:ID"`
+	Student   InternStudent `gorm:"foreignKey:StudentId;references:ID" json:"-"`
 	CompanyId uint          `gorm:"not null" json:"company_id"`
 	Company   Company       `gorm:"foreignKey:CompanyId;references:ID"`
 	Detail    string        `gorm:"type:text" csv:"detail" json:"detail"`

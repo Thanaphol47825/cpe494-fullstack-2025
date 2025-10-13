@@ -28,6 +28,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       if (!window.ListTemplate) {
         await this.loadSubModule('template/CurriculumListTemplate.js')
       }
+
+      if (!window.EditModalTemplate) {
+        await this.loadSubModule('template/CurriculumEditModalTemplate.js');
+      }
+
     }
 
     setupRoutes() {

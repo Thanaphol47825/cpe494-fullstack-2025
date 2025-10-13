@@ -319,7 +319,7 @@ class AdvanceFormRender {
             const response = await fetch(`${RootURL}${apiUrl}`);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            return data.map(item => ({
+            return data.result.map(item => ({
                 label: item.label || item.name,
                 value: item.value || item.id
             }));

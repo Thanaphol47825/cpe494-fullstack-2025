@@ -4,7 +4,6 @@ import (
 	"ModEd/core/config"
 
 	"ModEd/admin"
-	"ModEd/authorization"
 	"ModEd/common"
 	"ModEd/core"
 	"ModEd/core/database"
@@ -53,7 +52,6 @@ func main() {
 	hr.InitialCommon()
 	eval.InitialEval()
 	recruit.InitialRecruit()
-	authorization.InitialAuthorization()
 	admin.InitialAdmin()
 	application.Run()
 }

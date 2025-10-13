@@ -7,6 +7,7 @@ type CommonMigrationStrategy struct {
 
 func (s *CommonMigrationStrategy) GetModels() []interface{} {
 	return []interface{}{
+		&model.User{},
 		&model.Department{},
 		&model.Faculty{},
 		&model.Instructor{},

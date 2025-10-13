@@ -2,15 +2,11 @@ package core
 
 import (
 	"context"
+	"crypto/rand"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
-
-type Session struct {
-	UserID string
-}
 
 type SessionManager struct {
 	rdb *redis.Client
@@ -27,7 +23,7 @@ func NewSessionManager(rdb *redis.Client, ttl time.Duration) *SessionManager {
 }
 
 func (sm *SessionManager) Set(userID string) (string, error) {
-	sessionID := uuid.NewString()
+	sessionID := rand.Text()
 	err := sm.rdb.Set(sm.ctx, "session:"+sessionID, userID, sm.ttl).Err()
 	if err != nil {
 		return "", err
@@ -35,12 +31,12 @@ func (sm *SessionManager) Set(userID string) (string, error) {
 	return sessionID, nil
 }
 
-func (sm *SessionManager) Get(sessionID string) (Session, bool) {
+func (sm *SessionManager) Get(sessionID string) (string, bool) {
 	userID, err := sm.rdb.Get(sm.ctx, "session:"+sessionID).Result()
 	if err != nil {
-		return Session{}, false
+		return "", false
 	}
-	return Session{UserID: userID}, true
+	return userID, true
 }
 
 func (sm *SessionManager) Delete(sessionID string) {

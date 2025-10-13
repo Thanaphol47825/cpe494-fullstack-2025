@@ -21,7 +21,7 @@ const (
 	AuthRole
 )
 
-type Middleware struct {
+type Authentication struct {
 	AuthType AuthType
 	Roles    []string
 }
@@ -33,7 +33,7 @@ func NewRoleBasedAccessControl(DB *gorm.DB, SessionManager *SessionManager) *Rol
 	}
 }
 
-func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Middleware) fiber.Handler {
+func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Authentication) fiber.Handler {
 	return func(ctx *fiber.Ctx) error {
 		// AuthNone
 		if middleware.AuthType == AuthNone {
@@ -42,7 +42,7 @@ func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Middleware) fiber.
 
 		// AuthAny and AuthRole
 		tokenCookie := ctx.Cookies("token", "")
-		session, status := rbac.SessionManager.Get(tokenCookie)
+		userID, status := rbac.SessionManager.Get(tokenCookie)
 		if !status {
 			return SendResponse(ctx, BaseApiResponse{
 				IsSuccess: false,
@@ -57,7 +57,7 @@ func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Middleware) fiber.
 		}
 
 		// AuthRole
-		if !rbac.hasAccess(session.UserID, middleware.Roles) {
+		if !rbac.hasAccess(userID, middleware.Roles) {
 			return SendResponse(ctx, BaseApiResponse{
 				IsSuccess: false,
 				Status:    http.StatusForbidden,
@@ -72,7 +72,6 @@ func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Middleware) fiber.
 func (rbac *RoleBasedAccessControl) hasAccess(userId string, Roles []string) bool {
 	var count int64
 	rbac.DB.Model(&model.UserRole{}).
-		Where("user_id = ? AND role IN ?", userId, Roles).
-		Count(&count)
+		Where("user_id = ? AND role IN ?", userId, Roles).Count(&count)
 	return count > 0
 }

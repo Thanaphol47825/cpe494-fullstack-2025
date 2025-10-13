@@ -42,9 +42,9 @@ func (application *ModEdApplication) AddController(controller BaseController) {
 	for _, route := range routeList {
 		switch route.Method {
 		case GET:
-			application.Application.Get(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Middleware), route.Handler)
+			application.Application.Get(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Authentication), route.Handler)
 		case POST:
-			application.Application.Post(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Middleware), route.Handler)
+			application.Application.Post(route.Route, application.RoleBasedAccessControl.RBACMiddleware(route.Authentication), route.Handler)
 		}
 	}
 	for _, modelMeta := range modelMetaList {

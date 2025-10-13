@@ -93,31 +93,31 @@ func (controller *InterviewController) GetRoute() []*core.RouteItem {
 		Route:      "/recruit/my/interviews",
 		Handler:    controller.GetMyInterviews,
 		Method:     core.GET,
-		Middleware: core.Middleware{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:      "/recruit/my/interview",
 		Handler:    controller.CreateMyInterview,
 		Method:     core.POST,
-		Middleware: core.Middleware{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:      "/recruit/my/interview/:id",
 		Handler:    controller.GetMyInterviewByID,
 		Method:     core.GET,
-		Middleware: core.Middleware{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:      "/recruit/my/interview/:id",
 		Handler:    controller.UpdateMyInterview,
 		Method:     core.POST,
-		Middleware: core.Middleware{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:      "/recruit/my/interview/delete/:id",
 		Handler:    controller.DeleteMyInterview,
 		Method:     core.POST,
-		Middleware: core.Middleware{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
@@ -262,12 +262,12 @@ func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx
 	if token == "" || controller.application == nil || controller.application.SessionManager == nil {
 		return 0, false
 	}
-	session, ok := controller.application.SessionManager.Get(token)
-	if !ok || session.UserID == "" {
+	userID, ok := controller.application.SessionManager.Get(token)
+	if !ok || userID == "" {
 		return 0, false
 	}
-	// assume session.UserID is numeric and maps to InstructorID
-	uid, err := strconv.ParseUint(session.UserID, 10, 64)
+	// assume userID is numeric and maps to InstructorID
+	uid, err := strconv.ParseUint(userID, 10, 64)
 	if err != nil {
 		return 0, false
 	}

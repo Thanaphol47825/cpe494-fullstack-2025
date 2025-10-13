@@ -19,6 +19,7 @@ const (
 	AuthNone AuthType = iota
 	AuthAny
 	AuthRole
+	AuthAdmin
 )
 
 type Authentication struct {
@@ -41,7 +42,7 @@ func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Authentication) fi
 		}
 
 		// AuthAny and AuthRole
-		tokenCookie := ctx.Cookies("token", "")
+		tokenCookie := ctx.Cookies("moded_token", "")
 		userID, status := rbac.SessionManager.Get(tokenCookie)
 		if !status {
 			return SendResponse(ctx, BaseApiResponse{
@@ -51,18 +52,43 @@ func (rbac *RoleBasedAccessControl) RBACMiddleware(middleware Authentication) fi
 			})
 		}
 
+		var dbUser struct {
+			ID      uint `gorm:"column:id"`
+			IsAdmin bool `gorm:"column:is_admin"`
+		}
+		if err := rbac.DB.Table("users").Select("id, is_admin").Where("id = ?", userID).Limit(1).Take(&dbUser).Error; err != nil {
+			return SendResponse(ctx, BaseApiResponse{
+				IsSuccess: false,
+				Status:    http.StatusForbidden,
+				Message:   "unauthorized",
+			})
+		}
+
+		// AuthAny, AuthRole, AuthAdmin
+		ctx.Locals("userId", userID)
+
 		// AuthAny
 		if middleware.AuthType == AuthAny {
 			return ctx.Next()
 		}
-
 		// AuthRole
-		if !rbac.hasAccess(userID, middleware.Roles) {
-			return SendResponse(ctx, BaseApiResponse{
-				IsSuccess: false,
-				Status:    http.StatusForbidden,
-				Message:   "permission denied",
-			})
+		switch middleware.AuthType {
+		case AuthRole:
+			if !rbac.hasAccess(userID, middleware.Roles) {
+				return SendResponse(ctx, BaseApiResponse{
+					IsSuccess: false,
+					Status:    http.StatusForbidden,
+					Message:   "permission denied",
+				})
+			}
+		case AuthAdmin:
+			if !dbUser.IsAdmin {
+				return SendResponse(ctx, BaseApiResponse{
+					IsSuccess: false,
+					Status:    http.StatusForbidden,
+					Message:   "admin permission required",
+				})
+			}
 		}
 
 		return ctx.Next()

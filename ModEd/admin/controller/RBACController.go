@@ -22,11 +22,17 @@ func (controller *RBACController) GetRoute() []*core.RouteItem {
 		Route:   "/admin/add_user_role",
 		Handler: controller.handler.AddUserRole,
 		Method:  core.POST,
+		Authentication: core.Authentication{
+			AuthType: core.AuthAdmin,
+		},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/admin/del_user_role",
 		Handler: controller.handler.DelUserRole,
 		Method:  core.POST,
+		Authentication: core.Authentication{
+			AuthType: core.AuthAdmin,
+		},
 	})
 	return routeList
 }

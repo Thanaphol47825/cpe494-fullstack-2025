@@ -59,7 +59,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                 const studentId = this.internData.StudentID || this.internData.student_id;
                 if (!studentId) return;
 
-                const response = await fetch(`/curriculum/internWorkExperience/getByStudent/${studentId}`);
+                const response = await fetch(`/curriculum/internWorkExperience/getByStudentID/${studentId}`);
                 const data = await response.json();
                 
                 if (data.isSuccess) {

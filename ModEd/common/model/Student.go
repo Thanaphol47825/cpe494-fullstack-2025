@@ -28,6 +28,9 @@ type Student struct {
 
 	// FK → Instructor.InstructorCode
 	Advisor *Instructor `json:"Advisor,omitempty" gorm:"foreignKey:AdvisorCode;references:InstructorCode" form:"-"`
+
+	// FK → User
+	UserId *uint `gorm:"index"`
 }
 
 func (Student) TableName() string {

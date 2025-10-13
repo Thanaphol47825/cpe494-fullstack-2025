@@ -51,12 +51,22 @@ func (controller *InternWorkExperienceHandler) CreateInternWorkExperience(contex
 		})
 	}
 
+	// Resolve company name to ID if provided
+	if err := newInternWorkExperience.ResolveCompanyName(controller.DB); err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to resolve company: " + err.Error(),
+		})
+	}
+
 	if err := controller.DB.Create(&newInternWorkExperience).Error; err != nil {
 		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "failed to create intern work experience",
 		})
 	}
+
+	controller.DB.Preload("Company").First(&newInternWorkExperience, newInternWorkExperience.ID)
 
 	return context.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"isSuccess": true,
@@ -103,10 +113,27 @@ func (controller *InternWorkExperienceHandler) UpdateInternWorkExperienceByID(co
 		})
 	}
 
-	internWorkExperience.CompanyId = updateInternWorkExperience.CompanyId
-	internWorkExperience.Detail = updateInternWorkExperience.Detail
-	internWorkExperience.StartDate = updateInternWorkExperience.StartDate
-	internWorkExperience.EndDate = updateInternWorkExperience.EndDate
+	// Resolve company name to ID if provided
+	if err := updateInternWorkExperience.ResolveCompanyName(controller.DB); err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to resolve company: " + err.Error(),
+		})
+	}
+
+	// Update fields
+	if updateInternWorkExperience.CompanyId != 0 {
+		internWorkExperience.CompanyId = updateInternWorkExperience.CompanyId
+	}
+	if updateInternWorkExperience.Detail != "" {
+		internWorkExperience.Detail = updateInternWorkExperience.Detail
+	}
+	if !updateInternWorkExperience.StartDate.IsZero() {
+		internWorkExperience.StartDate = updateInternWorkExperience.StartDate
+	}
+	if !updateInternWorkExperience.EndDate.IsZero() {
+		internWorkExperience.EndDate = updateInternWorkExperience.EndDate
+	}
 
 	if err := controller.DB.Save(&internWorkExperience).Error; err != nil {
 		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -114,6 +141,9 @@ func (controller *InternWorkExperienceHandler) UpdateInternWorkExperienceByID(co
 			"error":     "failed to update intern work experience",
 		})
 	}
+
+	// Load with company data for response
+	controller.DB.Preload("Company").First(&internWorkExperience, internWorkExperience.ID)
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,

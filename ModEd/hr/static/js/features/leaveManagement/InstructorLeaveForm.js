@@ -10,140 +10,62 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveFormFeature) {
 
     async render() {
       try {
-        // Fetch instructors for dropdown
-        const instructorsResponse = await this.apiService.fetchInstructors();
-        const instructors = instructorsResponse.result || instructorsResponse || [];
+        this.templateEngine.mainContainer.innerHTML = HrUiComponents.showLoadingState(
+          'Instructor Leave Request',
+          'Loading leave form...'
+        );
 
-        const html = this.#generateFormHTML(instructors);
-        this.templateEngine.mainContainer.innerHTML = html;
+        const instructorsResponse = await this.apiService.fetchInstructors();
+        const instructors = instructorsResponse?.result || instructorsResponse || [];
+
+        this.#renderFormLayout(instructors);
         this.#attachEventListeners();
       } catch (error) {
         console.error('Error rendering instructor leave form:', error);
         if (this.errorHandler) {
           this.errorHandler.handleError(error, { context: 'instructor_leave_form_render' });
         }
-        this.templateEngine.mainContainer.innerHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-            <div class="max-w-4xl mx-auto px-4">
-              <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p class="text-red-800">Error loading form: ${error.message}</p>
-              </div>
-              <a routerLink="hr/leave" class="text-blue-600 hover:underline">← Back to Leave Management</a>
-            </div>
-          </div>
-        `;
+        this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+          title: 'Error Loading Leave Form',
+          message: error.message || 'Unable to load instructor leave form.',
+          hasRetry: true,
+          retryAction: 'hrApp.renderCreateInstructorLeave()',
+          backLink: 'hr/leave',
+          backLabel: 'Back to Leave Management'
+        });
       }
     }
 
-    #generateFormHTML(instructors) {
-      const leaveTypes = ['Sick', 'Vacation', 'Personal', 'Maternity', 'Other'];
-      
-      return `
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <!-- Header -->
-            <div class="mb-8">
-              <h1 class="text-3xl font-bold text-gray-900 mb-2">Instructor Leave Request</h1>
-              <p class="text-gray-600">Submit a new leave request for an instructor</p>
-            </div>
+    #renderFormLayout(instructors) {
+      this.templateEngine.mainContainer.innerHTML = '';
 
-            <!-- Form Card -->
-            <div class="bg-white rounded-2xl shadow-lg p-8 mb-6">
-              <form id="instructorLeaveForm" class="space-y-6">
-                
-                <!-- Instructor Selection -->
-                <div>
-                  <label for="instructor_code" class="block text-sm font-medium text-gray-700 mb-2">
-                    Instructor <span class="text-red-500">*</span>
-                  </label>
-                  <select 
-                    id="instructor_code" 
-                    name="InstructorCode" 
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select an instructor</option>
-                    ${instructors.map(i => `
-                      <option value="${i.instructor_code}">
-                        ${i.instructor_code} - ${i.first_name} ${i.last_name}
-                      </option>
-                    `).join('')}
-                  </select>
-                </div>
+      const wrapper = HrUiComponents.createFormPageWrapper({
+        title: 'Instructor Leave Request',
+        description: 'Submit a new leave request for an instructor',
+        icon: HrUiComponents.iconPaths.instructor,
+        gradientFrom: 'purple-600',
+        gradientTo: 'indigo-600',
+        bgGradient: 'from-slate-50 via-blue-50 to-indigo-100',
+        formTitle: 'Request Details',
+        containerSelector: '.instructor-leave-form-container',
+        backLink: 'hr/leave',
+        backLabel: 'Back to Leave Management'
+      });
 
-                <!-- Leave Type -->
-                <div>
-                  <label for="leave_type" class="block text-sm font-medium text-gray-700 mb-2">
-                    Leave Type <span class="text-red-500">*</span>
-                  </label>
-                  <select 
-                    id="leave_type" 
-                    name="LeaveType" 
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select leave type</option>
-                    ${leaveTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                  </select>
-                </div>
+      this.templateEngine.mainContainer.appendChild(wrapper);
 
-                <!-- Leave Date -->
-                <div>
-                  <label for="leave_date" class="block text-sm font-medium text-gray-700 mb-2">
-                    Leave Date <span class="text-red-500">*</span>
-                  </label>
-                  <input 
-                    type="date" 
-                    id="leave_date" 
-                    name="DateStr" 
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+      const container = wrapper.querySelector('.instructor-leave-form-container');
+      if (!container) {
+        throw new Error('Instructor leave form container not found');
+      }
 
-                <!-- Reason -->
-                <div>
-                  <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-                    Reason <span class="text-red-500">*</span>
-                  </label>
-                  <textarea 
-                    id="reason" 
-                    name="Reason" 
-                    rows="4" 
-                    required
-                    placeholder="Please provide a detailed reason for the leave request..."
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  ></textarea>
-                </div>
-
-                <!-- Status Message -->
-                <div id="formStatus" class="hidden"></div>
-
-                <!-- Actions -->
-                <div class="flex gap-4 pt-4">
-                  <button 
-                    type="submit" 
-                    class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-200"
-                  >
-                    Submit Leave Request
-                  </button>
-                  <a 
-                    routerLink="hr/leave/instructor" 
-                    class="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200 text-center"
-                  >
-                    Cancel
-                  </a>
-                </div>
-              </form>
-            </div>
-
-            <!-- Back Link -->
-            <div class="text-center">
-              <a routerLink="hr/leave" class="text-blue-600 hover:underline">← Back to Leave Management</a>
-            </div>
-          </div>
-        </div>
-      `;
+      container.innerHTML = HrUiComponents.renderInstructorLeaveForm({
+        instructors,
+        submitLabel: 'Submit Leave Request',
+        cancelLabel: 'Cancel',
+        cancelRoute: 'hr/leave/instructor',
+        statusContainerId: 'formStatus'
+      });
     }
 
     #attachEventListeners() {
@@ -214,4 +136,3 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveFormFeature) {
 
   window.HrInstructorLeaveFormFeature = HrInstructorLeaveFormFeature;
 }
-

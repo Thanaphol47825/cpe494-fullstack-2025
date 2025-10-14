@@ -583,6 +583,93 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
         </form>
       `;
 
+      this.templates.instructorLeaveForm = `
+        <form id="{{formId}}" class="space-y-6">
+          <div>
+            <label for="instructor_code" class="block text-sm font-medium text-gray-700 mb-2">
+              Instructor <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="instructor_code" 
+              name="InstructorCode" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select an instructor</option>
+              {{#instructors}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>
+                  {{label}}
+                </option>
+              {{/instructors}}
+            </select>
+          </div>
+
+          <div>
+            <label for="leave_type" class="block text-sm font-medium text-gray-700 mb-2">
+              Leave Type <span class="text-red-500">*</span>
+            </label>
+            <select 
+              id="leave_type" 
+              name="LeaveType" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Select leave type</option>
+              {{#leaveTypes}}
+                <option value="{{value}}" {{#selected}}selected{{/selected}}>
+                  {{label}}
+                </option>
+              {{/leaveTypes}}
+            </select>
+          </div>
+
+          <div>
+            <label for="leave_date" class="block text-sm font-medium text-gray-700 mb-2">
+              Leave Date <span class="text-red-500">*</span>
+            </label>
+            <input 
+              type="date" 
+              id="leave_date" 
+              name="DateStr" 
+              value="{{leaveDate}}"
+              required
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
+              Reason <span class="text-red-500">*</span>
+            </label>
+            <textarea 
+              id="reason" 
+              name="Reason" 
+              rows="4" 
+              required
+              placeholder="Please provide a detailed reason for the leave request..."
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            >{{reason}}</textarea>
+          </div>
+
+          <div id="{{statusContainerId}}" class="hidden"></div>
+
+          <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <button 
+              type="submit" 
+              class="flex-1 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-6 rounded-lg hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300 transition-all duration-200"
+            >
+              {{submitLabel}}
+            </button>
+            <a 
+              routerLink="{{cancelRoute}}" 
+              class="flex-1 bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200 text-center"
+            >
+              {{cancelLabel}}
+            </a>
+          </div>
+        </form>
+      `;
+
       // ========================================
       // Resignation Card Templates
       // ========================================

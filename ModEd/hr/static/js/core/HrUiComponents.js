@@ -487,6 +487,133 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       return HrTemplates.render('studentLeaveForm', data);
     }
 
+    static renderInstructorLeaveForm(options = {}) {
+      const { instructors = [], initialData = {} } = options;
+      const selectedInstructor = initialData.InstructorCode || initialData.instructor_code || options.selectedInstructor || '';
+      const selectedLeaveType = initialData.LeaveType || initialData.leave_type || options.selectedLeaveType || '';
+
+      const mappedInstructors = instructors.map((instructor) => {
+        const code = instructor.instructor_code || instructor.InstructorCode || instructor.code;
+        const firstName = instructor.first_name || instructor.FirstName || '';
+        const lastName = instructor.last_name || instructor.LastName || '';
+        return {
+          value: code,
+          label: `${code} - ${firstName} ${lastName}`.trim(),
+          selected: code === selectedInstructor
+        };
+      });
+
+      const leaveTypes = ['Sick', 'Vacation', 'Personal', 'Maternity', 'Other'].map((type) => ({
+        value: type,
+        label: type,
+        selected: type === selectedLeaveType
+      }));
+
+      const data = {
+        formId: options.formId || 'instructorLeaveForm',
+        instructors: mappedInstructors,
+        leaveTypes,
+        leaveDate: HrUiComponents.formatDateForInput(initialData.DateStr || initialData.leave_date || initialData.LeaveDate || ''),
+        reason: (initialData.Reason || initialData.reason || '').trim(),
+        statusContainerId: options.statusContainerId || 'formStatus',
+        submitLabel: options.submitLabel || 'Submit Leave Request',
+        cancelLabel: options.cancelLabel || 'Cancel',
+        cancelRoute: options.cancelRoute || 'hr/leave/instructor'
+      };
+
+      return HrTemplates.render('instructorLeaveForm', data);
+    }
+
+    static renderInstructorLeaveListPage(requests = []) {
+      const parsedRequests = (requests || []).map((request) => {
+        const idValue = request.ID ?? request.id ?? request.Id ?? null;
+        const id = idValue !== null && idValue !== undefined ? String(idValue) : '';
+        const instructorCode = request.InstructorCode || request.instructor_code || 'N/A';
+        const leaveType = request.LeaveType || request.leave_type || 'N/A';
+        const leaveDateRaw = request.LeaveDate || request.leave_date || '';
+        const status = request.Status || request.status || 'Pending';
+
+        const actions = [];
+        if (status === 'Pending') {
+          const baseActionClasses = 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 review-btn';
+          actions.push({
+            isButton: true,
+            action: 'approve',
+            actionType: 'review',
+            label: 'Approve',
+            className: `${baseActionClasses} bg-blue-50 text-blue-700 hover:bg-blue-100`,
+            id
+          });
+          actions.push({
+            isButton: true,
+            action: 'reject',
+            actionType: 'review',
+            label: 'Reject',
+            className: `${baseActionClasses} bg-rose-50 text-rose-700 hover:bg-rose-100`,
+            id
+          });
+        }
+
+        return {
+          id,
+          personLabel: instructorCode,
+          leaveType,
+          leaveDate: HrTemplates.formatDate(leaveDateRaw),
+          status,
+          statusClass: HrTemplates.getStatusClass(status),
+          actions
+        };
+      });
+
+      const data = {
+        bgGradient: 'from-slate-50 via-blue-50 to-indigo-100',
+        gradientFrom: 'purple-600',
+        gradientTo: 'indigo-600',
+        title: 'Instructor Leave Requests',
+        description: 'View and manage instructor leave requests',
+        icon: HrTemplates.iconPaths.instructor,
+        actions: [
+          {
+            route: 'hr/leave/instructor/create',
+            label: 'New Leave Request',
+            className: 'inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200',
+            icon: HrTemplates.iconPaths.add
+          }
+        ],
+        showRefresh: true,
+        refreshId: 'refreshBtn',
+        refreshClass: 'inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200',
+        refreshLabel: 'Refresh',
+        hasRequests: parsedRequests.length > 0,
+        requests: parsedRequests,
+        columns: [
+          { label: 'ID' },
+          { label: 'Instructor' },
+          { label: 'Leave Type' },
+          { label: 'Leave Date' },
+          { label: 'Status' },
+          { label: 'Actions' }
+        ],
+        emptyTitle: 'No Leave Requests Yet',
+        emptyMessage: 'There are no instructor leave requests to display.',
+        emptyActionRoute: 'hr/leave/instructor/create',
+        emptyActionLabel: 'Create First Request',
+        backRoute: 'hr/leave',
+        modalId: 'reviewModal',
+        modalTitle: 'Review Leave Request',
+        modalMessageId: 'reviewModalMessage',
+        modalMessage: 'Are you sure you want to review this leave request?',
+        reasonFieldId: 'reviewReason',
+        reasonPlaceholder: 'Optional: add a reason for your decision...',
+        confirmButtonId: 'confirmReview',
+        confirmLabel: 'Confirm',
+        cancelButtonId: 'cancelReview',
+        cancelLabel: 'Cancel'
+      };
+
+      return HrTemplates.render('leaveListPage', data);
+    }
+
     static formatDateForInput(dateValue) {
       if (!dateValue) return '';
       const date = new Date(dateValue);

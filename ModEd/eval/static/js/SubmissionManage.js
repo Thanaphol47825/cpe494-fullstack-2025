@@ -33,15 +33,6 @@ class SubmissionManage {
             </a>
           </div>
 
-          <!-- Analytics Section -->
-          <div class="mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-              <h2 class="text-xl font-semibold text-gray-800 mb-4">Evaluation Analytics</h2>
-              <div id="evaluation-analytics-container" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <!-- Analytics will be loaded here -->
-              </div>
-            </div>
-          </div>
 
           <!-- Table Container -->
           <div class="bg-white rounded-lg shadow-md p-6">
@@ -54,10 +45,10 @@ class SubmissionManage {
       </div>
     `;
 
-    // Setup table with AdvanceTableRender
+    // Setup table with EvalTableRenderer (filters out system fields like 'model')
     // Note: AdvanceTableRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.table = new AdvanceTableRender(this.application.templateEngine, {
+    this.table = new EvalTableRenderer(this.application.templateEngine, {
       modelPath: "eval/submission",
       data: [],
       targetSelector: "#submission-table-container",
@@ -89,7 +80,6 @@ class SubmissionManage {
       await this.table.loadSchema();
       await this.table.render();
       await this.loadSubmissions();
-      await this.loadEvaluationAnalytics();
     } catch (error) {
       console.error('Error rendering table:', error);
       this.showError('Failed to load submissions: ' + error.message);

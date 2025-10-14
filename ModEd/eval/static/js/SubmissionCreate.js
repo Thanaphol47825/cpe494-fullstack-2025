@@ -35,20 +35,14 @@ class SubmissionCreate {
 
           <!-- Form Container -->
           <div id="submission-form-container"></div>
-
-          <!-- Submissions List -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Submissions</h2>
-            <div id="submission-table-container" class="bg-white rounded-lg shadow-md p-6"></div>
-          </div>
         </div>
       </div>
     `;
 
-    // Initialize AdvanceFormRender
+    // Initialize EvalFormRenderer (filters out system fields like 'model')
     // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.form = new AdvanceFormRender(this.application.templateEngine, {
+    this.form = new EvalFormRenderer(this.application.templateEngine, {
       modelPath: "eval/submission",
       targetSelector: "#submission-form-container",
       submitHandler: async (formData) => await this.handleSubmit(formData),
@@ -58,7 +52,6 @@ class SubmissionCreate {
 
     try {
       await this.form.render();
-      await this.loadSubmissions();
     } catch (error) {
       console.error('Error rendering form:', error);
       this.showError('Failed to load form: ' + error.message);
@@ -87,8 +80,17 @@ class SubmissionCreate {
       
       if (result && result.isSuccess) {
         this.showSuccess('Submission created successfully!');
-        this.form.reset();
-        await this.loadSubmissions();
+        // Reset the form by clearing input values
+        const form = document.getElementById('submission-form-container');
+        if (form) {
+          form.querySelectorAll('input, textarea, select').forEach(element => {
+            if (element.type === 'checkbox') {
+              element.checked = false;
+            } else {
+              element.value = '';
+            }
+          });
+        }
       } else {
         throw new Error(result?.message || 'Failed to create submission');
       }
@@ -99,69 +101,6 @@ class SubmissionCreate {
     }
   }
 
-  async loadSubmissions() {
-    const container = document.getElementById('submission-table-container');
-    if (!container) return;
-
-    try {
-      const response = await this.apiService.getAllSubmissions();
-      
-      if (response && response.isSuccess && Array.isArray(response.result)) {
-        const submissions = response.result;
-        
-        if (submissions.length === 0) {
-          container.innerHTML = '<p class="text-gray-500 text-center py-8">No submissions created yet</p>';
-          return;
-        }
-
-        const tableHTML = `
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted At</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                ${submissions.slice(0, 5).map(s => `
-                  <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${s.title || s.Title || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${s.type || s.Type || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${s.studentName || s.StudentName || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${s.submittedAt || s.SubmittedAt ? new Date(s.submittedAt || s.SubmittedAt).toLocaleDateString() : '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${s.isLate || s.IsLate ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                        ${s.isLate || s.IsLate ? 'Late' : 'On Time'}
-                      </span>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-        
-        container.innerHTML = tableHTML;
-      } else {
-        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading submissions</p>';
-      }
-    } catch (error) {
-      console.error('Error loading submissions:', error);
-      container.innerHTML = `<p class="text-red-500 text-center py-4">Error: ${error.message}</p>`;
-    }
-  }
 
   showSuccess(message) {
     const div = document.createElement('div');
@@ -176,7 +115,7 @@ class SubmissionCreate {
   }
 
   showError(message) {
-    const div = document.createElement('div');
+        const div = document.createElement('div');
     div.className = 'fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 bg-red-100 text-red-800 border border-red-200';
     div.textContent = message;
     document.body.appendChild(div);

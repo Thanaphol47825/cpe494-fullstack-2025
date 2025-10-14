@@ -41,10 +41,10 @@ class AssignmentManage {
       </div>
     `;
 
-    // Setup table with AdvanceTableRender
+    // Setup table with EvalTableRenderer (filters out system fields like 'model')
     // Note: AdvanceTableRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.table = new AdvanceTableRender(this.application.templateEngine, {
+    this.table = new EvalTableRenderer(this.application.templateEngine, {
       modelPath: "eval/assignment",
       data: [],
       targetSelector: "#assignment-table-container",

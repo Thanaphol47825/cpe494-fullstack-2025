@@ -35,20 +35,14 @@ class QuizCreate {
 
           <!-- Form Container -->
           <div id="quiz-form-container"></div>
-
-          <!-- Quizzes List -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Quizzes</h2>
-            <div id="quiz-table-container" class="bg-white rounded-lg shadow-md p-6"></div>
-          </div>
         </div>
       </div>
     `;
 
-    // Initialize AdvanceFormRender
+    // Initialize EvalFormRenderer (filters out system fields like 'model')
     // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.form = new AdvanceFormRender(this.application.templateEngine, {
+    this.form = new EvalFormRenderer(this.application.templateEngine, {
       modelPath: "eval/quiz",
       targetSelector: "#quiz-form-container",
       submitHandler: async (formData) => await this.handleSubmit(formData),
@@ -58,7 +52,6 @@ class QuizCreate {
 
     try {
       await this.form.render();
-      await this.loadQuizzes();
     } catch (error) {
       console.error('Error rendering form:', error);
       this.showError('Failed to load form: ' + error.message);
@@ -89,8 +82,17 @@ class QuizCreate {
       
       if (result && result.isSuccess) {
         this.showSuccess('Quiz created successfully!');
-        this.form.reset();
-        await this.loadQuizzes();
+        // Reset the form by clearing input values
+        const form = document.getElementById('quiz-form-container');
+        if (form) {
+          form.querySelectorAll('input, textarea, select').forEach(element => {
+            if (element.type === 'checkbox') {
+              element.checked = false;
+            } else {
+              element.value = '';
+            }
+          });
+        }
       } else {
         throw new Error(result?.message || 'Failed to create quiz');
       }
@@ -101,69 +103,6 @@ class QuizCreate {
     }
   }
 
-  async loadQuizzes() {
-    const container = document.getElementById('quiz-table-container');
-    if (!container) return;
-
-    try {
-      const response = await this.apiService.getAllQuizzes();
-      
-      if (response && response.isSuccess && Array.isArray(response.result)) {
-        const quizzes = response.result;
-        
-        if (quizzes.length === 0) {
-          container.innerHTML = '<p class="text-gray-500 text-center py-8">No quizzes created yet</p>';
-          return;
-        }
-
-        const tableHTML = `
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Limit</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Score</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                ${quizzes.slice(0, 5).map(q => `
-                  <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${q.title || q.Title || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${q.dueDate || q.DueDate ? new Date(q.dueDate || q.DueDate).toLocaleDateString() : '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${q.timeLimit || q.TimeLimit || '-'} min
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${q.maxScore || q.MaxScore || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${(q.isActive || q.IsActive) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                        ${(q.isActive || q.IsActive) ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-        
-        container.innerHTML = tableHTML;
-      } else {
-        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading quizzes</p>';
-      }
-    } catch (error) {
-      console.error('Error loading quizzes:', error);
-      container.innerHTML = `<p class="text-red-500 text-center py-4">Error: ${error.message}</p>`;
-    }
-  }
 
   showSuccess(message) {
     const div = document.createElement('div');

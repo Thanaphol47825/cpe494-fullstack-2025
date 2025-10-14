@@ -45,10 +45,10 @@ class QuizSubmissionCreate {
       </div>
     `;
 
-    // Initialize AdvanceFormRender
+    // Initialize EvalFormRenderer (filters out system fields like 'model')
     // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.form = new AdvanceFormRender(this.application.templateEngine, {
+    this.form = new EvalFormRenderer(this.application.templateEngine, {
       modelPath: "eval/quizsubmission",
       targetSelector: "#quiz-submission-form-container",
       submitHandler: async (formData) => await this.handleSubmit(formData),
@@ -88,8 +88,17 @@ class QuizSubmissionCreate {
       
       if (result && result.isSuccess) {
         this.showSuccess('Quiz submission created successfully!');
-        this.form.reset();
-        await this.loadQuizSubmissions();
+        // Reset the form by clearing input values
+        const form = document.getElementById('quiz-submission-form-container');
+        if (form) {
+          form.querySelectorAll('input, textarea, select').forEach(element => {
+            if (element.type === 'checkbox') {
+              element.checked = false;
+            } else {
+              element.value = '';
+            }
+          });
+        }
       } else {
         throw new Error(result?.message || 'Failed to create quiz submission');
       }

@@ -35,20 +35,14 @@ class AssignmentCreate {
 
           <!-- Form Container -->
           <div id="assignment-form-container"></div>
-
-          <!-- Assignments List -->
-          <div class="mt-12">
-            <h2 class="text-2xl font-bold text-gray-900 mb-4">Recent Assignments</h2>
-            <div id="assignment-table-container" class="bg-white rounded-lg shadow-md p-6"></div>
-          </div>
         </div>
       </div>
     `;
 
-    // Initialize AdvanceFormRender
+    // Initialize EvalFormRenderer (filters out system fields like 'model')
     // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.form = new AdvanceFormRender(this.application.templateEngine, {
+    this.form = new EvalFormRenderer(this.application.templateEngine, {
       modelPath: "eval/assignment",
       targetSelector: "#assignment-form-container",
       submitHandler: async (formData) => await this.handleSubmit(formData),
@@ -58,7 +52,6 @@ class AssignmentCreate {
 
     try {
       await this.form.render();
-      await this.loadAssignments();
     } catch (error) {
       console.error('Error rendering form:', error);
       this.showError('Failed to load form: ' + error.message);
@@ -88,8 +81,17 @@ class AssignmentCreate {
       
       if (result && result.isSuccess) {
         this.showSuccess('Assignment created successfully!');
-        this.form.reset();
-        await this.loadAssignments();
+        // Reset the form by clearing input values
+        const form = document.getElementById('assignment-form-container');
+        if (form) {
+          form.querySelectorAll('input, textarea, select').forEach(element => {
+            if (element.type === 'checkbox') {
+              element.checked = false;
+            } else {
+              element.value = '';
+            }
+          });
+        }
       } else {
         throw new Error(result?.message || 'Failed to create assignment');
       }
@@ -100,65 +102,6 @@ class AssignmentCreate {
     }
   }
 
-  async loadAssignments() {
-    const container = document.getElementById('assignment-table-container');
-    if (!container) return;
-
-    try {
-      const response = await this.apiService.getAllAssignments();
-      
-      if (response && response.isSuccess && Array.isArray(response.result)) {
-        const assignments = response.result;
-        
-        if (assignments.length === 0) {
-          container.innerHTML = '<p class="text-gray-500 text-center py-8">No assignments created yet</p>';
-          return;
-        }
-
-        const tableHTML = `
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Max Score</th>
-                  <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody class="bg-white divide-y divide-gray-200">
-                ${assignments.slice(0, 5).map(a => `
-                  <tr>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      ${a.title || a.Title || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${a.dueDate || a.DueDate ? new Date(a.dueDate || a.DueDate).toLocaleDateString() : '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${a.maxScore || a.MaxScore || '-'}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${(a.isActive || a.IsActive) ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
-                        ${(a.isActive || a.IsActive) ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          </div>
-        `;
-        
-        container.innerHTML = tableHTML;
-      } else {
-        container.innerHTML = '<p class="text-red-500 text-center py-4">Error loading assignments</p>';
-      }
-    } catch (error) {
-      console.error('Error loading assignments:', error);
-      container.innerHTML = `<p class="text-red-500 text-center py-4">Error: ${error.message}</p>`;
-    }
-  }
 
   showSuccess(message) {
     const div = document.createElement('div');

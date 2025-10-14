@@ -3,13 +3,11 @@ package model
 import (
 	"time"
 
-	"gorm.io/gorm"
+	"ModEd/core"
 )
 
 type QuizSubmission struct {
-	gorm.Model
-	QuizID      uint      `json:"quizId" gorm:"not null" form:"label:Quiz;type:select;fk:Quiz;required:true"`
-	StudentID   uint      `json:"studentId" gorm:"not null" form:"label:Student;type:select;fk:Student;required:true"`
+	core.BaseModel
 	StartedAt   time.Time `json:"startedAt" gorm:"type:timestamptz;not null" form:"label:Started At;type:datetime-local;required:true"`
 	SubmittedAt time.Time `json:"submittedAt" gorm:"type:timestamptz;not null" form:"label:Submitted At;type:datetime-local;required:true"`
 	Answers     string    `json:"answers" gorm:"type:text" form:"label:Answers;type:textarea;placeholder:Enter answers as JSON"`

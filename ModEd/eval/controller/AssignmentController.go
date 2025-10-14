@@ -18,7 +18,7 @@ func NewAssignmentController() *AssignmentController {
 
 func (controller *AssignmentController) GetModelMeta() []*core.ModelMeta {
 	return []*core.ModelMeta{
-		{Path: "eval/assignment", Model: &model.Assignment{}},
+		{Path: "eval/assignment", Model: model.Assignment{}},
 	}
 }
 

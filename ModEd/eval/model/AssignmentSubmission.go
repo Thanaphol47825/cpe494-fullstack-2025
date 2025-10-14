@@ -3,11 +3,11 @@ package model
 import (
 	"time"
 
-	"gorm.io/gorm"
+	"ModEd/core"
 )
 
 type AssignmentSubmission struct {
-	gorm.Model
+	core.BaseModel
 	AssignmentID   uint      `json:"assignmentId" gorm:"not null" form:"label:Assignment;type:select;fk:Assignment;required:true"`
 	StudentID      uint      `json:"studentId" gorm:"not null" form:"label:Student;type:select;fk:Student;required:true"`
 	SubmittedAt    time.Time `json:"submittedAt" gorm:"type:timestamptz;not null" form:"label:Submitted At;type:datetime-local;required:true"`

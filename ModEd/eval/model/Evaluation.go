@@ -3,11 +3,11 @@ package model
 import (
 	"time"
 
-	"gorm.io/gorm"
+	"ModEd/core"
 )
 
 type Evaluation struct {
-	gorm.Model
+	core.BaseModel
 	SubmissionID   uint      `json:"submissionId" gorm:"not null" form:"label:Submission;type:select;fk:Submission;required:true"`
 	SubmissionType string    `json:"submissionType" gorm:"type:varchar(50);not null" form:"label:Submission Type;type:text;placeholder:assignment/quiz;required:true"`
 	InstructorID   uint      `json:"instructorId" gorm:"not null" form:"label:Instructor;type:select;fk:Instructor;required:true"`

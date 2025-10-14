@@ -3,14 +3,13 @@ package model
 import (
 	"time"
 
-	"gorm.io/gorm"
+	"ModEd/core"
 )
 
 type Submission struct {
-	gorm.Model
+	core.BaseModel
 	Type         string    `json:"type" gorm:"type:varchar(50);not null" form:"label:Submission Type;type:text;placeholder:assignment/quiz/project;required:true"`
 	Title        string    `json:"title" gorm:"type:varchar(255);not null" form:"label:Submission Title;type:text;placeholder:Enter submission title;required:true"`
-	StudentID    uint      `json:"studentId" gorm:"not null" form:"label:Student;type:select;fk:Student;required:true"`
 	StudentName  string    `json:"studentName" gorm:"type:varchar(255);not null" form:"label:Student Name;type:text;placeholder:Enter student name;required:true"`
 	SubmittedAt  time.Time `json:"submittedAt" gorm:"type:timestamptz;not null" form:"label:Submitted At;type:datetime-local;required:true"`
 	Status       string    `json:"status" gorm:"type:varchar(50);default:'submitted'" form:"label:Status;type:text;placeholder:submitted/graded"`

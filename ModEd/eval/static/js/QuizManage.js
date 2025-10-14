@@ -33,15 +33,6 @@ class QuizManage {
             </a>
           </div>
 
-          <!-- Analytics Section -->
-          <div class="mb-8">
-            <div class="bg-white rounded-lg shadow-md p-6">
-              <h2 class="text-xl font-semibold text-gray-800 mb-4">Quiz Analytics</h2>
-              <div id="quiz-analytics-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Analytics will be loaded here -->
-              </div>
-            </div>
-          </div>
 
           <!-- Table Container -->
           <div class="bg-white rounded-lg shadow-md p-6">
@@ -51,10 +42,10 @@ class QuizManage {
       </div>
     `;
 
-    // Setup table with AdvanceTableRender
+    // Setup table with EvalTableRenderer (filters out system fields like 'model')
     // Note: AdvanceTableRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
-    this.table = new AdvanceTableRender(this.application.templateEngine, {
+    this.table = new EvalTableRenderer(this.application.templateEngine, {
       modelPath: "eval/quiz",
       data: [],
       targetSelector: "#quiz-table-container",
@@ -83,7 +74,6 @@ class QuizManage {
       await this.table.loadSchema();
       await this.table.render();
       await this.loadQuizzes();
-      await this.loadAnalytics();
     } catch (error) {
       console.error('Error rendering table:', error);
       this.showError('Failed to load quizzes: ' + error.message);
@@ -164,7 +154,6 @@ class QuizManage {
       if (result && result.isSuccess) {
         this.showSuccess('Quiz deleted successfully!');
         await this.loadQuizzes();
-        await this.loadAnalytics();
       } else {
         throw new Error(result?.message || 'Failed to delete quiz');
       }

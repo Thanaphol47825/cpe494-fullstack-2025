@@ -3,11 +3,11 @@ package model
 import (
 	"time"
 
-	"gorm.io/gorm"
+	"ModEd/core"
 )
 
 type AssignmentProgress struct {
-	gorm.Model
+	core.BaseModel
 	AssignmentID      uint      `json:"assignmentId" gorm:"not null" form:"label:Assignment;type:select;fk:Assignment;required:true"`
 	TotalStudents     uint      `json:"totalStudents" gorm:"not null" form:"label:Total Students;type:number;placeholder:Enter total students;required:true"`
 	SubmittedCount    uint      `json:"submittedCount" gorm:"default:0" form:"label:Submitted Count;type:number;placeholder:0"`

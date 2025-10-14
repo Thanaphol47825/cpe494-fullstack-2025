@@ -3,10 +3,10 @@ app:
   port: 8080
 
 database:
-    dsn: 'host=localhost user=user password=H@55P@ssw0rd dbname=moded port=5432'
+    dsn: 'host=postgres  user=user password=H@55P@ssw0rd dbname=moded port=5432'
 
 redis:
-  addr: localhost:6379
+  addr: redis:6379
   password: ""
   db: 0
 

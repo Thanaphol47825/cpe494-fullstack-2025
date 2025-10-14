@@ -4,8 +4,9 @@ import (
 	"ModEd/core"
 	"ModEd/recruit/model"
 	"net/http"
-	"path/filepath"
 	"os"
+	"path/filepath"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
 )

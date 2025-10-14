@@ -18,8 +18,10 @@ if (!window.CommonStudentListFeature) {
           <div class="max-w-6xl mx-auto">
             <div class="flex justify-between items-center mb-6">
               <h2 class="text-3xl font-bold text-gray-800">Student List</h2>
-              <a href="#common" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">← Back</a>
-              <a href="#common/student/create" class="button">+ Add Student</a>
+              <div class="flex items-center gap-3">
+                <a href="#common" class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition">← Back</a>
+                <a href="#common/student/create" class="button">+ Add Student</a>
+              </div>
             </div>
             <div id="studentTable" class="bg-white rounded-xl shadow p-4 overflow-x-auto">
               <p class="text-gray-500">Loading students...</p>
@@ -47,15 +49,15 @@ if (!window.CommonStudentListFeature) {
                             label: "Actions",
                             template: `
                 <div class="flex space-x-2">
-                  <button onclick="commonStudentList.editStudent('{id}')"
+                  <button onclick="commonStudentList.editStudent('{ID}')"
                           class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                     Edit
                   </button>
-                  <button onclick="commonStudentList.viewStudent('{id}')"
+                  <button onclick="commonStudentList.viewStudent('{ID}')"
                           class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                     View
                   </button>
-                  <button onclick="commonStudentList.deleteStudent('{id}', '{firstName} {lastName}')"
+                  <button onclick="commonStudentList.deleteStudent('{ID}', '{first_name} {last_name}')"
                           class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
                     Delete
                   </button>
@@ -78,18 +80,18 @@ if (!window.CommonStudentListFeature) {
         }
     
       editStudent(id) {
-        location.hash = `#common/student/create?id=${encodeURIComponent(id)}`;
+        location.hash = `#common/student/create?id=${id}`;
       }
 
       async viewStudent(id) {
         try {
-          const res = await fetch(`${this.rootURL}/common/students/${encodeURIComponent(id)}`);
+          const res = await fetch(`${this.rootURL}/common/students/${id}`);
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const { result } = await res.json();
           alert(
             `👁 Student Details\n` +
-            `Name: ${result?.firstName ?? "-"} ${result?.lastName ?? ""}\n` +
-            `Student No: ${result?.studentId ?? "-"}\n` +
+            `Name: ${result?.first_name ?? "-"} ${result?.last_name ?? ""}\n` +
+            `Student No: ${result?.student_code ?? "-"}\n` +
             `Email: ${result?.email ?? "-"}`
           );
         } catch (e) {
@@ -103,13 +105,13 @@ if (!window.CommonStudentListFeature) {
           return;
         }
         try {
-          let res = await fetch(`${this.rootURL}/common/students/${encodeURIComponent(id)}`, {
+          let res = await fetch(`${this.rootURL}/common/students/${id}`, {
             method: "DELETE",
             headers: { "Content-Type": "application/json" }
           });
           if (res.status === 405 || res.status === 404) {
-            res = await fetch(`${this.rootURL}/common/students/${encodeURIComponent(id)}/delete`, {
-              method: "POST",
+            res = await fetch(`${this.rootURL}/common/students/delete/${id}`, {
+              method: "GET",
               headers: { "Accept": "application/json", "Content-Type": "application/json" }
             });
           }

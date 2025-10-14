@@ -55,7 +55,7 @@ class TemplateEngine {
         // Same module, but check for sub-route changes
         await this.handleSubRoute(targetModule, currentPath)
       }
-    } else if (currentPath == null || currentPath == '') {
+    } else if (currentPath == null || currentPath == '' || currentPath === '/') {
       // If its the main page or no valid route, show module selection menu
       this.currentModule = null // Reset current module
       this.renderModuleMenu()
@@ -214,6 +214,12 @@ class TemplateEngine {
     }
 
     return ''
+  }
+
+  async checkUserPermission(requiredPermission) {
+    // @SK-Tonhom This function will use for checking user permission before entering route.
+    console.log('Checking permission for:', requiredPermission)
+    return false;
   }
 
   // Create a route helper for modules

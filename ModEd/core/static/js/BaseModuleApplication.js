@@ -46,7 +46,7 @@ class BaseModuleApplication {
     }
 
     // Register a sub-route with optional sub-module loading
-    addRouteWithSubModule(path, handler, subModuleFile = null) {
+    addRouteWithSubModule(path, handler, subModuleFile = null, role_required = null) {
         // Create a wrapper handler that loads the sub-module first
         const wrapperHandler = async (params) => {
             if (subModuleFile) {
@@ -58,8 +58,7 @@ class BaseModuleApplication {
             }
             await handler(params)
         }
-        
-        this.addRoute(path, wrapperHandler)
+        this.addRoute(path, wrapperHandler, role_required)
     }
 
     // Check if a sub-module is loaded
@@ -74,8 +73,28 @@ class BaseModuleApplication {
     }
 
     // Register a sub-route
-    addRoute(path, handler) {
-        this.routes.set(path, handler)
+    addRoute(path, handler, role_required = null) {
+        const wrapperHandler = async (params) => {
+            if (role_required) {
+                const hasPermission = await this.templateEngine.checkUserPermission(role_required)
+                console.log('Permission check for', role_required, ':', hasPermission)
+                if (!hasPermission) {
+                    console.error(`Access denied. Missing required role: ${role_required}`)
+                    // @SK-Tonhom You can add a redirect to an error page or show a message here.
+                    if (this.routes.has(this.defaultRoute)) {
+                        const moduleBasePath = this.getModuleBasePath()
+                        // Reset to default route
+                        location.hash = `#${moduleBasePath}/${this.defaultRoute}`
+                        const handler = this.routes.get(this.defaultRoute)
+                        await handler()
+                        return true
+                    }
+                    return
+                }
+            }
+            await handler(params)
+        }
+        this.routes.set(path, wrapperHandler)
     }
 
     // Set the default route (when no sub-path is provided)

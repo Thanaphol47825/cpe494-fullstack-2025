@@ -648,7 +648,7 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                             </h4>
                         </div>
                         <div class="text-sm text-gray-700">
-                            <p class="line-clamp-2">${project.detail || 'No description provided'}</p>
+                            <p class="line-clamp-2">${project.project_detail || 'No description provided'}</p>
                         </div>
                     </div>
                     <div class="ml-4">

@@ -4,6 +4,9 @@ if (typeof window !== 'undefined' && !window.HrErrorHandler) {
     constructor() {
       this.errors = []
       this.maxErrors = 100
+      if (!HrErrorHandler._instance) {
+        HrErrorHandler._instance = this
+      }
     }
 
     logError(error, context = {}) {
@@ -24,6 +27,21 @@ if (typeof window !== 'undefined' && !window.HrErrorHandler) {
       
       console.error(' HR Error:', errorEntry)
       return errorEntry
+    }
+
+    handleError(error, context = {}) {
+      return this.logError(error, context)
+    }
+
+    static getInstance() {
+      if (!HrErrorHandler._instance) {
+        HrErrorHandler._instance = new HrErrorHandler()
+      }
+      return HrErrorHandler._instance
+    }
+
+    static handleError(error, context = {}) {
+      return HrErrorHandler.getInstance().handleError(error, context)
     }
 
     getErrors() {

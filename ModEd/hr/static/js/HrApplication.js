@@ -94,16 +94,60 @@ class HrApplication extends BaseModuleApplication {
       await new Promise(resolve => setTimeout(resolve, 50));
       retries++;
     }
-    
-    if (!window.HrTemplates) {
-      throw new Error('HrTemplates failed to load');
+
+    if (!window.HrTemplates || !this.#hasRequiredTemplates(window.HrTemplates)) {
+      await this.loadScript('/hr/static/js/core/HrTemplates.js?v=' + Date.now());
     }
+
+    if (!window.HrTemplates || !this.#hasRequiredTemplates(window.HrTemplates)) {
+      throw new Error('HrTemplates failed to load required templates');
+    }
+  }
+
+  async ensureUiComponentsLoaded() {
+    let retries = 0
+    while (!window.HrUiComponents && retries < 40) {
+      await new Promise(resolve => setTimeout(resolve, 50))
+      retries++
+    }
+
+    if (window.HrUiComponents && this.#hasRequiredUiComponents(window.HrUiComponents)) {
+      return
+    }
+
+    await this.loadScript('/hr/static/js/core/HrUiComponents.js?v=' + Date.now())
+
+    if (!window.HrUiComponents || !this.#hasRequiredUiComponents(window.HrUiComponents)) {
+      throw new Error('HrUiComponents failed to load')
+    }
+  }
+
+  #hasRequiredTemplates(templates) {
+    if (!templates) {
+      return false
+    }
+
+    if (typeof templates.has === 'function') {
+      return templates.has('leaveListPage') && templates.has('loadingStatePage')
+    }
+
+    return typeof templates.render === 'function'
+  }
+
+  #hasRequiredUiComponents(components) {
+    if (!components) {
+      return false
+    }
+
+    return typeof components.renderStudentLeaveListPage === 'function' &&
+      typeof components.showLoadingState === 'function'
   }
 
   async loadFeatureModules() {
     try {
       // Ensure templates are loaded first
       await this.ensureTemplatesLoaded();
+      await this.ensureUiComponentsLoaded();
       
       // Check if already loading to prevent duplicate loading
       if (this._loadingFeatures) {

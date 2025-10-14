@@ -403,7 +403,17 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
         throw new Error(`Failed to load student leave requests: ${response.status}`);
       }
 
-      return await response.json();
+      const payload = await response.json().catch(() => ([]));
+      if (Array.isArray(payload)) {
+        return payload;
+      }
+      if (payload && Array.isArray(payload.result)) {
+        return payload.result;
+      }
+      if (payload && Array.isArray(payload.data)) {
+        return payload.data;
+      }
+      return [];
     }
 
     async fetchStudentLeaveRequest(requestId) {

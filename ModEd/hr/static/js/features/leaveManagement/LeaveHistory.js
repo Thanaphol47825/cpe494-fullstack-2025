@@ -40,15 +40,31 @@ if (typeof window !== 'undefined' && !window.HrLeaveHistoryFeature) {
           this.apiService.fetchStudentLeaveRequests(),
           this.apiService.fetchInstructorLeaveRequests()
         ]);
-        
-        this.studentRequests = studentResponse || [];
-        this.instructorRequests = instructorResponse || [];
+
+        this.studentRequests = this.#normalizeRequests(studentResponse);
+        this.instructorRequests = this.#normalizeRequests(instructorResponse);
       } catch (error) {
         console.error('Error loading requests:', error);
         // Continue with empty arrays if one fails
-        this.studentRequests = this.studentRequests || [];
-        this.instructorRequests = this.instructorRequests || [];
+        this.studentRequests = Array.isArray(this.studentRequests) ? this.studentRequests : [];
+        this.instructorRequests = Array.isArray(this.instructorRequests) ? this.instructorRequests : [];
       }
+    }
+
+    #normalizeRequests(response) {
+      if (Array.isArray(response)) {
+        return response;
+      }
+
+      if (response && Array.isArray(response.result)) {
+        return response.result;
+      }
+
+      if (response && Array.isArray(response.data)) {
+        return response.data;
+      }
+
+      return [];
     }
 
     #generateHistoryHTML() {
@@ -354,4 +370,3 @@ if (typeof window !== 'undefined' && !window.HrLeaveHistoryFeature) {
 
   window.HrLeaveHistoryFeature = HrLeaveHistoryFeature;
 }
-

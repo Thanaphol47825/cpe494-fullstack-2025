@@ -20,5 +20,9 @@ func (s *EvalMigrationStrategy) GetModels() []interface{} {
 
 // คืนค่า seed data path ของ module eval
 func (s *EvalMigrationStrategy) GetSeedPath() []SeedPath {
-	return []SeedPath{}
+	return []SeedPath{
+		{Path: "data/eval/assignment.json", Model: &[]model.Assignment{}},
+		{Path: "data/eval/quiz.json", Model: &[]model.Quiz{}},
+		{Path: "data/eval/submission.json", Model: &[]model.Submission{}},
+	}
 }

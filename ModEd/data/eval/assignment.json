@@ -1,0 +1,30 @@
+[
+  {
+    "title": "Week 1 Lab: Introduction to Programming",
+    "description": "Complete the basic programming exercises covering variables, data types, and control structures. Submit your code files along with a brief report explaining your solutions.",
+    "startDate": "2025-01-15T00:00:00Z",
+    "dueDate": "2025-01-22T23:59:59Z",
+    "maxScore": 100,
+    "isReleased": true,
+    "isActive": true
+  },
+  {
+    "title": "Project Proposal: Software Design",
+    "description": "Submit a detailed project proposal for your semester project. Include problem statement, objectives, proposed methodology, and expected outcomes. Maximum 5 pages.",
+    "startDate": "2025-02-01T00:00:00Z",
+    "dueDate": "2025-02-15T23:59:59Z",
+    "maxScore": 50,
+    "isReleased": true,
+    "isActive": true
+  },
+  {
+    "title": "Final Report: Database Design Project",
+    "description": "Complete and submit your final database design project report. Include ER diagrams, schema design, SQL implementation, and testing results. Present findings in a professional format.",
+    "startDate": "2025-03-01T00:00:00Z",
+    "dueDate": "2025-03-20T23:59:59Z",
+    "maxScore": 150,
+    "isReleased": false,
+    "isActive": true
+  }
+]
+

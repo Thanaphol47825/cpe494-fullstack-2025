@@ -1,0 +1,7 @@
+instructor_id,application_report_id,scheduled_appointment,criteria_scores,total_score,evaluated_at,interview_status
+1,1,2025-01-20T14:00:00Z,"{""communication"": 8.5, ""technical"": 9.0, ""motivation"": 8.0}",8.5,2025-01-20T15:30:00Z,Evaluated
+1,2,2025-01-21T10:00:00Z,"{""communication"": 7.5, ""technical"": 8.5, ""motivation"": 8.5}",8.2,2025-01-21T11:30:00Z,Accepted
+1,3,2025-01-22T15:00:00Z,"{""communication"": 9.0, ""technical"": 8.0, ""motivation"": 9.0}",8.7,2025-01-22T16:15:00Z,Evaluated
+1,4,2025-01-23T09:00:00Z,"{}",0.0,,Scheduled
+1,5,2025-01-24T13:00:00Z,"{""communication"": 6.5, ""technical"": 7.0, ""motivation"": 6.0}",6.5,2025-01-24T14:00:00Z,Rejected
+

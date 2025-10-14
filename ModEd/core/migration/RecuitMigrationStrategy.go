@@ -21,5 +21,8 @@ func (s *RecuitMigrationStrategy) GetSeedPath() []SeedPath {
 		{Path: "data/recruit/Admin.csv", Model: &[]model.Admin{}},
 		{Path: "data/recruit/Applicant.csv", Model: &[]model.Applicant{}},
 		{Path: "data/recruit/ApplicationRound.csv", Model: &[]model.ApplicationRound{}},
+		{Path: "data/recruit/InterviewCriteria.csv", Model: &[]model.InterviewCriteria{}},
+		{Path: "data/recruit/ApplicationReport.csv", Model: &[]model.ApplicationReport{}},
+		{Path: "data/recruit/Interview.csv", Model: &[]model.Interview{}},
 	}
 }

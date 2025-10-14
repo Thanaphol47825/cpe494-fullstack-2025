@@ -68,7 +68,7 @@ class InterviewCriteriaCreate {
     }
 
     this.form = new window.AdvanceFormRender(this.engine, {
-      modelPath: 'recruit/InterviewCriteria',
+      modelPath: 'recruit/interviewcriteria',
       targetSelector: '#createCriteriaForm',
       submitHandler: (fd) => this.handleSubmit(fd),
       autoFocus: true,

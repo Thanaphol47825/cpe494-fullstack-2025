@@ -1,11 +1,14 @@
-class RecruitApplication extends BaseModuleApplication {
-  constructor(templateEngine) {
-    super(templateEngine);
-    this.rootURL = window.__ROOT_URL__ || RootURL || "";
+if (typeof window !== "undefined" && !window.RecruitApplication) {
+  class RecruitApplication extends BaseModuleApplication {
+    constructor(templateEngine) {
+      super(templateEngine);
+      this.rootURL = window.__ROOT_URL__ || RootURL || "";
 
-    this.setSubModuleBasePath("/recruit/static/js");
-    this.loadRecruitFormTemplate();
-    this.loadRecruitTableTemplate();
+      this.setSubModuleBasePath("/recruit/static/js");
+    // Don't load templates in constructor - load them when needed
+    // this.loadRecruitFormTemplate();
+    // this.loadRecruitTableTemplate();
+    // this.loadRecruitHomeTemplate();
     
     this.features = {
       "admin/create": { title: "Create Admin", icon: "👤", script: "AdminCreate.js" },
@@ -32,6 +35,12 @@ class RecruitApplication extends BaseModuleApplication {
   async loadRecruitTableTemplate() {
     if (!window.RecruitTableTemplate) {
       await this.loadSubModule("template/RecruitTableTemplate.js");
+    }
+  }
+
+  async loadRecruitHomeTemplate() {
+    if (!window.RecruitHomeTemplate) {
+      await this.loadSubModule("template/RecruitHomeTemplate.js");
     }
   }
 
@@ -74,6 +83,11 @@ class RecruitApplication extends BaseModuleApplication {
       "InterviewList.js"
     );
     this.addRouteWithSubModule(
+      "/interview/edit/:id",
+      this.renderInterviewEdit.bind(this),
+      "InterviewEdit.js"
+    );
+    this.addRouteWithSubModule(
       "/interviewcriteria/list",
       this.renderInterviewCriteriaList.bind(this),
       "InterviewCriteriaList.js"
@@ -93,92 +107,118 @@ class RecruitApplication extends BaseModuleApplication {
     return await this.handleRoute(this.templateEngine.getCurrentPath());
   }
 
-  renderMenu() {
+  async renderMenu() {
+    if (!this.templateEngine?.mainContainer) {
+      console.error("RecruitApplication: templateEngine or mainContainer not found");
+      return false;
+    }
+
     const container = this.templateEngine.mainContainer;
     container.innerHTML = "";
 
-    const html = `
-      <section class="menu-container">
-        <div class="form-container">
-          <h1 class="menu-title">Recruit Module</h1>
-          <p>Manage recruitment process — applicants, rounds, and interviews.</p>
+    if (
+      !document.querySelector('script[src*="tailwindcss"]') &&
+      !document.querySelector('link[href*="tailwind"]')
+    ) {
+      const script = document.createElement("script");
+      script.src = "https://cdn.tailwindcss.com";
+      document.head.appendChild(script);
+    }
 
-          <div class="module-list">
-            ${Object.entries(this.features)
-              .map(
-                ([path, feature]) => `
-                  <a href="#recruit/${path}" class="module-button" routerLink="recruit/${path}">
-                    ${feature.icon} ${feature.title}
-                  </a>
-                `
-              )
-              .join("")}
-          </div>
-        </div>
-      </section>
-    `;
+    if (!window.RecruitHomeTemplate) {
+      console.log("Loading RecruitHomeTemplate...");
+      await this.loadRecruitHomeTemplate();
+    }
 
-    const element = this.templateEngine.create(html);
-    container.appendChild(element);
+    if (!this.templateEngine.template) {
+      await this.templateEngine.fetchTemplate();
+    }
+
+    console.log("Rendering recruit main page with features:", this.features);
+    const homeElement = await RecruitHomeTemplate.getTemplate(
+      this.features,
+      this.templateEngine
+    );
+    this.templateEngine.mainContainer.appendChild(homeElement);
+    
+    return true;
   }
 
   async renderAdminCreate() {
+    await this.loadRecruitFormTemplate();
     if (!window.AdminCreate) return this.renderError("Failed to load AdminCreate");
     const feature = new window.AdminCreate(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderApplicantCreate() {
+    await this.loadRecruitFormTemplate();
     if (!window.ApplicantCreate) return this.renderError("Failed to load ApplicantCreate");
     const feature = new window.ApplicantCreate(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderApplicantList() {
+    await this.loadRecruitTableTemplate();
     if (!window.ApplicantList) return this.renderError("Failed to load ApplicantList");
     const feature = new window.ApplicantList(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderApplicationReportList() {
+    await this.loadRecruitTableTemplate();
     if (!window.ApplicationReportList) return this.renderError("Failed to load ApplicationReportList");
     const feature = new window.ApplicationReportList(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderApplicationRoundList() {
+    await this.loadRecruitTableTemplate();
     if (!window.ApplicationRoundList) return this.renderError("Failed to load ApplicationRoundList");
     const feature = new window.ApplicationRoundList(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderInterviewCriteriaCreate() {
+    await this.loadRecruitFormTemplate();
     if (!window.InterviewCriteriaCreate) return this.renderError("Failed to load InterviewCriteriaCreate");
     const feature = new window.InterviewCriteriaCreate(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderInterviewCreate() {
+    await this.loadRecruitFormTemplate();
     if (!window.InterviewCreate) return this.renderError("Failed to load InterviewCreate");
     const feature = new window.InterviewCreate(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderInterviewList() {
+    await this.loadRecruitTableTemplate();
     if (!window.InterviewList) return this.renderError("Failed to load InterviewList");
     const feature = new window.InterviewList(this.templateEngine, this.rootURL);
+    window.interviewList = feature; // Store for button callbacks
+    return await feature.render();
+  }
+
+  async renderInterviewEdit(params) {
+    await this.loadRecruitFormTemplate();
+    
+    if (!window.InterviewCreate) {
+      await this.loadSubModule("InterviewCreate.js");
+    }
+    
+    if (!window.InterviewEdit) return this.renderError("Failed to load InterviewEdit");
+    const interviewId = params?.id;
+    if (!interviewId) return this.renderError("Interview ID is required");
+    const feature = new window.InterviewEdit(this.templateEngine, this.rootURL, interviewId);
     return await feature.render();
   }
 
   async renderInterviewCriteriaList() {
+    await this.loadRecruitTableTemplate();
     if (!window.InterviewCriteriaList) return this.renderError("Failed to load InterviewCriteriaList");
     const feature = new window.InterviewCriteriaList(this.templateEngine, this.rootURL);
-    return await feature.render();
-  }
-
-  async renderInterviewCriteriaCreate() {
-    if (!window.InterviewCriteriaCreate) return this.renderError("Failed to load InterviewCriteriaCreate");
-    const feature = new window.InterviewCriteriaCreate(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
@@ -194,4 +234,5 @@ class RecruitApplication extends BaseModuleApplication {
   }
 }
 
-if (typeof window !== "undefined") window.RecruitApplication = RecruitApplication;
+  window.RecruitApplication = RecruitApplication;
+}

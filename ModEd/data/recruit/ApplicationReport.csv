@@ -1,0 +1,7 @@
+applicant_id,application_rounds_id,faculty_id,department_id,program,application_statuses
+1,1,1,1,Regular,Pending
+2,1,1,1,Regular,Interview
+3,1,1,2,International,Evaluated
+4,1,2,3,Regular,Accepted
+5,1,2,3,International,Rejected
+

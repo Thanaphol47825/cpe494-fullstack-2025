@@ -26,8 +26,9 @@ func NewInterviewController() *InterviewController {
 }
 
 func (controller *InterviewController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "recruit/interview", Model: &model.Interview{}},
+	}
 }
 
 func (controller *InterviewController) SetApplication(application *core.ModEdApplication) {
@@ -90,33 +91,33 @@ func (controller *InterviewController) GetRoute() []*core.RouteItem {
 
 	// My Interview (authenticated) CRUD
 	routeList = append(routeList, &core.RouteItem{
-		Route:      "/recruit/my/interviews",
-		Handler:    controller.GetMyInterviews,
-		Method:     core.GET,
+		Route:          "/recruit/my/interviews",
+		Handler:        controller.GetMyInterviews,
+		Method:         core.GET,
 		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:      "/recruit/my/interview",
-		Handler:    controller.CreateMyInterview,
-		Method:     core.POST,
+		Route:          "/recruit/my/interview",
+		Handler:        controller.CreateMyInterview,
+		Method:         core.POST,
 		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:      "/recruit/my/interview/:id",
-		Handler:    controller.GetMyInterviewByID,
-		Method:     core.GET,
+		Route:          "/recruit/my/interview/:id",
+		Handler:        controller.GetMyInterviewByID,
+		Method:         core.GET,
 		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:      "/recruit/my/interview/:id",
-		Handler:    controller.UpdateMyInterview,
-		Method:     core.POST,
+		Route:          "/recruit/my/interview/:id",
+		Handler:        controller.UpdateMyInterview,
+		Method:         core.POST,
 		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:      "/recruit/my/interview/delete/:id",
-		Handler:    controller.DeleteMyInterview,
-		Method:     core.POST,
+		Route:          "/recruit/my/interview/delete/:id",
+		Handler:        controller.DeleteMyInterview,
+		Method:         core.POST,
 		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
 
@@ -160,6 +161,7 @@ func (controller *InterviewController) GetAllInterviews(context *fiber.Ctx) erro
 	if err := controller.application.DB.
 		Preload("Instructor").
 		Preload("ApplicationReport").
+		Preload("ApplicationReport.Applicant").
 		Find(&interviews).Error; err != nil {
 		return core.SendResponse(context, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
@@ -178,6 +180,7 @@ func (controller *InterviewController) GetInterviewByID(context *fiber.Ctx) erro
 	if err := controller.application.DB.
 		Preload("Instructor").
 		Preload("ApplicationReport").
+		Preload("ApplicationReport.Applicant").
 		First(&interview, id).Error; err != nil {
 		return core.SendResponse(context, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusNotFound, Message: ErrInterviewNotFound,
@@ -256,7 +259,6 @@ func (controller *InterviewController) DeleteInterview(context *fiber.Ctx) error
 	})
 }
 
-// Helper: get current instructor ID from session token cookie
 func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx) (uint, bool) {
 	token := context.Cookies("token", "")
 	if token == "" || controller.application == nil || controller.application.SessionManager == nil {
@@ -266,7 +268,6 @@ func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx
 	if !ok || userID == "" {
 		return 0, false
 	}
-	// assume userID is numeric and maps to InstructorID
 	uid, err := strconv.ParseUint(userID, 10, 64)
 	if err != nil {
 		return 0, false
@@ -274,7 +275,6 @@ func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx
 	return uint(uid), true
 }
 
-// GET /recruit/my/interviews
 func (controller *InterviewController) GetMyInterviews(context *fiber.Ctx) error {
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
@@ -301,7 +301,6 @@ func (controller *InterviewController) GetMyInterviews(context *fiber.Ctx) error
 	})
 }
 
-// POST /recruit/my/interview
 func (controller *InterviewController) CreateMyInterview(context *fiber.Ctx) error {
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
@@ -318,7 +317,6 @@ func (controller *InterviewController) CreateMyInterview(context *fiber.Ctx) err
 			"result":    "cannot parse JSON",
 		})
 	}
-	// enforce ownership
 	interview.InstructorID = instructorID
 
 	if err := controller.application.DB.Create(interview).Error; err != nil {
@@ -333,7 +331,6 @@ func (controller *InterviewController) CreateMyInterview(context *fiber.Ctx) err
 	})
 }
 
-// GET /recruit/my/interview/:id
 func (controller *InterviewController) GetMyInterviewByID(context *fiber.Ctx) error {
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
@@ -360,7 +357,6 @@ func (controller *InterviewController) GetMyInterviewByID(context *fiber.Ctx) er
 	})
 }
 
-// POST /recruit/my/interview/:id
 func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) error {
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
@@ -418,7 +414,6 @@ func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) err
 	})
 }
 
-// POST /recruit/my/interview/delete/:id
 func (controller *InterviewController) DeleteMyInterview(context *fiber.Ctx) error {
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
@@ -429,7 +424,6 @@ func (controller *InterviewController) DeleteMyInterview(context *fiber.Ctx) err
 	}
 	id := context.Params("id")
 
-	// ensure ownership
 	var interview model.Interview
 	if err := controller.application.DB.Where(ErrWhereIDAndInstructor, id, instructorID).First(&interview).Error; err != nil {
 		return context.JSON(fiber.Map{
@@ -450,7 +444,6 @@ func (controller *InterviewController) DeleteMyInterview(context *fiber.Ctx) err
 	})
 }
 
-// POST /recruit/SetupTestData - Create required test data for interviews
 func (controller *InterviewController) SetupTestData(context *fiber.Ctx) error {
 	rawSQL := `
 		-- Create faculties

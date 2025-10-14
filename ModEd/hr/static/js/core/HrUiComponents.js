@@ -18,7 +18,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
 
             <!-- Main Menu Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              
+
               <!-- Instructors Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -48,7 +48,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Students Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -79,7 +79,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Resignation - Students -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -127,7 +127,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Leave Management Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -138,7 +138,6 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                       </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900">Leave Management</h3>
-                    <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">ACTIVE</span>
                   </div>
                   <p class="text-gray-600 mb-6">Manage leave requests and vacation tracking</p>
                   <div class="flex flex-col space-y-2">
@@ -157,7 +156,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Departments Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -188,7 +187,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                 </div>
               </div>
             </div>
-            
+
             <!-- Back to Main Menu -->
             <div class="text-center">
               <a routerLink="" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">
@@ -555,19 +554,19 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       const resultIcon = document.getElementById('formResultIcon');
       const resultTitle = document.getElementById('formResultTitle');
       const resultContent = document.getElementById('formResultContent');
-      
+
       if (!resultBox) return;
 
       resultBox.classList.remove('hidden');
       resultHeader.className = 'px-6 py-4 bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200';
-      
+
       resultIcon.innerHTML = `
         <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           ${HrTemplates.iconPaths.success}
         </svg>
       `;
       resultTitle.textContent = 'Success!';
-      
+
       // Use template for success message
       resultContent.innerHTML = HrTemplates.render('successMessage', {
         message,
@@ -585,19 +584,19 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       const resultIcon = document.getElementById('formResultIcon');
       const resultTitle = document.getElementById('formResultTitle');
       const resultContent = document.getElementById('formResultContent');
-      
+
       if (!resultBox) return;
 
       resultBox.classList.remove('hidden');
       resultHeader.className = 'px-6 py-4 bg-gradient-to-r from-red-50 to-pink-50 border-b border-gray-200';
-      
+
       resultIcon.innerHTML = `
         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           ${HrTemplates.iconPaths.error}
         </svg>
       `;
       resultTitle.textContent = 'Error';
-      
+
       // Use template for error message
       const errorMessage = error?.message || error || message;
       resultContent.innerHTML = HrTemplates.render('errorMessage', {
@@ -631,7 +630,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
     // ========================================
     // Shared Tailwind CSS Classes as constants
     // ========================================
-    
+
     static get buttonClasses() {
       return {
         primary: 'inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1',
@@ -658,6 +657,6 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       };
     }
   }
-  
+
   window.HrUiComponents = HrUiComponents;
 }

@@ -1,166 +1,247 @@
-class ApplicationReportList {
-  constructor(templateEngine, rootURL) {
-    this.templateEngine = templateEngine;
-    this.rootURL = rootURL || window.__ROOT_URL__ || "";
-    this.ENDPOINT_LIST = this.rootURL + "/recruit/GetApplicationReports";
-    this.ENDPOINT_DELETE = this.rootURL + "/recruit/DeleteApplicationReport";
-  }
+if (typeof window !== 'undefined' && !window.ApplicationReportList) {
+  class ApplicationReportList {
+    constructor(app, rootURL) {
+      this.app = app || {};
+      this.engine = this.app.templateEngine ? this.app.templateEngine : this.app;
+      this.container = this.engine?.mainContainer || document.querySelector('#app');
+      this.rootURL = rootURL ?? this.app?.rootURL ?? window.__ROOT_URL__ ?? '';
 
-  async render() {
-    const container = this.templateEngine?.mainContainer || document.getElementById("MainContainer");
-    if (!container) return console.error("MainContainer not found");
+      this.ENDPOINT_LIST = `${this.rootURL}/recruit/GetApplicationReports`;
+      this.ENDPOINT_GET_ONE = (id) => `${this.rootURL}/recruit/GetApplicationReport/${id}`;
+      this.ENDPOINT_CREATE = `${this.rootURL}/recruit/CreateApplicationReport`;
+      this.ENDPOINT_UPDATE = `${this.rootURL}/recruit/UpdateApplicationReport`;
+      this.ENDPOINT_DELETE = `${this.rootURL}/recruit/DeleteApplicationReport`;
 
-    container.innerHTML = `
-      <div class="min-h-screen bg-gray-50 p-8">
-        <div class="max-w-[1200px] mx-auto bg-white shadow rounded-2xl p-6">
-          <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              📊 Application Reports
-            </h1>
-            <div class="flex flex-wrap gap-2">
-              <button id="btnCreate"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">＋ Create New</button>
-            </div>
-          </div>
+      this.table = null;
+      this.form = null;
+      this.ui = null;
+      this.currentEditId = null;
+      this.$tableHost = null;
+      this.$panelHost = null;
+    }
 
-          <div id="tableContainer" class="overflow-x-auto border rounded-lg"></div>
-        </div>
-      </div>
-    `;
+    async render() {
+      if (!this.container) return;
 
-    await this.loadList();
+      const root = await window.RecruitTableTemplate.getTable({
+        title: '📊 Application Report Management',
+        subtitle: 'Manage reports for applicants and rounds',
+        tableId: 'applicationreport-table',
+        panelTitle: 'Application Report Form',
+        backLink: 'recruit',
+        backText: 'Back to Recruit Menu',
+        colorPrimary: '#9333ea',
+        colorAccent: '#7e22ce',
+      }, 'manage');
 
-    document.getElementById("btnCreate")?.addEventListener("click", () => this.openCreateForm());
-  }
+      this.container.innerHTML = '';
+      this.container.appendChild(root);
 
-  async loadList() {
-    const mount = document.getElementById("tableContainer");
-    mount.innerHTML = `<p class="text-gray-500 p-4">Loading...</p>`;
+      this.ui = window.RecruitTableTemplate.mountMessageAndResult(root, {
+        messagesId: 'applicationReportMessages',
+        resultId: 'applicationReportResult'
+      });
 
-    try {
-      const listRes = await fetch(this.ENDPOINT_LIST);
-      const listData = await listRes.json();
-      if (!listRes.ok || listData?.isSuccess === false) {
-        throw new Error(listData?.message || `Load failed (HTTP ${listRes.status})`);
+      this.$tableHost = root.querySelector('#recruit-table-container');
+      this.$panelHost = root.querySelector('#recruit-sidepanel-container');
+
+      if (this.$tableHost) {
+        this.$tableHost.style.overflowY = 'auto';
+        this.$tableHost.style.maxHeight = '60vh';
       }
-      const rows = Array.isArray(listData?.result) ? listData.result : [];
+      if (this.$panelHost) {
+        this.$panelHost.style.overflowY = 'auto';
+        this.$panelHost.style.maxHeight = '60vh';
+      }
 
-      const displayFields = [
-        { name: "applicant_id", label: "Applicant ID" },
-        { name: "application_rounds_id", label: "Application Round ID" },
-        { name: "faculty_id", label: "Faculty ID" },
-        { name: "department_id", label: "Department ID" },
-        { name: "program", label: "Program" },
-        { name: "application_statuses", label: "Status" },
-      ];
+      this.setupTable();
+      this.setupForm();
 
-      this.renderSimpleTable(rows, displayFields, mount);
+      await this.renderTable();
+      await this.renderForm();
 
-      mount.querySelectorAll("button[data-action]").forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const id = e.currentTarget.getAttribute("data-id");
-          const action = e.currentTarget.getAttribute("data-action");
-          if (action === "edit") this.openEditForm(id);
-          else if (action === "delete") this.deleteItem(id);
+      this._bindTableActions();
+
+      root.querySelector('[data-action="reset"]')?.addEventListener('click', () => this.resetForm());
+    }
+
+    setupTable() {
+      this.table = new window.AdvanceTableRender(this.engine, {
+        modelPath: 'recruit/applicationreport',
+        targetSelector: '#recruit-table-container',
+        customColumns: [
+          {
+            name: 'actions',
+            label: 'Actions',
+            template: `
+              <div style="white-space:nowrap;">
+                <button data-action="edit" data-id="{ID}" class="text-blue-600 hover:underline mr-2">Edit</button>
+                <button data-action="delete" data-id="{ID}" class="text-red-600 hover:underline">Delete</button>
+              </div>`
+          }
+        ]
+      });
+    }
+
+    async renderTable() {
+      await this.table.loadSchema();
+      await this.table.render();
+      await this.refreshTable();
+    }
+
+    setupForm() {
+      this.form = new window.AdvanceFormRender(this.engine, {
+        modelPath: 'recruit/applicationreport',
+        targetSelector: '#recruit-sidepanel-container',
+        submitHandler: (formData) => this.handleFormSubmit(formData),
+        autoFocus: true,
+        validateOnBlur: true
+      });
+    }
+
+    async renderForm() {
+      await this.form.render();
+      this._changeSubmitButtonLabel("Create");
+    }
+
+    async handleFormSubmit(formData) {
+      this.ui?.showMessage('Saving report...', 'info');
+
+      const resolvedId = formData?.ID ?? formData?.Id ?? formData?.id ?? this.currentEditId ?? null;
+      const isUpdate = resolvedId != null;
+
+      const payload = {
+        ...formData,
+        ...(isUpdate ? { ID: Number(resolvedId) } : {})
+      };
+
+      const url = isUpdate ? this.ENDPOINT_UPDATE : this.ENDPOINT_CREATE;
+
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
-      });
-    } catch (err) {
-      mount.innerHTML = `<p class="text-red-500 p-4">Error: ${err.message}</p>`;
-    }
-  }
+        const data = await resp.json();
+        if (!data?.isSuccess) throw new Error(data?.message || 'Save failed');
 
-  getIdFromRow(row) {
-    return row?.ID ?? row?.Id ?? row?.id ?? null;
-  }
-
-  getCellValue(row, fieldName) {
-    const n = String(fieldName);
-    if (n.toLowerCase() === "id") return this.getIdFromRow(row) ?? "-";
-    return row?.[n] ?? row?.[n.toLowerCase?.()] ?? "-";
-  }
-
-  renderSimpleTable(rows, fields, mountEl) {
-    if (!mountEl) return;
-
-    if (!rows || rows.length === 0) {
-      mountEl.innerHTML = `
-        <div class="p-8 text-center text-gray-500">
-          <p class="text-lg font-medium">No application reports found</p>
-          <p class="text-sm text-gray-400 mt-1">Try adding a new application report.</p>
-        </div>`;
-      return;
-    }
-
-    const headerCells = fields.map(f => `<th class="px-4 py-2 text-left">${f.label || f.name}</th>`).join("");
-    const thead = `
-      <thead class="bg-gray-100 text-gray-800">
-        <tr>${headerCells}<th class="px-4 py-2 text-right">Actions</th></tr>
-      </thead>`;
-
-    const tbodyRows = rows.map(r => {
-      const tds = fields.map(f => {
-        const val = this.getCellValue(r, f.name);
-        return `<td class="px-4 py-2">${val === "" ? "-" : val}</td>`;
-      }).join("");
-
-      const rowId = this.getIdFromRow(r);
-      return `
-        <tr class="border-b hover:bg-gray-50 transition">
-          ${tds}
-          <td class="px-4 py-2 text-right whitespace-nowrap">
-            <button class="text-blue-600 hover:underline" data-id="${rowId}" data-action="edit">Edit</button>
-            <button class="text-red-600 hover:underline ml-3" data-id="${rowId}" data-action="delete">Delete</button>
-          </td>
-        </tr>`;
-    }).join("");
-
-    const tableHTML = `
-      <table class="min-w-full text-sm text-gray-700">
-        ${thead}
-        <tbody>${tbodyRows}</tbody>
-      </table>`;
-
-    mountEl.innerHTML = tableHTML;
-
-    mountEl.style.width = "100%";
-    mountEl.style.overflowX = "auto";
-    mountEl.style.webkitOverflowScrolling = "touch";
-    const tbl = mountEl.querySelector("table");
-    if (tbl) {
-      tbl.style.width = "max-content";
-      tbl.querySelectorAll("th,td").forEach(el => (el.style.whiteSpace = "nowrap"));
-    }
-  }
-
-  openCreateForm() {
-    window.location.href = `${this.rootURL}/recruit/RenderApplicationReport`;
-  }
-
-  openEditForm(id) {
-    window.location.href = `${this.rootURL}/recruit/RenderApplicationReport?edit=${id}`;
-  }
-
-  async deleteItem(id) {
-    if (!id) return alert("Missing ID");
-    if (!confirm("Are you sure you want to delete this application report?")) return;
-
-    try {
-      const res = await fetch(this.ENDPOINT_DELETE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: Number(id) }),
-      });
-      const result = await res.json();
-      if (res.ok && result?.isSuccess !== false) {
-        alert("Deleted successfully");
-        await this.loadList();
-      } else {
-        throw new Error(result?.message || `Delete failed (HTTP ${res.status})`);
+        this.ui?.showMessage(`Report ${isUpdate ? 'updated' : 'created'} successfully`, 'success');
+        await this.refreshTable();
+        this.resetForm();
+      } catch (err) {
+        this.ui?.showMessage('Error saving report: ' + err.message, 'error');
       }
-    } catch (e) {
-      alert("Delete error: " + e.message);
+    }
+
+    async refreshTable() {
+      const resp = await fetch(this.ENDPOINT_LIST);
+      const data = await resp.json().catch(() => ({}));
+
+      if (!data?.isSuccess) return;
+
+      const rows = (data.result || []).map(r => ({
+        ...r,
+        ID: r.id ?? r.Id ?? r.ID,
+      }));
+
+      console.log('[DEBUG] mapped rows:', rows);
+      this.table.setData(rows);
+    }
+
+    async edit(id) {
+      try {
+        this.currentEditId = id;
+        const resp = await fetch(this.ENDPOINT_GET_ONE(id));
+        const payload = await resp.json();
+
+        if (!payload?.isSuccess) throw new Error(payload?.message || 'Failed to fetch report');
+
+        await this.form.render();
+        this._changeSubmitButtonLabel("Update");
+
+        this.form.setData(payload.result);
+        this.ui?.showMessage(`Editing report ID ${id}`, 'info');
+      } catch (err) {
+        this.ui?.showMessage('Edit error: ' + err.message, 'error');
+      }
+    }
+
+    async delete(id) {
+      if (!confirm('Delete this report?')) return;
+      try {
+        const resp = await fetch(this.ENDPOINT_DELETE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: Number(id) })
+        });
+        const data = await resp.json();
+        if (!data?.isSuccess) throw new Error(data?.message || 'Delete failed');
+        this.ui?.showMessage(`Report ID ${id} deleted successfully.`, 'success');
+        await this.refreshTable();
+      } catch (err) {
+        this.ui?.showMessage('Delete error: ' + err.message, 'error');
+      }
+    }
+
+    resetForm() {
+      this.currentEditId = null;
+      try {
+        const formRoot = this.form?.form?.html || this.form?.html;
+        if (!formRoot) return;
+
+        if (typeof formRoot.reset === 'function') {
+          formRoot.reset();
+          this.ui?.showMessage('Form reset successfully', 'info');
+          return;
+        }
+
+        const fields = formRoot.querySelectorAll('input, select, textarea');
+        fields.forEach((el) => {
+          const tag = (el.tagName || '').toLowerCase();
+          const type = (el.type || '').toLowerCase();
+          if (tag === 'input') {
+            if (type === 'checkbox' || type === 'radio') el.checked = false;
+            else el.value = '';
+          } else if (tag === 'select') {
+            el.selectedIndex = 0;
+          } else if (tag === 'textarea') {
+            el.value = '';
+          }
+        });
+
+        this._changeSubmitButtonLabel("Create");
+        this.ui?.showMessage('Form reset successfully', 'info');
+      } catch (err) {
+        this.ui?.showMessage('Error resetting form: ' + err.message, 'error');
+      }
+    }
+
+    _bindTableActions() {
+      if (!this.$tableHost) return;
+      this.$tableHost.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        if (action === 'edit') this.edit(id);
+        if (action === 'delete') this.delete(id);
+      });
+    }
+
+    _changeSubmitButtonLabel(labelText = 'Submit') {
+      const formEl = this.form.form?.html || this.form?.html;
+      if (!formEl) return;
+
+      const submitBtn = formEl.querySelector('input[type="submit"], button[type="submit"]');
+      if (!submitBtn) return;
+
+      if (submitBtn.tagName.toLowerCase() === 'input') {
+        submitBtn.value = labelText;
+      } else {
+        submitBtn.textContent = labelText;
+      }
     }
   }
+  window.ApplicationReportList = ApplicationReportList;
 }
-
-if (typeof window !== "undefined") window.ApplicationReportList = ApplicationReportList;

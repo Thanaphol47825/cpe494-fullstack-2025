@@ -18,7 +18,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
 
             <!-- Main Menu Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              
+
               <!-- Instructors Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -48,7 +48,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Students Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -79,7 +79,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Resignation - Students -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -127,7 +127,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Leave Management Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -138,7 +138,6 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                       </svg>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-900">Leave Management</h3>
-                    <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">ACTIVE</span>
                   </div>
                   <p class="text-gray-600 mb-6">Manage leave requests and vacation tracking</p>
                   <div class="flex flex-col space-y-2">
@@ -157,7 +156,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   </div>
                 </div>
               </div>
-              
+
               <!-- Departments Card -->
               <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
                 <div class="p-6">
@@ -188,7 +187,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                 </div>
               </div>
             </div>
-            
+
             <!-- Back to Main Menu -->
             <div class="text-center">
               <a routerLink="" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">
@@ -488,6 +487,154 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       return HrTemplates.render('studentLeaveForm', data);
     }
 
+    static renderInstructorLeaveForm(options = {}) {
+      const { instructors = [], initialData = {} } = options;
+      const selectedInstructor = initialData.InstructorCode || initialData.instructor_code || options.selectedInstructor || '';
+      const selectedLeaveType = initialData.LeaveType || initialData.leave_type || options.selectedLeaveType || '';
+
+      const mappedInstructors = instructors.map((instructor) => {
+        const code = instructor.instructor_code || instructor.InstructorCode || instructor.code;
+        const firstName = instructor.first_name || instructor.FirstName || '';
+        const lastName = instructor.last_name || instructor.LastName || '';
+        return {
+          value: code,
+          label: `${code} - ${firstName} ${lastName}`.trim(),
+          selected: code === selectedInstructor
+        };
+      });
+
+      const leaveTypes = ['Sick', 'Vacation', 'Personal', 'Maternity', 'Other'].map((type) => ({
+        value: type,
+        label: type,
+        selected: type === selectedLeaveType
+      }));
+
+      const data = {
+        formId: options.formId || 'instructorLeaveForm',
+        instructors: mappedInstructors,
+        leaveTypes,
+        leaveDate: HrUiComponents.formatDateForInput(initialData.DateStr || initialData.leave_date || initialData.LeaveDate || ''),
+        reason: (initialData.Reason || initialData.reason || '').trim(),
+        statusContainerId: options.statusContainerId || 'formStatus',
+        submitLabel: options.submitLabel || 'Submit Leave Request',
+        cancelLabel: options.cancelLabel || 'Cancel',
+        cancelRoute: options.cancelRoute || 'hr/leave/instructor',
+        showDelete: options.showDelete || false,
+        deleteButtonId: options.deleteButtonId || 'deleteInstructorLeaveBtn',
+        deleteLabel: options.deleteLabel || 'Delete Request',
+        disableInstructor: options.disableInstructor || false,
+        disableDate: options.disableDate || false
+      };
+
+      return HrTemplates.render('instructorLeaveForm', data);
+    }
+
+    static renderInstructorLeaveListPage(requests = []) {
+      const parsedRequests = (requests || []).map((request) => {
+        const idValue = request.ID ?? request.id ?? request.Id ?? null;
+        const id = idValue !== null && idValue !== undefined ? String(idValue) : '';
+        const instructorCode = request.InstructorCode || request.instructor_code || 'N/A';
+        const leaveType = request.LeaveType || request.leave_type || 'N/A';
+        const leaveDateRaw = request.LeaveDate || request.leave_date || '';
+        const status = request.Status || request.status || 'Pending';
+
+        const actions = [
+          {
+            isLink: true,
+            route: `hr/leave/instructor/edit/${id}`,
+            label: 'Edit',
+            className: 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
+            id
+          },
+          {
+            isButton: true,
+            action: 'delete',
+            actionType: 'delete',
+            label: 'Delete',
+            className: 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-700 hover:bg-red-100 js-delete-btn',
+            id
+          }
+        ];
+        if (status === 'Pending') {
+          const baseActionClasses = 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 review-btn';
+          actions.push({
+            isButton: true,
+            action: 'approve',
+            actionType: 'review',
+            label: 'Approve',
+            className: `${baseActionClasses} bg-blue-50 text-blue-700 hover:bg-blue-100`,
+            id
+          });
+          actions.push({
+            isButton: true,
+            action: 'reject',
+            actionType: 'review',
+            label: 'Reject',
+            className: `${baseActionClasses} bg-rose-50 text-rose-700 hover:bg-rose-100`,
+            id
+          });
+        }
+
+        return {
+          id,
+          personLabel: instructorCode,
+          leaveType,
+          leaveDate: HrTemplates.formatDate(leaveDateRaw),
+          status,
+          statusClass: HrTemplates.getStatusClass(status),
+          actions
+        };
+      });
+
+      const data = {
+        bgGradient: 'from-slate-50 via-blue-50 to-indigo-100',
+        gradientFrom: 'purple-600',
+        gradientTo: 'indigo-600',
+        title: 'Instructor Leave Requests',
+        description: 'View and manage instructor leave requests',
+        icon: HrTemplates.iconPaths.instructor,
+        actions: [
+          {
+            route: 'hr/leave/instructor/create',
+            label: 'New Leave Request',
+            className: 'inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200',
+            icon: HrTemplates.iconPaths.add
+          }
+        ],
+        showRefresh: true,
+        refreshId: 'refreshBtn',
+        refreshClass: 'inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200',
+        refreshLabel: 'Refresh',
+        hasRequests: parsedRequests.length > 0,
+        requests: parsedRequests,
+        columns: [
+          { label: 'ID' },
+          { label: 'Instructor' },
+          { label: 'Leave Type' },
+          { label: 'Leave Date' },
+          { label: 'Status' },
+          { label: 'Actions' }
+        ],
+        emptyTitle: 'No Leave Requests Yet',
+        emptyMessage: 'There are no instructor leave requests to display.',
+        emptyActionRoute: 'hr/leave/instructor/create',
+        emptyActionLabel: 'Create First Request',
+        backRoute: 'hr/leave',
+        modalId: 'reviewModal',
+        modalTitle: 'Review Leave Request',
+        modalMessageId: 'reviewModalMessage',
+        modalMessage: 'Are you sure you want to review this leave request?',
+        reasonFieldId: 'reviewReason',
+        reasonPlaceholder: 'Optional: add a reason for your decision...',
+        confirmButtonId: 'confirmReview',
+        confirmLabel: 'Confirm',
+        cancelButtonId: 'cancelReview',
+        cancelLabel: 'Cancel'
+      };
+
+      return HrTemplates.render('leaveListPage', data);
+    }
+
     static formatDateForInput(dateValue) {
       if (!dateValue) return '';
       const date = new Date(dateValue);
@@ -555,19 +702,19 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       const resultIcon = document.getElementById('formResultIcon');
       const resultTitle = document.getElementById('formResultTitle');
       const resultContent = document.getElementById('formResultContent');
-      
+
       if (!resultBox) return;
 
       resultBox.classList.remove('hidden');
       resultHeader.className = 'px-6 py-4 bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200';
-      
+
       resultIcon.innerHTML = `
         <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           ${HrTemplates.iconPaths.success}
         </svg>
       `;
       resultTitle.textContent = 'Success!';
-      
+
       // Use template for success message
       resultContent.innerHTML = HrTemplates.render('successMessage', {
         message,
@@ -585,19 +732,19 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       const resultIcon = document.getElementById('formResultIcon');
       const resultTitle = document.getElementById('formResultTitle');
       const resultContent = document.getElementById('formResultContent');
-      
+
       if (!resultBox) return;
 
       resultBox.classList.remove('hidden');
       resultHeader.className = 'px-6 py-4 bg-gradient-to-r from-red-50 to-pink-50 border-b border-gray-200';
-      
+
       resultIcon.innerHTML = `
         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           ${HrTemplates.iconPaths.error}
         </svg>
       `;
       resultTitle.textContent = 'Error';
-      
+
       // Use template for error message
       const errorMessage = error?.message || error || message;
       resultContent.innerHTML = HrTemplates.render('errorMessage', {
@@ -631,7 +778,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
     // ========================================
     // Shared Tailwind CSS Classes as constants
     // ========================================
-    
+
     static get buttonClasses() {
       return {
         primary: 'inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1',
@@ -658,6 +805,6 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
       };
     }
   }
-  
+
   window.HrUiComponents = HrUiComponents;
 }

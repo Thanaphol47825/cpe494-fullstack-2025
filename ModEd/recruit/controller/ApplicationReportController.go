@@ -22,7 +22,7 @@ func NewApplicationReportController() *ApplicationReportController {
 func (controller *ApplicationReportController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{
 		{
-			Path:  "ApplicationReport",
+			Path:  "recruit/applicationreport",
 			Model: &model.ApplicationReport{},
 		},
 	}
@@ -33,8 +33,8 @@ func (controller *ApplicationReportController) SetApplication(application *core.
 	controller.application = application
 }
 
-func (controller *ApplicationReportController) RenderApplicationReport(c *fiber.Ctx) error {
-	path := filepath.Join(controller.application.RootPath, "recruit", "view", "ApplicationReport.tpl")
+func (controller *ApplicationReportController) RenderCreateForm(c *fiber.Ctx) error {
+	path := filepath.Join(controller.application.RootPath, "recruit", "view", "ApplicationReportCreate.tpl")
 
 	rendered := mustache.RenderFile(path, map[string]any{
 		"title":   "Create Application Report",
@@ -49,8 +49,8 @@ func (controller *ApplicationReportController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/RenderApplicationReport",
-		Handler: controller.RenderApplicationReport,
+		Route:   "/recruit/RenderCreateForm",
+		Handler: controller.RenderCreateForm,
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{

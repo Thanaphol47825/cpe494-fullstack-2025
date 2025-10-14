@@ -94,16 +94,60 @@ class HrApplication extends BaseModuleApplication {
       await new Promise(resolve => setTimeout(resolve, 50));
       retries++;
     }
-    
-    if (!window.HrTemplates) {
-      throw new Error('HrTemplates failed to load');
+
+    if (!window.HrTemplates || !this.#hasRequiredTemplates(window.HrTemplates)) {
+      await this.loadScript('/hr/static/js/core/HrTemplates.js?v=' + Date.now());
     }
+
+    if (!window.HrTemplates || !this.#hasRequiredTemplates(window.HrTemplates)) {
+      throw new Error('HrTemplates failed to load required templates');
+    }
+  }
+
+  async ensureUiComponentsLoaded() {
+    let retries = 0
+    while (!window.HrUiComponents && retries < 40) {
+      await new Promise(resolve => setTimeout(resolve, 50))
+      retries++
+    }
+
+    if (window.HrUiComponents && this.#hasRequiredUiComponents(window.HrUiComponents)) {
+      return
+    }
+
+    await this.loadScript('/hr/static/js/core/HrUiComponents.js?v=' + Date.now())
+
+    if (!window.HrUiComponents || !this.#hasRequiredUiComponents(window.HrUiComponents)) {
+      throw new Error('HrUiComponents failed to load')
+    }
+  }
+
+  #hasRequiredTemplates(templates) {
+    if (!templates) {
+      return false
+    }
+
+    if (typeof templates.has === 'function') {
+      return templates.has('leaveListPage') && templates.has('loadingStatePage')
+    }
+
+    return typeof templates.render === 'function'
+  }
+
+  #hasRequiredUiComponents(components) {
+    if (!components) {
+      return false
+    }
+
+    return typeof components.renderStudentLeaveListPage === 'function' &&
+      typeof components.showLoadingState === 'function'
   }
 
   async loadFeatureModules() {
     try {
       // Ensure templates are loaded first
       await this.ensureTemplatesLoaded();
+      await this.ensureUiComponentsLoaded();
       
       // Check if already loading to prevent duplicate loading
       if (this._loadingFeatures) {
@@ -118,7 +162,8 @@ class HrApplication extends BaseModuleApplication {
           window.HrStudentEditFeature && window.HrInstructorEditFeature &&
           window.HrStudentLeaveFormFeature && window.HrInstructorLeaveFormFeature &&
           window.HrStudentLeaveListFeature && window.HrInstructorLeaveListFeature &&
-          window.HrStudentLeaveEditFeature && window.HrLeaveHistoryFeature) {
+          window.HrStudentLeaveEditFeature && window.HrInstructorLeaveEditFeature &&
+          window.HrLeaveHistoryFeature) {
         return
       }
       
@@ -195,6 +240,10 @@ class HrApplication extends BaseModuleApplication {
         await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveList.js?v=' + Date.now())
       }
       
+      if (!window.HrInstructorLeaveEditFeature) {
+        await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveEdit.js?v=' + Date.now())
+      }
+
       if (!window.HrLeaveHistoryFeature) {
         await this.loadScript('/hr/static/js/features/leaveManagement/LeaveHistory.js?v=' + Date.now())
       }
@@ -242,6 +291,7 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/leave/student/edit/:id', this.renderEditStudentLeave.bind(this))
     this.addRoute('/leave/instructor', this.renderInstructorLeaveList.bind(this))
     this.addRoute('/leave/instructor/create', this.renderCreateInstructorLeave.bind(this))
+    this.addRoute('/leave/instructor/edit/:id', this.renderEditInstructorLeave.bind(this))
     this.addRoute('/leave/history', this.renderLeaveHistory.bind(this))
 
     // Department routes
@@ -1407,6 +1457,14 @@ class HrApplication extends BaseModuleApplication {
     await this.loadFeatureModules()
     if (window.HrInstructorLeaveFormFeature) {
       const feature = new window.HrInstructorLeaveFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
+  }
+
+  async renderEditInstructorLeave(params = {}) {
+    await this.loadFeatureModules()
+    if (window.HrInstructorLeaveEditFeature) {
+      const feature = new window.HrInstructorLeaveEditFeature(this.templateEngine, this.rootURL, params?.id)
       await feature.render()
     }
   }

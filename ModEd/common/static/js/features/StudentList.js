@@ -78,7 +78,7 @@ if (!window.CommonStudentListFeature) {
         }
     
       editStudent(id) {
-        location.hash = `#common/student/create?id=${encodeURIComponent(id)}`;
+        location.hash = `#common/student/edit/${encodeURIComponent(id)}`;
       }
 
       async viewStudent(id) {

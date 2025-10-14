@@ -18,7 +18,8 @@ type DepartmentController struct {
 
 func (controller *DepartmentController) GetAllDepartments(context *fiber.Ctx) error {
 	var departments []model.Department
-	result := controller.application.DB.Find(&departments)
+	// Filter out soft-deleted records
+	result := controller.application.DB.Where("is_drop = ?", false).Find(&departments)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
 	}
@@ -68,9 +69,13 @@ func (controller *DepartmentController) UpdateDepartment(context *fiber.Ctx) err
 
 func (controller *DepartmentController) DeleteDepartment(context *fiber.Ctx) error {
 	id := context.Params("id")
-	result := controller.application.DB.Delete(&model.Department{}, id)
+	// Soft delete: set is_drop = true
+	result := controller.application.DB.Model(&model.Department{}).Where("id = ?", id).Update("is_drop", true)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{"error": result.Error.Error()})
+	}
+	if result.RowsAffected == 0 {
+		return context.Status(404).JSON(fiber.Map{"error": "Department not found"})
 	}
 	return context.JSON(fiber.Map{"message": "Department deleted"})
 }

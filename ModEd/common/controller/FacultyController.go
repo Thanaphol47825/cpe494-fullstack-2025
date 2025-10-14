@@ -18,7 +18,8 @@ type FacultyController struct {
 
 func (controller *FacultyController) GetAllFaculties(context *fiber.Ctx) error {
 	var faculties []model.Faculty
-	result := controller.application.DB.Find(&faculties)
+	// Filter out soft-deleted records
+	result := controller.application.DB.Where("is_drop = ?", false).Find(&faculties)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{
 			"isSuccess": false,
@@ -98,11 +99,18 @@ func (controller *FacultyController) UpdateFaculty(context *fiber.Ctx) error {
 
 func (controller *FacultyController) DeleteFaculty(context *fiber.Ctx) error {
 	id := context.Params("id")
-	result := controller.application.DB.Delete(&model.Faculty{}, id)
+	// Soft delete: set is_drop = true
+	result := controller.application.DB.Model(&model.Faculty{}).Where("id = ?", id).Update("is_drop", true)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     result.Error.Error(),
+		})
+	}
+	if result.RowsAffected == 0 {
+		return context.Status(404).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "Faculty not found",
 		})
 	}
 	return context.JSON(fiber.Map{

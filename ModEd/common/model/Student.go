@@ -31,6 +31,9 @@ type Student struct {
 
 	// FK → User
 	UserId *uint `gorm:"index"`
+
+	// Soft delete flag
+	IsDrop bool `gorm:"default:false" json:"is_drop" form:"-"`
 }
 
 func (Student) TableName() string {

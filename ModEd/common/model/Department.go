@@ -13,6 +13,8 @@ type Department struct {
 	Faculty string `csv:"faculty" json:"faculty"`
 	Budget  int    `gorm:"default:0" csv:"budget" json:"budget"`
 
+	// Soft delete flag
+	IsDrop bool `gorm:"default:false" json:"is_drop" form:"-"`
 }
 
 func (Department) TableName() string {

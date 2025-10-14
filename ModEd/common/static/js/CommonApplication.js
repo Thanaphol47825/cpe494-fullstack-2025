@@ -59,9 +59,19 @@ class CommonApplication extends BaseModuleApplication {
       "StudentList.js"
     );
     this.addRouteWithSubModule(
+      "/student/edit/:id",
+      this.renderStudentEdit.bind(this),
+      "StudentEdit.js"
+    );
+    this.addRouteWithSubModule(
       "/instructor/create",
       this.renderInstructorCreate.bind(this),
       "InstructorForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/instructor/edit/:id",
+      this.renderInstructorEdit.bind(this),
+      "InstructorEdit.js"
     );
     this.addRouteWithSubModule(
       "/department/create",
@@ -69,9 +79,19 @@ class CommonApplication extends BaseModuleApplication {
       "DepartmentForm.js"
     );
     this.addRouteWithSubModule(
+      "/department/edit/:id",
+      this.renderDepartmentEdit.bind(this),
+      "DepartmentEdit.js"
+    );
+    this.addRouteWithSubModule(
       "/faculty/create",
       this.renderFacultyCreate.bind(this),
       "FacultyForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/faculty/edit/:id",
+      this.renderFacultyEdit.bind(this),
+      "FacultyEdit.js"
     );
     this.addRouteWithSubModule(
       "/department/list",
@@ -160,6 +180,26 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
+  async renderStudentEdit(params) {
+    if (!window.CommonStudentEditFeature) {
+      console.error("CommonStudentEditFeature not available after loading");
+      this.renderError("Failed to load Student Edit Form");
+      return false;
+    }
+    const studentId = params?.id;
+    if (!studentId) {
+      console.error("No student ID provided");
+      this.renderError("Invalid student ID");
+      return false;
+    }
+    const feature = new window.CommonStudentEditFeature(
+      this.templateEngine,
+      this.rootURL,
+      studentId
+    );
+    return await feature.render();
+  }
+
    async renderInstructorList() {
     if (!window.CommonInstructorListFeature) {
       console.error("CommonInstructorListFeature not available after loading");
@@ -199,6 +239,26 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
+  async renderInstructorEdit(params) {
+    if (!window.CommonInstructorEditFeature) {
+      console.error("CommonInstructorEditFeature not available after loading");
+      this.renderError("Failed to load Instructor Edit Form");
+      return false;
+    }
+    const instructorId = params?.id;
+    if (!instructorId) {
+      console.error("No instructor ID provided");
+      this.renderError("Invalid instructor ID");
+      return false;
+    }
+    const feature = new window.CommonInstructorEditFeature(
+      this.templateEngine,
+      this.rootURL,
+      instructorId
+    );
+    return await feature.render();
+  }
+
   async renderDepartmentCreate() {
     if (!window.CommonDepartmentFormFeature) {
       console.error("CommonDepartmentFormFeature not available after loading");
@@ -212,6 +272,26 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
+  async renderDepartmentEdit(params) {
+    if (!window.CommonDepartmentEditFeature) {
+      console.error("CommonDepartmentEditFeature not available after loading");
+      this.renderError("Failed to load Department Edit Form");
+      return false;
+    }
+    const departmentId = params?.id;
+    if (!departmentId) {
+      console.error("No department ID provided");
+      this.renderError("Invalid department ID");
+      return false;
+    }
+    const feature = new window.CommonDepartmentEditFeature(
+      this.templateEngine,
+      this.rootURL,
+      departmentId
+    );
+    return await feature.render();
+  }
+
   async renderFacultyCreate() {
     if (!window.CommonFacultyFormFeature) {
       console.error("CommonFacultyFormFeature not available after loading");
@@ -221,6 +301,26 @@ class CommonApplication extends BaseModuleApplication {
     const feature = new window.CommonFacultyFormFeature(
       this.templateEngine,
       this.rootURL
+    );
+    return await feature.render();
+  }
+
+  async renderFacultyEdit(params) {
+    if (!window.CommonFacultyEditFeature) {
+      console.error("CommonFacultyEditFeature not available after loading");
+      this.renderError("Failed to load Faculty Edit Form");
+      return false;
+    }
+    const facultyId = params?.id;
+    if (!facultyId) {
+      console.error("No faculty ID provided");
+      this.renderError("Invalid faculty ID");
+      return false;
+    }
+    const feature = new window.CommonFacultyEditFeature(
+      this.templateEngine,
+      this.rootURL,
+      facultyId
     );
     return await feature.render();
   }

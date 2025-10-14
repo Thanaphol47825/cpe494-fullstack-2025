@@ -18,7 +18,8 @@ type StudentController struct {
 
 func (controller *StudentController) GetAllStudents(context *fiber.Ctx) error {
 	var students []model.Student
-	result := controller.application.DB.Find(&students)
+	// Filter out soft-deleted records
+	result := controller.application.DB.Where("is_drop = ?", false).Find(&students)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{
 			"isSuccess": false,
@@ -101,11 +102,18 @@ func (controller *StudentController) UpdateStudent(context *fiber.Ctx) error {
 
 func (controller *StudentController) DeleteStudent(context *fiber.Ctx) error {
 	id := context.Params("id")
-	result := controller.application.DB.Delete(&model.Student{}, id)
+	// Soft delete: set is_drop = true
+	result := controller.application.DB.Model(&model.Student{}).Where("id = ?", id).Update("is_drop", true)
 	if result.Error != nil {
 		return context.Status(500).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     result.Error.Error(),
+		})
+	}
+	if result.RowsAffected == 0 {
+		return context.Status(404).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "Student not found",
 		})
 	}
 	return context.JSON(fiber.Map{

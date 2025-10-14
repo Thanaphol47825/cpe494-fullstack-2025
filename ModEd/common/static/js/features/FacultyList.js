@@ -81,8 +81,7 @@ if (!window.CommonFacultyListFeature) {
 
 
 async function editFaculty(id) {
-    alert(`✏️ Edit faculty ID: ${id}`);
-
+    location.hash = `#common/faculty/edit/${encodeURIComponent(id)}`;
 }
 
 async function viewFaculty(id) {

@@ -126,7 +126,7 @@ class CommonStudentFormFeature {
       AdvisorCode: formData.AdvisorCode || null,
       start_date: toRFC3339(formData.start_date),
       birth_date: toRFC3339(formData.birth_date),
-      userid : formData.userid || null,
+      userid: formData.userid || null,
     };
   }
 

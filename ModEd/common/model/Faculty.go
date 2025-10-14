@@ -11,6 +11,9 @@ type Faculty struct {
 	core.BaseModel
 	Name   string `gorm:"not null;unique" csv:"name" json:"name"`
 	Budget int    `gorm:"default:0" csv:"budget" json:"budget"`
+
+	// Soft delete flag
+	IsDrop bool `gorm:"default:false" json:"is_drop" form:"-"`
 }
 
 func (Faculty) TableName() string {

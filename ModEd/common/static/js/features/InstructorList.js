@@ -81,8 +81,7 @@ if (!window.CommonInstructorListFeature) {
 
 
 async function editInstructor(id) {
-    alert(`✏️ Edit instructor ID: ${id}`);
-
+    location.hash = `#common/instructor/edit/${encodeURIComponent(id)}`;
 }
 
 async function viewInstructor(id) {

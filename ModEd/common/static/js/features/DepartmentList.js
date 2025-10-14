@@ -82,8 +82,7 @@ if (!window.CommonDepartmentListFeature) {
 
 
 async function editDepartment(id) {
-  alert(`✏️ Edit department ID: ${id}`);
-
+  location.hash = `#common/department/edit/${encodeURIComponent(id)}`;
 }
 
 async function viewDepartment(id) {

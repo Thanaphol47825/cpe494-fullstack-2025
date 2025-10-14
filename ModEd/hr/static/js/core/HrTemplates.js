@@ -593,6 +593,7 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
               id="instructor_code" 
               name="InstructorCode" 
               required
+              {{#disableInstructor}}disabled{{/disableInstructor}}
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">Select an instructor</option>
@@ -633,6 +634,7 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
               name="DateStr" 
               value="{{leaveDate}}"
               required
+              {{#disableDate}}disabled{{/disableDate}}
               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -666,6 +668,15 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
             >
               {{cancelLabel}}
             </a>
+            {{#showDelete}}
+            <button 
+              type="button" 
+              id="{{deleteButtonId}}" 
+              class="flex-1 bg-red-100 text-red-700 font-semibold py-3 px-6 rounded-lg hover:bg-red-200 focus:outline-none focus:ring-4 focus:ring-red-300 transition-all duration-200"
+            >
+              {{deleteLabel}}
+            </button>
+            {{/showDelete}}
           </div>
         </form>
       `;

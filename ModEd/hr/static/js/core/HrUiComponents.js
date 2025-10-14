@@ -518,7 +518,12 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
         statusContainerId: options.statusContainerId || 'formStatus',
         submitLabel: options.submitLabel || 'Submit Leave Request',
         cancelLabel: options.cancelLabel || 'Cancel',
-        cancelRoute: options.cancelRoute || 'hr/leave/instructor'
+        cancelRoute: options.cancelRoute || 'hr/leave/instructor',
+        showDelete: options.showDelete || false,
+        deleteButtonId: options.deleteButtonId || 'deleteInstructorLeaveBtn',
+        deleteLabel: options.deleteLabel || 'Delete Request',
+        disableInstructor: options.disableInstructor || false,
+        disableDate: options.disableDate || false
       };
 
       return HrTemplates.render('instructorLeaveForm', data);
@@ -533,7 +538,23 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
         const leaveDateRaw = request.LeaveDate || request.leave_date || '';
         const status = request.Status || request.status || 'Pending';
 
-        const actions = [];
+        const actions = [
+          {
+            isLink: true,
+            route: `hr/leave/instructor/edit/${id}`,
+            label: 'Edit',
+            className: 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100',
+            id
+          },
+          {
+            isButton: true,
+            action: 'delete',
+            actionType: 'delete',
+            label: 'Delete',
+            className: 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-700 hover:bg-red-100 js-delete-btn',
+            id
+          }
+        ];
         if (status === 'Pending') {
           const baseActionClasses = 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 review-btn';
           actions.push({

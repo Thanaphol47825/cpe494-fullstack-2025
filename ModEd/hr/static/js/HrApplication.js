@@ -162,7 +162,8 @@ class HrApplication extends BaseModuleApplication {
           window.HrStudentEditFeature && window.HrInstructorEditFeature &&
           window.HrStudentLeaveFormFeature && window.HrInstructorLeaveFormFeature &&
           window.HrStudentLeaveListFeature && window.HrInstructorLeaveListFeature &&
-          window.HrStudentLeaveEditFeature && window.HrLeaveHistoryFeature) {
+          window.HrStudentLeaveEditFeature && window.HrInstructorLeaveEditFeature &&
+          window.HrLeaveHistoryFeature) {
         return
       }
       
@@ -239,6 +240,10 @@ class HrApplication extends BaseModuleApplication {
         await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveList.js?v=' + Date.now())
       }
       
+      if (!window.HrInstructorLeaveEditFeature) {
+        await this.loadScript('/hr/static/js/features/leaveManagement/InstructorLeaveEdit.js?v=' + Date.now())
+      }
+
       if (!window.HrLeaveHistoryFeature) {
         await this.loadScript('/hr/static/js/features/leaveManagement/LeaveHistory.js?v=' + Date.now())
       }
@@ -286,6 +291,7 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/leave/student/edit/:id', this.renderEditStudentLeave.bind(this))
     this.addRoute('/leave/instructor', this.renderInstructorLeaveList.bind(this))
     this.addRoute('/leave/instructor/create', this.renderCreateInstructorLeave.bind(this))
+    this.addRoute('/leave/instructor/edit/:id', this.renderEditInstructorLeave.bind(this))
     this.addRoute('/leave/history', this.renderLeaveHistory.bind(this))
 
     // Department routes
@@ -1451,6 +1457,14 @@ class HrApplication extends BaseModuleApplication {
     await this.loadFeatureModules()
     if (window.HrInstructorLeaveFormFeature) {
       const feature = new window.HrInstructorLeaveFormFeature(this.templateEngine, this.rootURL)
+      await feature.render()
+    }
+  }
+
+  async renderEditInstructorLeave(params = {}) {
+    await this.loadFeatureModules()
+    if (window.HrInstructorLeaveEditFeature) {
+      const feature = new window.HrInstructorLeaveEditFeature(this.templateEngine, this.rootURL, params?.id)
       await feature.render()
     }
   }

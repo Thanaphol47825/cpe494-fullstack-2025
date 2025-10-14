@@ -62,6 +62,14 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
           this.#showReviewModal(id, action);
         });
       });
+
+      document.querySelectorAll('[data-action-type="delete"]').forEach((btn) => {
+        btn.addEventListener('click', (event) => {
+          const target = event.currentTarget;
+          const id = target.dataset.id;
+          this.#handleDelete(id);
+        });
+      });
     }
 
     #showReviewModal(requestId, action) {
@@ -111,6 +119,31 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
         alert(`Error: ${error.message}`);
         if (this.errorHandler) {
           this.errorHandler.handleError(error, { context: 'instructor_leave_review' });
+        }
+      }
+    }
+
+    async #handleDelete(requestId) {
+      const id = Number(requestId);
+      if (!Number.isFinite(id)) {
+        console.warn('Invalid instructor leave request id for deletion', requestId);
+        return;
+      }
+
+      const confirmed = window.confirm('Are you sure you want to delete this leave request?');
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await this.apiService.deleteInstructorLeaveRequest(id);
+        alert('Leave request deleted successfully.');
+        await this.render();
+      } catch (error) {
+        console.error('Error deleting leave request:', error);
+        alert(`Error: ${error.message}`);
+        if (this.errorHandler && typeof this.errorHandler.handleError === 'function') {
+          this.errorHandler.handleError(error, { context: 'instructor_leave_delete' });
         }
       }
     }

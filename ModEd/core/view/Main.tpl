@@ -29,7 +29,6 @@
 </head>
 
 <body>
-  <h1>{{ title }}</h1>
   <div id="MainContainer"></div>
   <div class="Form1"></div>
 </body>

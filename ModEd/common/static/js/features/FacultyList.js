@@ -46,15 +46,15 @@ if (!window.CommonFacultyListFeature) {
                             label: "Actions",
                             template: `
                 <div class="flex space-x-2">
-                  <button onclick="editFaculty({id})"
+                  <button onclick="editFaculty({ID})"
                           class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
                     Edit
                   </button>
-                  <button onclick="viewFaculty({id})"
+                  <button onclick="viewFaculty({ID})"
                           class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
                     View
                   </button>
-                  <button onclick="deleteFaculty({id})"
+                  <button onclick="deleteFaculty({ID})"
                           class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
                     Delete
                   </button>

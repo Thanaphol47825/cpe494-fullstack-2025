@@ -101,7 +101,6 @@ if (typeof window !== 'undefined' && !window.ApplicationReportList) {
 
     async renderForm() {
       await this.form.render();
-      this._hideUnnecessaryFields();
       this._changeSubmitButtonLabel("Create");
     }
 
@@ -159,7 +158,6 @@ if (typeof window !== 'undefined' && !window.ApplicationReportList) {
         if (!payload?.isSuccess) throw new Error(payload?.message || 'Failed to fetch report');
 
         await this.form.render();
-        this._hideUnnecessaryFields();
         this._changeSubmitButtonLabel("Update");
 
         this.form.setData(payload.result);
@@ -228,25 +226,6 @@ if (typeof window !== 'undefined' && !window.ApplicationReportList) {
         const id = btn.dataset.id;
         if (action === 'edit') this.edit(id);
         if (action === 'delete') this.delete(id);
-      });
-    }
-
-    _hideUnnecessaryFields() {
-      const hiddenFields = [
-        'id',
-        'applicant',
-        'applicationround',
-        'faculty',
-        'department'
-      ];
-
-      hiddenFields.forEach((name) => {
-        const field = this.form.form?.html?.querySelector(`[name="${name}"]`);
-        if (field) {
-          const wrapper = field.closest('.form-field, div');
-          if (wrapper) wrapper.style.display = 'none';
-          else field.style.display = 'none';
-        }
       });
     }
 

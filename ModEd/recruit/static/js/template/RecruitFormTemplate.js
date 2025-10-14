@@ -71,6 +71,5 @@ if (typeof window !== 'undefined' && !window.RecruitFormTemplate) {
     }
   }
 
-  // auto-register like Curriculum
   window.RecruitFormTemplate = RecruitFormTemplate;
 }

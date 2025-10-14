@@ -27,7 +27,7 @@ if (typeof window !== 'undefined' && !window.ApplicantList) {
       this.ENDPOINT_CREATE  = `${this.rootURL}/recruit/CreateApplicant`;
       this.ENDPOINT_UPDATE  = `${this.rootURL}/recruit/UpdateApplicant`;
       this.ENDPOINT_DELETE  = `${this.rootURL}/recruit/DeleteApplicant`;
-      this.ENDPOINT_IMPORT  = `${this.rootURL}/recruit/ImportApplicantsFromFile`;
+      this.ENDPOINT_IMPORT  = `${this.rootURL}/recruit/GetApplicantsFromFile`;
 
       this.table = null;
       this.form  = null;
@@ -245,8 +245,8 @@ if (typeof window !== 'undefined' && !window.ApplicantList) {
           throw new Error(payload?.message || `Unable to load applicant #${id}`);
         }
         const applicant = payload?.result || payload || {};
-        await this.form.render();     // ensure form exists/fresh
-        this.form.setData(applicant); // set data
+        await this.form.render();   
+        this.form.setData(applicant); 
         this.ui?.showMessage(`Editing applicant ID ${id}`, 'info');
       } catch (err) {
         this.ui?.showMessage(`Edit error: ${err.message}`, 'error');

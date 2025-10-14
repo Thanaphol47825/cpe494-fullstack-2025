@@ -1,248 +1,360 @@
 if (typeof window.InterviewCriteriaList === 'undefined') {
 class InterviewCriteriaList {
-    constructor(application) {
-        this.application = application;
-        this.RootURL = window.__ROOT_URL__ || "";
+  constructor(applicationOrEngine, rootURL) {
+    this.app = applicationOrEngine || {};
+
+    this.engine =
+      this.app.templateEngine
+        ? this.app.templateEngine
+        : this.app;
+
+    this.container =
+      this.engine?.mainContainer ||
+      this.app?.mainContainer ||
+      document.querySelector('#app') ||
+      null;
+
+    this.rootURL =
+      rootURL ??
+      this.app?.rootURL ??
+      window.RootURL ??
+      window.__ROOT_URL__ ??
+      '';
+
+    this.ENDPOINT_LIST    = `${this.rootURL}/recruit/GetAllInterviewCriteria`;
+    this.ENDPOINT_GET_ONE = (id) => `${this.rootURL}/recruit/GetInterviewCriteriaByID/${id}`;
+    this.ENDPOINT_CREATE  = `${this.rootURL}/recruit/CreateInterviewCriteria`;
+    this.ENDPOINT_UPDATE  = (id) => `${this.rootURL}/recruit/UpdateInterviewCriteria/${id}`;
+    this.ENDPOINT_DELETE  = (id) => `${this.rootURL}/recruit/DeleteInterviewCriteria/${id}`;
+    this.ENDPOINT_SEED    = `${this.rootURL}/recruit/CreateRawSQL`;
+    this.ENDPOINT_IMPORT  = `${this.rootURL}/recruit/GetInterviewCriteriaFromFile`;
+
+    this.table = null;
+    this.form  = null;
+    this.ui = null;
+    this.$tableHost = null;
+    this.$panelHost = null;
+    this.currentEditId = null;
+  }
+
+  _assertContainer() {
+    if (!this.container) {
+      console.error('InterviewCriteriaList: mainContainer not found (checked application.templateEngine.mainContainer, application.mainContainer, and #app).');
+      return false;
+    }
+    return true;
+  }
+
+  _assertDeps() {
+    const missing = [];
+    if (typeof window.RecruitTableTemplate?.getTable !== 'function') missing.push('RecruitTableTemplate');
+    if (typeof window.AdvanceTableRender !== 'function') missing.push('AdvanceTableRender');
+    if (typeof window.AdvanceFormRender !== 'function') missing.push('AdvanceFormRender');
+    if (missing.length) {
+      console.error('Missing dependencies:', missing.join(', '));
+      if (this.container) {
+        this.container.innerHTML = `<div class="p-4 rounded border border-red-200 bg-red-50 text-red-700">Missing: ${missing.join(', ')}</div>`;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  async render() {
+    if (!this._assertContainer() || !this._assertDeps()) return false;
+
+    this.container.innerHTML = '';
+    const root = await window.RecruitTableTemplate.getTable({
+      title: '📋 Interview Criteria Management',
+      subtitle: 'Manage interview criteria and seed sample data',
+      tableId: 'interviewcriteria-table',
+      panelTitle: 'Criteria Form',
+      backLink: 'recruit',
+      backText: 'Back to Recruit Menu',
+      colorPrimary: '#4f46e5',
+      colorAccent: '#4338ca',
+      iconPath: 'M3 4a1 1 0 011-1h3l1 2h6l1-2h3a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V4z'
+    }, 'manage');
+
+    this.container.appendChild(root);
+    this.ui = window.RecruitTableTemplate.mountMessageAndResult(root, {
+      messagesId: 'criteriaMessages',
+      resultId: 'criteriaResult'
+    });
+
+    this.$tableHost = root.querySelector('#recruit-table-container');
+    this.$panelHost = root.querySelector('#recruit-sidepanel-container');
+
+    if (this.$tableHost) {
+      this.$tableHost.style.overflowY = 'auto';
+      this.$tableHost.style.maxHeight = '60vh';
+    }
+    if (this.$panelHost) {
+      this.$panelHost.style.overflowY = 'auto';
+      this.$panelHost.style.maxHeight = '60vh';
     }
 
-    async render() {
-        console.log("InterviewCriteriaList: render()");
+    root.querySelector('[data-action="seed"]')?.addEventListener('click', () => this.seedData());
+    root.querySelector('[data-action="import"]')?.addEventListener('click', () => this.importFromFile());
+    root.querySelector('[data-action="reset"]')?.addEventListener('click', () => this.resetForm());
 
-        if (!document.querySelector('script[src*="cdn.tailwindcss.com"]')) {
-            const script = document.createElement("script");
-            script.src = "https://cdn.tailwindcss.com";
-            document.head.appendChild(script);
-        }
+    this.setupTable();
+    this.setupForm();
 
-        this.application.mainContainer.innerHTML = `
-      <div class="min-h-screen bg-gray-50 p-8">
-        <div class="max-w-6xl mx-auto bg-white shadow rounded-2xl p-6">
-          <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
-            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-              📋 Interview Criteria Management
-            </h1>
-            <div class="flex flex-wrap gap-2">
-              <button id="btnSeed"
-                class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-lg hover:bg-yellow-200">🌱 Seed Data</button>
-              <button id="btnRefresh"
-                class="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200">🔄 Refresh</button>
-              <button id="btnCreate"
-                class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">＋ Create New</button>
+    await this.renderTable();
+    await this.renderForm();
+
+    this._bindTableActions();
+    return true;
+  }
+
+  setupTable() {
+    this.table = new window.AdvanceTableRender(this.engine, {
+      modelPath: 'recruit/interviewcriteria',
+      data: [],
+      targetSelector: '#recruit-table-container',
+      customColumns: [
+        {
+          name: 'actions',
+          label: 'Actions',
+          template: `
+            <div style="white-space:nowrap;">
+              <button class="ic-btn-view text-blue-600 hover:underline" data-action="view" data-id="{ID}" style="margin-right:8px;">View</button>
+              <button class="ic-btn-edit text-green-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
+              <button class="ic-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}">Delete</button>
             </div>
-          </div>
-
-          <div id="tableContainer" class="overflow-x-auto border rounded-lg"></div>
-        </div>
-      </div>
-    `;
-
-        await this.loadList();
-
-        document.getElementById("btnCreate")?.addEventListener("click", () => this.openForm());
-        document.getElementById("btnSeed")?.addEventListener("click", () => this.seedData());
-        document.getElementById("btnRefresh")?.addEventListener("click", () => this.loadList());
-    }
-
-    async loadList() {
-        const tableContainer = document.getElementById("tableContainer");
-        tableContainer.innerHTML = `<p class="text-gray-500 p-4">Loading interview criteria...</p>`;
-
-        try {
-            const res = await fetch(this.RootURL + "/recruit/GetAllInterviewCriteria");
-            const data = await res.json();
-            if (!data.isSuccess) throw new Error(data.result || "Load failed");
-
-            if (!data.result || data.result.length === 0) {
-                tableContainer.innerHTML = `
-          <div class="p-8 text-center text-gray-500">
-            <p class="text-lg font-medium">No interview criteria found</p>
-            <p class="text-sm text-gray-400 mt-1">Create a new criteria to get started.</p>
-          </div>
-        `;
-                return;
-            }
-
-            console.log("Loaded interview criteria:", data.result);
-
-            const rows = data.result.map((r) => `
-        <tr class="border-b hover:bg-gray-50 transition">
-          <td class="px-4 py-2 font-medium">${r.ID}</td>
-          <td class="px-4 py-2">${r.application_rounds_id || "-"}</td>
-          <td class="px-4 py-2">${r.ApplicationRound?.round_name || "Round " + r.application_rounds_id}</td>
-          <td class="px-4 py-2">${r.faculty_id || "-"}</td>
-          <td class="px-4 py-2">${r.department_id || "-"}</td>
-          <td class="px-4 py-2 font-medium ${r.passing_score >= 70 ? 'text-green-600' : r.passing_score >= 50 ? 'text-yellow-600' : 'text-red-600'}">${r.passing_score}</td>
-          <td class="px-4 py-2 text-right">
-            <button class="text-blue-600 hover:underline text-sm" data-id="${r.ID}" data-action="view">View</button>
-            <button class="text-green-600 hover:underline ml-3 text-sm" data-id="${r.ID}" data-action="edit">Edit</button>
-            <button class="text-red-600 hover:underline ml-3 text-sm" data-id="${r.ID}" data-action="delete">Delete</button>
-          </td>
-        </tr>`
-            );
-
-            tableContainer.innerHTML = `
-        <table class="min-w-full text-sm text-gray-700">
-          <thead class="bg-gray-100 text-gray-800">
-            <tr>
-              <th class="px-4 py-3 text-left font-medium">ID</th>
-              <th class="px-4 py-3 text-left font-medium">Round ID</th>
-              <th class="px-4 py-3 text-left font-medium">Round Name</th>
-              <th class="px-4 py-3 text-left font-medium">Faculty ID</th>
-              <th class="px-4 py-3 text-left font-medium">Department ID</th>
-              <th class="px-4 py-3 text-left font-medium">Passing Score</th>
-              <th class="px-4 py-3 text-right font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>${rows.join("")}</tbody>
-        </table>
-      `;
-
-            tableContainer.querySelectorAll("button[data-action]").forEach((btn) => {
-                btn.addEventListener("click", (e) => {
-                    const id = e.target.getAttribute("data-id");
-                    const action = e.target.getAttribute("data-action");
-                    console.log(`Action: ${action}, ID: ${id}`);
-                    if (action === "view") this.viewItem(id);
-                    else if (action === "edit") this.openForm(id);
-                    else if (action === "delete") this.deleteItem(id);
-                });
-            });
-        } catch (err) {
-            console.error("Load list error:", err);
-            tableContainer.innerHTML = `
-        <div class="p-4 text-red-600 bg-red-50 border border-red-200 rounded">
-          <p class="font-medium">Error loading interview criteria</p>
-          <p class="text-sm mt-1">${err.message}</p>
-        </div>
-      `;
+          `
         }
+      ]
+    });
+  }
+
+  async renderTable() {
+    if (!this.$tableHost) return;
+    this.$tableHost.innerHTML = `<p class="p-2 text-gray-500">Loading interview criteria…</p>`;
+    try {
+      await this.table.loadSchema();
+      this.table.targetSelector = '#recruit-table-container';
+      await this.table.render();
+      await this.refreshTable();
+    } catch (err) {
+      console.error('renderTable error:', err);
+      this.$tableHost.innerHTML = `<div class="p-4 text-red-600 bg-red-50 rounded">Error rendering table: ${err.message}</div>`;
+    }
+  }
+
+  async refreshTable() {
+    try {
+      const resp = await fetch(this.ENDPOINT_LIST);
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || data?.isSuccess === false) throw new Error(data?.message || 'Failed to load interview criteria');
+      const rows = (data.result || []).map(r => ({ ...r, ID: r.ID ?? r.Id ?? r.id }));
+      this.table.setData(rows);
+    } catch (err) {
+      this.ui?.showMessage?.(`Error loading interview criteria: ${err.message}`, 'error');
+    }
+  }
+
+  setupForm() {
+    this.form = new window.AdvanceFormRender(this.engine, {
+      modelPath: 'recruit/interviewcriteria',
+      targetSelector: '#recruit-sidepanel-container',
+      submitHandler: (fd) => this.handleFormSubmit(fd),
+      autoFocus: true,
+      validateOnBlur: true
+    });
+  }
+
+  async renderForm() {
+    try {
+      await this.form.render();
+      this.resetForm();
+    } catch (err) {
+      console.error('renderForm error:', err);
+      this.$panelHost.innerHTML = `<div class="p-4 text-red-600 bg-red-50 rounded">Form render failed: ${err.message}</div>`;
+    }
+  }
+
+  async handleFormSubmit(formData) {
+    this.ui?.showMessage('Saving criteria...', 'info');
+
+    const tryNum = (v) => {
+      if (v === null || v === undefined || v === '') return null;
+      const n = Number(v);
+      return Number.isNaN(n) ? v : n;
+    };
+
+    const payload = {
+      ...formData,
+      application_rounds_id: tryNum(formData.application_rounds_id),
+      faculty_id: tryNum(formData.faculty_id),
+      department_id: tryNum(formData.department_id),
+      passing_score: (() => { const v = formData.passing_score; const f = parseFloat(v); return Number.isNaN(f) ? v : f; })()
+    };
+
+    const resolvedId = formData?.ID ?? formData?.Id ?? formData?.id ?? this.currentEditId ?? null;
+    const isUpdate = resolvedId != null;
+    const url = isUpdate ? this.ENDPOINT_UPDATE(resolvedId) : this.ENDPOINT_CREATE;
+
+    let resp, data;
+    try {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } catch (err) {
+      this.ui?.showMessage('Network error while saving criteria.', 'error');
+      return false;
     }
 
-    async viewItem(id) {
-        try {
-            console.log("Viewing item with ID:", id);
-            const res = await fetch(this.RootURL + "/recruit/GetInterviewCriteriaByID/" + id);
-            const data = await res.json();
-            if (!data.isSuccess) throw new Error(data.result || "Failed to load item");
+    try { data = await resp.json(); } catch { data = {}; }
 
-            const item = data.result;
-            const details = `
+    if (!resp.ok || data?.isSuccess !== true) {
+      const msg = data?.result || data?.message || `Request failed (${resp.status})`;
+      this.ui?.showMessage(msg, 'error');
+      return false;
+    }
+
+    const result = data.result ?? {};
+    const id = result?.ID ?? result?.id ?? (Array.isArray(result) ? result[0]?.ID ?? result[0]?.id : resolvedId);
+
+    this.ui?.showMessage(`Interview criteria ${isUpdate ? 'updated' : 'created'} successfully! ID: ${id || '?'}`, 'success');
+    await this.refreshTable();
+    this.resetForm();
+    return true;
+  }
+
+  async edit(id) {
+    if (!id) return;
+    try {
+      this.currentEditId = Number(id);
+      const resp = await fetch(this.ENDPOINT_GET_ONE(id));
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok || payload?.isSuccess === false) throw new Error(payload?.message || `Unable to load criteria #${id}`);
+      const item = payload?.result || {};
+      await this.form.render();
+      this.form.setData(item);
+      this.ui?.showMessage(`Editing criteria ID ${id}`, 'info');
+    } catch (err) {
+      this.ui?.showMessage(`Edit error: ${err.message}`, 'error');
+    }
+  }
+
+  async view(id) {
+    if (!id) return;
+    try {
+      const resp = await fetch(this.ENDPOINT_GET_ONE(id));
+      const payload = await resp.json().catch(() => ({}));
+      if (!resp.ok || payload?.isSuccess === false) throw new Error(payload?.message || `Unable to load criteria #${id}`);
+      const item = payload?.result || payload || {};
+      const details = `
 ID: ${item.ID}
 Application Round: ${item.ApplicationRound?.round_name || item.application_rounds_id}
-Faculty: ${item.Faculty?.name || "Faculty " + item.faculty_id}
-Department: ${item.Department?.name || "Dept " + item.department_id}
+Faculty: ${item.Faculty?.name || item.faculty_id}
+Department: ${item.Department?.name || item.department_id}
 Passing Score: ${item.passing_score}
-Created: ${new Date(item.CreatedAt).toLocaleString()}
-Updated: ${new Date(item.UpdatedAt).toLocaleString()}
       `;
-            alert("Interview Criteria Details:\n\n" + details);
-        } catch (err) {
-            console.error("viewItem error:", err);
-            alert("Error viewing item: " + err.message);
-        }
+      alert(details);
+    } catch (err) {
+      this.ui?.showMessage(`View error: ${err.message}`, 'error');
     }
+  }
 
-    async openForm(id = null) {
-        try {
-            await this.application.fetchModule("/recruit/static/js/InterviewCriteriaCreate.js");
-            const form = new InterviewCriteriaCreate(this.application);
-            this.application.mainContainer.innerHTML = "";
-            await form.render();
-
-            // If editing, populate form with existing data
-            if (id) {
-                console.log("Editing item with ID:", id);
-                const res = await fetch(this.RootURL + "/recruit/GetInterviewCriteriaByID/" + id);
-                const data = await res.json();
-                if (data.isSuccess && data.result) {
-                    const item = data.result;
-                    // Populate form fields
-                    setTimeout(() => {
-                        const formElement = document.getElementById("createCriteriaForm");
-                        if (formElement) {
-                            const applicationRoundsInput = formElement.querySelector('input[name="application_rounds_id"]');
-                            const facultyInput = formElement.querySelector('input[name="faculty_id"]');
-                            const departmentInput = formElement.querySelector('input[name="department_id"]');
-                            const passingScoreInput = formElement.querySelector('input[name="passing_score"]');
-
-                            if (applicationRoundsInput) applicationRoundsInput.value = item.application_rounds_id || "";
-                            if (facultyInput) facultyInput.value = item.faculty_id || "";
-                            if (departmentInput) departmentInput.value = item.department_id || "";
-                            if (passingScoreInput) passingScoreInput.value = item.passing_score || "";
-
-                            // Change form action for update
-                            formElement.setAttribute('data-mode', 'edit');
-                            formElement.setAttribute('data-id', id);
-
-                            // Update button text
-                            const submitBtn = document.getElementById("submitCreateCriteria");
-                            if (submitBtn) submitBtn.textContent = "Update Criteria";
-
-                            // Update title
-                            const title = document.querySelector("h1");
-                            if (title) title.textContent = "Edit Interview Criteria";
-                        }
-                    }, 100);
-                }
-            }
-        } catch (err) {
-            console.error("openForm error:", err);
-            alert("Error opening form: " + err.message);
-        }
+  async delete(id) {
+    if (!id) return;
+    if (!confirm('Delete this interview criteria?')) return;
+    try {
+      const resp = await fetch(this.ENDPOINT_DELETE(id), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || data?.isSuccess === false) throw new Error(data?.message || 'Delete failed');
+      this.ui?.showMessage(`Interview criteria ID ${id} deleted`, 'success');
+      await this.refreshTable();
+    } catch (err) {
+      this.ui?.showMessage(`Delete error: ${err.message}`, 'error');
     }
+  }
 
-    async deleteItem(id) {
-        if (!confirm("Are you sure you want to delete this interview criteria?")) return;
-
-        try {
-            console.log("Deleting item with ID:", id);
-            const res = await fetch(this.RootURL + "/recruit/DeleteInterviewCriteria/" + id, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-            });
-            const result = await res.json();
-
-            if (result.isSuccess) {
-                alert("Interview criteria deleted successfully");
-                await this.loadList();
-            } else {
-                throw new Error(result.result || "Delete failed");
-            }
-        } catch (err) {
-            console.error("deleteItem error:", err);
-            alert("Delete failed: " + err.message);
-        }
+  async seedData() {
+    if (!confirm('This will create sample application rounds, faculties and departments. Continue?')) return;
+    this.ui?.showMessage('Seeding sample data...', 'info');
+    try {
+      const res = await fetch(this.ENDPOINT_SEED, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.isSuccess === false) throw new Error(data?.message || 'Seed failed');
+      this.ui?.showMessage('Sample data created', 'success');
+      await this.refreshTable();
+    } catch (err) {
+      this.ui?.showMessage(`Seed error: ${err.message}`, 'error');
     }
+  }
 
-    async seedData() {
-        if (!confirm("This will create sample data for application rounds, faculties, and departments. Continue?")) return;
+  async importFromFile() {
+    const picker = document.createElement('input');
+    picker.type = 'file';
+    picker.accept = '.csv,.json,text/csv,application/json';
+    picker.style.display = 'none';
+    document.body.appendChild(picker);
 
-        try {
-            const res = await fetch(this.RootURL + "/recruit/CreateRawSQL", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-            });
-            const result = await res.json();
+    const file = await new Promise((resolve) => {
+      picker.onchange = () => resolve(picker.files?.[0] || null);
+      picker.click();
+    });
+    document.body.removeChild(picker);
+    if (!file) return;
 
-            if (result.isSuccess) {
-                alert("Sample data created successfully!\n\n" + result.result);
-                await this.loadList();
-            } else {
-                throw new Error(result.result || "Seed operation failed");
-            }
-        } catch (err) {
-            console.error("seedData error:", err);
-            alert("Seed data failed: " + err.message);
-        }
+    try {
+      const formData = new FormData();
+      formData.append('file', file, file.name);
+      const resp = await fetch(this.ENDPOINT_IMPORT, { method: 'POST', body: formData });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || data?.isSuccess === false) throw new Error(data?.message || 'Import failed');
+      const count = Array.isArray(data.result) ? data.result.length : (data?.result?.count ?? 0);
+      this.ui?.showMessage(`Imported ${count} criteria from ${file.name}`, 'success');
+      await this.refreshTable();
+    } catch (err) {
+      this.ui?.showMessage(`Import error: ${err.message}`, 'error');
     }
+  }
+
+  resetForm() {
+    this.currentEditId = null;
+    try {
+      const formRoot = this.form?.form?.html || this.form?.html;
+      if (!formRoot) return;
+      if (typeof formRoot.reset === 'function') { formRoot.reset(); return; }
+      const fields = formRoot.querySelectorAll('input, select, textarea');
+      fields.forEach((el) => {
+        const tag = (el.tagName || '').toLowerCase();
+        const type = (el.type || '').toLowerCase();
+        if (tag === 'input') {
+          if (type === 'checkbox' || type === 'radio') el.checked = false;
+          else el.value = '';
+        } else if (tag === 'select') el.selectedIndex = 0;
+        else if (tag === 'textarea') el.value = '';
+      });
+    } catch (err) {
+      this.ui?.showMessage('Error resetting form: ' + err.message, 'error');
+    }
+  }
+
+  _bindTableActions() {
+    if (!this.$tableHost) return;
+    this.$tableHost.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-action]');
+      if (!btn) return;
+      const action = btn.getAttribute('data-action');
+      const id = btn.getAttribute('data-id') || btn.dataset.id;
+      if (!action || !id) return;
+      if (action === 'edit') this.edit(id);
+      else if (action === 'delete') this.delete(id);
+      else if (action === 'view') this.view(id);
+    });
+  }
 }
 
 window.InterviewCriteriaList = InterviewCriteriaList;
-
-if (typeof window !== "undefined") window.InterviewCriteriaList = InterviewCriteriaList;
-
 }

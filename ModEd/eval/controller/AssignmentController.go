@@ -3,6 +3,11 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/eval/model"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -66,6 +71,42 @@ func (controller *AssignmentController) GetRoute() []*core.RouteItem {
 func (controller *AssignmentController) CreateAssignment(context *fiber.Ctx) error {
 	var assignment model.Assignment
 
+	// Support multipart/form-data with 'data' JSON and files
+	if form, err := context.MultipartForm(); err == nil && form != nil {
+		// parse JSON payload from form value 'data'
+		if vals, ok := form.Value["data"]; ok && len(vals) > 0 {
+			if err := json.Unmarshal([]byte(vals[0]), &assignment); err != nil {
+				return context.JSON(fiber.Map{"isSuccess": false, "result": "cannot parse data JSON"})
+			}
+		}
+
+		// create assignment record first to get ID for file naming
+		if err := controller.application.DB.Create(&assignment).Error; err != nil {
+			return context.JSON(fiber.Map{"isSuccess": false, "result": err.Error()})
+		}
+
+		// save uploaded files (field name 'files')
+		files := form.File["files"]
+		if len(files) > 0 {
+			saveDir := filepath.Join(controller.application.RootPath, "ModEd", "eval", "static", "assignment-file")
+			if err := os.MkdirAll(saveDir, 0755); err != nil {
+				// log but continue
+				fmt.Println("cannot create save dir:", err)
+			}
+			for _, fh := range files {
+				// create unique filename
+				fname := fmt.Sprintf("%d_%d_%s", assignment.ID, time.Now().UnixNano(), fh.Filename)
+				savePath := filepath.Join(saveDir, fname)
+				if err := context.SaveFile(fh, savePath); err != nil {
+					fmt.Println("failed to save file:", err)
+				}
+			}
+		}
+
+		return context.JSON(fiber.Map{"isSuccess": true, "result": assignment})
+	}
+
+	// fallback: parse JSON body
 	if err := context.BodyParser(&assignment); err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,

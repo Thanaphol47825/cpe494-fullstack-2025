@@ -18,6 +18,22 @@ class EvalApiService {
     }
   }
 
+  async uploadFormData(url, formData) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: formData
+      });
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      return await res.json();
+    } catch (err) {
+      console.error('Upload error:', err);
+      return { isSuccess: false, result: err.message };
+    }
+  }
+
   formatToRFC3339(dtLocal) {
     if (!dtLocal) return null;
     // If already in ISO Zulu format, return as-is
@@ -34,23 +50,51 @@ class EvalApiService {
 
   // Assignment API calls
   async createAssignment(assignmentData) {
-    const payload = {
-      title: assignmentData.name || assignmentData.title,
-      description: assignmentData.description,
-      dueDate: this.formatToRFC3339(assignmentData.dueDate),
-      startDate: this.formatToRFC3339(assignmentData.startDate),
-      maxScore: Number(assignmentData.maxScore),
-      instructorId: 1,
-      courseId: 101,
-      isReleased: true,
-      isActive: true
-    };
+    if (assignmentData.files) {
+      // Handle file upload with FormData
+      const formData = new FormData();
+      
+      // Add assignment data
+      const payload = {
+        title: assignmentData.name || assignmentData.title,
+        description: assignmentData.description,
+        dueDate: this.formatToRFC3339(assignmentData.dueDate),
+        startDate: this.formatToRFC3339(assignmentData.startDate),
+        maxScore: Number(assignmentData.maxScore),
+        instructorId: 1,
+        courseId: 101,
+        isReleased: true,
+        isActive: true
+      };
+      
+      formData.append('data', JSON.stringify(payload));
+      
+      // Append all files
+      for (const file of assignmentData.files) {
+        formData.append('files', file);
+      }
 
-    return await this.fetchJSON(`${this.baseUrl}/assignment/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
+      // Use helper to upload multipart FormData
+      return await this.uploadFormData(`${this.baseUrl}/assignment/create`, formData);
+    } else {
+      // Handle regular assignment creation without files
+      const payload = {
+        title: assignmentData.name || assignmentData.title,
+        description: assignmentData.description,
+        dueDate: this.formatToRFC3339(assignmentData.dueDate),
+        startDate: this.formatToRFC3339(assignmentData.startDate),
+        maxScore: Number(assignmentData.maxScore),
+        instructorId: 1,
+        courseId: 101,
+        isReleased: true,
+        isActive: true
+      };
+
+      return await this.fetchJSON(`${this.baseUrl}/assignment/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
   }
 
   async getAllAssignments() {

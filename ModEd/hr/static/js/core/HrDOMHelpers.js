@@ -230,13 +230,68 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
      * Create a label element
      */
     static createLabel(options = {}) {
-      return this.createElement('label', {
+      const labelOptions = {
         className: options.className || 'block text-sm font-medium mb-1',
-        textContent: options.text,
         attributes: {
           for: options.for || options.htmlFor || ''
         }
+      };
+      
+      // Use children if provided, otherwise use text
+      if (options.children) {
+        labelOptions.children = options.children;
+      } else if (options.text) {
+        labelOptions.textContent = options.text;
+      }
+      
+      return this.createElement('label', labelOptions);
+    }
+
+    /**
+     * Create a textarea element
+     */
+    static createTextarea(options = {}) {
+      const textarea = this.createElement('textarea', {
+        name: options.name,
+        id: options.id,
+        className: options.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+        attributes: {
+          placeholder: options.placeholder || '',
+          rows: options.rows || '4',
+          ...(options.required ? { required: '' } : {}),
+          ...(options.attributes || {})
+        }
       });
+      if (options.value) {
+        textarea.value = options.value;
+      }
+      return textarea;
+    }
+
+    /**
+     * Create SVG icon with path
+     */
+    static createIcon(path, options = {}) {
+      const icon = this.createElement('svg', {
+        className: options.className || 'w-5 h-5',
+        attributes: {
+          fill: options.fill || 'none',
+          stroke: options.stroke || 'currentColor',
+          viewBox: options.viewBox || '0 0 24 24'
+        }
+      });
+      
+      const pathElement = this.createElement('path', {
+        attributes: {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          'stroke-width': options.strokeWidth || '2',
+          d: path
+        }
+      });
+      
+      icon.appendChild(pathElement);
+      return icon;
     }
 
     /**
@@ -254,6 +309,68 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
           }
         });
       }
+    }
+
+    /**
+     * Create a table element
+     */
+    static createTable(options = {}) {
+      return this.createElement('table', {
+        className: options.className || 'min-w-full divide-y divide-gray-200',
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table header element
+     */
+    static createTableHead(options = {}) {
+      return this.createElement('thead', {
+        className: options.className || 'bg-gray-50',
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table body element
+     */
+    static createTableBody(options = {}) {
+      return this.createElement('tbody', {
+        className: options.className || 'bg-white divide-y divide-gray-200',
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table row element
+     */
+    static createTableRow(options = {}) {
+      return this.createElement('tr', {
+        className: options.className,
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table header cell element
+     */
+    static createTableHeader(options = {}) {
+      return this.createElement('th', {
+        className: options.className || 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
+        children: options.children,
+        textContent: options.text
+      });
+    }
+
+    /**
+     * Create a table cell element
+     */
+    static createTableCell(options = {}) {
+      return this.createElement('td', {
+        className: options.className || 'px-6 py-4 whitespace-nowrap text-sm',
+        children: options.children,
+        textContent: options.text
+      });
     }
   }
 

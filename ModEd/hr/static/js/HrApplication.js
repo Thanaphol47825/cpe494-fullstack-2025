@@ -28,18 +28,18 @@ if (typeof window !== 'undefined') {
     document.head.appendChild(apiScript);
   }
   
+  // Load DOM helpers
+  if (!window.HrDOMHelpers) {
+    const domScript = document.createElement('script');
+    domScript.src = '/hr/static/js/core/HrDOMHelpers.js';
+    document.head.appendChild(domScript);
+  }
+  
   // Load UI components
   if (!window.HrUiComponents) {
     const uiScript = document.createElement('script');
     uiScript.src = '/hr/static/js/core/HrUiComponents.js';
     document.head.appendChild(uiScript);
-  }
-  
-  // Load DOM helpers
-  if (!window.HrDOMHelpers) {
-    const domHelpersScript = document.createElement('script');
-    domHelpersScript.src = '/hr/static/js/core/HrDOMHelpers.js';
-    document.head.appendChild(domHelpersScript);
   }
   
 }

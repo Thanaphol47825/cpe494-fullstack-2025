@@ -1,5 +1,5 @@
-if (typeof window !== 'undefined' && !window.ApplicantForm) {
-  class ApplicantForm {
+if (typeof window !== 'undefined' && !window.ApplicationReportForm) {
+  class ApplicationReportForm {
     constructor(applicationOrEngine, rootURL) {
       this.app = applicationOrEngine || {};
 
@@ -24,13 +24,13 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
       this.form = null;
       this.ui = null;
       this.currentEditId = null;
-      this.applicantService = null;
+      this.reportService = null;
       this.returnRoute = null; 
     }
 
     _assertContainer() {
       if (!this.container) {
-        console.error('ApplicantForm: mainContainer not found (checked application.templateEngine.mainContainer, application.mainContainer, and #app).');
+        console.error('ApplicationReportForm: mainContainer not found (checked application.templateEngine.mainContainer, application.mainContainer, and #app).');
         return false;
       }
       return true;
@@ -40,7 +40,7 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
       const missing = [];
       if (typeof window.RecruitFormTemplate?.getForm !== 'function') missing.push('RecruitFormTemplate');
       if (typeof window.AdvanceFormRender !== 'function') missing.push('AdvanceFormRender');
-      if (typeof window.ApplicantService !== 'function') missing.push('ApplicantService');
+      if (typeof window.ApplicationReportService !== 'function') missing.push('ApplicationReportService');
       if (missing.length) {
         console.error('Missing dependencies:', missing.join(', '));
         if (this.container) {
@@ -55,8 +55,8 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
     }
 
     _initializeService() {
-      if (!this.applicantService && typeof window.ApplicantService === 'function') {
-        this.applicantService = new window.ApplicantService(this.rootURL);
+      if (!this.reportService && typeof window.ApplicationReportService === 'function') {
+        this.reportService = new window.ApplicationReportService(this.rootURL);
       }
     }
 
@@ -65,14 +65,14 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
       
       console.log('Determining return route:', {
         cameFromTable,
-        sessionStorage: sessionStorage.getItem('applicantFormSource'),
+        sessionStorage: sessionStorage.getItem('applicationReportFormSource'),
         hash: window.location.hash
       });
       
       if (cameFromTable) {
         this.returnRoute = {
-          link: 'recruit/applicant/list',
-          text: 'Back to Applicant Table'
+          link: 'recruit/applicationreport/list',
+          text: 'Back to Application Report Table'
         };
       } else {
         this.returnRoute = {
@@ -84,7 +84,7 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
     }
 
     _checkIfCameFromTable() {
-      const navigationSource = sessionStorage.getItem('applicantFormSource');
+      const navigationSource = sessionStorage.getItem('applicationReportFormSource');
       return navigationSource === 'table';
     }
 
@@ -97,31 +97,31 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
 
       this._determineReturnRoute();
       
-      sessionStorage.removeItem('applicantFormSource');
+      sessionStorage.removeItem('applicationReportFormSource');
 
       const isEdit = editId != null;
       const formEl = await window.RecruitFormTemplate.getForm({
-        title: 'Applicant',
-        subtitle: isEdit ? `Edit applicant #${editId}` : 'Add a new applicant',
-        formId: 'applicant-form',
+        title: 'Application Report',
+        subtitle: isEdit ? `Edit application report #${editId}` : 'Add a new application report',
+        formId: 'applicationreport-form',
         backLink: this.returnRoute.link,
         backText: this.returnRoute.text,
-        colorPrimary: '#059669',
-        colorAccent: '#0f766e',
+        colorPrimary: '#9333ea',
+        colorAccent: '#7e22ce',
         iconPath:
-          'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0z'
+          'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
       }, 'create');
 
       this.container.appendChild(formEl);
 
       this.ui = window.RecruitFormTemplate.mountMessageAndResult(formEl, {
-        messagesId: 'applicantMessages',
-        resultId: 'applicantResult',
+        messagesId: 'applicationReportMessages',
+        resultId: 'applicationReportResult',
       });
 
       this.form = new window.AdvanceFormRender(this.engine, {
-        modelPath: 'recruit/applicant',
-        targetSelector: '#applicant-form',
+        modelPath: 'recruit/applicationreport',
+        targetSelector: '#applicationreport-form',
         submitHandler: (fd) => this.handleSubmit(fd),
         autoFocus: true,
         validateOnBlur: true,
@@ -130,35 +130,37 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
       await this.form.render();
       
       if (isEdit) {
-        await this.loadApplicantData(editId);
+        await this.loadApplicationReportData(editId);
       }
       
       return true;
     }
 
-    async loadApplicantData(id) {
+    async loadApplicationReportData(id) {
       if (!id) return;
       
-      this.ui?.showMessage(`Loading applicant #${id}...`, 'info');
+      this.ui?.showMessage(`Loading application report #${id}...`, 'info');
       
-      const result = await this.applicantService.getById(id);
+      const result = await this.reportService.getById(id);
       if (result.success) {
         this.form.setData(result.data);
-        this.ui?.showMessage(`Editing applicant ID ${id}`, 'info');
+        this.ui?.showMessage(`Editing application report ID ${id}`, 'info');
       } else {
-        this.ui?.showMessage(`Error loading applicant: ${result.error}`, 'error');
+        this.ui?.showMessage(`Error loading application report: ${result.error}`, 'error');
       }
     }
 
     async handleSubmit(formData) {
       const isEdit = this.currentEditId != null;
-      this.ui?.showMessage(`${isEdit ? 'Updating' : 'Creating'} applicant...`, 'info');
+      const cameFromTable = this._checkIfCameFromTable();
+      
+      this.ui?.showMessage(`${isEdit ? 'Updating' : 'Creating'} application report...`, 'info');
 
-      const result = await this.applicantService.save(formData, this.currentEditId);
+      const result = await this.reportService.save(formData, this.currentEditId);
       
       if (result.success) {
         const action = isEdit ? 'updated' : 'created';
-        const message = `Applicant ${action} successfully!${result.id ? ' ID: ' + result.id : ''}`;
+        const message = `Application report ${action} successfully!${result.id ? ' ID: ' + result.id : ''}`;
         
         this.ui?.clearMessages();
         this.ui?.renderResult(result.data, 'success', message);
@@ -167,16 +169,23 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
           this.resetForm();
         }
         
-        window.dispatchEvent(new CustomEvent('applicantChanged', { 
+        window.dispatchEvent(new CustomEvent('applicationReportChanged', { 
           detail: { action: isEdit ? 'update' : 'create', id: result.id, data: result.data }
         }));
-        
-        setTimeout(() => {
-          const returnRoute = this.returnRoute?.link || 'recruit/applicant/list';
-          this._navigateTo(returnRoute);
-          
-          sessionStorage.removeItem('applicantFormSource');
-        }, 2000);
+
+        if (cameFromTable) {
+          setTimeout(() => {
+            const returnRoute = this.returnRoute?.link || 'recruit/applicationreport/list';
+            this._navigateTo(returnRoute);
+            
+            sessionStorage.removeItem('applicationReportFormSource');
+          }, 2000);
+        } else {
+          setTimeout(() => {
+            this.resetForm();
+            sessionStorage.removeItem('applicationReportFormSource');
+          }, 2000);
+        }
         
         return true;
       } else {
@@ -238,5 +247,5 @@ if (typeof window !== 'undefined' && !window.ApplicantForm) {
     }
   }
 
-  window.ApplicantForm = ApplicantForm;
+  window.ApplicationReportForm = ApplicationReportForm;
 }

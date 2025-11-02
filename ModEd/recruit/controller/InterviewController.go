@@ -1,6 +1,7 @@
 package controller
 
 import (
+	commonModel "ModEd/common/model"
 	"ModEd/core"
 	"ModEd/recruit/model"
 	"path/filepath"
@@ -130,6 +131,17 @@ func (controller *InterviewController) GetRoute() []*core.RouteItem {
 		Route:   "/recruit/SetupMockData",
 		Handler: controller.SetupMockData,
 		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetInstructorOptions",
+		Handler: controller.GetInstructorOptions,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetApplicationReportOptions",
+		Handler: controller.GetApplicationReportOptions,
+		Method:  core.GET,
 	})
 
 	return routeList
@@ -574,5 +586,74 @@ func (controller *InterviewController) SetupMockData(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    "Mock data created successfully! Created 5 interviews with related data.",
+	})
+}
+
+func (controller *InterviewController) GetInstructorOptions(context *fiber.Ctx) error {
+	var instructors []commonModel.Instructor
+
+	if err := controller.application.DB.
+		Where("is_drop = ?", false).
+		Order("instructor_code ASC").
+		Find(&instructors).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Failed to get instructors: " + err.Error(),
+		})
+	}
+
+	var results []map[string]interface{}
+	for _, instructor := range instructors {
+		label := ""
+		if instructor.InstructorCode != "" {
+			label = instructor.InstructorCode + " - "
+		}
+		label += instructor.FirstName + " " + instructor.LastName
+
+		results = append(results, map[string]interface{}{
+			"value": instructor.ID,
+			"label": label,
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    results,
+	})
+}
+
+func (controller *InterviewController) GetApplicationReportOptions(context *fiber.Ctx) error {
+	var reports []model.ApplicationReport
+
+	if err := controller.application.DB.
+		Preload("Applicant").
+		Preload("ApplicationRound").
+		Order("id ASC").
+		Find(&reports).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Failed to get application reports: " + err.Error(),
+		})
+	}
+
+	var results []map[string]interface{}
+	for _, report := range reports {
+		label := "Report #" + strconv.Itoa(int(report.ID))
+		if report.Applicant.FirstName != "" || report.Applicant.LastName != "" {
+			label += " | " + report.Applicant.FirstName + " " + report.Applicant.LastName
+		}
+		if report.ApplicationRound.RoundName != "" {
+			label += " | Round: " + report.ApplicationRound.RoundName
+		}
+
+		results = append(results, map[string]interface{}{
+			"value": report.ID,
+			"label": label,
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    results,
 	})
 }

@@ -5,6 +5,7 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
       "Create Admin": "from-gray-500 to-slate-600",
       "Create Applicant": "from-blue-500 to-indigo-500",
       "Manage Applicant": "from-cyan-500 to-blue-500",
+      "Create Application Report": "from-teal-500 to-emerald-500",
       "Manage Application Report": "from-emerald-500 to-green-500",
       "Manage Application Round": "from-amber-500 to-orange-500",
       "Create Interview": "from-purple-500 to-violet-500",
@@ -20,6 +21,8 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
         "M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z",
       "Manage Applicant":
         "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
+      "Create Application Report":
+        "M12 4v16m8-8H4",
       "Manage Application Report":
         "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
       "Manage Application Round":
@@ -38,6 +41,7 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
       "Create Admin": "Create and manage administrator accounts",
       "Create Applicant": "Add new student applicants to the system",
       "Manage Applicant": "View and manage all applicant records",
+      "Create Application Report": "Create new application reports for applicants",
       "Manage Application Report": "Review and process application reports",
       "Manage Application Round": "Configure recruitment rounds and schedules",
       "Create Interview": "Schedule new interviews with applicants",
@@ -50,6 +54,7 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
       "Create Admin": "from-gray-500 to-slate-600",
       "Create Applicant": "from-blue-500 to-indigo-600",
       "Manage Applicant": "from-cyan-500 to-blue-600",
+      "Create Application Report": "from-teal-500 to-emerald-600",
       "Manage Application Report": "from-emerald-500 to-green-600",
       "Manage Application Round": "from-amber-500 to-orange-600",
       "Create Interview": "from-purple-500 to-violet-600",

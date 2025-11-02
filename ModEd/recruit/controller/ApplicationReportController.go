@@ -1,6 +1,7 @@
 package controller
 
 import (
+	commonModel "ModEd/common/model"
 	"ModEd/core"
 	"ModEd/recruit/model"
 	"fmt"
@@ -97,6 +98,17 @@ func (controller *ApplicationReportController) GetRoute() []*core.RouteItem {
 		Method:  core.POST,
 	})
 
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetFacultyOptions",
+		Handler: controller.GetFacultyOptions,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetDepartmentOptions",
+		Handler: controller.GetDepartmentOptions,
+		Method:  core.GET,
+	})
+
 	return routeList
 }
 
@@ -104,12 +116,16 @@ func (controller *ApplicationReportController) CreateApplicationReport(c *fiber.
 	report := new(model.ApplicationReport)
 	fmt.Println("RAW BODY:", string(c.Body()))
 	if err := c.BodyParser(report); err != nil {
+		fmt.Println("PARSE ERROR:", err)
 		return core.SendResponse(c, core.BaseApiResponse{
-			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Cannot parse JSON",
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: fmt.Sprintf("Cannot parse JSON: %v", err),
 		})
 	}
 
+	fmt.Printf("PARSED REPORT: %+v\n", report)
+
 	if err := controller.application.DB.Create(report).Error; err != nil {
+		fmt.Println("DB CREATE ERROR:", err)
 		return core.SendResponse(c, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
@@ -316,5 +332,67 @@ func (controller *ApplicationReportController) VerifyApplicationEligibility(c *f
 
 	return core.SendResponse(c, core.BaseApiResponse{
 		IsSuccess: true, Status: fiber.StatusOK, Message: "Eligibility check complete",
+	})
+}
+
+func (controller *ApplicationReportController) GetFacultyOptions(c *fiber.Ctx) error {
+	var faculties []commonModel.Faculty
+
+	if err := controller.application.DB.Find(&faculties).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
+
+	type Option struct {
+		Label string `json:"label"`
+		Value uint   `json:"value"`
+	}
+
+	options := make([]Option, 0, len(faculties))
+	for _, faculty := range faculties {
+		options = append(options, Option{
+			Label: faculty.Name,
+			Value: faculty.ID,
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Result:    options,
+	})
+}
+
+func (controller *ApplicationReportController) GetDepartmentOptions(c *fiber.Ctx) error {
+	var departments []commonModel.Department
+
+	if err := controller.application.DB.Find(&departments).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
+
+	type Option struct {
+		Label string `json:"label"`
+		Value uint   `json:"value"`
+	}
+
+	options := make([]Option, 0, len(departments))
+	for _, dept := range departments {
+		options = append(options, Option{
+			Label: dept.Name,
+			Value: dept.ID,
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Result:    options,
 	})
 }

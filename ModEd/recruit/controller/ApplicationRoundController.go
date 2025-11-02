@@ -92,6 +92,12 @@ func (controller *ApplicationRoundController) GetRoute() []*core.RouteItem {
 		Method:  core.POST,
 	})
 
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetApplicationRoundOptions",
+		Handler: controller.GetApplicationRoundOptions,
+		Method:  core.GET,
+	})
+
 	return routeList
 }
 
@@ -243,5 +249,35 @@ func (controller *ApplicationRoundController) ImportApplicationRoundsFromFile(c 
 
 	return core.SendResponse(c, core.BaseApiResponse{
 		IsSuccess: true, Status: fiber.StatusOK, Result: rounds,
+	})
+}
+
+func (controller *ApplicationRoundController) GetApplicationRoundOptions(c *fiber.Ctx) error {
+	var rounds []model.ApplicationRound
+	if err := controller.application.DB.Find(&rounds).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
+
+	type Option struct {
+		Label string `json:"label"`
+		Value uint   `json:"value"`
+	}
+
+	options := make([]Option, 0, len(rounds))
+	for _, round := range rounds {
+		options = append(options, Option{
+			Label: round.RoundName,
+			Value: round.ID,
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Result:    options,
 	})
 }

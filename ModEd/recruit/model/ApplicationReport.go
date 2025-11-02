@@ -9,19 +9,19 @@ import (
 type ApplicationReport struct {
 	core.BaseModel
 
-	ApplicantID uint      `gorm:"not null" json:"applicant_id" csv:"applicant_id" label:"Applicant ID" form:"number"`
-	Applicant   Applicant `gorm:"foreignKey:ApplicantID;references:ID" json:"-" form:"-"`
+	ApplicantID uint      `gorm:"not null" json:"applicant_id" csv:"applicant_id" form:"label:Applicant;type:select;apiurl:/recruit/GetApplicantOptions;required:true"`
+	Applicant   Applicant `gorm:"foreignKey:ApplicantID;references:ID" json:"applicant,omitempty" form:"-"`
 
-	ApplicationRoundsID uint             `gorm:"not null" json:"application_rounds_id" csv:"application_rounds_id" label:"Application Round ID" form:"number"`
-	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:ID" json:"-" form:"-"`
+	ApplicationRoundsID uint             `gorm:"not null" json:"application_rounds_id" csv:"application_rounds_id" form:"label:Application Round;type:select;apiurl:/recruit/GetApplicationRoundOptions;required:true"`
+	ApplicationRound    ApplicationRound `gorm:"foreignKey:ApplicationRoundsID;references:ID" json:"application_round,omitempty" form:"-"`
 
-	FacultyID uint           `json:"faculty_id" csv:"faculty_id" label:"Faculty ID" form:"number"`
-	Faculty   *model.Faculty `gorm:"foreignKey:FacultyID;references:ID" json:"-" form:"-"`
+	FacultyID uint           `json:"faculty_id" csv:"faculty_id" form:"label:Faculty;type:select;apiurl:/recruit/GetFacultyOptions"`
+	Faculty   *model.Faculty `gorm:"foreignKey:FacultyID;references:ID" json:"faculty,omitempty" form:"-"`
 
-	DepartmentID uint              `json:"department_id" csv:"department_id" label:"Department ID" form:"number"`
-	Department   *model.Department `gorm:"foreignKey:DepartmentID;references:ID" json:"-" form:"-"`
+	DepartmentID uint              `json:"department_id" csv:"department_id" form:"label:Department;type:select;apiurl:/recruit/GetDepartmentOptions"`
+	Department   *model.Department `gorm:"foreignKey:DepartmentID;references:ID" json:"department,omitempty" form:"-"`
 
-	Program string `gorm:"type:varchar(50);default:''" json:"program" csv:"program" label:"Program Type" form:"text"`
+	Program string `gorm:"type:varchar(50);default:''" json:"program" csv:"program" form:"label:Program Type;type:text;placeholder:e.g., Bachelor, Master, PhD"`
 
-	ApplicationStatuses string `gorm:"type:varchar(50);default:'Pending'" json:"application_statuses" csv:"application_statuses" label:"Application Status" form:"select"`
+	ApplicationStatuses string `gorm:"type:varchar(50);default:'Pending'" json:"application_statuses" csv:"application_statuses" form:"label:Application Status;type:select;apiurl:/recruit/GetApplicationStatusOptions"`
 }

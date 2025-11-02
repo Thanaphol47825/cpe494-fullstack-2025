@@ -12,12 +12,13 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     
     this.features = {
       "admin/create": { title: "Create Admin", icon: "👤", script: "AdminCreate.js" },
-      "applicant/create": { title: "Create Applicant", icon: "🧑‍💼", script: "ApplicantCreate.js" },
+      "applicant/create": { title: "Create Applicant", icon: "🧑‍💼", script: "ApplicantForm.js" },
       "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantTable.js" },
-      "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportList.js" },
+      "applicationreport/create": { title: "Create Application Report", icon: "📝", script: "ApplicationReportForm.js" },
+      "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js" },
       "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundList.js" },
-      "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewCreate.js" },
-      "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewList.js" },
+      "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewForm.js" },
+      "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js" },
       "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
       "interviewcriteria/create": { title: "Create Interview Criteria", icon: "✏️", script: "InterviewCriteriaCreate.js" },
     };
@@ -68,9 +69,19 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       "ApplicantTable.js"
     );
     this.addRouteWithSubModule(
+      "/applicationreport/create",
+      this.renderApplicationReportCreate.bind(this),
+      "ApplicationReportForm.js"
+    );
+    this.addRouteWithSubModule(
+      "/applicationreport/edit/:id",
+      this.renderApplicationReportEdit.bind(this),
+      "ApplicationReportForm.js"
+    );
+    this.addRouteWithSubModule(
       "/applicationreport/list",
       this.renderApplicationReportList.bind(this),
-      "ApplicationReportList.js"
+      "ApplicationReportTable.js"
     );
     this.addRouteWithSubModule(
       "/applicationround/list",
@@ -80,17 +91,17 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     this.addRouteWithSubModule(
       "/interview/create",
       this.renderInterviewCreate.bind(this),
-      "InterviewCreate.js"
+      "InterviewForm.js"
     );
     this.addRouteWithSubModule(
       "/interview/list",
       this.renderInterviewList.bind(this),
-      "InterviewList.js"
+      "InterviewTable.js"
     );
     this.addRouteWithSubModule(
       "/interview/edit/:id",
       this.renderInterviewEdit.bind(this),
-      "InterviewEdit.js"
+      "InterviewForm.js"
     );
     this.addRouteWithSubModule(
       "/interviewcriteria/list",
@@ -201,10 +212,45 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     return await feature.render();
   }
 
+  async renderApplicationReportCreate() {
+    await this.loadRecruitFormTemplate();
+    
+    if (!window.ApplicationReportService) {
+      await this.loadSubModule("services/ApplicationReportService.js");
+    }
+    
+    if (!window.ApplicationReportForm) return this.renderError("Failed to load ApplicationReportForm");
+    const feature = new window.ApplicationReportForm(this.templateEngine, this.rootURL);
+    return await feature.render();
+  }
+
+  async renderApplicationReportEdit(params) {
+    await this.loadRecruitFormTemplate();
+    
+    if (!window.ApplicationReportService) {
+      await this.loadSubModule("services/ApplicationReportService.js");
+    }
+    
+    if (!window.ApplicationReportForm) return this.renderError("Failed to load ApplicationReportForm");
+    
+    const id = params?.id || this.getRouteParam('id');
+    if (!id) {
+      return this.renderError("Application Report ID is required for editing");
+    }
+    
+    const feature = new window.ApplicationReportForm(this.templateEngine, this.rootURL);
+    return await feature.render(id);
+  }
+
   async renderApplicationReportList() {
     await this.loadRecruitTableTemplate();
-    if (!window.ApplicationReportList) return this.renderError("Failed to load ApplicationReportList");
-    const feature = new window.ApplicationReportList(this.templateEngine, this.rootURL);
+    
+    if (!window.ApplicationReportService) {
+      await this.loadSubModule("services/ApplicationReportService.js");
+    }
+    
+    if (!window.ApplicationReportTable) return this.renderError("Failed to load ApplicationReportTable");
+    const feature = new window.ApplicationReportTable(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
@@ -224,31 +270,44 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
 
   async renderInterviewCreate() {
     await this.loadRecruitFormTemplate();
-    if (!window.InterviewCreate) return this.renderError("Failed to load InterviewCreate");
-    const feature = new window.InterviewCreate(this.templateEngine, this.rootURL);
+    
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.InterviewForm) return this.renderError("Failed to load InterviewForm");
+    const feature = new window.InterviewForm(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderInterviewList() {
     await this.loadRecruitTableTemplate();
-    if (!window.InterviewList) return this.renderError("Failed to load InterviewList");
-    const feature = new window.InterviewList(this.templateEngine, this.rootURL);
-    window.interviewList = feature; 
+    
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.InterviewTable) return this.renderError("Failed to load InterviewTable");
+    const feature = new window.InterviewTable(this.templateEngine, this.rootURL);
     return await feature.render();
   }
 
   async renderInterviewEdit(params) {
     await this.loadRecruitFormTemplate();
     
-    if (!window.InterviewCreate) {
-      await this.loadSubModule("InterviewCreate.js");
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
     }
     
-    if (!window.InterviewEdit) return this.renderError("Failed to load InterviewEdit");
-    const interviewId = params?.id;
-    if (!interviewId) return this.renderError("Interview ID is required");
-    const feature = new window.InterviewEdit(this.templateEngine, this.rootURL, interviewId);
-    return await feature.render();
+    if (!window.InterviewForm) return this.renderError("Failed to load InterviewForm");
+    
+    const id = params?.id || this.getRouteParam('id');
+    if (!id) {
+      return this.renderError("Interview ID is required for editing");
+    }
+    
+    const feature = new window.InterviewForm(this.templateEngine, this.rootURL);
+    return await feature.render(id);
   }
 
   async renderInterviewCriteriaList() {

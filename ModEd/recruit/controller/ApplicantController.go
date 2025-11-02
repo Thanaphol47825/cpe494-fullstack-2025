@@ -3,6 +3,7 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -87,6 +88,12 @@ func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 		Route:   "/recruit/GetApplicantsFromFile",
 		Handler: controller.ImportApplicantsFromFile,
 		Method:  core.POST,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetApplicantOptions",
+		Handler: controller.GetApplicantOptions,
+		Method:  core.GET,
 	})
 
 	return routeList
@@ -248,5 +255,36 @@ func (controller *ApplicantController) ImportApplicantsFromFile(c *fiber.Ctx) er
 
 	return core.SendResponse(c, core.BaseApiResponse{
 		IsSuccess: true, Status: fiber.StatusOK, Result: applicants,
+	})
+}
+
+func (controller *ApplicantController) GetApplicantOptions(c *fiber.Ctx) error {
+	var applicants []model.Applicant
+	if err := controller.application.DB.Order("id ASC").Find(&applicants).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   err.Error(),
+		})
+	}
+
+	type Option struct {
+		Label string `json:"label"`
+		Value uint   `json:"value"`
+	}
+
+	options := make([]Option, 0, len(applicants))
+	for _, applicant := range applicants {
+		label := fmt.Sprintf("%d - %s %s", applicant.ID, applicant.FirstName, applicant.LastName)
+		options = append(options, Option{
+			Label: label,
+			Value: applicant.ID,
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Result:    options,
 	})
 }

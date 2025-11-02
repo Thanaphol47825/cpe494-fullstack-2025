@@ -160,33 +160,6 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       submitButton.appendChild(submitIcon);
       submitButton.appendChild(document.createTextNode('Create Company'));
 
-      // Reset button
-      const resetButton = document.createElement('button');
-      resetButton.type = 'button';
-      resetButton.className = 'inline-flex items-center justify-center px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 shadow-lg font-semibold';
-      
-      const resetIcon = document.createElement('svg');
-      resetIcon.className = 'w-5 h-5 mr-2';
-      resetIcon.setAttribute('fill', 'none');
-      resetIcon.setAttribute('stroke', 'currentColor');
-      resetIcon.setAttribute('viewBox', '0 0 24 24');
-      resetIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>';
-      
-      resetButton.appendChild(resetIcon);
-      resetButton.appendChild(document.createTextNode('Reset Form'));
-
-      resetButton.addEventListener('click', () => {
-        if (this.formRender) {
-          this.formRender.reset();
-          this.#hideFormResult();
-          
-          const firstField = form.querySelector('input[name="company_name"]');
-          if (firstField) {
-            setTimeout(() => firstField.focus(), 100);
-          }
-        }
-      });
-
       // Back button
       const backButton = document.createElement('button');
       backButton.type = 'button';
@@ -204,7 +177,6 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       backButton.appendChild(document.createTextNode('Back to List'));
 
       buttonContainer.appendChild(submitButton);
-      buttonContainer.appendChild(resetButton);
       buttonContainer.appendChild(backButton);
 
       form.appendChild(buttonContainer);

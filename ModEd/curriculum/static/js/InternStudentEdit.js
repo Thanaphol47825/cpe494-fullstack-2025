@@ -782,15 +782,15 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
 
         async navigateToCreateCertificate() {
             try {
-                // Load the InternCertificateCreate module
-                await this.application.fetchModule('/curriculum/static/js/InternCertificateCreate.js');
+                // Load the InternStudentCertificateCreate module
+                await this.application.fetchModule('/curriculum/static/js/InternStudentCertificateCreate.js');
 
-                if (window.InternCertificateCreate) {
+                if (window.InternStudentCertificateCreate) {
                     // Pass the InternStudent ID (this.internId)
-                    const createForm = new window.InternCertificateCreate(this.application, this.internId);
+                    const createForm = new window.InternStudentCertificateCreate(this.application, this.internId);
                     await createForm.render();
                 } else {
-                    console.error('InternCertificateCreate class not found');
+                    console.error('InternStudentCertificateCreate class not found');
                     this.showError('Failed to load certificate form');
                 }
             } catch (error) {
@@ -801,16 +801,16 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
 
         async navigateToEditCertificate(certificateId) {
             try {
-                // Load the InternCertificateCreate module for editing
-                await this.application.fetchModule('/curriculum/static/js/InternCertificateCreate.js');
+                // Load the InternStudentCertificateCreate module for editing
+                await this.application.fetchModule('/curriculum/static/js/InternStudentCertificateCreate.js');
 
-                if (window.InternCertificateCreate) {
+                if (window.InternStudentCertificateCreate) {
                     const studentId = this.internData.StudentID || this.internData.student_id;
                     // Pass the certificate ID and student ID to edit mode
-                    const editForm = new window.InternCertificateCreate(this.application, studentId, certificateId);
+                    const editForm = new window.InternStudentCertificateCreate(this.application, studentId, certificateId);
                     await editForm.render();
                 } else {
-                    console.error('InternCertificateCreate class not found');
+                    console.error('InternStudentCertificateCreate class not found');
                     this.showError('Failed to load certificate edit form');
                 }
             } catch (error) {

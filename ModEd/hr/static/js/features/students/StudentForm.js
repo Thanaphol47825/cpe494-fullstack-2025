@@ -86,33 +86,57 @@ if (typeof HrStudentFormFeature === 'undefined') {
       // Program dropdown (0=REGULAR, 1=INTERNATIONAL)
       const programSelect = form.querySelector('select[name="program"], select[name="Program"]');
       if (programSelect) {
-        programSelect.innerHTML = `
-          <option value="">— Select Program —</option>
-          <option value="0">Regular</option>
-          <option value="1">International</option>
-        `;
+        // Clear and rebuild options using DOM
+        programSelect.innerHTML = '';
+        const options = [
+          { value: '', label: '— Select Program —' },
+          { value: '0', label: 'Regular' },
+          { value: '1', label: 'International' }
+        ];
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          programSelect.appendChild(option);
+        });
       }
 
       // Status dropdown (0=ACTIVE, 1=GRADUATED, 2=DROP)
       const statusSelect = form.querySelector('select[name="status"], select[name="Status"]');
       if (statusSelect) {
-        statusSelect.innerHTML = `
-          <option value="">— Select Status —</option>
-          <option value="0">Active</option>
-          <option value="1">Graduated</option>
-          <option value="2">Drop</option>
-        `;
+        // Clear and rebuild options using DOM
+        statusSelect.innerHTML = '';
+        const options = [
+          { value: '', label: '— Select Status —' },
+          { value: '0', label: 'Active' },
+          { value: '1', label: 'Graduated' },
+          { value: '2', label: 'Drop' }
+        ];
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          statusSelect.appendChild(option);
+        });
       }
 
       // Gender dropdown
       const genderSelect = form.querySelector('select[name="Gender"], select[name="gender"]');
       if (genderSelect) {
-        genderSelect.innerHTML = `
-          <option value="">— Select Gender —</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        `;
+        // Clear and rebuild options using DOM
+        genderSelect.innerHTML = '';
+        const options = [
+          { value: '', label: '— Select Gender —' },
+          { value: 'Male', label: 'Male' },
+          { value: 'Female', label: 'Female' },
+          { value: 'Other', label: 'Other' }
+        ];
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          genderSelect.appendChild(option);
+        });
       }
 
       // AdvisorCode: Convert select to text input if it's a dropdown
@@ -151,27 +175,35 @@ if (typeof HrStudentFormFeature === 'undefined') {
       const buttonContainer = document.createElement('div');
       buttonContainer.className = 'flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200';
 
-      // Create Submit button using shared button classes
+      // Create Submit button using DOM manipulation
       const submitButton = document.createElement('button');
       submitButton.type = 'submit';
       submitButton.className = HrUiComponents.buttonClasses.success;
-      submitButton.innerHTML = `
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          ${HrUiComponents.iconPaths.add}
-        </svg>
-        Create Student
-      `;
+      
+      const submitIcon = document.createElement('svg');
+      submitIcon.className = 'w-5 h-5 mr-2';
+      submitIcon.setAttribute('fill', 'none');
+      submitIcon.setAttribute('stroke', 'currentColor');
+      submitIcon.setAttribute('viewBox', '0 0 24 24');
+      submitIcon.innerHTML = HrUiComponents.iconPaths.add;
+      
+      submitButton.appendChild(submitIcon);
+      submitButton.appendChild(document.createTextNode(' Create Student'));
 
-      // Create Reset button using shared button classes
+      // Create Reset button using DOM manipulation
       const resetButton = document.createElement('button');
       resetButton.type = 'button';
       resetButton.className = HrUiComponents.buttonClasses.secondary;
-      resetButton.innerHTML = `
-        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          ${HrUiComponents.iconPaths.reset}
-        </svg>
-        Reset Form
-      `;
+      
+      const resetIcon = document.createElement('svg');
+      resetIcon.className = 'w-5 h-5 mr-2';
+      resetIcon.setAttribute('fill', 'none');
+      resetIcon.setAttribute('stroke', 'currentColor');
+      resetIcon.setAttribute('viewBox', '0 0 24 24');
+      resetIcon.innerHTML = HrUiComponents.iconPaths.reset;
+      
+      resetButton.appendChild(resetIcon);
+      resetButton.appendChild(document.createTextNode(' Reset Form'));
 
       // Add reset handler
       resetButton.addEventListener('click', () => {
@@ -358,26 +390,59 @@ if (typeof HrStudentFormFeature === 'undefined') {
     }
 
     #showError(message) {
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gray-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-              <p class="text-red-600 mt-2">${message}</p>
-              <div class="mt-4">
-                <button onclick="window.location.reload()" 
-                        class="${HrUiComponents.buttonClasses.danger}">
-                  Retry
-                </button>
-                <button onclick="window.location.href='${this.rootURL}/hr'" 
-                        class="${HrUiComponents.buttonClasses.secondary} ml-3">
-                  Back to Main
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      const helpers = window.HrDOMHelpers;
+      if (helpers && typeof helpers.createErrorPage === 'function') {
+        const errorPage = helpers.createErrorPage({
+          message: message,
+          backUrl: `${this.rootURL}/hr`,
+          retryButtonClass: HrUiComponents.buttonClasses.danger,
+          backButtonClass: HrUiComponents.buttonClasses.secondary
+        });
+        HrDOMHelpers.replaceContent(this.templateEngine.mainContainer, errorPage);
+      } else {
+        // Fallback if helpers not available
+        const container = this.templateEngine.mainContainer;
+        container.innerHTML = '';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'min-h-screen bg-gray-50 py-8';
+        
+        const inner = document.createElement('div');
+        inner.className = 'max-w-4xl mx-auto px-4';
+        
+        const card = document.createElement('div');
+        card.className = 'bg-red-50 border border-red-200 rounded-lg p-6';
+        
+        const title = document.createElement('h2');
+        title.className = 'text-lg font-semibold text-red-800';
+        title.textContent = 'Error Loading Form';
+        
+        const msg = document.createElement('p');
+        msg.className = 'text-red-600 mt-2';
+        msg.textContent = message;
+        
+        const buttons = document.createElement('div');
+        buttons.className = 'mt-4';
+        
+        const retryBtn = document.createElement('button');
+        retryBtn.className = HrUiComponents.buttonClasses.danger;
+        retryBtn.textContent = 'Retry';
+        retryBtn.onclick = () => window.location.reload();
+        
+        const backBtn = document.createElement('button');
+        backBtn.className = `${HrUiComponents.buttonClasses.secondary} ml-3`;
+        backBtn.textContent = 'Back to Main';
+        backBtn.onclick = () => window.location.href = `${this.rootURL}/hr`;
+        
+        buttons.appendChild(retryBtn);
+        buttons.appendChild(backBtn);
+        card.appendChild(title);
+        card.appendChild(msg);
+        card.appendChild(buttons);
+        inner.appendChild(card);
+        wrapper.appendChild(inner);
+        container.appendChild(wrapper);
+      }
     }
 
     // Cleanup method

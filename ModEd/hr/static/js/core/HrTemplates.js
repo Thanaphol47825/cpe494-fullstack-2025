@@ -884,6 +884,31 @@ if (typeof window !== 'undefined' && !window.HrTemplates) {
           </div>
         </div>
       `;
+
+      // ========================================
+      // Form Error Page Template
+      // ========================================
+      
+      this.templates.formErrorPage = `
+        <div class="min-h-screen bg-gray-50 py-8">
+          <div class="max-w-4xl mx-auto px-4">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <p class="text-red-600 mt-2">{{message}}</p>
+              <div class="mt-4">
+                <button onclick="window.location.reload()" 
+                        class="{{retryButtonClass}}">
+                  Retry
+                </button>
+                <button onclick="window.location.href='{{backUrl}}'" 
+                        class="{{backButtonClass}} ml-3">
+                  Back to Main
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     /**

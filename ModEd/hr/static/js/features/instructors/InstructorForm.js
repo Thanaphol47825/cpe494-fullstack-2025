@@ -83,30 +83,40 @@ if (typeof HrInstructorFormFeature === 'undefined') {
       const form = document.querySelector('.instructor-form-container form');
       if (!form) return;
 
+      const helpers = window.HrDOMHelpers;
+
       // Convert AcademicPosition from number input to dropdown
       const academicInput = form.querySelector('input[name="AcademicPosition"], input[name="academic_position"]');
       if (academicInput && academicInput.type === 'number') {
         const currentValue = academicInput.value || '';
-        const wrapper = academicInput.parentElement;
         const label = academicInput.previousElementSibling || form.querySelector(`label[for="${academicInput.id}"]`);
         
-        // Create select dropdown
-        const select = document.createElement('select');
-        select.name = academicInput.name;
-        select.id = academicInput.id || `AcademicPosition_${Date.now()}`;
-        select.className = academicInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
-        select.innerHTML = `
-          <option value="">— Select Academic Position —</option>
-          <option value="0">None</option>
-          <option value="1">Assistant Prof</option>
-          <option value="2">Associate Prof</option>
-          <option value="3">Professor</option>
-        `;
-        
-        // Set current value if exists
-        if (currentValue) {
-          select.value = currentValue;
-        }
+        // Create select dropdown using DOM helpers or native DOM
+        const select = helpers ? helpers.createSelect({
+          name: academicInput.name,
+          id: academicInput.id || `AcademicPosition_${Date.now()}`,
+          className: academicInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+          placeholder: '— Select Academic Position —',
+          options: [
+            { value: '0', label: 'None' },
+            { value: '1', label: 'Assistant Prof' },
+            { value: '2', label: 'Associate Prof' },
+            { value: '3', label: 'Professor' }
+          ],
+          value: currentValue
+        }) : this.#createSelectNative({
+          name: academicInput.name,
+          id: academicInput.id || `AcademicPosition_${Date.now()}`,
+          className: academicInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+          placeholder: '— Select Academic Position —',
+          options: [
+            { value: '0', label: 'None' },
+            { value: '1', label: 'Assistant Prof' },
+            { value: '2', label: 'Associate Prof' },
+            { value: '3', label: 'Professor' }
+          ],
+          value: currentValue
+        });
         
         // Replace input with select
         academicInput.replaceWith(select);
@@ -120,39 +130,55 @@ if (typeof HrInstructorFormFeature === 'undefined') {
       // Also check if it's already a select
       const academicSelect = form.querySelector('select[name="AcademicPosition"], select[name="academic_position"]');
       if (academicSelect) {
-        academicSelect.innerHTML = `
-          <option value="">— Select Academic Position —</option>
-          <option value="0">None</option>
-          <option value="1">Assistant Prof</option>
-          <option value="2">Associate Prof</option>
-          <option value="3">Professor</option>
-        `;
+        // Clear and rebuild options
+        academicSelect.innerHTML = '';
+        const options = [
+          { value: '', label: '— Select Academic Position —' },
+          { value: '0', label: 'None' },
+          { value: '1', label: 'Assistant Prof' },
+          { value: '2', label: 'Associate Prof' },
+          { value: '3', label: 'Professor' }
+        ];
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          academicSelect.appendChild(option);
+        });
       }
 
       // Convert DepartmentPosition from number input to dropdown
       const deptInput = form.querySelector('input[name="DepartmentPosition"], input[name="department_position"]');
       if (deptInput && deptInput.type === 'number') {
         const currentValue = deptInput.value || '';
-        const wrapper = deptInput.parentElement;
         const label = deptInput.previousElementSibling || form.querySelector(`label[for="${deptInput.id}"]`);
         
-        // Create select dropdown
-        const select = document.createElement('select');
-        select.name = deptInput.name;
-        select.id = deptInput.id || `DepartmentPosition_${Date.now()}`;
-        select.className = deptInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
-        select.innerHTML = `
-          <option value="">— Select Department Position —</option>
-          <option value="0">None</option>
-          <option value="1">Head</option>
-          <option value="2">Deputy</option>
-          <option value="3">Secretary</option>
-        `;
-        
-        // Set current value if exists
-        if (currentValue) {
-          select.value = currentValue;
-        }
+        // Create select dropdown using DOM helpers or native DOM
+        const select = helpers ? helpers.createSelect({
+          name: deptInput.name,
+          id: deptInput.id || `DepartmentPosition_${Date.now()}`,
+          className: deptInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+          placeholder: '— Select Department Position —',
+          options: [
+            { value: '0', label: 'None' },
+            { value: '1', label: 'Head' },
+            { value: '2', label: 'Deputy' },
+            { value: '3', label: 'Secretary' }
+          ],
+          value: currentValue
+        }) : this.#createSelectNative({
+          name: deptInput.name,
+          id: deptInput.id || `DepartmentPosition_${Date.now()}`,
+          className: deptInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+          placeholder: '— Select Department Position —',
+          options: [
+            { value: '0', label: 'None' },
+            { value: '1', label: 'Head' },
+            { value: '2', label: 'Deputy' },
+            { value: '3', label: 'Secretary' }
+          ],
+          value: currentValue
+        });
         
         // Replace input with select
         deptInput.replaceWith(select);
@@ -166,38 +192,53 @@ if (typeof HrInstructorFormFeature === 'undefined') {
       // Also check if it's already a select
       const deptSelect = form.querySelector('select[name="DepartmentPosition"], select[name="department_position"]');
       if (deptSelect) {
-        deptSelect.innerHTML = `
-          <option value="">— Select Department Position —</option>
-          <option value="0">None</option>
-          <option value="1">Head</option>
-          <option value="2">Deputy</option>
-          <option value="3">Secretary</option>
-        `;
+        // Clear and rebuild options
+        deptSelect.innerHTML = '';
+        const options = [
+          { value: '', label: '— Select Department Position —' },
+          { value: '0', label: 'None' },
+          { value: '1', label: 'Head' },
+          { value: '2', label: 'Deputy' },
+          { value: '3', label: 'Secretary' }
+        ];
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          deptSelect.appendChild(option);
+        });
       }
 
       // Convert Gender from text input to dropdown (if it's not already a select)
       const genderInput = form.querySelector('input[name="Gender"], input[name="gender"]');
       if (genderInput && genderInput.type === 'text') {
         const currentValue = genderInput.value || '';
-        const wrapper = genderInput.parentElement;
         const label = genderInput.previousElementSibling || form.querySelector(`label[for="${genderInput.id}"]`);
         
-        // Create select dropdown
-        const select = document.createElement('select');
-        select.name = genderInput.name;
-        select.id = genderInput.id || `Gender_${Date.now()}`;
-        select.className = genderInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
-        select.innerHTML = `
-          <option value="">— Select Gender —</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        `;
-        
-        // Set current value if exists
-        if (currentValue) {
-          select.value = currentValue;
-        }
+        // Create select dropdown using DOM helpers or native DOM
+        const select = helpers ? helpers.createSelect({
+          name: genderInput.name,
+          id: genderInput.id || `Gender_${Date.now()}`,
+          className: genderInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+          placeholder: '— Select Gender —',
+          options: [
+            { value: 'Male', label: 'Male' },
+            { value: 'Female', label: 'Female' },
+            { value: 'Other', label: 'Other' }
+          ],
+          value: currentValue
+        }) : this.#createSelectNative({
+          name: genderInput.name,
+          id: genderInput.id || `Gender_${Date.now()}`,
+          className: genderInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+          placeholder: '— Select Gender —',
+          options: [
+            { value: 'Male', label: 'Male' },
+            { value: 'Female', label: 'Female' },
+            { value: 'Other', label: 'Other' }
+          ],
+          value: currentValue
+        });
         
         // Replace input with select
         genderInput.replaceWith(select);
@@ -211,13 +252,54 @@ if (typeof HrInstructorFormFeature === 'undefined') {
       // Also check if it's already a select
       const genderSelect = form.querySelector('select[name="Gender"], select[name="gender"]');
       if (genderSelect) {
-        genderSelect.innerHTML = `
-          <option value="">— Select Gender —</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        `;
+        // Clear and rebuild options
+        genderSelect.innerHTML = '';
+        const options = [
+          { value: '', label: '— Select Gender —' },
+          { value: 'Male', label: 'Male' },
+          { value: 'Female', label: 'Female' },
+          { value: 'Other', label: 'Other' }
+        ];
+        options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          genderSelect.appendChild(option);
+        });
       }
+    }
+
+    // Helper method for creating select without helpers
+    #createSelectNative(options) {
+      const select = document.createElement('select');
+      select.name = options.name;
+      select.id = options.id;
+      select.className = options.className;
+      
+      // Add placeholder option
+      if (options.placeholder) {
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = options.placeholder;
+        select.appendChild(defaultOption);
+      }
+      
+      // Add options
+      if (options.options) {
+        options.options.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt.value;
+          option.textContent = opt.label;
+          select.appendChild(option);
+        });
+      }
+      
+      // Set value
+      if (options.value) {
+        select.value = options.value;
+      }
+      
+      return select;
     }
 
     #addCustomButtons() {
@@ -413,26 +495,59 @@ if (typeof HrInstructorFormFeature === 'undefined') {
     }
 
     #showError(message) {
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gray-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-              <p class="text-red-600 mt-2">${message}</p>
-              <div class="mt-4">
-                <button onclick="window.location.reload()" 
-                        class="${HrUiComponents.buttonClasses.danger}">
-                  Retry
-                </button>
-                <button onclick="window.location.href='${this.rootURL}/hr'" 
-                        class="${HrUiComponents.buttonClasses.secondary} ml-3">
-                  Back to Main
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      const helpers = window.HrDOMHelpers;
+      if (helpers && typeof helpers.createErrorPage === 'function') {
+        const errorPage = helpers.createErrorPage({
+          message: message,
+          backUrl: `${this.rootURL}/hr`,
+          retryButtonClass: HrUiComponents.buttonClasses.danger,
+          backButtonClass: HrUiComponents.buttonClasses.secondary
+        });
+        HrDOMHelpers.replaceContent(this.templateEngine.mainContainer, errorPage);
+      } else {
+        // Fallback if helpers not available
+        const container = this.templateEngine.mainContainer;
+        container.innerHTML = '';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'min-h-screen bg-gray-50 py-8';
+        
+        const inner = document.createElement('div');
+        inner.className = 'max-w-4xl mx-auto px-4';
+        
+        const card = document.createElement('div');
+        card.className = 'bg-red-50 border border-red-200 rounded-lg p-6';
+        
+        const title = document.createElement('h2');
+        title.className = 'text-lg font-semibold text-red-800';
+        title.textContent = 'Error Loading Form';
+        
+        const msg = document.createElement('p');
+        msg.className = 'text-red-600 mt-2';
+        msg.textContent = message;
+        
+        const buttons = document.createElement('div');
+        buttons.className = 'mt-4';
+        
+        const retryBtn = document.createElement('button');
+        retryBtn.className = HrUiComponents.buttonClasses.danger;
+        retryBtn.textContent = 'Retry';
+        retryBtn.onclick = () => window.location.reload();
+        
+        const backBtn = document.createElement('button');
+        backBtn.className = `${HrUiComponents.buttonClasses.secondary} ml-3`;
+        backBtn.textContent = 'Back to Main';
+        backBtn.onclick = () => window.location.href = `${this.rootURL}/hr`;
+        
+        buttons.appendChild(retryBtn);
+        buttons.appendChild(backBtn);
+        card.appendChild(title);
+        card.appendChild(msg);
+        card.appendChild(buttons);
+        inner.appendChild(card);
+        wrapper.appendChild(inner);
+        container.appendChild(wrapper);
+      }
     }
 
     // Cleanup method

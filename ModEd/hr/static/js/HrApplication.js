@@ -35,6 +35,13 @@ if (typeof window !== 'undefined') {
     document.head.appendChild(uiScript);
   }
   
+  // Load DOM helpers
+  if (!window.HrDOMHelpers) {
+    const domHelpersScript = document.createElement('script');
+    domHelpersScript.src = '/hr/static/js/core/HrDOMHelpers.js';
+    document.head.appendChild(domHelpersScript);
+  }
+  
 }
 
 // Prevent duplicate declaration

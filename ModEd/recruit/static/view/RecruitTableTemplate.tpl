@@ -21,19 +21,14 @@
   <div id="recruit-table-messages-slot"></div>
 
   <div class="recruit-toolbar">
+    <button data-action="create" class="btn btn-primary">➕ Add New</button>
     <button data-action="import" class="btn btn-import">📥 Import</button>
-    <button data-action="reset"  class="btn btn-secondary">↻ Reset Form</button>
   </div>
 
   <div class="recruit-grid">
-    <div class="recruit-table-wrap">
+    <div class="recruit-table-wrap recruit-table-fullwidth">
       <div id="recruit-table-container"></div>
     </div>
-
-    <aside class="recruit-sidepanel">
-      <h3 class="sidepanel-title">{{panelTitle}}</h3>
-      <div id="recruit-sidepanel-container" class="sidepanel-body"></div>
-    </aside>
   </div>
 
   <div id="recruit-table-result-slot" class="result-slot"></div>
@@ -101,6 +96,10 @@
       background: var(--rt-muted);
       color: var(--rt-text);
     }
+    .btn-primary {
+      background: var(--rt-primary);
+      color: white;
+    }
     .btn-import {
       background: var(--rt-import-bg);
       color: var(--rt-accent);
@@ -123,6 +122,10 @@
     .recruit-table-wrap {
       overflow: auto;
       border: 1px solid var(--rt-border);
+    }
+
+    .recruit-table-fullwidth {
+      grid-column: 1 / -1;
       border-radius: 12px;
       background: var(--rt-bg);
       min-width: 0;

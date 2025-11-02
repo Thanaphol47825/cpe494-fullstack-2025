@@ -1,9 +1,11 @@
-// Company Create Feature using AdvanceFormRender (V2)
-if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
-  class CurriculumCompanyCreateFeature {
-    constructor(templateEngine, rootURL) {
+// Company Edit Feature using AdvanceFormRender (V2)
+if (typeof CompanyEdit === 'undefined' && !window.CompanyEdit) {
+  class CompanyEdit {
+    constructor(templateEngine, rootURL, companyId) {
       this.templateEngine = templateEngine;
       this.rootURL = rootURL || window.__ROOT_URL__ || "";
+      this.companyId = companyId;
+      this.companyData = null;
       this.formRender = null;
     }
 
@@ -13,29 +15,41 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
         return false;
       }
 
-      if (this._isRendering) {
-        return false;
-      }
+      this.templateEngine.mainContainer.innerHTML = "";
+      await this.#loadCompanyData();
+      return true;
+    }
 
-      this._isRendering = true;
-
+    async #loadCompanyData() {
       try {
-        this.templateEngine.mainContainer.innerHTML = "";
-        await this.#createCompanyForm();
-        return true;
-      } finally {
-        this._isRendering = false;
+        this.#showLoading();
+        this.companyData = await this.#fetchCompany(this.companyId);
+        await this.#createCompanyEditForm();
+      } catch (error) {
+        console.error('Error loading company data:', error);
+        this.#showError('Failed to load company data: ' + error.message);
       }
     }
 
-    async #createCompanyForm() {
+    async #fetchCompany(id) {
+      const response = await fetch(`${this.rootURL}/curriculum/company/get/${id}`);
+      const data = await response.json();
+      
+      if (!data.isSuccess) {
+        throw new Error('Failed to fetch company');
+      }
+      
+      return data.result;
+    }
+
+    async #createCompanyEditForm() {
       try {
-        const pageWrapper = this.#createFormPageWrapper();
+        const pageWrapper = this.#createEditFormPageWrapper();
         this.templateEngine.mainContainer.appendChild(pageWrapper);
 
         this.formRender = new AdvanceFormRender(this.templateEngine, {
           modelPath: 'curriculum/company',
-          targetSelector: '.company-form-container',
+          targetSelector: '.company-edit-form-container',
           submitHandler: this.#handleSubmit.bind(this),
           config: {
             autoFocus: true,
@@ -51,15 +65,16 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
           this.#showFormError(message);
         };
 
+        this.#populateForm();
         this.#addCustomButtons();
 
       } catch (error) {
-        console.error('Error creating company form:', error);
+        console.error('Error creating company edit form:', error);
         this.#showError('Failed to load form: ' + error.message);
       }
     }
 
-    #createFormPageWrapper() {
+    #createEditFormPageWrapper() {
       const container = document.createElement('div');
       container.className = 'min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8';
 
@@ -84,18 +99,18 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       icon.setAttribute('fill', 'none');
       icon.setAttribute('stroke', 'currentColor');
       icon.setAttribute('viewBox', '0 0 24 24');
-      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>';
+      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>';
       iconContainer.appendChild(icon);
 
       const headerText = document.createElement('div');
       
       const title = document.createElement('h1');
       title.className = 'text-4xl font-bold';
-      title.textContent = 'Add New Company';
+      title.textContent = 'Edit Company';
       
       const description = document.createElement('p');
       description.className = 'text-blue-100 mt-2 text-lg';
-      description.textContent = 'Create a new company record for internship management';
+      description.textContent = `Update company record: ${this.companyData?.company_name || this.companyData?.CompanyName || this.companyId}`;
 
       headerText.appendChild(title);
       headerText.appendChild(description);
@@ -118,7 +133,7 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       formHeader.appendChild(formTitle);
 
       const formContainer = document.createElement('div');
-      formContainer.className = 'company-form-container p-8';
+      formContainer.className = 'company-edit-form-container p-8';
 
       const resultContainer = document.createElement('div');
       resultContainer.id = 'form-result-container';
@@ -135,8 +150,19 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       return container;
     }
 
+    #populateForm() {
+      if (this.formRender && this.companyData) {
+        const formData = {
+          company_name: this.companyData.company_name || this.companyData.CompanyName || '',
+          company_address: this.companyData.company_address || this.companyData.CompanyAddress || ''
+        };
+
+        this.formRender.setData(formData);
+      }
+    }
+
     #addCustomButtons() {
-      const form = document.querySelector('.company-form-container form');
+      const form = document.querySelector('.company-edit-form-container form');
       if (!form) return;
 
       const existingSubmitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
@@ -145,67 +171,44 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       const buttonContainer = document.createElement('div');
       buttonContainer.className = 'flex flex-col sm:flex-row gap-4 justify-center mt-8 pt-6 border-t border-gray-200';
 
-      // Submit button
-      const submitButton = document.createElement('button');
-      submitButton.type = 'submit';
-      submitButton.className = 'inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg font-semibold';
+      // Update button
+      const updateButton = document.createElement('button');
+      updateButton.type = 'submit';
+      updateButton.className = 'inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg font-semibold';
       
-      const submitIcon = document.createElement('svg');
-      submitIcon.className = 'w-5 h-5 mr-2';
-      submitIcon.setAttribute('fill', 'none');
-      submitIcon.setAttribute('stroke', 'currentColor');
-      submitIcon.setAttribute('viewBox', '0 0 24 24');
-      submitIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>';
+      const updateIcon = document.createElement('svg');
+      updateIcon.className = 'w-5 h-5 mr-2';
+      updateIcon.setAttribute('fill', 'none');
+      updateIcon.setAttribute('stroke', 'currentColor');
+      updateIcon.setAttribute('viewBox', '0 0 24 24');
+      updateIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
       
-      submitButton.appendChild(submitIcon);
-      submitButton.appendChild(document.createTextNode('Create Company'));
+      updateButton.appendChild(updateIcon);
+      updateButton.appendChild(document.createTextNode('Update Company'));
 
-      // Reset button
-      const resetButton = document.createElement('button');
-      resetButton.type = 'button';
-      resetButton.className = 'inline-flex items-center justify-center px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 shadow-lg font-semibold';
+      // Cancel button
+      const cancelButton = document.createElement('button');
+      cancelButton.type = 'button';
+      cancelButton.className = 'inline-flex items-center justify-center px-6 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow font-semibold';
       
-      const resetIcon = document.createElement('svg');
-      resetIcon.className = 'w-5 h-5 mr-2';
-      resetIcon.setAttribute('fill', 'none');
-      resetIcon.setAttribute('stroke', 'currentColor');
-      resetIcon.setAttribute('viewBox', '0 0 24 24');
-      resetIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>';
+      const cancelIcon = document.createElement('svg');
+      cancelIcon.className = 'w-5 h-5 mr-2';
+      cancelIcon.setAttribute('fill', 'none');
+      cancelIcon.setAttribute('stroke', 'currentColor');
+      cancelIcon.setAttribute('viewBox', '0 0 24 24');
+      cancelIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
       
-      resetButton.appendChild(resetIcon);
-      resetButton.appendChild(document.createTextNode('Reset Form'));
+      cancelButton.appendChild(cancelIcon);
+      cancelButton.appendChild(document.createTextNode('Cancel'));
 
-      resetButton.addEventListener('click', () => {
-        if (this.formRender) {
-          this.formRender.reset();
-          this.#hideFormResult();
-          
-          const firstField = form.querySelector('input[name="company_name"]');
-          if (firstField) {
-            setTimeout(() => firstField.focus(), 100);
-          }
+      cancelButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+          window.location.href = '#internship/company';
         }
       });
 
-      // Back button
-      const backButton = document.createElement('button');
-      backButton.type = 'button';
-      backButton.className = 'inline-flex items-center justify-center px-6 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-xl hover:bg-gray-50 transition-all duration-200 shadow font-semibold';
-      backButton.onclick = () => window.location.href = '#internship/company';
-      
-      const backIcon = document.createElement('svg');
-      backIcon.className = 'w-5 h-5 mr-2';
-      backIcon.setAttribute('fill', 'none');
-      backIcon.setAttribute('stroke', 'currentColor');
-      backIcon.setAttribute('viewBox', '0 0 24 24');
-      backIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>';
-      
-      backButton.appendChild(backIcon);
-      backButton.appendChild(document.createTextNode('Back to List'));
-
-      buttonContainer.appendChild(submitButton);
-      buttonContainer.appendChild(resetButton);
-      buttonContainer.appendChild(backButton);
+      buttonContainer.appendChild(updateButton);
+      buttonContainer.appendChild(cancelButton);
 
       form.appendChild(buttonContainer);
     }
@@ -218,7 +221,7 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
           return;
         }
 
-        const response = await fetch(`${this.rootURL}/curriculum/company/create`, {
+        const response = await fetch(`${this.rootURL}/curriculum/company/update/${this.companyId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -233,18 +236,11 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
           throw new Error(result?.error || result?.message || `API Error (${response.status})`);
         }
 
-        this.#showFormSuccess('Company created successfully!', result);
+        this.#showFormSuccess('Company updated successfully!', result);
 
         setTimeout(() => {
-          if (this.formRender) {
-            this.formRender.reset();
-            this.#hideFormResult();
-
-            const form = document.querySelector('.company-form-container form');
-            const firstField = form?.querySelector('input[name="company_name"]');
-            if (firstField) firstField.focus();
-          }
-        }, 3000);
+          window.location.href = '#internship/company';
+        }, 2000);
 
       } catch (error) {
         console.error('Form submission error:', error);
@@ -276,7 +272,7 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
           </svg>
           <div class="flex-1">
             <h3 class="text-lg font-semibold text-green-800">${message}</h3>
-            ${data?.result ? `<p class="text-sm text-green-600 mt-1">Company ID: ${data.result.ID || data.result.id}</p>` : ''}
+            <p class="text-sm text-green-600 mt-1">Redirecting to company list...</p>
           </div>
         </div>
       `;
@@ -307,12 +303,24 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
       }
     }
 
+    #showLoading() {
+      this.templateEngine.mainContainer.innerHTML = `
+        <div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center py-8">
+          <div class="bg-white rounded-3xl shadow-2xl p-12 text-center max-w-md">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto"></div>
+            <h2 class="mt-6 text-2xl font-bold text-gray-900">Loading Company Data...</h2>
+            <p class="mt-2 text-gray-600">Please wait while we load the company information for editing.</p>
+          </div>
+        </div>
+      `;
+    }
+
     #showError(message) {
       this.templateEngine.mainContainer.innerHTML = `
         <div class="min-h-screen bg-gray-50 py-8">
           <div class="max-w-4xl mx-auto px-4">
             <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
+              <h2 class="text-lg font-semibold text-red-800">Error Loading Company</h2>
               <p class="text-red-600 mt-2">${message}</p>
               <div class="mt-4 flex gap-3">
                 <button onclick="window.location.reload()" 
@@ -339,6 +347,6 @@ if (typeof window !== 'undefined' && !window.CurriculumCompanyCreateFeature) {
   }
 
   if (typeof window !== 'undefined') {
-    window.CurriculumCompanyCreateFeature = CurriculumCompanyCreateFeature;
+    window.CompanyEdit = CompanyEdit;
   }
 }

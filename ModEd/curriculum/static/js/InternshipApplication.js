@@ -15,10 +15,21 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderInternshipReport.bind(this),
         "InternshipReportCreate.js"
       );
+      //Company (new version)
       this.addRouteWithSubModule(
         "/company",
-        this.renderCompany.bind(this),
+        this.renderCompanyList.bind(this),
+        "CompanyList.js"
+      );
+      this.addRouteWithSubModule(
+        "/company/create",
+        this.renderCompanyCreate.bind(this),
         "CompanyCreate.js"
+      );
+      this.addRouteWithSubModule(
+        "/company/edit/:id",
+        this.renderCompanyEdit.bind(this),
+        "CompanyEdit.js"
       );
       this.addRouteWithSubModule(
         "/internshipmentor",
@@ -159,12 +170,60 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
     }
 
     async renderCompany() {
-      console.log("Rendering Company");
+      console.log("Rendering Company (Legacy)");
       if (window.CompanyCreate) {
         const companyCreate = new window.CompanyCreate(this.templateEngine);
         await companyCreate.render();
       } else {
         console.error("CompanyCreate class not found");
+      }
+    }
+
+    async renderCompanyList() {
+      console.log("Rendering Company List");
+      await this.loadSubModule("CompanyList.js");
+      console.log("Finish await");
+      if (window.CompanyList){
+        const companyList = new window.CompanyList(
+          this.templateEngine,
+          RootURL || ""
+        );
+        await companyList.render();
+      }
+      else{
+        console.error("CompanyList class not found");
+      }
+    }
+
+    async renderCompanyCreate(){
+      console.log("Rendering Company Create");
+      if (window.CurriculumCompanyCreateFeature) {
+        const companyList = new window.CurriculumCompanyCreateFeature(
+          this.templateEngine,
+          RootURL || ""
+        );
+        await companyList.render();
+      } else {
+        console.error("CurriculumCompanyCreateFeature class not found");
+      }
+    }
+
+    async renderCompanyEdit(){
+      console.log("Rendering Company Edit");
+      const currentPath = this.templateEngine.getCurrentPath();
+      const pathParts = currentPath.split("/");
+      const companyId = pathParts[pathParts.length - 1];
+
+      if(window.CompanyEdit){
+        const companyEdit = new window.CompanyEdit(
+          this.templateEngine,
+          RootURL || "",
+          companyId
+        );
+        await companyEdit.render();
+      }
+      else{
+        console.log("CompanyEdit class not found");
       }
     }
 

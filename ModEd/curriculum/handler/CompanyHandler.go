@@ -29,19 +29,18 @@ func (controller *CompanyHandler) RenderMain(context *fiber.Ctx) error {
 }
 
 func (controller *CompanyHandler) GetAllCompany(context *fiber.Ctx) error {
-	filePath := "/workspace/ModEd/curriculum/data/internship/company.csv"
-	CompanyMapper, err := core.CreateMapper[model.Company](filePath)
-	if err != nil {
-		return context.JSON(fiber.Map{
+	var companies []model.Company
+
+	if err := controller.DB.Find(&companies).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "failed to get company",
+			"error":     "failed to get companies",
 		})
 	}
 
-	Companies := CompanyMapper.Deserialize()
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    Companies,
+		"result":    companies,
 	})
 }
 

@@ -3,6 +3,7 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/curriculum/handler"
+	"ModEd/curriculum/model"
 )
 
 type CompanyController struct {
@@ -48,8 +49,18 @@ func (controller *CompanyController) GetRoute() []*core.RouteItem {
 	return routeList
 }
 
+// func (controller *CompanyController) GetModelMeta() []*core.ModelMeta {
+// 	modelMetaList := []*core.ModelMeta{}
+// 	return modelMetaList
+// }
+
 func (controller *CompanyController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
+	modelMetaList := []*core.ModelMeta{
+		{
+			Path:  "curriculum/company",
+			Model: &model.Company{},
+		},
+	}
 	return modelMetaList
 }
 

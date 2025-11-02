@@ -31,105 +31,11 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
 
     async #createResignationForm() {
       try {
-        // Create page wrapper with manual form
-        const pageHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-              <!-- Header Section -->
-              <div class="text-center mb-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-600 to-red-600 rounded-full mb-4">
-                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">Submit Student Resignation</h1>
-                <p class="text-gray-600">Create a student resignation request</p>
-              </div>
+        // Use HrDOMHelpers to build the form
+        const pageHTML = this.#buildFormWithDOM();
 
-              <!-- Form Container -->
-              <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-                <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600">
-                  <h2 class="text-2xl font-semibold text-white flex items-center">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Resignation Information
-                  </h2>
-                </div>
-                
-                <div class="p-8">
-                  <form id="studentResignationForm" class="space-y-6">
-                    <!-- Student Code -->
-                    <div>
-                      <label for="StudentCode" class="block text-sm font-medium text-gray-700 mb-2">
-                        Student Code <span class="text-red-500">*</span>
-                      </label>
-                      <input 
-                        type="text" 
-                        id="StudentCode" 
-                        name="StudentCode" 
-                        required
-                        placeholder="Enter student code"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                      />
-                    </div>
-
-                    <!-- Reason -->
-                    <div>
-                      <label for="Reason" class="block text-sm font-medium text-gray-700 mb-2">
-                        Reason for Resignation <span class="text-red-500">*</span>
-                      </label>
-                      <textarea 
-                        id="Reason" 
-                        name="Reason" 
-                        required
-                        rows="4"
-                        placeholder="Please provide detailed reason for resignation"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none"
-                      ></textarea>
-                    </div>
-
-                    <!-- Button Container -->
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200">
-                      <button 
-                        type="submit" 
-                        class="${HrUiComponents.buttonClasses.success}">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                        </svg>
-                        Submit Resignation
-                      </button>
-                      <button 
-                        type="button" 
-                        id="resetButton"
-                        class="${HrUiComponents.buttonClasses.secondary}">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          ${HrUiComponents.iconPaths.reset}
-                        </svg>
-                        Reset Form
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-
-              <!-- Result Display Area -->
-              <div id="formResultArea" class="mt-6"></div>
-
-              <!-- Back Button -->
-              <div class="text-center mt-8">
-                <a routerLink="hr/resignation/student" class="${HrUiComponents.buttonClasses.secondary}">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                  </svg>
-                  Back to List
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-
-        this.templateEngine.mainContainer.innerHTML = pageHTML;
+        this.templateEngine.mainContainer.innerHTML = '';
+        this.templateEngine.mainContainer.appendChild(pageHTML);
 
         // Attach form handlers
         this.#attachFormHandlers();
@@ -138,6 +44,205 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
         console.error('Error creating resignation form:', error);
         this.#showError('Failed to load form: ' + error.message);
       }
+    }
+
+    #buildFormWithDOM() {
+      const Hel = HrDOMHelpers;
+
+      // Main container
+      const container = Hel.createDiv({
+        className: 'min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8'
+      });
+
+      // Inner wrapper
+      const wrapper = Hel.createDiv({
+        className: 'max-w-3xl mx-auto px-4 sm:px-6 lg:px-8'
+      });
+
+      // Header Section
+      const headerSection = Hel.createDiv({
+        className: 'text-center mb-10',
+        children: [
+          // Icon circle
+          Hel.createDiv({
+            className: 'inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-600 to-red-600 rounded-full mb-4',
+            children: [
+              Hel.createIcon('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', {
+                className: 'w-8 h-8 text-white',
+                viewBox: '0 0 24 24'
+              })
+            ]
+          }),
+          // Title
+          Hel.createHeading(1, {
+            className: 'text-3xl font-bold text-gray-900 mb-2',
+            textContent: 'Submit Student Resignation'
+          }),
+          // Subtitle
+          Hel.createParagraph({
+            className: 'text-gray-600',
+            textContent: 'Create a student resignation request'
+          })
+        ]
+      });
+
+      // Form Container
+      const formCard = Hel.createDiv({
+        className: 'bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100',
+        children: [
+          // Form header
+          Hel.createDiv({
+            className: 'px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600',
+            children: [
+              Hel.createHeading(2, {
+                className: 'text-2xl font-semibold text-white flex items-center',
+                children: [
+                  Hel.createIcon('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', {
+                    className: 'w-6 h-6 mr-3'
+                  }),
+                  document.createTextNode(' Resignation Information')
+                ]
+              })
+            ]
+          }),
+          // Form body
+          Hel.createDiv({
+            className: 'p-8',
+            children: [
+              // Form element
+              this.#createFormElement()
+            ]
+          })
+        ]
+      });
+
+      // Result area
+      const resultArea = Hel.createDiv({
+        id: 'formResultArea',
+        className: 'mt-6'
+      });
+
+      // Back button
+      const backButtonSection = Hel.createDiv({
+        className: 'text-center mt-8',
+        children: [
+          Hel.createElement('a', {
+            attributes: {
+              'routerLink': 'hr/resignation/student'
+            },
+            className: HrUiComponents.buttonClasses.secondary,
+            children: [
+              Hel.createIcon('M10 19l-7-7m0 0l7-7m-7 7h18', {
+                className: 'w-5 h-5 mr-2'
+              }),
+              document.createTextNode(' Back to List')
+            ]
+          })
+        ]
+      });
+
+      // Assemble the page
+      wrapper.appendChild(headerSection);
+      wrapper.appendChild(formCard);
+      wrapper.appendChild(resultArea);
+      wrapper.appendChild(backButtonSection);
+      container.appendChild(wrapper);
+
+      return container;
+    }
+
+    #createFormElement() {
+      const Hel = HrDOMHelpers;
+
+      // Form
+      const form = Hel.createElement('form', {
+        id: 'studentResignationForm',
+        className: 'space-y-6'
+      });
+
+      // Student Code field
+      const studentCodeField = Hel.createDiv({
+        children: [
+          Hel.createLabel({
+            className: 'block text-sm font-medium text-gray-700 mb-2',
+            children: [
+              document.createTextNode('Student Code '),
+              Hel.createElement('span', {
+                className: 'text-red-500',
+                textContent: '*'
+              })
+            ]
+          }),
+          Hel.createInput({
+            id: 'StudentCode',
+            name: 'StudentCode',
+            placeholder: 'Enter student code',
+            required: true,
+            className: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors'
+          })
+        ]
+      });
+
+      // Reason field
+      const reasonField = Hel.createDiv({
+        children: [
+          Hel.createLabel({
+            className: 'block text-sm font-medium text-gray-700 mb-2',
+            children: [
+              document.createTextNode('Reason for Resignation '),
+              Hel.createElement('span', {
+                className: 'text-red-500',
+                textContent: '*'
+              })
+            ]
+          }),
+          Hel.createTextarea({
+            id: 'Reason',
+            name: 'Reason',
+            placeholder: 'Please provide detailed reason for resignation',
+            required: true,
+            rows: '4',
+            className: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none'
+          })
+        ]
+      });
+
+      // Button container
+      const buttonContainer = Hel.createDiv({
+        className: 'flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200',
+        children: [
+          // Submit button
+          Hel.createElement('button', {
+            type: 'submit',
+            className: HrUiComponents.buttonClasses.success,
+            children: [
+              Hel.createIcon('M12 6v6m0 0v6m0-6h6m-6 0H6', {
+                className: 'w-5 h-5 mr-2'
+              }),
+              document.createTextNode(' Submit Resignation')
+            ]
+          }),
+          // Reset button
+          Hel.createElement('button', {
+            type: 'button',
+            id: 'resetButton',
+            className: HrUiComponents.buttonClasses.secondary,
+            children: [
+              Hel.createIcon(HrTemplates.iconPaths.reset, {
+                className: 'w-5 h-5 mr-2'
+              }),
+              document.createTextNode(' Reset Form')
+            ]
+          })
+        ]
+      });
+
+      // Assemble form
+      form.appendChild(studentCodeField);
+      form.appendChild(reasonField);
+      form.appendChild(buttonContainer);
+
+      return form;
     }
 
     #attachFormHandlers() {
@@ -272,26 +377,18 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
     }
 
     #showError(message) {
-      this.templateEngine.mainContainer.innerHTML = `
-        <div class="min-h-screen bg-gray-50 py-8">
-          <div class="max-w-4xl mx-auto px-4">
-            <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-              <h2 class="text-lg font-semibold text-red-800">Error Loading Form</h2>
-              <p class="text-red-600 mt-2">${message}</p>
-              <div class="mt-4">
-                <button onclick="window.location.reload()" 
-                        class="${HrUiComponents.buttonClasses.danger}">
-                  Retry
-                </button>
-                <button onclick="window.location.href='${this.rootURL}/#hr/resignation/student'" 
-                        class="${HrUiComponents.buttonClasses.secondary} ml-3">
-                  Back to List
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
+      const errorPage = HrDOMHelpers.createErrorPage({
+        title: 'Error Loading Form',
+        message: message,
+        retryText: 'Retry',
+        backText: 'Back to List',
+        backUrl: `${this.rootURL}/#hr/resignation/student`,
+        retryButtonClass: HrUiComponents.buttonClasses.danger,
+        backButtonClass: `${HrUiComponents.buttonClasses.secondary} ml-3`
+      });
+      
+      this.templateEngine.mainContainer.innerHTML = '';
+      this.templateEngine.mainContainer.appendChild(errorPage);
     }
   }
 

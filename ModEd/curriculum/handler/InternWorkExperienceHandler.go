@@ -79,7 +79,7 @@ func (controller *InternWorkExperienceHandler) GetInternWorkExperienceByID(conte
 
 	var internWorkExperience model.InternWorkExperience
 
-	if err := controller.DB.First(&internWorkExperience, id).Error; err != nil {
+	if err := controller.DB.Preload("Company").First(&internWorkExperience, id).Error; err != nil {
 		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "intern work experience not found",

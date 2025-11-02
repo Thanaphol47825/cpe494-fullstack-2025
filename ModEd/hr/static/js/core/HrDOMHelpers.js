@@ -230,13 +230,68 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
      * Create a label element
      */
     static createLabel(options = {}) {
-      return this.createElement('label', {
+      const labelOptions = {
         className: options.className || 'block text-sm font-medium mb-1',
-        textContent: options.text,
         attributes: {
           for: options.for || options.htmlFor || ''
         }
+      };
+      
+      // Use children if provided, otherwise use text
+      if (options.children) {
+        labelOptions.children = options.children;
+      } else if (options.text) {
+        labelOptions.textContent = options.text;
+      }
+      
+      return this.createElement('label', labelOptions);
+    }
+
+    /**
+     * Create a textarea element
+     */
+    static createTextarea(options = {}) {
+      const textarea = this.createElement('textarea', {
+        name: options.name,
+        id: options.id,
+        className: options.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
+        attributes: {
+          placeholder: options.placeholder || '',
+          rows: options.rows || '4',
+          ...(options.required ? { required: '' } : {}),
+          ...(options.attributes || {})
+        }
       });
+      if (options.value) {
+        textarea.value = options.value;
+      }
+      return textarea;
+    }
+
+    /**
+     * Create SVG icon with path
+     */
+    static createIcon(path, options = {}) {
+      const icon = this.createElement('svg', {
+        className: options.className || 'w-5 h-5',
+        attributes: {
+          fill: options.fill || 'none',
+          stroke: options.stroke || 'currentColor',
+          viewBox: options.viewBox || '0 0 24 24'
+        }
+      });
+      
+      const pathElement = this.createElement('path', {
+        attributes: {
+          'stroke-linecap': 'round',
+          'stroke-linejoin': 'round',
+          'stroke-width': options.strokeWidth || '2',
+          d: path
+        }
+      });
+      
+      icon.appendChild(pathElement);
+      return icon;
     }
 
     /**
@@ -257,16 +312,65 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
     }
 
     /**
-     * Create SVG icon element
+     * Create a table element
      */
-    static createIcon(path, className = '') {
-      const svg = document.createElement('svg');
-      svg.className = className;
-      svg.setAttribute('fill', 'none');
-      svg.setAttribute('stroke', 'currentColor');
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.innerHTML = path;
-      return svg;
+    static createTable(options = {}) {
+      return this.createElement('table', {
+        className: options.className || 'min-w-full divide-y divide-gray-200',
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table header element
+     */
+    static createTableHead(options = {}) {
+      return this.createElement('thead', {
+        className: options.className || 'bg-gray-50',
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table body element
+     */
+    static createTableBody(options = {}) {
+      return this.createElement('tbody', {
+        className: options.className || 'bg-white divide-y divide-gray-200',
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table row element
+     */
+    static createTableRow(options = {}) {
+      return this.createElement('tr', {
+        className: options.className,
+        children: options.children
+      });
+    }
+
+    /**
+     * Create a table header cell element
+     */
+    static createTableHeader(options = {}) {
+      return this.createElement('th', {
+        className: options.className || 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider',
+        children: options.children,
+        textContent: options.text
+      });
+    }
+
+    /**
+     * Create a table cell element
+     */
+    static createTableCell(options = {}) {
+      return this.createElement('td', {
+        className: options.className || 'px-6 py-4 whitespace-nowrap text-sm',
+        children: options.children,
+        textContent: options.text
+      });
     }
 
     /**
@@ -307,7 +411,7 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
           this.createDiv({
             className: `inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r ${headerGradient} rounded-full mb-6`,
             children: [
-              iconPath ? this.createIcon(iconPath, 'w-8 h-8 text-white') : null
+              iconPath ? this.createIcon(iconPath, { className: 'w-8 h-8 text-white' }) : null
             ].filter(Boolean)
           }),
           // Title
@@ -334,7 +438,7 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
               href: `#${addButtonLink}`
             },
             children: [
-              this.createIcon('<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>', 'w-5 h-5 mr-2'),
+              this.createIcon('M12 6v6m0 0v6m0-6h6m-6 0H6', { className: 'w-5 h-5 mr-2' }),
               document.createTextNode(addButtonText)
             ]
           })
@@ -352,7 +456,7 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
               this.createHeading(2, {
                 className: 'text-2xl font-semibold text-white flex items-center',
                 children: [
-                  iconPath ? this.createIcon(iconPath, 'w-6 h-6 mr-3') : null,
+                  iconPath ? this.createIcon(iconPath, { className: 'w-6 h-6 mr-3' }) : null,
                   document.createTextNode('Current ' + title.replace(' Management', ''))
                 ].filter(Boolean)
               })
@@ -381,7 +485,7 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
               href: `#${backButtonLink}`
             },
             children: [
-              this.createIcon('<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>', 'w-5 h-5 mr-2'),
+              this.createIcon('M10 19l-7-7m0 0l7-7m-7 7h18', { className: 'w-5 h-5 mr-2' }),
               document.createTextNode(backButtonText)
             ]
           })
@@ -401,7 +505,7 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
     /**
      * Create table row for student/instructor
      */
-    static createTableRow(data, columns, actions = null) {
+    static createTableRowSimple(data, columns, actions = null) {
       const row = document.createElement('tr');
       row.className = 'hover:bg-gray-50 transition-colors';
 
@@ -439,13 +543,13 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
     static createActionButton(type, onClick, code, text) {
       const button = document.createElement('button');
       
-      let iconPath, bgClass, textClass;
+      let iconPath, bgClass, hoverClass;
       if (type === 'edit') {
-        iconPath = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>';
+        iconPath = 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z';
         bgClass = 'bg-yellow-50 text-yellow-700';
         hoverClass = 'hover:bg-yellow-100';
       } else if (type === 'delete') {
-        iconPath = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>';
+        iconPath = 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16';
         bgClass = 'bg-red-50 text-red-700';
         hoverClass = 'hover:bg-red-100';
       }
@@ -453,7 +557,7 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
       button.className = `inline-flex items-center px-3 py-1.5 ${bgClass} text-sm rounded-lg ${hoverClass} transition-colors`;
       button.type = 'button';
       
-      const icon = this.createIcon(iconPath, 'w-4 h-4 mr-1');
+      const icon = this.createIcon(iconPath, { className: 'w-4 h-4 mr-1' });
       button.appendChild(icon);
       button.appendChild(document.createTextNode(text));
       

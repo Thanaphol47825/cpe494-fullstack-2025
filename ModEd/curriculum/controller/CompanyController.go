@@ -21,34 +21,29 @@ func NewCompanyController(app *core.ModEdApplication) *CompanyController {
 func (controller *CompanyController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/getAllCompany",
+		Route:   "/curriculum/company/getAll",
 		Handler: controller.handler.GetAllCompany,
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/createCompany",
+		Route:   "/curriculum/company/create",
 		Handler: controller.handler.CreateCompany,
 		Method:  core.POST,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/getCompany/:id",
+		Route:   "/curriculum/company/get/:id",
 		Handler: controller.handler.GetCompanyByID,
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/updateCompany/:id",
+		Route:   "/curriculum/company/update/:id",
 		Handler: controller.handler.UpdateCompanyByID,
 		Method:  core.POST,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/deleteCompany/:id",
+		Route:   "/curriculum/company/delete/:id",
 		Handler: controller.handler.DeleteCompanyByID,
 		Method:  core.POST,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/company/create",
-		Handler: controller.handler.RenderCreateCompany,
-		Method:  core.GET,
 	})
 	return routeList
 }

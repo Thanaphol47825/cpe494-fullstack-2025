@@ -72,7 +72,7 @@ if (typeof window !== 'undefined' && !window.CompanyCreate) {
                 submitBtn.textContent = 'Creating...';
                 submitBtn.disabled = true;
 
-                const response = await fetch('/curriculum/createCompany', {
+                const response = await fetch('/curriculum/company/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

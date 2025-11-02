@@ -20,63 +20,8 @@ if (typeof HrStudentResignationListFeature === 'undefined') {
 
     async #createListPage() {
       try {
-        // Create page wrapper
-        const pageHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <!-- Header Section -->
-              <div class="text-center mb-12">
-                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-600 to-red-600 rounded-full mb-6">
-                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-                <h1 class="text-4xl font-bold text-gray-900 mb-4">Student Resignation Requests</h1>
-                <p class="text-xl text-gray-600 max-w-2xl mx-auto">Manage student withdrawal and resignation requests</p>
-              </div>
-
-              <!-- Action Bar -->
-              <div class="flex justify-end mb-6">
-                <a routerLink="hr/resignation/student/create" class="${HrUiComponents.buttonClasses.success}">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                  </svg>
-                  New Resignation Request
-                </a>
-              </div>
-
-              <!-- Table Container -->
-              <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mb-8">
-                <div class="px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600">
-                  <h2 class="text-2xl font-semibold text-white flex items-center">
-                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Current Resignation Requests
-                  </h2>
-                </div>
-                
-                <div class="p-8">
-                  <div id="resignationsTableContainer">
-                    <!-- Table will be inserted here -->
-                  </div>
-                </div>
-              </div>
-
-              <!-- Back Button -->
-              <div class="text-center">
-                <a routerLink="hr" class="${HrUiComponents.buttonClasses.secondary}">
-                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                  </svg>
-                  Back to HR Menu
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
-
-        const pageElement = this.templateEngine.create(pageHTML);
+        // Build page with DOM helpers
+        const pageElement = this.#buildListPageLayout();
         this.templateEngine.mainContainer.appendChild(pageElement);
 
         // Fetch resignations data
@@ -107,115 +52,364 @@ if (typeof HrStudentResignationListFeature === 'undefined') {
       }
     }
 
+    #buildListPageLayout() {
+      const Hel = HrDOMHelpers;
+
+      // Main container
+      const container = Hel.createDiv({
+        className: 'min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8'
+      });
+
+      // Inner wrapper
+      const wrapper = Hel.createDiv({
+        className: 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'
+      });
+
+      // Header Section
+      const headerSection = Hel.createDiv({
+        className: 'text-center mb-12',
+        children: [
+          Hel.createDiv({
+            className: 'inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-orange-600 to-red-600 rounded-full mb-6',
+            children: [
+              Hel.createIcon('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', {
+                className: 'w-8 h-8 text-white'
+              })
+            ]
+          }),
+          Hel.createHeading(1, {
+            className: 'text-4xl font-bold text-gray-900 mb-4',
+            textContent: 'Student Resignation Requests'
+          }),
+          Hel.createParagraph({
+            className: 'text-xl text-gray-600 max-w-2xl mx-auto',
+            textContent: 'Manage student withdrawal and resignation requests'
+          })
+        ]
+      });
+
+      // Action Bar
+      const actionBar = Hel.createDiv({
+        className: 'flex justify-end mb-6',
+        children: [
+          Hel.createElement('a', {
+            attributes: { 'routerLink': 'hr/resignation/student/create' },
+            className: HrUiComponents.buttonClasses.success,
+            children: [
+              Hel.createIcon('M12 6v6m0 0v6m0-6h6m-6 0H6', {
+                className: 'w-5 h-5 mr-2'
+              }),
+              document.createTextNode(' New Resignation Request')
+            ]
+          })
+        ]
+      });
+
+      // Table Container
+      const tableCard = Hel.createDiv({
+        className: 'bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100 mb-8',
+        children: [
+          Hel.createDiv({
+            className: 'px-8 py-6 bg-gradient-to-r from-orange-500 to-red-600',
+            children: [
+              Hel.createHeading(2, {
+                className: 'text-2xl font-semibold text-white flex items-center',
+                children: [
+                  Hel.createIcon('M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', {
+                    className: 'w-6 h-6 mr-3'
+                  }),
+                  document.createTextNode(' Current Resignation Requests')
+                ]
+              })
+            ]
+          }),
+          Hel.createDiv({
+            className: 'p-8',
+            children: [
+              Hel.createDiv({
+                id: 'resignationsTableContainer'
+              })
+            ]
+          })
+        ]
+      });
+
+      // Back Button
+      const backButtonSection = Hel.createDiv({
+        className: 'text-center',
+        children: [
+          Hel.createElement('a', {
+            attributes: { 'routerLink': 'hr' },
+            className: HrUiComponents.buttonClasses.secondary,
+            children: [
+              Hel.createIcon('M10 19l-7-7m0 0l7-7m-7 7h18', {
+                className: 'w-5 h-5 mr-2'
+              }),
+              document.createTextNode(' Back to HR Menu')
+            ]
+          })
+        ]
+      });
+
+      // Assemble page
+      wrapper.appendChild(headerSection);
+      wrapper.appendChild(actionBar);
+      wrapper.appendChild(tableCard);
+      wrapper.appendChild(backButtonSection);
+      container.appendChild(wrapper);
+
+      return container;
+    }
+
     #renderResignationTable(resignations) {
       const container = document.querySelector('#resignationsTableContainer');
       if (!container) return;
 
-      const tableHTML = `
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Code</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submission Date</th>
-                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              ${resignations.map(resignation => this.#renderResignationRow(resignation)).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      container.innerHTML = tableHTML;
+      const tableElement = this.#buildTable(resignations);
+      container.appendChild(tableElement);
     }
 
-    #renderResignationRow(resignation) {
+    #buildTable(resignations) {
+      const Hel = HrDOMHelpers;
+
+      // Table wrapper with overflow
+      const tableWrapper = Hel.createDiv({
+        className: 'overflow-x-auto'
+      });
+
+      // Table
+      const table = Hel.createTable({
+        children: [
+          // Table header
+          Hel.createTableHead({
+            children: [
+              Hel.createTableRow({
+                children: [
+                  Hel.createTableHeader({ text: 'ID' }),
+                  Hel.createTableHeader({ text: 'Student Code' }),
+                  Hel.createTableHeader({ text: 'Status' }),
+                  Hel.createTableHeader({ text: 'Submission Date' }),
+                  Hel.createTableHeader({ 
+                    text: 'Actions',
+                    className: 'px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider'
+                  })
+                ]
+              })
+            ]
+          }),
+          // Table body
+          Hel.createTableBody({
+            children: resignations.map(resignation => this.#buildResignationRow(resignation))
+          })
+        ]
+      });
+
+      tableWrapper.appendChild(table);
+      return tableWrapper;
+    }
+
+    #buildResignationRow(resignation) {
+      const Hel = HrDOMHelpers;
       const id = resignation.ID || resignation.id || 'N/A';
       const studentCode = resignation.StudentCode || resignation.student_code || 'N/A';
       const status = resignation.Status || resignation.status || 'Pending';
       const submissionDate = this.#formatDate(resignation.CreatedAt || resignation.created_at);
       const statusColor = this.#getStatusColor(status);
 
-      return `
-        <tr class="hover:bg-gray-50 transition-colors">
-          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${id}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${studentCode}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm">
-            <span class="px-3 py-1 text-xs font-medium rounded-full ${statusColor}">${status}</span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${submissionDate}</td>
-          <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-            <div class="flex gap-2 justify-center">
-              <button onclick="hrStudentResignationList.viewResignation(${id})" 
-                      class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100 transition-colors">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                View
-              </button>
-              <button onclick="hrStudentResignationList.editResignation(${id})" 
-                      class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-                Edit
-              </button>
-              <button onclick="hrStudentResignationList.deleteResignation(${id}, '${studentCode}')" 
-                      class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-                Delete
-              </button>
-            </div>
-          </td>
-        </tr>
-      `;
+      // Actions container
+      const actionsContainer = Hel.createDiv({
+        className: 'flex gap-2 justify-center',
+        children: [
+          // View button
+          Hel.createButton({
+            className: 'inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100 transition-colors',
+            attributes: {
+              onclick: `hrStudentResignationList.viewResignation(${id})`
+            },
+            children: [
+              Hel.createIcon('M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z', {
+                className: 'w-4 h-4 mr-1'
+              }),
+              document.createTextNode('View')
+            ]
+          }),
+          // Edit button
+          Hel.createButton({
+            className: 'inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors',
+            attributes: {
+              onclick: `hrStudentResignationList.editResignation(${id})`
+            },
+            children: [
+              Hel.createIcon('M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z', {
+                className: 'w-4 h-4 mr-1'
+              }),
+              document.createTextNode('Edit')
+            ]
+          }),
+          // Delete button
+          Hel.createButton({
+            className: 'inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors',
+            attributes: {
+              onclick: `hrStudentResignationList.deleteResignation(${id}, '${studentCode}')`
+            },
+            children: [
+              Hel.createIcon('M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16', {
+                className: 'w-4 h-4 mr-1'
+              }),
+              document.createTextNode('Delete')
+            ]
+          })
+        ]
+      });
+
+      return Hel.createTableRow({
+        className: 'hover:bg-gray-50 transition-colors',
+        children: [
+          Hel.createTableCell({
+            className: 'px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900',
+            text: id
+          }),
+          Hel.createTableCell({
+            className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900',
+            text: studentCode
+          }),
+          Hel.createTableCell({
+            className: 'px-6 py-4 whitespace-nowrap text-sm',
+            children: [
+              Hel.createElement('span', {
+                className: `px-3 py-1 text-xs font-medium rounded-full ${statusColor}`,
+                textContent: status
+              })
+            ]
+          }),
+          Hel.createTableCell({
+            className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500',
+            text: submissionDate
+          }),
+          Hel.createTableCell({
+            className: 'px-6 py-4 whitespace-nowrap text-center text-sm font-medium',
+            children: [actionsContainer]
+          })
+        ]
+      });
     }
 
     async viewResignation(resignationId) {
       try {
         const resignation = await this.api.fetchStudentResignation(resignationId);
         
-        // Render detail view
-        const detailHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8">
-            <div class="max-w-4xl mx-auto px-4">
-              <div class="bg-white rounded-3xl shadow-2xl p-8">
-                <h2 class="text-2xl font-bold mb-6">Student Resignation Request #${resignationId}</h2>
-                <div class="grid grid-cols-2 gap-4">
-                  <div><strong>Student Code:</strong> ${resignation.StudentCode || resignation.student_code || 'N/A'}</div>
-                  <div><strong>Status:</strong> <span class="px-3 py-1 text-xs font-medium rounded-full ${this.#getStatusColor(resignation.Status || resignation.status)}">${resignation.Status || resignation.status || 'Pending'}</span></div>
-                  <div><strong>Submission Date:</strong> ${this.#formatDate(resignation.CreatedAt || resignation.created_at)}</div>
-                  <div><strong>Updated At:</strong> ${this.#formatDate(resignation.UpdatedAt || resignation.updated_at)}</div>
-                </div>
-                <div class="mt-6">
-                  <strong>Reason:</strong>
-                  <p class="mt-2 p-4 bg-gray-50 rounded-lg">${resignation.Reason || resignation.reason || 'No reason provided'}</p>
-                </div>
-                <div class="mt-6 flex gap-3">
-                  <button onclick="hrStudentResignationList.render()" class="${HrUiComponents.buttonClasses.secondary}">
-                    Back to List
-                  </button>
-                  <button onclick="hrStudentResignationList.editResignation(${resignationId})" class="${HrUiComponents.buttonClasses.success}">
-                    Edit
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        this.templateEngine.mainContainer.innerHTML = detailHTML;
+        // Build detail view with DOM
+        const detailElement = this.#buildDetailView(resignationId, resignation);
+        this.templateEngine.mainContainer.innerHTML = '';
+        this.templateEngine.mainContainer.appendChild(detailElement);
       } catch (error) {
         console.error('Error viewing resignation:', error);
         alert(`Error loading resignation: ${error.message}`);
       }
+    }
+
+    #buildDetailView(resignationId, resignation) {
+      const Hel = HrDOMHelpers;
+      const status = resignation.Status || resignation.status || 'Pending';
+      const statusColor = this.#getStatusColor(status);
+
+      // Main container
+      const container = Hel.createDiv({
+        className: 'min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 py-8'
+      });
+
+      // Inner wrapper
+      const wrapper = Hel.createDiv({
+        className: 'max-w-4xl mx-auto px-4'
+      });
+
+      // Detail card
+      const card = Hel.createDiv({
+        className: 'bg-white rounded-3xl shadow-2xl p-8',
+        children: [
+          // Title
+          Hel.createHeading(2, {
+            className: 'text-2xl font-bold mb-6',
+            textContent: `Student Resignation Request #${resignationId}`
+          }),
+          // Info grid
+          Hel.createDiv({
+            className: 'grid grid-cols-2 gap-4',
+            children: [
+              Hel.createDiv({
+                children: [
+                  document.createTextNode('Student Code: '),
+                  Hel.createElement('strong', {
+                    textContent: resignation.StudentCode || resignation.student_code || 'N/A'
+                  })
+                ]
+              }),
+              Hel.createDiv({
+                children: [
+                  document.createTextNode('Status: '),
+                  Hel.createElement('span', {
+                    className: `px-3 py-1 text-xs font-medium rounded-full ${statusColor}`,
+                    textContent: status
+                  })
+                ]
+              }),
+              Hel.createDiv({
+                children: [
+                  document.createTextNode('Submission Date: '),
+                  Hel.createElement('strong', {
+                    textContent: this.#formatDate(resignation.CreatedAt || resignation.created_at)
+                  })
+                ]
+              }),
+              Hel.createDiv({
+                children: [
+                  document.createTextNode('Updated At: '),
+                  Hel.createElement('strong', {
+                    textContent: this.#formatDate(resignation.UpdatedAt || resignation.updated_at)
+                  })
+                ]
+              })
+            ]
+          }),
+          // Reason section
+          Hel.createDiv({
+            className: 'mt-6',
+            children: [
+              Hel.createElement('strong', {
+                textContent: 'Reason:'
+              }),
+              Hel.createParagraph({
+                className: 'mt-2 p-4 bg-gray-50 rounded-lg',
+                textContent: resignation.Reason || resignation.reason || 'No reason provided'
+              })
+            ]
+          }),
+          // Buttons
+          Hel.createDiv({
+            className: 'mt-6 flex gap-3',
+            children: [
+              Hel.createButton({
+                className: HrUiComponents.buttonClasses.secondary,
+                attributes: {
+                  onclick: 'hrStudentResignationList.render()'
+                },
+                text: 'Back to List'
+              }),
+              Hel.createButton({
+                className: HrUiComponents.buttonClasses.success,
+                attributes: {
+                  onclick: `hrStudentResignationList.editResignation(${resignationId})`
+                },
+                text: 'Edit'
+              })
+            ]
+          })
+        ]
+      });
+
+      wrapper.appendChild(card);
+      container.appendChild(wrapper);
+      return container;
     }
 
     editResignation(resignationId) {
@@ -281,14 +475,18 @@ if (typeof HrStudentResignationListFeature === 'undefined') {
     }
 
     #showError(message) {
-      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+      const errorPage = HrDOMHelpers.createErrorPage({
         title: 'Error Loading Resignations',
         message: message,
-        hasRetry: true,
-        retryAction: 'window.location.reload()',
-        backLink: 'hr',
-        backLabel: 'Back to HR Menu'
+        retryText: 'Try Again',
+        backText: 'Back to HR Menu',
+        backUrl: `${this.rootURL}/#hr`,
+        retryButtonClass: HrUiComponents.buttonClasses.danger,
+        backButtonClass: `${HrUiComponents.buttonClasses.secondary} ml-3`
       });
+      
+      this.templateEngine.mainContainer.innerHTML = '';
+      this.templateEngine.mainContainer.appendChild(errorPage);
     }
   }
 

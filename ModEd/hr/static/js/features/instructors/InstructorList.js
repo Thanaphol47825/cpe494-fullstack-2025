@@ -91,12 +91,14 @@ if (typeof HrInstructorListFeature === 'undefined') {
           return;
         }
 
-        // Fetch schema from API
-        const schemaResponse = await fetch(`${this.rootURL}/api/modelmeta/hr/instructors`);
-        const schema = await schemaResponse.json();
-
-        // Render table manually (simpler than AdvanceTableRender which needs template definitions)
-        this.#renderInstructorTable(instructors);
+        // Use AdvanceTableRender from core
+        try {
+          await this.#renderWithAdvanceTableRender(instructors);
+        } catch (error) {
+          console.warn('AdvanceTableRender failed, falling back to manual render:', error);
+          // Fallback to manual render if AdvanceTableRender fails
+          this.#renderInstructorTable(instructors);
+        }
 
         // Make globally accessible for onclick handlers
         window.hrInstructorList = this;
@@ -107,9 +109,121 @@ if (typeof HrInstructorListFeature === 'undefined') {
       }
     }
 
+    async #renderWithAdvanceTableRender(instructors) {
+      if (!window.AdvanceTableRender) {
+        throw new Error('AdvanceTableRender not available');
+      }
+
+      // Prepare data with formatted values
+      const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+          const date = new Date(dateString);
+          return !isNaN(date.getTime()) ? date.toLocaleDateString('en-GB') : 'N/A';
+        } catch {
+          return 'N/A';
+        }
+      };
+
+      const formatAcademicPosition = (pos) => {
+        if (pos === undefined || pos === null) return 'N/A';
+        const posMap = { 0: 'None', 1: 'Assistant Prof', 2: 'Associate Prof', 3: 'Professor' };
+        return posMap[pos] || `Position ${pos}`;
+      };
+
+      const formatDepartmentPosition = (pos) => {
+        if (pos === undefined || pos === null) return 'N/A';
+        const posMap = { 0: 'None', 1: 'Head', 2: 'Deputy', 3: 'Secretary' };
+        return posMap[pos] || `Position ${pos}`;
+      };
+
+      const formatSalary = (salary) => {
+        if (!salary && salary !== 0) return 'N/A';
+        return `฿${Number(salary).toLocaleString('en-US')}`;
+      };
+
+      const preparedData = instructors.map(instructor => ({
+        ...instructor,
+        start_date_display: formatDate(instructor.start_date),
+        AcademicPosition_display: formatAcademicPosition(instructor.AcademicPosition),
+        DepartmentPosition_display: formatDepartmentPosition(instructor.DepartmentPosition),
+        Salary_display: formatSalary(instructor.Salary),
+        full_name: `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim()
+      }));
+
+      // Create application wrapper for AdvanceTableRender
+      const app = this.templateEngine || {
+        template: {},
+        fetchTemplate: async () => {}
+      };
+
+      // Create custom columns for actions
+      const customColumns = [
+        {
+          name: 'actions',
+          label: 'Actions',
+          template: `
+            <div class="flex gap-2 justify-center">
+              <button onclick="hrInstructorList.editInstructor('{instructor_code}')" 
+                      class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit
+              </button>
+              <button onclick="hrInstructorList.deleteInstructor('{instructor_code}', '{full_name}')" 
+                      class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Delete
+              </button>
+            </div>
+          `
+        }
+      ];
+
+      // Use AdvanceTableRender - let it fetch schema automatically via modelPath
+      this.tableRender = new AdvanceTableRender(app, {
+        modelPath: 'hr/instructors',
+        data: preparedData,
+        targetSelector: '#instructorsTableContainer',
+        customColumns: customColumns
+      });
+
+      await this.tableRender.render();
+    }
+
     #renderInstructorTable(instructors) {
       const container = document.querySelector('#instructorsTableContainer');
       if (!container) return;
+
+      const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+          const date = new Date(dateString);
+          return !isNaN(date.getTime()) ? date.toLocaleDateString('en-GB') : 'N/A';
+        } catch {
+          return 'N/A';
+        }
+      };
+
+      const formatAcademicPosition = (pos) => {
+        if (pos === undefined || pos === null) return 'N/A';
+        const posMap = { 0: 'None', 1: 'Assistant Prof', 2: 'Associate Prof', 3: 'Professor' };
+        return posMap[pos] || `Position ${pos}`;
+      };
+
+      const formatDepartmentPosition = (pos) => {
+        if (pos === undefined || pos === null) return 'N/A';
+        const posMap = { 0: 'None', 1: 'Head', 2: 'Deputy', 3: 'Secretary' };
+        return posMap[pos] || `Position ${pos}`;
+      };
+
+      const formatSalary = (salary) => {
+        if (!salary && salary !== 0) return 'N/A';
+        return `฿${Number(salary).toLocaleString('en-US')}`;
+      };
 
       const tableHTML = `
         <div class="overflow-x-auto">
@@ -119,7 +233,13 @@ if (typeof HrInstructorListFeature === 'undefined') {
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Instructor Code</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Academic Position</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dept Position</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Salary</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gender</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone Number</th>
                 <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -127,19 +247,17 @@ if (typeof HrInstructorListFeature === 'undefined') {
               ${instructors.map(instructor => `
                 <tr class="hover:bg-gray-50 transition-colors">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${instructor.instructor_code || ''}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${instructor.first_name || ''} ${instructor.last_name || ''}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${instructor.email || ''}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${instructor.rank || 'N/A'}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${(instructor.first_name || '') + ' ' + (instructor.last_name || '')}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${instructor.email || 'N/A'}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${instructor.department || 'N/A'}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(instructor.start_date)}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatAcademicPosition(instructor.AcademicPosition)}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDepartmentPosition(instructor.DepartmentPosition)}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatSalary(instructor.Salary)}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${instructor.Gender || 'N/A'}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${instructor.PhoneNumber || 'N/A'}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                     <div class="flex gap-2 justify-center">
-                      <button onclick="hrInstructorList.viewInstructor('${instructor.instructor_code}')" 
-                              class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100 transition-colors">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        View
-                      </button>
                       <button onclick="hrInstructorList.editInstructor('${instructor.instructor_code}')" 
                               class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +265,7 @@ if (typeof HrInstructorListFeature === 'undefined') {
                         </svg>
                         Edit
                       </button>
-                      <button onclick="hrInstructorList.deleteInstructor('${instructor.instructor_code}', '${instructor.first_name} ${instructor.last_name}')" 
+                      <button onclick="hrInstructorList.deleteInstructor('${instructor.instructor_code}', '${(instructor.first_name || '') + ' ' + (instructor.last_name || '')}')" 
                               class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>

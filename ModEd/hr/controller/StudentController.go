@@ -20,6 +20,10 @@ type StudentController struct {
 	application *core.ModEdApplication
 }
 
+func NewStudentController() *StudentController {
+	return &StudentController{}
+}
+
 func (ctl *StudentController) RenderCreateForm(c *fiber.Ctx) error {
 	path := filepath.Join(ctl.application.RootPath, "hr", "view", "HrTemplate.tpl")
 	tmpl, err := mustache.ParseFile(path)
@@ -41,9 +45,6 @@ func (ctl *StudentController) RenderCreateForm(c *fiber.Ctx) error {
 	})
 	c.Set("Content-Type", "text/html; charset=utf-8")
 	return c.SendString(rendered)
-}
-func NewStudentController() *StudentController {
-	return &StudentController{}
 }
 
 func (ctl *StudentController) GetRoute() []*core.RouteItem {

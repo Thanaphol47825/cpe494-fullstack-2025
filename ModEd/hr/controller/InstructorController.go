@@ -51,17 +51,13 @@ func (ctl *InstructorController) RenderCreateForm(c *fiber.Ctx) error {
 
 func (ctl *InstructorController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
-
 		{Route: "/hr/instructors/create", Method: core.GET, Handler: ctl.RenderCreateForm},
-
 		{Route: "/hr/instructors", Method: core.GET, Handler: ctl.List},
 		{Route: "/hr/instructors", Method: core.POST, Handler: ctl.Create},
-
 		{Route: "/hr/instructors/:code/update", Method: core.POST, Handler: ctl.UpdateByCode},
 		{Route: "/hr/instructors/:code/delete", Method: core.POST, Handler: ctl.DeleteByCode},
 		{Route: "/hr/instructors/:code", Method: core.GET, Handler: ctl.GetByCode},
 		{Route: "/hr/instructors/id/:id/delete", Method: core.POST, Handler: ctl.DeleteByID},
-
 		{Route: "/hr/Instructor", Method: core.GET, Handler: ctl.RenderMain}, // ของเดิม
 	}
 }
@@ -78,7 +74,6 @@ func (ctl *InstructorController) GetModelMeta() []*core.ModelMeta {
 func (ctl *InstructorController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&cmodel.Instructor{})
-
 }
 
 // ---------- Helpers ----------
@@ -179,11 +174,19 @@ func (ctl *InstructorController) UpdateByCode(c *fiber.Ctx) error {
 		return writeErr(c, http.StatusInternalServerError, err.Error())
 	}
 
+	// Read body once and parse both regular fields and positions
+	bodyBytes := c.Body()
 	var tmp map[string]any
-	if err := json.Unmarshal(c.Body(), &tmp); err != nil {
+	if err := json.Unmarshal(bodyBytes, &tmp); err != nil {
 		return writeErr(c, http.StatusBadRequest, err.Error())
 	}
 
+	var pos posIn
+	if err := json.Unmarshal(bodyBytes, &pos); err != nil {
+		return writeErr(c, http.StatusBadRequest, err.Error())
+	}
+
+	// Update regular fields
 	if v, ok := tmp["first_name"].(string); ok {
 		exist.FirstName = v
 	}
@@ -206,8 +209,7 @@ func (ctl *InstructorController) UpdateByCode(c *fiber.Ctx) error {
 		exist.Salary = &v
 	}
 
-	var pos posIn
-	_ = json.Unmarshal(c.Body(), &pos)
+	// Update positions
 	if p, err := coercePos(pos.AcademicPosition, parseAcademicPosAsInt); err != nil {
 		return writeErr(c, http.StatusBadRequest, err.Error())
 	} else if p != nil {

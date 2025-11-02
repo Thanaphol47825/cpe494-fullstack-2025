@@ -8,6 +8,8 @@
   <script src="{{ RootURL }}/core/static/js/DOMObject.js"></script>
   <script src="{{ RootURL }}/core/static/js/BaseModuleApplication.js"></script>
   <script src="{{ RootURL }}/core/static/js/FormRender.js"></script>
+  <script src="{{ RootURL }}/core/static/js/AdvanceFormRender.js"></script>
+  <script src="{{ RootURL }}/core/static/js/AdvanceTableRender.js"></script>
   
   <!-- HR Module Scripts -->
   <script src="{{ RootURL }}/hr/static/js/HrApplication.js"></script>

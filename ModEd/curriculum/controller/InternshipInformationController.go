@@ -10,9 +10,10 @@ type InternshipInformationController struct {
 	handler     *handler.InternshipInformationHandler
 }
 
-func NewInternshipInformationController() *InternshipInformationController {
+func NewInternshipInformationController(app *core.ModEdApplication) *InternshipInformationController {
 	controller := &InternshipInformationController{
-		handler: handler.NewInternshipInformationHandler(),
+		application: app,
+		handler:     handler.NewInternshipInformationHandler(app),
 	}
 	return controller
 }
@@ -25,9 +26,29 @@ func (controller *InternshipInformationController) GetRoute() []*core.RouteItem 
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/InternshipInformation/GetInternshipInformations",
+		Route:   "/curriculum/InternshipInformation/getall",
 		Handler: controller.handler.GetInternshipInformations,
 		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipInformation/:id",
+		Handler: controller.handler.GetInternshipInformationByID,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipInformation/getByStudentID/:student_id",
+		Handler: controller.handler.GetInternshipInformationByStudentID,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipInformation/create",
+		Handler: controller.handler.CreateInternshipInformation,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipInformation/update/:id",
+		Handler: controller.handler.UpdateInternshipInformationByID,
+		Method:  core.POST,
 	})
 	return routeList
 }

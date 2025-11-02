@@ -208,9 +208,9 @@ if (typeof window !== "undefined" && !window.InternStudentCreate) {
 
     goBackToList() {
       if (this.application.navigate) {
-        this.application.navigate("/curriculum/internstudent");
+        this.application.navigate("/internship");
       } else {
-        window.location.hash = "#/curriculum/internstudent";
+        window.location.hash = "#/internship";
       }
     }
 

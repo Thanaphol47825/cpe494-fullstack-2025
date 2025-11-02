@@ -28,6 +28,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       this.addRouteWithSubModule(
         "/internshipattendance",
         this.renderInternshipAttendance.bind(this),
+        "InternshipAttendanceList.js"
+      );
+      this.addRouteWithSubModule(
+        "/internshipattendance/create",
+        this.renderCreateInternshipAttendance.bind(this),
         "InternshipAttendanceCreate.js"
       );
       this.addRouteWithSubModule(
@@ -66,11 +71,10 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         "InternStudentEdit.js"
       );
       this.addRouteWithSubModule(
-      "/internstudentskill/create/:internStudentId",
-      this.renderInternStudentSkill.bind(this),
-      "InternStudentSkillCreate.js"
+        "/internstudentskill/create/:internStudentId",
+        this.renderInternStudentSkill.bind(this),
+        "InternStudentSkillCreate.js"
       );
-      
 
       this.setDefaultRoute("");
     }
@@ -219,6 +223,18 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
 
     async renderInternshipAttendance() {
       console.log("Rendering Internship Attendance");
+      if (window.InternshipAttendanceList) {
+        const attendanceList = new window.InternshipAttendanceList(
+          this.templateEngine
+        );
+        await attendanceList.render();
+      } else {
+        console.error("InternshipAttendanceList class not found");
+      }
+    }
+
+    async renderCreateInternshipAttendance() {
+      console.log("Rendering Create Internship Attendance");
       if (window.InternshipAttendanceCreate) {
         const attendanceCreate = new window.InternshipAttendanceCreate(
           this.templateEngine
@@ -267,7 +283,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       console.log("Rendering Intern Student Skill Create", params);
       const internStudentId = params?.internStudentId || null;
       if (window.InternStudentSkillCreate) {
-        const page = new window.InternStudentSkillCreate(this, internStudentId, null);
+        const page = new window.InternStudentSkillCreate(
+          this,
+          internStudentId,
+          null
+        );
         await page.render();
       } else {
         console.error("InternStudentSkillCreate class not found");

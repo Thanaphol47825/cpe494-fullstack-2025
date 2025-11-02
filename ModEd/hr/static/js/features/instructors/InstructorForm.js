@@ -67,12 +67,156 @@ if (typeof HrInstructorFormFeature === 'undefined') {
           HrUiComponents.showFormError(message);
         };
 
+        // Customize dropdown fields after render
+        this.#customizeDropdowns();
+
         // Add custom action buttons
         this.#addCustomButtons();
 
       } catch (error) {
         console.error('Error creating instructor form:', error);
         this.#showError('Failed to load form: ' + error.message);
+      }
+    }
+
+    #customizeDropdowns() {
+      const form = document.querySelector('.instructor-form-container form');
+      if (!form) return;
+
+      // Convert AcademicPosition from number input to dropdown
+      const academicInput = form.querySelector('input[name="AcademicPosition"], input[name="academic_position"]');
+      if (academicInput && academicInput.type === 'number') {
+        const currentValue = academicInput.value || '';
+        const wrapper = academicInput.parentElement;
+        const label = academicInput.previousElementSibling || form.querySelector(`label[for="${academicInput.id}"]`);
+        
+        // Create select dropdown
+        const select = document.createElement('select');
+        select.name = academicInput.name;
+        select.id = academicInput.id || `AcademicPosition_${Date.now()}`;
+        select.className = academicInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
+        select.innerHTML = `
+          <option value="">— Select Academic Position —</option>
+          <option value="0">None</option>
+          <option value="1">Assistant Prof</option>
+          <option value="2">Associate Prof</option>
+          <option value="3">Professor</option>
+        `;
+        
+        // Set current value if exists
+        if (currentValue) {
+          select.value = currentValue;
+        }
+        
+        // Replace input with select
+        academicInput.replaceWith(select);
+        
+        // Update label if needed
+        if (label && label.getAttribute('for') === academicInput.id) {
+          label.setAttribute('for', select.id);
+        }
+      }
+
+      // Also check if it's already a select
+      const academicSelect = form.querySelector('select[name="AcademicPosition"], select[name="academic_position"]');
+      if (academicSelect) {
+        academicSelect.innerHTML = `
+          <option value="">— Select Academic Position —</option>
+          <option value="0">None</option>
+          <option value="1">Assistant Prof</option>
+          <option value="2">Associate Prof</option>
+          <option value="3">Professor</option>
+        `;
+      }
+
+      // Convert DepartmentPosition from number input to dropdown
+      const deptInput = form.querySelector('input[name="DepartmentPosition"], input[name="department_position"]');
+      if (deptInput && deptInput.type === 'number') {
+        const currentValue = deptInput.value || '';
+        const wrapper = deptInput.parentElement;
+        const label = deptInput.previousElementSibling || form.querySelector(`label[for="${deptInput.id}"]`);
+        
+        // Create select dropdown
+        const select = document.createElement('select');
+        select.name = deptInput.name;
+        select.id = deptInput.id || `DepartmentPosition_${Date.now()}`;
+        select.className = deptInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
+        select.innerHTML = `
+          <option value="">— Select Department Position —</option>
+          <option value="0">None</option>
+          <option value="1">Head</option>
+          <option value="2">Deputy</option>
+          <option value="3">Secretary</option>
+        `;
+        
+        // Set current value if exists
+        if (currentValue) {
+          select.value = currentValue;
+        }
+        
+        // Replace input with select
+        deptInput.replaceWith(select);
+        
+        // Update label if needed
+        if (label && label.getAttribute('for') === deptInput.id) {
+          label.setAttribute('for', select.id);
+        }
+      }
+
+      // Also check if it's already a select
+      const deptSelect = form.querySelector('select[name="DepartmentPosition"], select[name="department_position"]');
+      if (deptSelect) {
+        deptSelect.innerHTML = `
+          <option value="">— Select Department Position —</option>
+          <option value="0">None</option>
+          <option value="1">Head</option>
+          <option value="2">Deputy</option>
+          <option value="3">Secretary</option>
+        `;
+      }
+
+      // Convert Gender from text input to dropdown (if it's not already a select)
+      const genderInput = form.querySelector('input[name="Gender"], input[name="gender"]');
+      if (genderInput && genderInput.type === 'text') {
+        const currentValue = genderInput.value || '';
+        const wrapper = genderInput.parentElement;
+        const label = genderInput.previousElementSibling || form.querySelector(`label[for="${genderInput.id}"]`);
+        
+        // Create select dropdown
+        const select = document.createElement('select');
+        select.name = genderInput.name;
+        select.id = genderInput.id || `Gender_${Date.now()}`;
+        select.className = genderInput.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
+        select.innerHTML = `
+          <option value="">— Select Gender —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        `;
+        
+        // Set current value if exists
+        if (currentValue) {
+          select.value = currentValue;
+        }
+        
+        // Replace input with select
+        genderInput.replaceWith(select);
+        
+        // Update label if needed
+        if (label && label.getAttribute('for') === genderInput.id) {
+          label.setAttribute('for', select.id);
+        }
+      }
+
+      // Also check if it's already a select
+      const genderSelect = form.querySelector('select[name="Gender"], select[name="gender"]');
+      if (genderSelect) {
+        genderSelect.innerHTML = `
+          <option value="">— Select Gender —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        `;
       }
     }
 
@@ -223,9 +367,44 @@ if (typeof HrInstructorFormFeature === 'undefined') {
         }
       });
 
+      // Transform AcademicPosition to int or null
+      if (transformed.AcademicPosition !== undefined || transformed.academic_position !== undefined) {
+        const posValue = transformed.AcademicPosition || transformed.academic_position;
+        if (posValue && posValue !== '' && posValue !== 'Select Academic Position') {
+          const posInt = parseInt(posValue, 10);
+          transformed.AcademicPosition = !isNaN(posInt) ? posInt : null;
+        } else {
+          transformed.AcademicPosition = null;
+        }
+        if (transformed.academic_position !== undefined) delete transformed.academic_position;
+      }
+
+      // Transform DepartmentPosition to int or null
+      if (transformed.DepartmentPosition !== undefined || transformed.department_position !== undefined) {
+        const posValue = transformed.DepartmentPosition || transformed.department_position;
+        if (posValue && posValue !== '' && posValue !== 'Select Department Position') {
+          const posInt = parseInt(posValue, 10);
+          transformed.DepartmentPosition = !isNaN(posInt) ? posInt : null;
+        } else {
+          transformed.DepartmentPosition = null;
+        }
+        if (transformed.department_position !== undefined) delete transformed.department_position;
+      }
+
+      // Transform Gender to string or null
+      if (transformed.Gender !== undefined || transformed.gender !== undefined) {
+        const genderValue = transformed.Gender || transformed.gender;
+        if (genderValue && genderValue !== '' && !genderValue.startsWith('Select')) {
+          transformed.Gender = genderValue;
+        } else {
+          transformed.Gender = null;
+        }
+        if (transformed.gender !== undefined) delete transformed.gender;
+      }
+
       // Set empty fields to null
-      ['department', 'AcademicPosition', 'Gender', 'DepartmentPosition'].forEach(field => {
-        if (!transformed[field]) {
+      ['department'].forEach(field => {
+        if (transformed[field] !== undefined && (!transformed[field] || transformed[field] === '')) {
           transformed[field] = null;
         }
       });

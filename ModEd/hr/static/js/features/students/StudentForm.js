@@ -67,12 +67,75 @@ if (typeof HrStudentFormFeature === 'undefined') {
           HrUiComponents.showFormError(message);
         };
 
+        // Customize dropdown fields after render
+        this.#customizeDropdowns();
+
         // Add custom action buttons
         this.#addCustomButtons();
 
       } catch (error) {
         console.error('Error creating student form:', error);
         this.#showError('Failed to load form: ' + error.message);
+      }
+    }
+
+    #customizeDropdowns() {
+      const form = document.querySelector('.student-form-container form');
+      if (!form) return;
+
+      // Program dropdown (0=REGULAR, 1=INTERNATIONAL)
+      const programSelect = form.querySelector('select[name="program"], select[name="Program"]');
+      if (programSelect) {
+        programSelect.innerHTML = `
+          <option value="">— Select Program —</option>
+          <option value="0">Regular</option>
+          <option value="1">International</option>
+        `;
+      }
+
+      // Status dropdown (0=ACTIVE, 1=GRADUATED, 2=DROP)
+      const statusSelect = form.querySelector('select[name="status"], select[name="Status"]');
+      if (statusSelect) {
+        statusSelect.innerHTML = `
+          <option value="">— Select Status —</option>
+          <option value="0">Active</option>
+          <option value="1">Graduated</option>
+          <option value="2">Drop</option>
+        `;
+      }
+
+      // Gender dropdown
+      const genderSelect = form.querySelector('select[name="Gender"], select[name="gender"]');
+      if (genderSelect) {
+        genderSelect.innerHTML = `
+          <option value="">— Select Gender —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        `;
+      }
+
+      // AdvisorCode: Convert select to text input if it's a dropdown
+      const advisorSelect = form.querySelector('select[name="AdvisorCode"], select[name="advisor_code"]');
+      if (advisorSelect) {
+        const label = advisorSelect.previousElementSibling || document.querySelector(`label[for="${advisorSelect.id}"]`);
+        const wrapper = advisorSelect.parentElement;
+        
+        // Create text input to replace select
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.name = advisorSelect.name;
+        textInput.id = advisorSelect.id || `advisor_code_${Date.now()}`;
+        textInput.className = advisorSelect.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500';
+        textInput.placeholder = 'Enter advisor code';
+        
+        // Replace select with input
+        advisorSelect.replaceWith(textInput);
+        
+        // Update label if needed
+        if (label && label.getAttribute('for') === advisorSelect.id) {
+          label.setAttribute('for', textInput.id);
+        }
       }
     }
 
@@ -218,7 +281,7 @@ if (typeof HrStudentFormFeature === 'undefined') {
       // Transform program to int or null (if exists and not empty)
       if (transformed.program !== undefined || transformed.Program !== undefined) {
         const programValue = transformed.program || transformed.Program;
-        if (programValue && programValue !== '' && programValue !== 'Select Program') {
+        if (programValue && programValue !== '' && programValue !== 'Select Program' && !programValue.startsWith('—')) {
           const programInt = parseInt(programValue, 10);
           transformed.Program = !isNaN(programInt) ? programInt : null;
         } else {
@@ -253,7 +316,7 @@ if (typeof HrStudentFormFeature === 'undefined') {
       // Transform Status to int or null
       if (transformed.status !== undefined || transformed.Status !== undefined) {
         const statusValue = transformed.status || transformed.Status;
-        if (statusValue && statusValue !== '' && !statusValue.startsWith('Select')) {
+        if (statusValue && statusValue !== '' && !statusValue.startsWith('Select') && !statusValue.startsWith('—')) {
           const statusInt = parseInt(statusValue, 10);
           transformed.Status = !isNaN(statusInt) ? statusInt : null;
         } else {
@@ -262,24 +325,22 @@ if (typeof HrStudentFormFeature === 'undefined') {
         if (transformed.status !== undefined) delete transformed.status;
       }
 
-      // Transform Gender to int or null
+      // Transform Gender to string or null
       if (transformed.gender !== undefined || transformed.Gender !== undefined) {
         const genderValue = transformed.gender || transformed.Gender;
-        if (genderValue && genderValue !== '' && !genderValue.startsWith('Select')) {
-          const genderInt = parseInt(genderValue, 10);
-          transformed.Gender = !isNaN(genderInt) ? genderInt : null;
+        if (genderValue && genderValue !== '' && !genderValue.startsWith('Select') && !genderValue.startsWith('—')) {
+          transformed.Gender = genderValue;
         } else {
           transformed.Gender = null;
         }
         if (transformed.gender !== undefined) delete transformed.gender;
       }
 
-      // Transform AdvisorCode to int or null
+      // Transform AdvisorCode to string or null (text input, not dropdown)
       if (transformed.advisor_code !== undefined || transformed.AdvisorCode !== undefined) {
         const advisorValue = transformed.advisor_code || transformed.AdvisorCode;
-        if (advisorValue && advisorValue !== '' && !advisorValue.startsWith('Select')) {
-          const advisorInt = parseInt(advisorValue, 10);
-          transformed.AdvisorCode = !isNaN(advisorInt) ? advisorInt : null;
+        if (advisorValue && advisorValue !== '' && advisorValue.trim() !== '') {
+          transformed.AdvisorCode = advisorValue.trim();
         } else {
           transformed.AdvisorCode = null;
         }

@@ -186,8 +186,7 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
             fields.forEach((field) => {
                 let inputHTML = "";
                 try {
-                    const templateName = field.Type === "textarea" ? "Textarea" : "Input";
-                    const template = this.application.template[templateName];
+                    const template = this.application.template.Input;
 
                     if (template) {
                         inputHTML = Mustache.render(template, field);
@@ -195,11 +194,6 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
 
                     if (inputHTML) {
                         fieldsHTML += `<div class="form-field">${inputHTML}</div>`;
-                        
-                        // Handle disabled state after rendering
-                        if (field.Disabled) {
-                            // This will be handled in setupEventListeners after DOM is ready
-                        }
                     }
                 } catch (error) {
                     console.error("Error creating field:", field.Label, error);
@@ -239,29 +233,35 @@ if (typeof window !== 'undefined' && !window.InternWorkExperienceCreate) {
                 }
             }
 
-            // Set field values for edit mode
-            if (this.experienceData) {
-                this.populateFormFields();
+            // Set field values for edit mode - THIS IS THE KEY FIX
+            if (this.isEditMode && this.experienceData) {
+                // Use setTimeout to ensure DOM is fully ready
+                setTimeout(() => {
+                    this.populateFormFields();
+                }, 0);
             }
         }
 
         populateFormFields() {
-            const fields = ['student_id', 'company_name', 'detail', 'start_date', 'end_date'];
+            console.log('Populating form fields with:', this.experienceData);
             
-            fields.forEach(fieldName => {
+            const fieldMappings = {
+                'student_id': this.experienceData?.student_id,
+                'company_name': this.experienceData?.Company?.company_name || this.experienceData?.company_name,
+                'detail': this.experienceData?.detail,
+                'start_date': this.experienceData?.start_date ? 
+                    new Date(this.experienceData.start_date).toISOString().split('T')[0] : '',
+                'end_date': this.experienceData?.end_date ? 
+                    new Date(this.experienceData.end_date).toISOString().split('T')[0] : ''
+            };
+            
+            Object.keys(fieldMappings).forEach(fieldName => {
                 const field = document.querySelector(`[name="${fieldName}"]`);
-                if (field && this.experienceData) {
-                    let value = this.experienceData[fieldName];
-                    
-                    if (fieldName === 'company_name' && this.experienceData.Company) {
-                        value = this.experienceData.Company.company_name;
-                    } else if ((fieldName === 'start_date' || fieldName === 'end_date') && value) {
-                        value = new Date(value).toISOString().split('T')[0];
-                    }
-                    
-                    if (value) {
-                        field.value = value;
-                    }
+                const value = fieldMappings[fieldName];
+                
+                if (field && value !== undefined && value !== null && value !== '') {
+                    field.value = value;
+                    console.log(`Set ${fieldName} to:`, value);
                 }
             });
         }

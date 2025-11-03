@@ -5,6 +5,7 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
             this.rawClassMaterials = []; // Store raw data for edit modal
             window._deleteClassMaterial = this.handleDelete.bind(this);
             window._editClassMaterial = this.handleEdit.bind(this);
+            window._viewDetailClassMaterial = this.handleViewDetail.bind(this);
         }
 
         getClassMaterials = async () => {
@@ -84,6 +85,37 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
             } catch (error) {
                 console.error('Error opening edit modal:', error);
                 alert('Error opening edit modal: ' + error.message);
+            }
+        }
+
+        async handleViewDetail(classMaterialId) {
+            if (!classMaterialId) return;
+            
+            try {
+                // โหลด CurriculumViewDetailModalTemplate ถ้ายังไม่ได้โหลด
+                if (!window.ViewDetailModalTemplate) {
+                    await this.application.loadSubModule('template/CurriculumViewDetailModalTemplate.js');
+                }
+
+                // Find the class material data with all nested objects
+                const classMaterialData = this.rawClassMaterials.find(item => item.ID === classMaterialId);
+                if (!classMaterialData) {
+                    alert('Class Material not found');
+                    return;
+                }
+
+                const modalId = `classmaterial-view-${classMaterialId}`;
+                
+                // Create view detail modal
+                await ViewDetailModalTemplate.createModal({
+                    modalType: 'ClassMaterial',
+                    modalId: modalId,
+                    data: classMaterialData
+                });
+
+            } catch (error) {
+                console.error('Error opening view detail modal:', error);
+                alert('Error opening view detail modal: ' + error.message);
             }
         }
 
@@ -196,6 +228,14 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
                         label: "Actions",
                         template: `
                             <div class="flex space-x-2">
+                                <button onclick="_viewDetailClassMaterial({ID})" 
+                                        class="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    View
+                                </button>
                                 <button onclick="_editClassMaterial({ID})" 
                                         class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

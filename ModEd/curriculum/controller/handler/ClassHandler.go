@@ -70,7 +70,7 @@ func (h *ClassHandler) GetClassById(context *fiber.Ctx) error {
 
 func (h *ClassHandler) GetClasses(context *fiber.Ctx) error {
 	var classes []model.Class
-	if err := h.Application.DB.Preload("Course").Order("id ASC").Find(&classes).Error; err != nil {
+	if err := h.Application.DB.Preload("Course.Curriculum.Department").Order("id ASC").Find(&classes).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    err.Error(),

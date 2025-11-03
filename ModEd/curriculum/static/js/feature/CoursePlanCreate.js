@@ -1,156 +1,90 @@
-// CoursePlanCreate.js — fixed: payload keys, form selector safety, populate Course dropdown
-
 if (typeof window !== 'undefined' && !window.CoursePlanCreate) {
   class CoursePlanCreate {
     constructor(application) {
       this.application = application;
-      this._coursesCache = null;
     }
 
-    // -------- helpers --------
-    async getCourses(force = false) {
-      if (!force && Array.isArray(this._coursesCache) && this._coursesCache.length) return this._coursesCache;
-      const res = await fetch(`${RootURL}/curriculum/course/getCourses`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await res.json().catch(() => ({ result: [] }));
-      this._coursesCache = (data.result || []).map(c => ({
-        ID: c.ID,
-        Name: c.Name || c.Title || `Course #${c.ID}`,
-      }));
-      return this._coursesCache;
-    }
-
-    async waitForSelector(root, selector, timeoutMs = 2500, intervalMs = 50) {
-      const start = Date.now();
-      return new Promise((resolve, reject) => {
-        const loop = () => {
-          const el = root?.querySelector?.(selector);
-          if (el) return resolve(el);
-          if (Date.now() - start >= timeoutMs) return reject(new Error(`Timeout waiting for ${selector}`));
-          setTimeout(loop, intervalMs);
-        };
-        loop();
-      });
-    }
-
-    async populateCourseDropdown(formRoot) {
-      // รองรับหลายเคสของชื่อฟิลด์
-      const select =
-        formRoot.querySelector('select[name="CourseId"]') ||
-        formRoot.querySelector('select[name="courseId"]') ||
-        formRoot.querySelector('select[data-field="CourseId"]') ||
-        formRoot.querySelector('select[data-name="CourseId"]');
-      if (!select) return;
-
-      const courses = await this.getCourses();
-      select.innerHTML = '';
-      const def = document.createElement('option');
-      def.value = '';
-      def.textContent = 'Select Course';
-      select.appendChild(def);
-
-      courses.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = String(c.ID);
-        opt.textContent = c.Name;
-        select.appendChild(opt);
-      });
-    }
-
-    // -------- submit --------
     async handleSubmit(formData) {
       try {
-        // validation
+        console.log("Submitting CoursePlan form data:", formData);
+
+        // --- Basic validation ---
         if (!formData.CourseId) {
-          alert('Please select a course.');
+          alert("Please select a course.");
           return false;
         }
-        if (!formData.date && !formData.Date) {
-          alert('Please select date & time.');
+        if (!formData.date) {
+          alert("Please select date & time.");
           return false;
         }
-        if (!formData.week && !formData.Week) {
-          alert('Please enter week number.');
-          return false;
-        }
-
-        // normalize fields: รองรับทั้ง date/Date และ week/Week
-        const courseId = parseInt(formData.CourseId, 10);
-        const dtStr = formData.Date || formData.date; // datetime-local
-        const weekNum = parseInt(formData.Week ?? formData.week, 10);
-
-        const dt = new Date(dtStr);
-        if (isNaN(dt.getTime())) {
-          alert('Invalid date/time format.');
+        if (!formData.week) {
+          alert("Please enter week number.");
           return false;
         }
 
-        // ❗ ใช้คีย์ตัวใหญ่ให้ตรงกับ struct ฝั่ง Go
+        // Normalize types
+        const courseId = parseInt(formData.CourseId);
+        const week = parseInt(formData.week);
+
+        // Convert datetime-local (browser local) -> RFC3339 (ISO)
+        let dateISO = null;
+        const dt = new Date(formData.date);
+        if (!isNaN(dt.getTime())) {
+          dateISO = dt.toISOString();
+        } else {
+          alert("Invalid date/time format.");
+          return false;
+        }
+
         const payload = {
           CourseId: courseId,
-          Date: dt.toISOString(),
-          Week: weekNum,
-          Topic: formData.Topic ?? formData.topic ?? '',
-          Description: formData.Description ?? formData.description ?? '',
+          date: dateISO,
+          week,
+          topic: formData.topic || "",
+          description: formData.description || ""
         };
 
-        const resp = await fetch(`${RootURL}/curriculum/CoursePlan/createCoursePlan`, {
+        const resp = await fetch(RootURL + "/curriculum/CoursePlan/createCoursePlan", {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
         const data = await resp.json().catch(() => ({}));
         if (data?.isSuccess) {
-          alert('Course Plan saved!');
-          const formEl = document.querySelector('#course-plan-form') || document.querySelector('form[data-form-key="CoursePlanForm"]');
-          if (formEl) formEl.reset();
-          return true;
+          alert("Course Plan saved!");
+          // reset form if the element exists
+          // const formEl = document.querySelector('#course-plan-form');
+          // if (formEl) formEl.reset();
         } else {
-          alert('Error: ' + (data?.result || data?.message || `Failed to save (HTTP ${resp.status})`));
-          return false;
+          alert("Error: " + (data?.result || data?.message || `Failed to save (HTTP ${resp.status})`));
         }
       } catch (error) {
-        alert('Error: ' + (error?.message || error || 'Failed to save'));
-        return false;
+        alert("Error: " + (error?.message || error || "Failed to save"));
       }
+
+      // prevent default submit navigation
+      return false;
     }
 
-    // -------- render --------
     async render() {
-      // clear
-      this.application.templateEngine.mainContainer.innerHTML = '';
+      // clear application container
+      this.application.templateEngine.mainContainer.innerHTML = "";
 
-      // ดึงฟอร์มจาก template (ต้องมี CoursePlanForm ใน template)
       const formElement = await FormTemplate.getForm('CoursePlanForm', 'create');
       this.application.templateEngine.mainContainer.appendChild(formElement);
 
-      // ให้แน่ใจว่า selector โดน: หาก template ไม่มี id เดิม ให้ fallback เป็น data attribute
-      const targetSelector = document.querySelector('#course-plan-form')
-        ? '#course-plan-form'
-        : (formElement.getAttribute('id') ? `#${formElement.id}` : 'form[data-form-key="CoursePlanForm"]');
-
-      // bind AdvanceFormRender
+      // ใช้ AdvanceFormRender ตาม model meta path "curriculum/courseplan"
       this.form = new AdvanceFormRender(this.application.templateEngine, {
-        modelPath: 'curriculum/courseplan', // ตรงกับ GetModelMeta
-        targetSelector: targetSelector,
+        modelPath: "curriculum/courseplan",
+        targetSelector: "#course-plan-form",
         submitHandler: this.handleSubmit.bind(this),
       });
 
       await this.form.render();
-
-      // หลังจาก render แล้ว เติมรายชื่อคอร์สใน dropdown
-      try {
-        // formElement อาจเป็น wrapper ให้หา form ภายใน
-        const formRoot = formElement.matches('form') ? formElement : (await this.waitForSelector(formElement, 'form'));
-        await this.populateCourseDropdown(formRoot);
-      } catch (e) {
-        console.warn('Populate course dropdown failed:', e?.message || e);
-      }
     }
   }
 
+  // Make available globally
   window.CoursePlanCreate = CoursePlanCreate;
 }

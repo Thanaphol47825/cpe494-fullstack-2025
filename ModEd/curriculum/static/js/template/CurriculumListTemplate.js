@@ -1,6 +1,6 @@
 if (typeof window !== 'undefined' && !window.ListTemplate) {
     class ListTemplate {
-        
+
         // List Type Configurations
         static LIST_CONFIGS = {
             ClassMaterialList: {
@@ -13,7 +13,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 createText: 'Add New Material',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
-                tableId: 'classmaterial-table'
+                tableId: 'classmaterial-table',
+                searchId: 'classmaterial-search'
             },
             CurriculumList: {
                 title: 'Curriculum List',
@@ -25,7 +26,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 createText: 'Add New Curriculum',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
-                tableId: 'curriculum-table'
+                tableId: 'curriculum-table',
+                searchId: 'curriculum-search'
             },
             CourseList: {
                 title: 'Course List',
@@ -37,7 +39,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 createText: 'Add New Course',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
-                tableId: 'course-table'
+                tableId: 'course-table',
+                searchId: 'course-search'
             },
             ClassList: {
                 title: 'Class List',
@@ -49,7 +52,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 createText: 'Add New Class',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
-                tableId: 'class-table'
+                tableId: 'class-table',
+                searchId: 'class-search'
             },
             CoursePlanList: {
                 title: 'Course Plan List',
@@ -61,7 +65,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 createText: 'Add New Course Plan',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
-                tableId: 'courseplan-table'
+                tableId: 'courseplan-table',
+                searchId: 'courseplan-search'
             }
         };
 
@@ -94,7 +99,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 createText,
                 backLink,
                 backText,
-                tableId
+                tableId,
+                searchId
             } = config;
 
             try {
@@ -119,7 +125,8 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                     createText,
                     backLink,
                     backText,
-                    tableId
+                    tableId,
+                    searchId,
                 };
 
                 // Render template ด้วย Mustache
@@ -128,7 +135,7 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 // สร้าง DOM element จาก HTML
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = renderedHTML.trim();
-                
+
                 return tempDiv.firstChild;
 
             } catch (error) {

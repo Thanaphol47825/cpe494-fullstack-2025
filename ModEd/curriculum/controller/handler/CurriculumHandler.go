@@ -104,13 +104,38 @@ func (h *CurriculumHandler) GetProgramTypeOptions(context *fiber.Ctx) error {
 
 // Read all
 func (h *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
+	tx := h.Application.DB.Preload("CourseList").Preload("Department")
+
+	queries := context.Queries()
+	for key, value := range queries {
+		switch key {
+		case "Name":
+			tx = tx.Where("name LIKE ?", "%"+value+"%")
+		case "DepartmentId":
+			tx = tx.Where("department_id = ?", value)
+		case "ProgramType":
+			tx = tx.Where("program_type = ?", value)
+		case "StartYear":
+			tx = tx.Where("start_year = ?", value)
+		case "EndYear":
+			tx = tx.Where("end_year = ?", value)
+		}
+	}
+
 	var curriculums []model.Curriculum
-	if err := h.Application.DB.Preload("CourseList").Preload("Department").Find(&curriculums).Error; err != nil {
+	if err := tx.Find(&curriculums).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculums",
 		})
 	}
+
+	// if err := h.Application.DB.Preload("CourseList").Preload("Department").Find(&curriculums).Error; err != nil {
+	// 	return context.JSON(fiber.Map{
+	// 		"isSuccess": false,
+	// 		"result":    "failed to get curriculums",
+	// 	})
+	// }
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,

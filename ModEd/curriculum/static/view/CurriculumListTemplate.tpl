@@ -53,6 +53,14 @@
         </div>
     </div>
 
+    <!-- Search Container - Full Width -->
+    <div class="max-w-2xl mx-auto">
+        <form method="GET" id="{{searchId}}" class="space-y-6">
+            <!-- Form Fields Container -->
+            <div id="form-fields" class="space-y-6"></div>
+        </form>
+    </div>
+
     <!-- Table Container - Full Width -->
     <div class="relative z-10 w-full">
         <div class="bg-white/80 backdrop-blur-sm shadow-2xl border-t border-white/50 overflow-hidden">

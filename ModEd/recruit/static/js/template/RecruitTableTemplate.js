@@ -50,7 +50,6 @@ if (typeof window !== 'undefined' && !window.RecruitTableTemplate) {
       };
     }
 
-    // Common utility functions
     static navigateTo(route) {
       if (window.RouterLinks) {
         new window.RouterLinks().navigateTo(route);

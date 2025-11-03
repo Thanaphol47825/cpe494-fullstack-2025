@@ -124,6 +124,11 @@ func (controller *ApplicationReportController) GetRoute() []*core.RouteItem {
 		Handler: controller.TransferConfirmedApplicantByIDHandler,
 		Method:  core.POST,
 	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetApplicationReportOptions",
+		Handler: controller.GetApplicationReportOptions,
+		Method:  core.GET,
+	})
 
 	return routeList
 }
@@ -621,5 +626,41 @@ func (controller *ApplicationReportController) TransferConfirmedApplicantByIDHan
 		IsSuccess: true,
 		Status:    fiber.StatusOK,
 		Message:   fmt.Sprintf("✅ Applicant #%d transferred successfully to student record (%s).", payload.ApplicantID, studentCode),
+	})
+}
+
+func (controller *ApplicationReportController) GetApplicationReportOptions(c *fiber.Ctx) error {
+	var reports []model.ApplicationReport
+
+	if err := controller.application.DB.
+		Preload("Applicant").
+		Preload("ApplicationRound").
+		Order("id ASC").
+		Find(&reports).Error; err != nil {
+		return c.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "Failed to get application reports: " + err.Error(),
+		})
+	}
+
+	var results []map[string]interface{}
+	for _, report := range reports {
+		label := "Report #" + strconv.Itoa(int(report.ID))
+		if report.Applicant.FirstName != "" || report.Applicant.LastName != "" {
+			label += " | " + report.Applicant.FirstName + " " + report.Applicant.LastName
+		}
+		if report.ApplicationRound.RoundName != "" {
+			label += " | Round: " + report.ApplicationRound.RoundName
+		}
+
+		results = append(results, map[string]interface{}{
+			"value": report.ID,
+			"label": label,
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    results,
 	})
 }

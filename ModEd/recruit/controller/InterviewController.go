@@ -138,11 +138,6 @@ func (controller *InterviewController) GetRoute() []*core.RouteItem {
 		Handler: controller.GetInstructorOptions,
 		Method:  core.GET,
 	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetApplicationReportOptions",
-		Handler: controller.GetApplicationReportOptions,
-		Method:  core.GET,
-	})
 
 	return routeList
 }
@@ -495,11 +490,11 @@ func (controller *InterviewController) SetupTestData(context *fiber.Ctx) error {
 		
 		-- Create application reports
 		INSERT INTO application_reports (id, applicant_id, application_rounds_id, faculty_id, department_id, program, application_statuses) VALUES 
-		(1, 1, 1, 1, 1, 'Regular', 'Pending'),
-		(2, 2, 1, 1, 1, 'Regular', 'Interview'),
-		(3, 3, 1, 1, 2, 'International', 'Evaluated'),
-		(4, 4, 1, 2, 3, 'Regular', 'Accepted'),
-		(5, 5, 1, 2, 3, 'International', 'Rejected')
+		(1, 1, 1, 1, 1, 0, 'Pending'),
+		(2, 2, 1, 1, 1, 0, 'Interview'),
+		(3, 3, 1, 1, 2, 1, 'Evaluated'),
+		(4, 4, 1, 2, 3, 0, 'Accepted'),
+		(5, 5, 1, 2, 3, 1, 'Rejected')
 		ON CONFLICT (id) DO NOTHING;
 	`
 
@@ -612,42 +607,6 @@ func (controller *InterviewController) GetInstructorOptions(context *fiber.Ctx) 
 
 		results = append(results, map[string]interface{}{
 			"value": instructor.ID,
-			"label": label,
-		})
-	}
-
-	return context.JSON(fiber.Map{
-		"isSuccess": true,
-		"result":    results,
-	})
-}
-
-func (controller *InterviewController) GetApplicationReportOptions(context *fiber.Ctx) error {
-	var reports []model.ApplicationReport
-
-	if err := controller.application.DB.
-		Preload("Applicant").
-		Preload("ApplicationRound").
-		Order("id ASC").
-		Find(&reports).Error; err != nil {
-		return context.JSON(fiber.Map{
-			"isSuccess": false,
-			"result":    "Failed to get application reports: " + err.Error(),
-		})
-	}
-
-	var results []map[string]interface{}
-	for _, report := range reports {
-		label := "Report #" + strconv.Itoa(int(report.ID))
-		if report.Applicant.FirstName != "" || report.Applicant.LastName != "" {
-			label += " | " + report.Applicant.FirstName + " " + report.Applicant.LastName
-		}
-		if report.ApplicationRound.RoundName != "" {
-			label += " | Round: " + report.ApplicationRound.RoundName
-		}
-
-		results = append(results, map[string]interface{}{
-			"value": report.ID,
 			"label": label,
 		})
 	}

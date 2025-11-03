@@ -96,9 +96,7 @@ if (typeof window !== 'undefined' && !window.RecruitFormTemplate) {
     }
 
     static dispatchChangeEvent(eventName, detailOrAction, id, data) {
-      // Support two signatures:
-      // 1. dispatchChangeEvent('interviewChanged', { action, id, data })
-      // 2. dispatchChangeEvent('interviewChanged', 'create', 123, {...})
+
       let detail;
       if (typeof detailOrAction === 'object' && detailOrAction !== null) {
         detail = detailOrAction;
@@ -112,7 +110,6 @@ if (typeof window !== 'undefined' && !window.RecruitFormTemplate) {
     static resetFormFields(formInstanceOrElement) {
       if (!formInstanceOrElement) return;
 
-      // Handle AdvanceFormRender instance
       if (formInstanceOrElement.form && formInstanceOrElement.form.html) {
         const formElement = formInstanceOrElement.form.html;
         if (typeof formElement.reset === 'function') {
@@ -121,7 +118,6 @@ if (typeof window !== 'undefined' && !window.RecruitFormTemplate) {
         }
       }
 
-      // Handle direct form element or other element
       const formRoot = formInstanceOrElement.form?.html || formInstanceOrElement;
       
       if (typeof formRoot.reset === 'function') {
@@ -129,7 +125,6 @@ if (typeof window !== 'undefined' && !window.RecruitFormTemplate) {
         return;
       }
 
-      // Manual reset if no native reset method
       if (formRoot.querySelectorAll) {
         formRoot.querySelectorAll('input, select, textarea').forEach((el) => {
           const tag = el.tagName.toLowerCase();

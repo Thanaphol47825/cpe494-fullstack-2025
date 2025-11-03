@@ -14,7 +14,11 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
                 tableId: 'classmaterial-table',
-                searchId: 'classmaterial-search'
+                searchId: 'classmaterial-search',
+                hasSort: false,
+                sortId: 'classmaterial-sort',
+                sortTypeId: 'classmaterial-sort-type',
+                sortVal: [],
             },
             CurriculumList: {
                 title: 'Curriculum List',
@@ -27,7 +31,11 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
                 tableId: 'curriculum-table',
-                searchId: 'curriculum-search'
+                searchId: 'curriculum-search',
+                hasSort: true,
+                sortId: 'curriculum-sort',
+                sortTypeId: 'curriculum-sort-type',
+                sortVal: [],
             },
             CourseList: {
                 title: 'Course List',
@@ -40,7 +48,11 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
                 tableId: 'course-table',
-                searchId: 'course-search'
+                searchId: 'course-search',
+                hasSort: false,
+                sortId: 'course-sort',
+                sortTypeId: 'course-sort-type',
+                sortVal: [],
             },
             ClassList: {
                 title: 'Class List',
@@ -53,7 +65,11 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
                 tableId: 'class-table',
-                searchId: 'class-search'
+                searchId: 'class-search',
+                hasSort: false,
+                sortId: 'class-sort',
+                sortTypeId: 'class-sort-type',
+                sortVal: [],
             },
             CoursePlanList: {
                 title: 'Course Plan List',
@@ -66,9 +82,31 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu',
                 tableId: 'courseplan-table',
-                searchId: 'courseplan-search'
+                searchId: 'courseplan-search',
+                hasSort: false,
+                sortId: 'courseplan-sort',
+                sortTypeId: 'courseplan-sort-type',
+                sortVal: [],
             }
         };
+
+        static createQueryString(url, searchData) {
+            Object.entries(searchData).forEach(([key, value]) => {
+                if (value !== null && value !== undefined && value !== '') {
+                    url += (url.includes('?') ? '&' : '?') + `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+                }
+            });
+
+            return url;
+        }
+
+        static updateSortOptions(listType, sortVal) {
+            const config = this.LIST_CONFIGS[listType];
+            if (!config) {
+                throw new Error(`List type "${listType}" is not supported`);
+            }
+            config.sortVal = sortVal;
+        }
 
         /**
          * สร้างรายการตาม type ที่กำหนด
@@ -100,7 +138,11 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                 backLink,
                 backText,
                 tableId,
-                searchId
+                searchId,
+                hasSort,
+                sortId,
+                sortTypeId,
+                sortVal
             } = config;
 
             try {
@@ -127,6 +169,10 @@ if (typeof window !== 'undefined' && !window.ListTemplate) {
                     backText,
                     tableId,
                     searchId,
+                    hasSort,
+                    sortId,
+                    sortTypeId,
+                    sortVal
                 };
 
                 // Render template ด้วย Mustache

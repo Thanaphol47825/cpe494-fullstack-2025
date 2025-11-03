@@ -48,6 +48,21 @@
                             {{backText}}
                         </a>
                     </div>
+                    {{#hasSort}}
+                        <div class="flex gap-3">
+                            <!-- sort variable selector -->
+                            <select id="{{sortId}}">
+                                {{#sortVal}}
+                                <option value="{{name}}">{{label}}</option>
+                                {{/sortVal}}
+                            </select>
+                            <select id="{{sortTypeId}}">
+                                <option value="asc">asc</option>
+                                <option value="desc">desc</option>
+                            </select>
+                        </div>
+                    {{/hasSort}}
+
                 </div>
             </div>
         </div>

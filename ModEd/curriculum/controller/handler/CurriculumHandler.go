@@ -104,6 +104,14 @@ func (h *CurriculumHandler) GetProgramTypeOptions(context *fiber.Ctx) error {
 
 // Read all
 func (h *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
+	allowed := map[string]string{
+		"Name":        "name",
+		"Department":  "department_id",
+		"ProgramType": "program_type",
+		"StartYear":   "start_year",
+		"EndYear":     "end_year",
+	}
+
 	tx := h.Application.DB.Preload("CourseList").Preload("Department")
 
 	queries := context.Queries()
@@ -119,6 +127,15 @@ func (h *CurriculumHandler) GetCurriculums(context *fiber.Ctx) error {
 			tx = tx.Where("start_year = ?", value)
 		case "EndYear":
 			tx = tx.Where("end_year = ?", value)
+		case "SortField":
+			if queries["SortOrder"] != "asc" && queries["SortOrder"] != "desc" {
+				queries["SortOrder"] = "asc"
+			}
+			if col, ok := allowed[value]; ok {
+				tx = tx.Order(col + " " + queries["SortOrder"])
+			} else {
+				tx = tx.Order("id " + queries["SortOrder"])
+			}
 		}
 	}
 

@@ -3,23 +3,19 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
         constructor(application) {
             this.application = application;
             this.rawCurriculums = []; // Store raw data for edit modal
+            this.sortData = {};
+            this.searchData = {};
             window._deleteCurriculum = this.handleDelete.bind(this);
             window._editCurriculum = this.handleEdit.bind(this);
         }
 
-        createQueryString(url, searchData) {
-            Object.entries(searchData).forEach(([key, value]) => {
-                if (value !== null && value !== undefined && value !== '') {
-                    url += (url.includes('?') ? '&' : '?') + `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
-                }
-            });
-
-            return url;
-        }
-
         async searchCurriculums(searchData) {
             const url = `${RootURL}/curriculum/Curriculum/getCurriculums`;
-            const queryURL = this.createQueryString(url, searchData);
+            if (this.sortData != undefined) {
+                searchData.SortField = this.sortData.field || 'ID';
+                searchData.SortOrder = this.sortData.order || 'asc';
+            }
+            const queryURL = ListTemplate.createQueryString(url, searchData);
 
             const res = await fetch(queryURL, {
                 method: "GET",
@@ -29,10 +25,10 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
             let curriculums = []
             const data = await res.json().catch(() => (this.table.setData([])));
             data.result.forEach(item => {
-                curriculums.push({ ID: item.ID, Name: item.Name, StartYear: item.StartYear, EndYear: item.EndYear, DepartmentId: item.Department.ID, Department: item.Department.name, ProgramType: item.ProgramType, ProgramTypeName: item.ProgramType === 0 ? 'Regular' : (item.ProgramType === 1 ? 'International' : 'N/A') });
+                curriculums.push({ ID: item.ID, Name: item.Name, StartYear: item.StartYear, EndYear: item.EndYear, DepartmentId: item.Department.ID, Department: item.Department.name, ProgramType: item.ProgramType === 0 ? 'Regular' : (item.ProgramType === 1 ? 'International' : 'N/A') });
             });
 
-            return curriculums;
+            this.table.setData(curriculums);
         }
 
         async getAllCurriculums() {
@@ -46,7 +42,7 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
             this.departments = [];
             this.programTypes = [];
             data.result.forEach(item => {
-                curriculums.push({ ID: item.ID, Name: item.Name, StartYear: item.StartYear, EndYear: item.EndYear, DepartmentId: item.Department.ID, Department: item.Department.name, ProgramType: item.ProgramType, ProgramTypeName: item.ProgramType === 0 ? 'Regular' : (item.ProgramType === 1 ? 'International' : 'N/A') });
+                curriculums.push({ ID: item.ID, Name: item.Name, StartYear: item.StartYear, EndYear: item.EndYear, DepartmentId: item.Department.ID, Department: item.Department.name, ProgramType: item.ProgramType === 0 ? 'Regular' : (item.ProgramType === 1 ? 'International' : 'N/A') });
 
                 const depart = {
                     value: item.Department.ID,
@@ -183,55 +179,78 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
 
         async render() {
             this.application.templateEngine.mainContainer.innerHTML = ""
+            this.setupTable();
+            ListTemplate.updateSortOptions('CurriculumList', this.tableSchema);
+
             const listWrapper = await ListTemplate.getList('CurriculumList');
             this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
             const curriculums = await this.getAllCurriculums();
-            this.setupTable();
             this.table.setData(curriculums);
             await this.table.render();
 
             this.setupFormSearch();
             await this.searchForm.render();
+
+            const sortSelect = document.getElementById("curriculum-sort");
+            sortSelect.addEventListener("change", async () => {
+                try {
+                    this.sortData.field = sortSelect.value;
+                    await this.searchCurriculums(this.searchData);
+                } catch (err) {
+                    console.error("Error while changing sort field:", err);
+                }
+            });
+
+            const sortOrder = document.getElementById("curriculum-sort-type");
+            sortOrder.addEventListener("change", async () => {
+                try {
+                    this.sortData.order = sortOrder.value;
+                    await this.searchCurriculums(this.searchData);
+                } catch (err) {
+                    console.error("Error while changing sort order:", err);
+                }
+            });
         }
 
         setupTable() {
+            this.tableSchema = [
+                {
+                    name: "ID",
+                    label: "No.",
+                    type: "number",
+                },
+                {
+                    name: "Name",
+                    label: "Name",
+                    type: "text",
+                },
+                {
+                    name: "StartYear",
+                    label: "Start Year",
+                    type: "text",
+                },
+                {
+                    name: "EndYear",
+                    label: "End Year",
+                    type: "text",
+                },
+                {
+                    name: "Department",
+                    label: "Department",
+                    type: "text",
+                },
+                {
+                    name: "ProgramType",
+                    label: "Program Type",
+                    type: "text",
+                },
+            ]
             this.table = new AdvanceTableRender(this.application.templateEngine, {
                 modelPath: "curriculum/curriculum",
                 data: [],
                 targetSelector: "#curriculum-table",
-                schema: [
-                    {
-                        name: "ID",
-                        label: "No.",
-                        type: "number",
-                    },
-                    {
-                        name: "Name",
-                        label: "Name",
-                        type: "text",
-                    },
-                    {
-                        name: "StartYear",
-                        label: "Start Year",
-                        type: "text",
-                    },
-                    {
-                        name: "EndYear",
-                        label: "End Year",
-                        type: "text",
-                    },
-                    {
-                        name: "Department",
-                        label: "Department",
-                        type: "text",
-                    },
-                    {
-                        name: "ProgramTypeName",
-                        label: "Program Type",
-                        type: "text",
-                    },
-                ],
+                schema: this.tableSchema,
                 // Add custom columns (actions, computed fields, etc.)
                 customColumns: [
                     {
@@ -269,8 +288,8 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
                     { name: "EndYear", label: "End Year", type: "number" },
                 ],
                 submitHandler: async (searchData) => {
-                    const results = await this.searchCurriculums(searchData);
-                    this.table.setData(results);
+                    this.searchData = searchData;
+                    await this.searchCurriculums(searchData);
                 }
             });
         }

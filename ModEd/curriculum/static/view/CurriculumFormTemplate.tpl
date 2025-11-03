@@ -35,22 +35,42 @@
         <!-- Action Buttons -->
         <div class="text-center mt-12 space-y-4">
             <!-- View List Button -->
-            <div>
-                <a routerLink="{{listLink}}" class="inline-flex items-center gap-3 px-8 py-3 bg-gradient-to-r from-{{gradientFrom}} to-{{gradientTo}} text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 font-medium">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="transform transition-all duration-300 hover:scale-105">
+                <a routerLink="{{listLink}}" class="group relative inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-{{gradientFrom}} to-{{gradientTo}} text-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 font-medium overflow-hidden">
+                    <!-- Animated background overlay -->
+                    <span class="absolute inset-0 bg-gradient-to-r from-{{gradientFromHover}} to-{{gradientToHover}} opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    
+                    <!-- Shine effect -->
+                    <span class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <span class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                    </span>
+                    
+                    <!-- Icon with animation -->
+                    <svg class="w-5 h-5 relative z-10 transform group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                     </svg>
-                    {{listText}}
+                    
+                    <!-- Text -->
+                    <span class="relative z-10">{{listText}}</span>
                 </a>
             </div>
             
             <!-- Back Button -->
-            <div>
-                <a routerLink="{{backLink}}" class="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:bg-white/90 border border-gray-200/50 font-medium">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="transform transition-all duration-300 hover:scale-105">
+                <a routerLink="{{backLink}}" class="group relative inline-flex items-center gap-3 px-6 py-4 bg-white/80 backdrop-blur-sm text-gray-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200/50 font-medium overflow-hidden">
+                    <!-- Hover background effect -->
+                    <span class="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    
+                    <!-- Pulse effect on hover -->
+                    <span class="absolute inset-0 rounded-xl border-2 border-gray-300/50 opacity-0 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500"></span>
+                    
+                    <!-- Icon with animation -->
+                    <svg class="w-5 h-5 relative z-10 transform group-hover:-translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    {{backText}}
+                    
+                    <!-- Text -->
+                    <span class="relative z-10">{{backText}}</span>
                 </a>
             </div>
         </div>

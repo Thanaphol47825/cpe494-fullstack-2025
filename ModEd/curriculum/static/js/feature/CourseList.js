@@ -15,7 +15,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       return data.result || [];
     }
 
-        async handleSubmit(formData) {
+    async handleSubmit(formData) {
       try {
         formData.ID = parseInt(this.courseData.ID);
         formData.CurriculumId = parseInt(formData.CurriculumId);
@@ -48,14 +48,44 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     async handleEdit(courseId) {
       if (!courseId) return;
 
-      const res = await fetch(`${RootURL}/curriculum/Course/getCourses/${courseId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await res.json().catch(() => ({}));
-      this.courseData = data.result;
+      try {
+        if (!window.EditModalTemplate) {
+          await this.application.loadSubModule('template/CurriculumEditModalTemplate.js');
+        }
 
-      await this.renderFormEdit();
+        const res = await fetch(`${RootURL}/curriculum/Course/getCourses/${courseId}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json().catch(() => ({}));
+        this.courseData = data.result || {};
+
+        if (this.courseData?.CurriculumId !== undefined) {
+            this.courseData.CurriculumId = this.courseData.CurriculumId.toString();
+        }
+        if (this.courseData?.CourseStatus !== undefined) {
+            this.courseData.CourseStatus = this.courseData.CourseStatus.toString();
+        }
+
+        const modalId = `course-${courseId}`;
+        
+        await EditModalTemplate.createModalWithForm({
+          modalType: 'Course',
+          modalId,
+          application: this.application,
+          modelPath: 'curriculum/course',
+          data: this.courseData,
+          submitHandler: async (formData) => {
+            formData.ID = parseInt(courseId);
+            await this.handleSubmit(formData);
+              return { success: true, message: "Course updated!" };
+          },
+        });
+
+      } catch (err) {
+        console.error('Error opening edit modal:', err);
+        alert('Error opening edit modal: ' + (err?.message || err));
+      }
     }
 
     async handleDelete(courseId) {
@@ -95,16 +125,6 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       await this.table.render();
 
       this.setupForm();
-    }
-
-    async renderFormEdit() {
-      this.application.templateEngine.mainContainer.innerHTML = "";
-      const formElement = await FormTemplate.getForm('CourseForm', 'create');
-      this.application.templateEngine.mainContainer.appendChild(formElement);
-
-      this.courseData.CurriculumId = this.courseData.CurriculumId.toString();
-      this.courseData.CourseStatus = this.courseData.CourseStatus.toString();
-      await this.form.setData(this.courseData);
     }
 
     setupTable() {

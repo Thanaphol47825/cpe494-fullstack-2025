@@ -31,16 +31,14 @@ if (!window.CommonInstructorListFeature) {
       `;
 
       try {
-        const response = await fetch(
-          `${this.rootURL}/common/instructors/getall`
-        );
+        const response = await fetch(`${this.rootURL}/common/instructors/getall`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
         const table = new AdvanceTableRender(this.templateEngine, {
           modelPath: "common/instructor", // โหลด schema: /api/modelmeta/common/Instructor
           dataPath: "common/instructors/getall",
-          data: data || [], // โหลดข้อมูลจริง
+          data: data.result || [], // โหลดข้อมูลจริง
           targetSelector: "#instructorTable",
 
           customColumns: [
@@ -80,17 +78,19 @@ if (!window.CommonInstructorListFeature) {
     }
 
     editInstructor(id) {
-      location.hash = `#common/instructor/create?id=${id}`;
+      location.hash = `#common/instructor/edit/${encodeURIComponent(id)}`;
     }
 
     async viewInstructor(id) {
       try {
+        console.log("test1", id);
         const res = await fetch(`${this.rootURL}/common/instructors/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
+        console.log("test2", result);
         alert(
-          `👁 Instructor Details\n` +
-            `Name: ${result?.first_name} ${result?.last_name ?? ""}\n` +
+          `Instructor Details\n` +
+            `Name: ${result?.first_name ?? "-"} ${result?.last_name ?? ""}\n` +
             `Instructor No: ${result?.instructor_code ?? "-"}\n` +
             `Email: ${result?.email ?? "-"}`
         );
@@ -142,13 +142,3 @@ if (!window.CommonInstructorListFeature) {
 
   window.CommonInstructorListFeature = CommonInstructorListFeature;
 }
-
-async function editInstructor(id) {
-  location.hash = `#common/instructor/edit/${encodeURIComponent(id)}`;
-}
-
-async function viewInstructor(id) {
-  alert(`👁 View instructor ID: ${id}`);
-}
-
-async function deleteInstructor(id) {}

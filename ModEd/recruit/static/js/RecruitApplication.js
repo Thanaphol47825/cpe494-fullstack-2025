@@ -249,6 +249,10 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       await this.loadSubModule("services/ApplicationReportService.js");
     }
     
+    if (!window.ApplicationStatusService) {
+      await this.loadSubModule("services/ApplicationStatusService.js");
+    }
+    
     if (!window.ApplicationReportTable) return this.renderError("Failed to load ApplicationReportTable");
     const feature = new window.ApplicationReportTable(this.templateEngine, this.rootURL);
     return await feature.render();
@@ -275,6 +279,18 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       await this.loadSubModule("services/InterviewService.js");
     }
     
+    if (!window.InterviewScheduler) {
+      await this.loadSubModule("InterviewScheduler.js");
+    }
+    
+    if (!window.ApplicationReportService) {
+      await this.loadSubModule("services/ApplicationReportService.js");
+    }
+    
+    if (!window.ApplicationStatusService) {
+      await this.loadSubModule("services/ApplicationStatusService.js");
+    }
+    
     if (!window.InterviewForm) return this.renderError("Failed to load InterviewForm");
     const feature = new window.InterviewForm(this.templateEngine, this.rootURL);
     return await feature.render();
@@ -297,6 +313,18 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     
     if (!window.InterviewService) {
       await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.InterviewScheduler) {
+      await this.loadSubModule("InterviewScheduler.js");
+    }
+    
+    if (!window.ApplicationReportService) {
+      await this.loadSubModule("services/ApplicationReportService.js");
+    }
+    
+    if (!window.ApplicationStatusService) {
+      await this.loadSubModule("services/ApplicationStatusService.js");
     }
     
     if (!window.InterviewForm) return this.renderError("Failed to load InterviewForm");

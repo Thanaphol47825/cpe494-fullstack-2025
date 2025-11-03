@@ -49,6 +49,52 @@ if (typeof window !== 'undefined' && !window.RecruitTableTemplate) {
         clearResult() { result.innerHTML = ''; }
       };
     }
+
+    // Common utility functions
+    static navigateTo(route) {
+      if (window.RouterLinks) {
+        new window.RouterLinks().navigateTo(route);
+      } else {
+        window.location.hash = route;
+      }
+    }
+
+    static setNavigationSource(key, value) {
+      sessionStorage.setItem(key, value);
+    }
+
+    static getNavigationSource(key) {
+      return sessionStorage.getItem(key);
+    }
+
+    static clearNavigationSource(key) {
+      sessionStorage.removeItem(key);
+    }
+
+    static checkIfCameFromTable(sourceKey) {
+      return this.getNavigationSource(sourceKey) === 'table';
+    }
+
+    static dispatchChangeEvent(entityName, action, id, data) {
+      window.dispatchEvent(new CustomEvent(`${entityName.toLowerCase()}Changed`, { 
+        detail: { action, id, data }
+      }));
+    }
+
+    static getDefaultColumns() {
+      return [
+        {
+          name: 'actions',
+          label: 'Actions',
+          template: `
+            <div style="white-space:nowrap;">
+              <button class="al-btn-edit text-blue-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
+              <button class="al-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}">Delete</button>
+            </div>
+          `
+        }
+      ];
+    }
   }
 
   window.RecruitTableTemplate = RecruitTableTemplate;

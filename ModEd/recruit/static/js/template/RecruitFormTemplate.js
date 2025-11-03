@@ -69,8 +69,83 @@ if (typeof window !== 'undefined' && !window.RecruitFormTemplate) {
         }
       };
     }
+
+    // Common utility functions
+    static navigateTo(route) {
+      if (window.RouterLinks) {
+        new window.RouterLinks().navigateTo(route);
+      } else {
+        window.location.hash = route;
+      }
+    }
+
+    static setNavigationSource(key, value) {
+      sessionStorage.setItem(key, value);
+    }
+
+    static getNavigationSource(key) {
+      return sessionStorage.getItem(key);
+    }
+
+    static clearNavigationSource(key) {
+      sessionStorage.removeItem(key);
+    }
+
+    static checkIfCameFromTable(sourceKey) {
+      return this.getNavigationSource(sourceKey) === 'table';
+    }
+
+    static dispatchChangeEvent(eventName, detailOrAction, id, data) {
+      // Support two signatures:
+      // 1. dispatchChangeEvent('interviewChanged', { action, id, data })
+      // 2. dispatchChangeEvent('interviewChanged', 'create', 123, {...})
+      let detail;
+      if (typeof detailOrAction === 'object' && detailOrAction !== null) {
+        detail = detailOrAction;
+      } else {
+        detail = { action: detailOrAction, id, data };
+      }
+      
+      window.dispatchEvent(new CustomEvent(eventName, { detail }));
+    }
+
+    static resetFormFields(formInstanceOrElement) {
+      if (!formInstanceOrElement) return;
+
+      // Handle AdvanceFormRender instance
+      if (formInstanceOrElement.form && formInstanceOrElement.form.html) {
+        const formElement = formInstanceOrElement.form.html;
+        if (typeof formElement.reset === 'function') {
+          formElement.reset();
+          return;
+        }
+      }
+
+      // Handle direct form element or other element
+      const formRoot = formInstanceOrElement.form?.html || formInstanceOrElement;
+      
+      if (typeof formRoot.reset === 'function') {
+        formRoot.reset();
+        return;
+      }
+
+      // Manual reset if no native reset method
+      if (formRoot.querySelectorAll) {
+        formRoot.querySelectorAll('input, select, textarea').forEach((el) => {
+          const tag = el.tagName.toLowerCase();
+          const type = (el.type || '').toLowerCase();
+          
+          if (tag === 'input' && (type === 'checkbox' || type === 'radio')) {
+            el.checked = false;
+          } else if (tag === 'select') {
+            el.selectedIndex = 0;
+          } else {
+            el.value = '';
+          }
+        });
+      }
+    }
   }
 
-  // auto-register like Curriculum
   window.RecruitFormTemplate = RecruitFormTemplate;
 }

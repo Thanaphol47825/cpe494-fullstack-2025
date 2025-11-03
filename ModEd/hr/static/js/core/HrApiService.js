@@ -620,13 +620,21 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
     // ==================== Departments ====================
 
     async fetchJSON(url, options = {}) {
-      const res = await fetch(url, { credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, ...options });
+      const res = await fetch(url, {
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        ...options
+      });
       if (!res.ok) {
         let msg = `${res.status} ${res.statusText}`;
-        try { const j = await res.json(); if (j?.error) msg = j.error; } catch {}
+        try {
+          const j = await res.json();
+          msg = j?.error?.message || j?.error || j?.message || msg;
+        } catch {
+          try { msg = await res.text(); } catch {}
+        }
         throw new Error(msg);
       }
-      // 204 No Content check
       if (res.status === 204) return null;
       return res.json();
     }
@@ -636,26 +644,45 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       if (limit) qs.set('limit', String(limit));
       if (offset) qs.set('offset', String(offset));
       const qstr = qs.toString() ? `?${qs.toString()}` : '';
-      return this.fetchJSON(`${this.rootURL}/hr/departments${qstr}`);
+      const data = await this.fetchJSON(`${this.rootURL}/hr/departments${qstr}`);
+      // backend returns { result: [...] }
+      return Array.isArray(data) ? data : (data?.result || data?.data || []);
     }
 
     async fetchDepartment(name) {
       const encoded = encodeURIComponent(name);
-      return this.fetchJSON(`${this.rootURL}/hr/departments/${encoded}`);
+      const data = await this.fetchJSON(`${this.rootURL}/hr/departments/${encoded}`);
+      // backend returns { result: { ...row } }
+      return data?.result || data;
+    }
+
+    normalizeDepartmentPayload(input = {}) {
+      const name = String(input.name ?? '').trim();
+      const faculty = String(input.faculty ?? input.parent ?? '').trim(); // parent→faculty
+      const body = { name, faculty };
+      if (input.budget !== undefined && String(input.budget).trim() !== '') {
+        const n = Number(String(input.budget).replace(/,/g, '')); // strip commas
+        if (!Number.isNaN(n)) body.budget = n;
+      }
+      return body;
     }
 
     async createDepartment(payload) {
+      const body = this.normalizeDepartmentPayload(payload);
       return this.fetchJSON(`${this.rootURL}/hr/departments`, {
         method: 'POST',
-        body: JSON.stringify(payload),
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
     }
 
     async updateDepartment(name, patch) {
+      const body = this.normalizeDepartmentPayload(patch);
       const encoded = encodeURIComponent(name);
       return this.fetchJSON(`${this.rootURL}/hr/departments/${encoded}/update`, {
         method: 'POST',
-        body: JSON.stringify(patch),
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
     }
 

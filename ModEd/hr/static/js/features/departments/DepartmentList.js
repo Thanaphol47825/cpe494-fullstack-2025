@@ -13,34 +13,47 @@
 
     async render() {
       try {
-        // Page skeleton (loading state)
-        this.container.innerHTML = HrUiComponents.renderLoadingState(
-          'Departments',
-          'Manage departments and budgets'
-        );
+        // --- Loading state (DOM only) ---
+        const loading = HrDOMHelpers.createDiv({
+          className: 'min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-50 py-8',
+          children: [
+            HrDOMHelpers.createDiv({
+              className: 'max-w-4xl mx-auto px-4',
+              children: [
+                HrDOMHelpers.createDiv({
+                  className: 'bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex items-center gap-3',
+                  children: [
+                    HrDOMHelpers.createDiv({
+                      className: 'w-10 h-10 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 animate-pulse'
+                    }),
+                    HrDOMHelpers.createParagraph({
+                      className: 'text-gray-700',
+                      text: 'Loading departments...'
+                    })
+                  ]
+                })
+              ]
+            })
+          ]
+        });
+        HrDOMHelpers.replaceContent(this.container, loading);
 
         const departments = await this.fetchDepartments();
 
-        // Render list page
-        this.container.innerHTML = this.renderPage(departments);
+        // --- Render list page ---
+        const page = this.renderPage(departments);
+        HrDOMHelpers.replaceContent(this.container, page);
 
-        // Wire events
+        // --- Wire events ---
         this.bindEvents();
       } catch (err) {
         console.error('DepartmentList render error:', err);
-        this.container.innerHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-50 py-8">
-            <div class="max-w-4xl mx-auto px-4">
-              <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-red-800">Error Loading Departments</h2>
-                <p class="text-red-600 mt-2">${err?.message || 'Unknown error'}</p>
-                <div class="mt-4">
-                  <a routerLink="hr" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Back to HR</a>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        const errorPage = HrDOMHelpers.createErrorPage({
+          title: 'Error Loading Departments',
+          message: err?.message || 'Unknown error',
+          backUrl: '#hr'
+        });
+        HrDOMHelpers.replaceContent(this.container, errorPage);
       }
     }
 
@@ -48,138 +61,223 @@
       return await window.hrApp.apiService.fetchDepartments();
     }
 
+    // Build the whole page using HrDOMHelpers
     renderPage(departments) {
       const hasItems = Array.isArray(departments) && departments.length > 0;
 
-      const header = `
-        <div class="text-center mb-8">
-          <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-full mb-4">
-            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              ${HrTemplates.iconPaths.department}
-            </svg>
-          </div>
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">Departments</h1>
-          <p class="text-lg text-gray-600">Manage academic departments and budgets</p>
-        </div>
-      `;
+      // --- Top-level page container ---
+      const page = HrDOMHelpers.createDiv({
+        className: 'min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-50 py-8'
+      });
 
-      const actionBar = `
-        <div class="flex justify-between items-center mb-8">
-          <div class="flex items-center space-x-3">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              ${HrTemplates.iconPaths.success}
-            </svg>
-            <span class="text-lg text-gray-700 font-medium">
-              ${hasItems ? departments.length : 0} Department${hasItems && departments.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div class="flex items-center gap-3">
-            <button id="deptRefreshBtn" class="inline-flex items-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border-2 border-gray-300 hover:bg-gray-50">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                ${HrTemplates.iconPaths.reset}
-              </svg>
-              Refresh
-            </button>
-            <a routerLink="hr/departments/create" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800">
-              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                ${HrTemplates.iconPaths.add}
-              </svg>
-              Add Department
-            </a>
-          </div>
-        </div>
-      `;
+      const wrapper = HrDOMHelpers.createDiv({
+        className: 'max-w-7xl mx-auto px-4'
+      });
 
-      const list = hasItems
-        ? `
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden p-6">
-            ${departments.map((d) => this.renderCard(d)).join('')}
-          </div>
-        `
-        : `
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden p-6">
-            ${HrTemplates.render('emptyState', {
-              icon: HrTemplates.iconPaths.department,
-              title: 'No Departments Found',
-              message: 'Get started by adding your first department.',
-              hasAction: true,
-              actionLink: 'hr/departments/create',
-              actionLabel: 'Add First Department'
-            })}
-          </div>
-        `;
+      // --- Header ---
+      const iconPathFallback = 'M3 7h18M5 7v10a2 2 0 002 2h10a2 2 0 002-2V7'; // simple "building" shape
+      const header = HrDOMHelpers.createDiv({
+        className: 'text-center mb-8',
+        children: [
+          HrDOMHelpers.createDiv({
+            className: 'inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-full mb-4',
+            children: [HrDOMHelpers.createIcon(iconPathFallback, { className: 'w-8 h-8 text-white' })]
+          }),
+          HrDOMHelpers.createHeading(1, {
+            className: 'text-3xl font-bold text-gray-900 mb-2',
+            textContent: 'Departments'
+          }),
+          HrDOMHelpers.createParagraph({
+            className: 'text-lg text-gray-600',
+            textContent: 'Manage academic departments and budgets'
+          })
+        ]
+      });
 
-      const backBtn = `
-        <div class="text-center mt-8">
-          <a routerLink="hr" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              ${HrTemplates.iconPaths.back}
-            </svg>
-            Back to HR Menu
-          </a>
-        </div>
-      `;
+      // --- Action Bar ---
+      const countIconPath = 'M5 13l4 4L19 7'; // check
+      const refreshIconPath = 'M4 4v6h6M20 20v-6h-6M5 19A9 9 0 1019 5'; // refresh-ish
+      const addIconPath = 'M12 6v12m6-6H6';
 
-      return `
-        <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-slate-50 to-blue-50 py-8">
-          <div class="max-w-7xl mx-auto px-4">
-            ${header}
-            ${actionBar}
-            ${list}
-            ${backBtn}
-          </div>
-        </div>
-      `;
+      const leftCount = HrDOMHelpers.createDiv({
+        className: 'flex items-center space-x-3',
+        children: [
+          HrDOMHelpers.createIcon(countIconPath, { className: 'w-6 h-6 text-green-600' }),
+          HrDOMHelpers.createElement('span', {
+            className: 'text-lg text-gray-700 font-medium',
+            textContent: `${hasItems ? departments.length : 0} Department${hasItems && departments.length !== 1 ? 's' : ''}`
+          })
+        ]
+      });
+
+      const refreshBtn = HrDOMHelpers.createButton({
+        id: 'deptRefreshBtn',
+        className:
+          'inline-flex items-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border-2 border-gray-300 hover:bg-gray-50',
+        children: [
+          HrDOMHelpers.createIcon(refreshIconPath, { className: 'w-5 h-5 mr-2' }),
+          'Refresh'
+        ]
+      });
+
+      const addLink = HrDOMHelpers.createElement('a', {
+        className:
+          'inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800',
+        attributes: { routerLink: 'hr/departments/create', href: '#hr/departments/create' },
+        children: [HrDOMHelpers.createIcon(addIconPath, { className: 'w-5 h-5 mr-2' }), 'Add Department']
+      });
+
+      const rightActions = HrDOMHelpers.createDiv({
+        className: 'flex items-center gap-3',
+        children: [refreshBtn, addLink]
+      });
+
+      const actionBar = HrDOMHelpers.createDiv({
+        className: 'flex justify-between items-center mb-8',
+        children: [leftCount, rightActions]
+      });
+
+      // --- List Section ---
+      const listCard = HrDOMHelpers.createDiv({
+        className: 'bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden p-6'
+      });
+
+      if (hasItems) {
+        departments.forEach((d) => listCard.appendChild(this.renderCard(d)));
+      } else {
+        listCard.appendChild(
+          HrDOMHelpers.createDiv({
+            className: 'rounded-xl border border-dashed border-gray-300 p-6 text-center',
+            children: [
+              HrDOMHelpers.createHeading(3, {
+                className: 'text-lg font-semibold text-gray-900',
+                textContent: 'No Departments Found'
+              }),
+              HrDOMHelpers.createParagraph({
+                className: 'text-gray-600 mt-1',
+                textContent: 'Get started by adding your first department.'
+              }),
+              HrDOMHelpers.createElement('a', {
+                className:
+                  'mt-4 inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800',
+                attributes: { routerLink: 'hr/departments/create', href: '#hr/departments/create' },
+                children: [HrDOMHelpers.createIcon(addIconPath, { className: 'w-5 h-5 mr-2' }), 'Add First Department']
+              })
+            ]
+          })
+        );
+      }
+
+      // --- Back Button ---
+      const backIconPath = 'M10 19l-7-7m0 0l7-7m-7 7h18';
+      const backRow = HrDOMHelpers.createDiv({
+        className: 'text-center mt-8',
+        children: [
+          HrDOMHelpers.createElement('a', {
+            className:
+              'inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50',
+            attributes: { routerLink: 'hr', href: '#hr' },
+            children: [HrDOMHelpers.createIcon(backIconPath, { className: 'w-5 h-5 mr-2' }), 'Back to HR Menu']
+          })
+        ]
+      });
+
+      // --- Assemble ---
+      wrapper.appendChild(header);
+      wrapper.appendChild(actionBar);
+      wrapper.appendChild(listCard);
+      wrapper.appendChild(backRow);
+      page.appendChild(wrapper);
+
+      return page;
     }
 
+    // Render one department "card" (DOM only)
     renderCard(row) {
       const name = row.name || row.Name || 'Unnamed';
       const faculty = row.faculty || row.Faculty || 'Not specified';
       const budgetRaw = row.budget ?? row.Budget;
       const budget = HrTemplates.formatCurrency(budgetRaw);
-
       const encoded = encodeURIComponent(String(name));
-      return `
-        <div class="rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:shadow mb-4 p-5 bg-white">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  ${HrTemplates.iconPaths.department}
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-gray-900">${name}</h3>
-                <div class="text-sm text-gray-600">Faculty: <span class="font-medium">${faculty}</span></div>
-                <div class="text-sm text-gray-600">Budget: <span class="font-medium">${budget}</span></div>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <a routerLink="hr/departments/edit/${encoded}" class="inline-flex items-center px-3 py-2 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  ${HrTemplates.iconPaths.edit}
-                </svg>
-                Edit
-              </a>
-              <button class="js-dept-del inline-flex items-center px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100"
-                      data-name="${encodeURIComponent(String(name))}">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  ${HrTemplates.iconPaths.trash}
-                </svg>
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
+
+      const deptIconPath = 'M3 7h18M5 7v10a2 2 0 002 2h10a2 2 0 002-2V7'; // simple building icon
+      const editIconPath = 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z';
+      const trashIconPath = 'M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16';
+
+      const card = HrDOMHelpers.createDiv({
+        className:
+          'rounded-xl border border-gray-200 hover:border-gray-300 transition-all duration-200 hover:shadow mb-4 p-5 bg-white'
+      });
+
+      const rowWrap = HrDOMHelpers.createDiv({
+        className: 'flex flex-col md:flex-row md:items-center md:justify-between gap-4'
+      });
+
+      const left = HrDOMHelpers.createDiv({
+        className: 'flex items-center gap-4'
+      });
+
+      const iconWrap = HrDOMHelpers.createDiv({
+        className: 'w-12 h-12 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center',
+        children: [HrDOMHelpers.createIcon(deptIconPath, { className: 'w-6 h-6 text-white' })]
+      });
+
+      const titleWrap = HrDOMHelpers.createDiv({
+        children: [
+          HrDOMHelpers.createHeading(3, {
+            className: 'text-lg font-semibold text-gray-900',
+            textContent: name
+          }),
+          HrDOMHelpers.createDiv({
+            className: 'text-sm text-gray-600',
+            children: [
+              'Faculty: ',
+              HrDOMHelpers.createElement('span', { className: 'font-medium', textContent: faculty })
+            ]
+          }),
+          HrDOMHelpers.createDiv({
+            className: 'text-sm text-gray-600',
+            children: [
+              'Budget: ',
+              HrDOMHelpers.createElement('span', { className: 'font-medium', textContent: budget })
+            ]
+          })
+        ]
+      });
+
+      left.appendChild(iconWrap);
+      left.appendChild(titleWrap);
+
+      const editLink = HrDOMHelpers.createElement('a', {
+        className: 'inline-flex items-center px-3 py-2 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100',
+        attributes: {
+          routerLink: `hr/departments/edit/${encoded}`,
+          href: `#hr/departments/edit/${encoded}`
+        },
+        children: [HrDOMHelpers.createIcon(editIconPath, { className: 'w-4 h-4 mr-1' }), 'Edit']
+      });
+
+      const delBtn = HrDOMHelpers.createButton({
+        className: 'js-dept-del inline-flex items-center px-3 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100',
+        attributes: { 'data-name': encodeURIComponent(String(name)) },
+        children: [HrDOMHelpers.createIcon(trashIconPath, { className: 'w-4 h-4 mr-1' }), 'Delete']
+      });
+
+      const right = HrDOMHelpers.createDiv({
+        className: 'flex items-center gap-2',
+        children: [editLink, delBtn]
+      });
+
+      rowWrap.appendChild(left);
+      rowWrap.appendChild(right);
+      card.appendChild(rowWrap);
+
+      return card;
     }
 
     bindEvents() {
-      // Router links are handled globally by your custom navigation
       const refresh = this.container.querySelector('#deptRefreshBtn');
-      if (refresh) {
-        refresh.addEventListener('click', () => this.render());
-      }
+      if (refresh) refresh.addEventListener('click', () => this.render());
 
       this.container.querySelectorAll('.js-dept-del').forEach((btn) => {
         btn.addEventListener('click', async (e) => {

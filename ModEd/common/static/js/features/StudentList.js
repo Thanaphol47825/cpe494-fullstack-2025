@@ -83,11 +83,9 @@ if (!window.CommonStudentListFeature) {
 
     async viewStudent(id) {
       try {
-        console.log("test1", id);
         const res = await fetch(`${this.rootURL}/common/students/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        console.log("test2", result);
         alert(
           `Student Details\n` +
             `Name: ${result?.first_name ?? "-"} ${result?.last_name ?? ""}\n` +

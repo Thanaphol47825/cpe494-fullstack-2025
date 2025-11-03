@@ -7,6 +7,7 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
       "Manage Applicant": "from-cyan-500 to-blue-500",
       "Create Application Report": "from-teal-500 to-emerald-500",
       "Manage Application Report": "from-emerald-500 to-green-500",
+      "Create Application Round": "from-yellow-500 to-amber-500",
       "Manage Application Round": "from-amber-500 to-orange-500",
       "Create Interview": "from-purple-500 to-violet-500",
       "Manage Interview": "from-indigo-500 to-purple-500",
@@ -25,6 +26,8 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
         "M12 4v16m8-8H4",
       "Manage Application Report":
         "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+      "Create Application Round":
+        "M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z",
       "Manage Application Round":
         "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z",
       "Create Interview":
@@ -43,6 +46,7 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
       "Manage Applicant": "View and manage all applicant records",
       "Create Application Report": "Create new application reports for applicants",
       "Manage Application Report": "Review and process application reports",
+      "Create Application Round": "Create new recruitment rounds",
       "Manage Application Round": "Configure recruitment rounds and schedules",
       "Create Interview": "Schedule new interviews with applicants",
       "Manage Interview": "View and manage all interview records",
@@ -56,6 +60,7 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
       "Manage Applicant": "from-cyan-500 to-blue-600",
       "Create Application Report": "from-teal-500 to-emerald-600",
       "Manage Application Report": "from-emerald-500 to-green-600",
+      "Create Application Round": "from-yellow-500 to-amber-600",
       "Manage Application Round": "from-amber-500 to-orange-600",
       "Create Interview": "from-purple-500 to-violet-600",
       "Manage Interview": "from-indigo-500 to-purple-600",

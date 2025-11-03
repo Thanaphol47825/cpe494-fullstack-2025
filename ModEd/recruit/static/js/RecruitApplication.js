@@ -16,7 +16,8 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantTable.js" },
       "applicationreport/create": { title: "Create Application Report", icon: "📝", script: "ApplicationReportForm.js" },
       "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js" },
-      "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundList.js" },
+      "applicationround/create": { title: "Create Application Round", icon: "➕", script: "ApplicationRoundForm.js" },
+      "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundTable.js" },
       "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewForm.js" },
       "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js" },
       "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
@@ -84,10 +85,20 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       "ApplicationReportTable.js"
     );
     this.addRouteWithSubModule(
+      "/applicationround/create",
+      this.renderApplicationRoundForm.bind(this),
+      "ApplicationRoundForm.js"
+    );
+    this.addRouteWithSubModule(
       "/applicationround/list",
       this.renderApplicationRoundList.bind(this),
-      "ApplicationRoundList.js"
+      "ApplicationRoundTable.js"
     );
+    this.addRouteWithSubModule(
+      "/applicationround/edit/:id",
+      this.renderApplicationRoundForm.bind(this),
+      "ApplicationRoundForm.js"
+  );
     this.addRouteWithSubModule(
       "/interview/create",
       this.renderInterviewCreate.bind(this),
@@ -188,7 +199,7 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     
     if (!window.ApplicantForm) return this.renderError("Failed to load ApplicantForm");
     
-    const id = params?.id || this.getRouteParam('id');
+    const id = params?.id;
     if (!id) {
       return this.renderError("Applicant ID is required for editing");
     }
@@ -233,7 +244,7 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     
     if (!window.ApplicationReportForm) return this.renderError("Failed to load ApplicationReportForm");
     
-    const id = params?.id || this.getRouteParam('id');
+    const id = params?.id;
     if (!id) {
       return this.renderError("Application Report ID is required for editing");
     }
@@ -264,10 +275,28 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
 
   async renderApplicationRoundList() {
     await this.loadRecruitTableTemplate();
-    if (!window.ApplicationRoundList) return this.renderError("Failed to load ApplicationRoundList");
-    const feature = new window.ApplicationRoundList(this.templateEngine, this.rootURL);
+    if (!window.ApplicationRoundService) {
+      await this.loadSubModule("ApplicationRoundService.js");
+    }
+    if (!window.ApplicationRoundTable) return this.renderError("Failed to load ApplicationRoundTable");
+    const feature = new window.ApplicationRoundTable(this.templateEngine, this.rootURL);
     return await feature.render();
+ }
+
+  async renderApplicationRoundForm(params = null) {
+    await this.loadRecruitFormTemplate();
+    if (!window.ApplicationRoundService) {
+      await this.loadSubModule("ApplicationRoundService.js");
+    }
+    if (!window.ApplicationRoundForm)
+      return this.renderError("Failed to load ApplicationRoundForm");
+    
+    const id = params?.id;
+    const feature = new window.ApplicationRoundForm(this.templateEngine, this.rootURL);
+    return await feature.render(id);
   }
+
+ 
 
   async renderInterviewCriteriaCreate() {
     await this.loadRecruitFormTemplate();
@@ -333,7 +362,7 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     
     if (!window.InterviewForm) return this.renderError("Failed to load InterviewForm");
     
-    const id = params?.id || this.getRouteParam('id');
+    const id = params?.id;
     if (!id) {
       return this.renderError("Interview ID is required for editing");
     }

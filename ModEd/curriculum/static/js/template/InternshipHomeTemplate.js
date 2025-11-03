@@ -12,6 +12,7 @@ if (typeof window !== "undefined" && !window.InternshipHomeTemplate) {
       "Internship Work Experience Create": "from-yellow-500 to-orange-500",
       "Intern Skill Create": "from-teal-500 to-cyan-500",
       "Intern Student Skill Create": "from-rose-500 to-pink-500",
+      "Internship Certificate Create": "from-yellow-500 to-yellow-500",
     };
 
     static ICON_PATHS = {
@@ -33,6 +34,8 @@ if (typeof window !== "undefined" && !window.InternshipHomeTemplate) {
       "Intern Skill Create":
         "M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z",
       "Intern Student Skill Create": "M13 10V3L4 14h7v7l9-11h-7z",
+      "Internship Certificate Create":
+        "M12 14l9-5-9-5-9 5 9 5zM12 14l6.16-3.422a12.083 12.083 0 01.839 6.479A12.083 12.083 0 0112 20.055a12.083 12.083 0 01-7-2.998 12.083 12.083 0 01.839-6.479L12 14z",
     };
 
     static DESCRIPTIONS = {
@@ -47,6 +50,7 @@ if (typeof window !== "undefined" && !window.InternshipHomeTemplate) {
       "Internship Work Experience Create": "Record work experience details",
       "Intern Skill Create": "Define and manage intern skills",
       "Intern Student Skill Create": "Assign skills to intern students",
+      "Internship Certificate Create": "Manage student internship certificates",
     };
 
     static GRADIENTS = {
@@ -60,6 +64,7 @@ if (typeof window !== "undefined" && !window.InternshipHomeTemplate) {
       "Internship Work Experience Create": "from-yellow-500 to-orange-600",
       "Intern Skill Create": "from-teal-500 to-cyan-600",
       "Intern Student Skill Create": "from-rose-500 to-pink-600",
+      "Internship Certificate Create": "from-yellow-500 to-yellow-600",
     };
 
     static async getTemplate(models, templateEngine) {

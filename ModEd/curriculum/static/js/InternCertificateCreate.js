@@ -1,10 +1,9 @@
 if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
     class InternCertificateCreate {
-        constructor(application, internStudentId = null, certificateId = null) {
+        constructor(application, internStudentId = null) {
             this.application = application;
             this.internStudentId = internStudentId;
-            this.certificateId = certificateId;
-            this.isEditMode = certificateId !== null;
+            this.isEditMode = false; // Default to create mode
             this.internStudentData = null;
             this.certificateData = null;
         }
@@ -30,9 +29,8 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
         }
 
         async render() {
-            console.log(this.isEditMode ? "Edit Intern Certificate Form" : "Create Intern Certificate Form");
+            console.log("Create Intern Certificate Form");
             console.log("InternStudent ID:", this.internStudentId);
-            console.log("Certificate ID:", this.certificateId);
 
             try {
                 await this.loadInternshipPageTemplate();
@@ -59,11 +57,11 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
         }
 
         preparePageConfig() {
-            const title = this.isEditMode ? "Edit Certificate" : "Add Certificate";
+            const title = "Add Certificate";
             const description = this.internStudentData ? 
                 `For: ${this.internStudentData.Student?.first_name || ''} ${this.internStudentData.Student?.last_name || ''}` :
-                "Add or edit internship certificate details.";
-            
+                "Add internship certificate details.";
+
             return {
                 title: title,
                 description: description,
@@ -91,18 +89,6 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                         throw new Error('Failed to load intern student data');
                     }
                 }
-
-                // Load existing certificate data if in edit mode
-                if (this.isEditMode) {
-                    const certificateResponse = await fetch(`/curriculum/InternCertificate/${this.certificateId}`);
-                    const certificateData = await certificateResponse.json();
-                    
-                    if (certificateData.isSuccess) {
-                        this.certificateData = certificateData.result;
-                    } else {
-                        throw new Error('Failed to load certificate data');
-                    }
-                }
             } catch (error) {
                 console.error('Error loading data:', error);
                 throw error;
@@ -123,7 +109,7 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                             Cancel
                         </button>
                         <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                            ${this.isEditMode ? 'Update' : 'Create'} Certificate
+                            Create Certificate
                         </button>
                     </div>
                 </form>
@@ -219,26 +205,6 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     studentIdField.classList.add('bg-gray-100', 'cursor-not-allowed');
                 }
             }
-
-            // Set field values for edit mode
-            if (this.certificateData) {
-                this.populateFormFields();
-            }
-        }
-
-        populateFormFields() {
-            const fields = ['intern_student_id', 'certificate_name', 'company_id'];
-            
-            fields.forEach(fieldName => {
-                const field = document.querySelector(`[name="${fieldName}"]`);
-                if (field && this.certificateData) {
-                    let value = this.certificateData[fieldName];
-                    
-                    if (value) {
-                        field.value = value;
-                    }
-                }
-            });
         }
 
         async handleSubmit(event) {
@@ -246,10 +212,7 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
             const form = event.target;
             const formData = new FormData(form);
 
-            window.InternshipPageTemplate.showLoading(
-                form, 
-                this.isEditMode ? "Updating..." : "Creating..."
-            );
+            window.InternshipPageTemplate.showLoading(form, "Creating...");
 
             try {
                 const jsonData = {};
@@ -260,7 +223,7 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                 }
 
                 formData.forEach((value, key) => {
-                    if (key === 'intern_student_id' || key === 'certificate_id') {
+                    if (key === 'intern_student_id') {
                         jsonData[key] = parseInt(value, 10);
                     } else {
                         jsonData[key] = value;
@@ -274,10 +237,7 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
 
                 console.log('Submitting data:', jsonData);
 
-                // Determine endpoint
-                const url = this.isEditMode ? 
-                    `/curriculum/UpdateInternCertificate/${this.certificateId}` :
-                    '/curriculum/CreateInternCertificate';
+                const url = '/curriculum/CreateInternCertificate';
 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -290,11 +250,11 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                 const result = await response.json();
 
                 if (!response.ok || !result.isSuccess) {
-                    throw new Error(result.error || `Failed to ${this.isEditMode ? 'update' : 'create'} certificate`);
+                    throw new Error(result.error || 'Failed to create certificate');
                 }
 
                 window.InternshipPageTemplate.showSuccess(
-                    `Certificate ${this.isEditMode ? 'updated' : 'created'} successfully!`,
+                    'Certificate created successfully!',
                     this.application.mainContainer
                 );
 
@@ -309,47 +269,33 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
             } finally {
                 window.InternshipPageTemplate.hideLoading(
                     form,
-                    `${this.isEditMode ? 'Update' : 'Create'} Certificate`
+                    'Create Certificate'
                 );
             }
         }
 
-        async goBack() {
-            try {
-                if (this.internStudentId) {
-                    // Go back to InternStudentEdit
-                    if (this.application.navigate) {
-                        this.application.navigate(`/internship/internstudent/edit/${this.internStudentId}`);
-                    } else {
-                        window.location.hash = `#internship/internstudent/edit/${this.internStudentId}`;
-                    }
-                } else {
-                    // Go to list or main page
-                    if (this.application.navigate) {
-                        this.application.navigate("/internship/internstudent");
-                    } else {
-                        window.location.hash = "#internship/internstudent";
-                    }
-                }
-            } catch (error) {
-                console.error('Error navigating back:', error);
+        goBackToList() {
+            if (this.application.navigate) {
+              this.application.navigate("/internship");
+            } else {
+              window.location.hash = "#/internship";
             }
-        }
+          }
 
         showError(message) {
             if (window.InternshipPageTemplate) {
-                window.InternshipPageTemplate.showError(
-                    message,
-                    this.application.mainContainer
-                );
+              window.InternshipPageTemplate.showError(
+                message,
+                this.application.mainContainer
+              );
             } else {
-                const errorDiv = document.createElement("div");
-                errorDiv.className =
-                    "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4";
-                errorDiv.textContent = message;
-                this.application.mainContainer.prepend(errorDiv);
+              const errorDiv = document.createElement("div");
+              errorDiv.className =
+                "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4";
+              errorDiv.textContent = message;
+              this.application.mainContainer.prepend(errorDiv);
             }
-        }
+          }
     }
 
     if (typeof window !== "undefined") {

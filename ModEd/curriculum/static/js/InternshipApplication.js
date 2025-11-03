@@ -86,6 +86,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderInternStudentSkill.bind(this),
         "InternStudentSkillCreate.js"
       );
+      this.addRouteWithSubModule(
+        "/interncertificate/create",
+        this.renderInternCertificateCreate.bind(this),
+        "InternCertificateCreate.js"
+      );
 
       this.setDefaultRoute("");
     }
@@ -107,6 +112,7 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       //   label: "Intern Student Skill Create",
       //   route: "/internstudentskill/create",
       // },
+      { label: "Intern Certificate Create", route: "/interncertificate/create" },
     ];
 
     async renderMainPage() {
@@ -350,6 +356,16 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         await page.render();
       } else {
         console.error("InternStudentSkillCreate class not found");
+      }
+    }
+
+    async renderInternCertificateCreate() {
+      console.log("Rendering Internship Certificate Create");
+      if (window.InternCertificateCreate) {
+        const page = new window.InternCertificateCreate(this.templateEngine);
+        await page.render();
+      } else {
+        console.error("InternCertificateCreate class not found");
       }
     }
 

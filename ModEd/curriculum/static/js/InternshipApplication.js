@@ -175,10 +175,10 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       }
     }
 
-    async renderCompany() {
-      console.log("Rendering Company (Legacy)");
+    async renderCompanyCreate() {
+      console.log("Rendering Company Create");
       if (window.CompanyCreate) {
-        const companyCreate = new window.CompanyCreate(this.templateEngine);
+        const companyCreate = new window.CompanyCreate(this);
         await companyCreate.render();
       } else {
         console.error("CompanyCreate class not found");
@@ -201,18 +201,6 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       }
     }
 
-    async renderCompanyCreate(){
-      console.log("Rendering Company Create");
-      if (window.CurriculumCompanyCreateFeature) {
-        const companyList = new window.CurriculumCompanyCreateFeature(
-          this.templateEngine,
-          RootURL || ""
-        );
-        await companyList.render();
-      } else {
-        console.error("CurriculumCompanyCreateFeature class not found");
-      }
-    }
 
     async renderCompanyEdit(){
       console.log("Rendering Company Edit");
@@ -222,8 +210,7 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
 
       if(window.CompanyEdit){
         const companyEdit = new window.CompanyEdit(
-          this.templateEngine,
-          RootURL || "",
+          this,
           companyId
         );
         await companyEdit.render();

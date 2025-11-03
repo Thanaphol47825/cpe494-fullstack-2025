@@ -117,7 +117,6 @@ if (typeof window !== 'undefined' && !window.InterviewForm) {
       const ul = document.createElement('ul');
       ul.className = 'text-sm text-blue-800 space-y-1 ml-7';
 
-      // List item 1
       const li1 = document.createElement('li');
       li1.appendChild(document.createTextNode('✓ '));
       const strong1 = document.createElement('strong');
@@ -125,7 +124,6 @@ if (typeof window !== 'undefined' && !window.InterviewForm) {
       li1.appendChild(strong1);
       li1.appendChild(document.createTextNode(' (อาจารย์) - จาก Common Module'));
 
-      // List item 2
       const li2 = document.createElement('li');
       li2.appendChild(document.createTextNode('✓ '));
       const strong2 = document.createElement('strong');
@@ -133,7 +131,6 @@ if (typeof window !== 'undefined' && !window.InterviewForm) {
       li2.appendChild(strong2);
       li2.appendChild(document.createTextNode(' (รายงานการสมัคร) - ต้องสร้างก่อน'));
 
-      // List item 3
       const li3 = document.createElement('li');
       li3.appendChild(document.createTextNode('💡 หรือกดปุ่ม '));
       const strong3 = document.createElement('strong');

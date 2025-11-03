@@ -44,11 +44,9 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
         this.$tableHost.style.maxHeight = '80vh';
       }
 
-      // Setup buttons
       root.querySelector('[data-action="import"]')?.addEventListener('click', () => this.handleImport());
       root.querySelector('[data-action="create"]')?.addEventListener('click', () => this.handleCreate());
 
-      // Setup table
       this.table = new window.AdvanceTableRender(this.engine, {
         modelPath: 'recruit/applicant',
         data: [],
@@ -61,7 +59,6 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
       await this.table.render();
       await this.refreshTable();
 
-      // Bind events
       this.$tableHost.addEventListener('click', (e) => {
         const btn = e.target.closest('[data-action]');
         if (!btn) return;

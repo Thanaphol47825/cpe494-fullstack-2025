@@ -5,6 +5,7 @@ import (
 	"ModEd/curriculum/model"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -90,6 +91,40 @@ func (h *CourseSkillHandler) GetCourseSkills(context *fiber.Ctx) error {
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    courseSkills,
+	})
+}
+
+func (h *CourseSkillHandler) GetSkillsByCourse(c *fiber.Ctx) error {
+	courseId, err := c.ParamsInt("courseId")
+	if err != nil || courseId <= 0 {
+		return c.JSON(fiber.Map{"isSuccess": false, "result": "invalid courseId"})
+	}
+
+	type Row struct{ Name string }
+	var rows []Row
+
+	if err := h.Application.DB.
+		Table("skills").
+		Select("skills.name AS name").
+		Joins("JOIN course_skills cs ON cs.skill_id = skills.id").
+		Where("cs.course_id = ? AND cs.deleted_at IS NULL AND skills.deleted_at IS NULL", courseId).
+		Order("skills.name ASC").
+		Scan(&rows).Error; err != nil {
+		return c.JSON(fiber.Map{"isSuccess": false, "result": "failed to query skills"})
+	}
+
+	names := make([]string, 0, len(rows))
+	for _, r := range rows {
+		names = append(names, r.Name)
+	}
+
+	return c.JSON(fiber.Map{
+		"isSuccess": true,
+		"result": fiber.Map{
+			"CourseId":   courseId,
+			"SkillNames": names,
+			"SkillLabel": strings.Join(names, ", "),
+		},
 	})
 }
 

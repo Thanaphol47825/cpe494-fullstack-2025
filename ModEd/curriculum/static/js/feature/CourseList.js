@@ -2,6 +2,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
   class CourseList {
     constructor(application) {
       this.application = application;
+      this.skillCache = new Map();
       window._deleteCourse = this.handleDelete.bind(this);
       window._editCourse = this.handleEdit.bind(this);
     }
@@ -14,6 +15,38 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       const data = await res.json().catch(() => []);
       return data.result || [];
     }
+
+    async getSkillsByCourse(courseId) {
+      if (this.skillCache.has(courseId)) return this.skillCache.get(courseId);
+
+      const res = await fetch(`${RootURL}/curriculum/CourseSkill/getSkillsByCourse/${courseId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const label = data?.result?.SkillLabel || "";
+      this.skillCache.set(courseId, label);
+      return label;
+    }
+
+    async getAllCoursesWithSkills() {
+      const courses = await this.getAllCourses();
+      if (!Array.isArray(courses) || courses.length === 0) return [];
+
+      const ids = courses.map(c => Number(c.ID ?? c.Id ?? c.id));
+      const labels = await Promise.all(
+        ids.map(id => Number.isFinite(id)
+          ? this.getSkillsByCourse(id).catch(() => "")
+          : Promise.resolve(""))
+      );
+
+      return courses.map((c, i) => ({
+        ...c,
+        Skills: labels[i] || ""
+      }));
+    }
+
 
     async handleSubmit(formData) {
       try {
@@ -109,7 +142,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     }
 
     async refreshTable() {
-      const courses = await this.getAllCourses();
+      const courses = await this.getAllCoursesWithSkills();
       this.table.setData(courses);
       this.render();
     }
@@ -119,7 +152,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       const listWrapper = await ListTemplate.getList('CourseList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-      const courses = await this.getAllCourses();
+      const courses = await this.getAllCoursesWithSkills();
       this.setupTable();
       this.table.setData(courses);
       await this.table.render();
@@ -139,6 +172,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
           { name: "CurriculumId", label: "Curriculum", type: "text" },
           { name: "Optional", label: "Optional", type: "checkbox" },
           { name: "CourseStatus", label: "Status", type: "text" },
+          { name: "Skills", label: "Skills", type: "text" },
         ],
         customColumns: [
           {

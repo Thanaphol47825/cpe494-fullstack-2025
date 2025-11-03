@@ -11,6 +11,22 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
     }
 
     transformData(formData) {
+      const parseNum = (val) => {
+        if (val === null || val === undefined || val === '') return null;
+        const n = parseInt(val, 10);
+        return isNaN(n) ? null : n;
+      };
+
+      const programMap = {
+        Regular: 0,
+        International: 1,
+      };
+      
+      const programValue =
+        typeof formData.program === "string"
+          ? programMap[formData.program] ?? 0
+          : Number(formData.program) || 0;
+
       const toRFC3339 = (dateStr) => {
         if (!dateStr) return null;
         const d = new Date(dateStr);
@@ -18,14 +34,15 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
       };
 
       return {
-        applicant_id: formData.applicant_id ? parseInt(formData.applicant_id) : 0,
-        application_rounds_id: formData.application_rounds_id ? parseInt(formData.application_rounds_id) : 0,
-        faculty_id: formData.faculty_id ? parseInt(formData.faculty_id) : 0,
-        department_id: formData.department_id ? parseInt(formData.department_id) : 0,
-        program: formData.program || '',
+        applicant_id: parseNum(formData.applicant_id),
+        application_rounds_id: parseNum(formData.application_rounds_id),
+        faculty_id: parseNum(formData.faculty_id),
+        department_id: parseNum(formData.department_id),
+        program: programValue,
         application_statuses: formData.application_statuses || 'Pending',
       };
     }
+
 
     async getAll() {
       try {

@@ -14,6 +14,7 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
       this.reportService = null;
       this.statusService = null;
       this.statusConstants = null;
+      this.transferService = null;
     }
 
     async render() {
@@ -21,6 +22,8 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
 
       this.reportService = new window.ApplicationReportService(this.rootURL);
       this.statusService = new window.ApplicationStatusService(this.rootURL);
+      this.transferService = new window.ApplicationReportTransferConfirmedStudentService(this.rootURL); 
+
       this.container.innerHTML = '';
 
       const root = await RecruitTableTemplate.getTable({
@@ -60,6 +63,7 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
                 <button class="al-btn-edit text-blue-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
                 <button class="al-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}" style="margin-right:8px;">Delete</button>
                 <button class="al-btn-schedule text-green-600 hover:underline" data-action="schedule" data-id="{ID}" data-status="{application_statuses}">Schedule</button>
+                <button class="al-btn-transfer text-purple-600 hover:underline" data-action="transfer" data-id="{ID}">Transfer</button>
               </div>
             `
           }
@@ -100,6 +104,7 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
         if (action === 'edit') this.handleEdit(id);
         else if (action === 'delete') this.handleDelete(id);
         else if (action === 'schedule') this.handleSchedule(id);
+        else if (action === 'transfer') this.handleTransferConfirmed(id);
       });
 
       window.addEventListener('applicationReportChanged', () => this.refreshTable());
@@ -155,6 +160,26 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
       RecruitTableTemplate.navigateTo('recruit/interview/create');
       this.ui?.showMessage(`Opening interview form for Application Report #${applicationReportId}...`, 'info');
     }
+
+    async handleTransferConfirmed(applicantId) {
+      if (!applicantId) {
+        this.ui?.showMessage('Applicant ID not found for this record.', 'error');
+        return;
+      }
+
+      this.ui?.showMessage(`Transferring applicant #${applicantId} to student record...`, 'info');
+
+      const result = await this.transferService.transferById(applicantId);
+
+      if (result.success) {
+        this.ui?.showMessage(result.message || `Applicant #${applicantId} transferred successfully.`, 'success');
+        await this.refreshTable();
+      } else {
+        this.ui?.showMessage(`Transfer failed for applicant #${applicantId}: ${result.error}`, 'error');
+      }
+    }
+
+
   }
 
   window.ApplicationReportTable = ApplicationReportTable;

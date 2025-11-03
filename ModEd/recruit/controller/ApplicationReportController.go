@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -107,6 +108,21 @@ func (controller *ApplicationReportController) GetRoute() []*core.RouteItem {
 		Route:   "/recruit/GetDepartmentOptions",
 		Handler: controller.GetDepartmentOptions,
 		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/GetProgramTypeOptions",
+		Handler: controller.GetProgramTypeOptions,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/TransferConfirmedApplicants",
+		Handler: controller.TransferConfirmedApplicantsHandler,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/TransferConfirmedApplicantByID",
+		Handler: controller.TransferConfirmedApplicantByIDHandler,
+		Method:  core.POST,
 	})
 
 	return routeList
@@ -394,5 +410,216 @@ func (controller *ApplicationReportController) GetDepartmentOptions(c *fiber.Ctx
 		IsSuccess: true,
 		Status:    fiber.StatusOK,
 		Result:    options,
+	})
+}
+
+func (controller *ApplicationReportController) GetProgramTypeOptions(c *fiber.Ctx) error {
+	programTypes := []commonModel.ProgramType{
+		commonModel.REGULAR,
+		commonModel.INTERNATIONAL,
+	}
+
+	var results []map[string]interface{}
+	for _, program := range programTypes {
+		results = append(results, map[string]interface{}{
+			"value": program,
+			"label": commonModel.ProgramTypeLabel[program],
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    results,
+	})
+}
+
+func (controller *ApplicationReportController) generateStudentCode(program string, year int) (string, error) {
+	const facultyCode = "0705"
+
+	if year == 0 {
+		year = time.Now().Year()
+	}
+
+	buddhistYear := (year + 543) % 100
+
+	var programCode string
+	switch program {
+	case commonModel.ProgramTypeLabel[commonModel.REGULAR]:
+		programCode = "01"
+	case commonModel.ProgramTypeLabel[commonModel.INTERNATIONAL]:
+		programCode = "34"
+	default:
+		programCode = "72"
+	}
+
+	prefix := fmt.Sprintf("%02d%s%s", buddhistYear, facultyCode, programCode)
+
+	var lastStudent commonModel.Student
+	err := controller.application.DB.
+		Where("student_code LIKE ?", prefix+"%").
+		Order("student_code DESC").
+		First(&lastStudent).Error
+
+	running := 1
+	if err == nil && len(lastStudent.StudentCode) > len(prefix) {
+		numStr := lastStudent.StudentCode[len(prefix):]
+		if n, convErr := strconv.Atoi(numStr); convErr == nil {
+			running = n + 1
+		}
+	}
+
+	studentCode := fmt.Sprintf("%s%03d", prefix, running)
+	return studentCode, nil
+}
+
+func (controller *ApplicationReportController) TransferConfirmedApplicantsHandler(c *fiber.Ctx) error {
+	var reports []model.ApplicationReport
+
+	if err := controller.application.DB.
+		Preload("Applicant").
+		Preload("Department").
+		Where("application_statuses = ?", model.Confirmed).
+		Find(&reports).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   fmt.Sprintf("Failed to retrieve confirmed applications: %v", err),
+		})
+	}
+
+	if len(reports) == 0 {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusOK,
+			Message:   "No confirmed applicants found.",
+		})
+	}
+
+	activeStatus := commonModel.ACTIVE
+	var createdCount int
+
+	for _, report := range reports {
+		applicant := report.Applicant
+		if applicant.ID == 0 {
+			continue
+		}
+
+		studentCode, err := controller.generateStudentCode(report.Program.String(), time.Now().Year())
+		if err != nil {
+			continue
+		}
+
+		var existing commonModel.Student
+		if err := controller.application.DB.Where("student_code = ?", studentCode).First(&existing).Error; err == nil {
+			continue
+		}
+
+		student := commonModel.Student{
+			StudentCode: studentCode,
+			FirstName:   applicant.FirstName,
+			LastName:    applicant.LastName,
+			Email:       applicant.Email,
+			StartDate:   time.Now(),
+			BirthDate:   applicant.BirthDate,
+			Program:     commonModel.ProgramType(report.Program),
+			Department:  report.Department.Name,
+			Status:      &activeStatus,
+		}
+
+		if err := controller.application.DB.Create(&student).Error; err != nil {
+			continue
+		}
+
+		if err := controller.application.DB.Model(&report).Update("application_statuses", model.Student).Error; err != nil {
+			continue
+		}
+
+		createdCount++
+	}
+
+	if createdCount == 0 {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusOK,
+			Message:   "No new students were created. All confirmed applicants already transferred.",
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Message:   fmt.Sprintf("✅ Transfer completed successfully — %d applicants converted to students.", createdCount),
+	})
+}
+
+func (controller *ApplicationReportController) TransferConfirmedApplicantByIDHandler(c *fiber.Ctx) error {
+	var payload struct {
+		ApplicantID uint `json:"applicant_id"`
+	}
+
+	if err := c.BodyParser(&payload); err != nil || payload.ApplicantID == 0 {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusBadRequest,
+			Message:   "Invalid or missing applicant_id",
+		})
+	}
+
+	var report model.ApplicationReport
+	if err := controller.application.DB.
+		Preload("Applicant").
+		Preload("Department").
+		Where("applicant_id = ? AND application_statuses = ?", payload.ApplicantID, model.Confirmed).
+		First(&report).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusNotFound,
+			Message:   "Confirmed applicant not found or not eligible for transfer",
+		})
+	}
+
+	activeStatus := commonModel.ACTIVE
+
+	studentCode, err := controller.generateStudentCode(report.Program.String(), time.Now().Year())
+	if err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   fmt.Sprintf("Failed to generate student code: %v", err),
+		})
+	}
+
+	student := commonModel.Student{
+		StudentCode: studentCode,
+		FirstName:   report.Applicant.FirstName,
+		LastName:    report.Applicant.LastName,
+		Email:       report.Applicant.Email,
+		StartDate:   time.Now(),
+		BirthDate:   report.Applicant.BirthDate,
+		Program:     report.Program,
+		Department:  report.Department.Name,
+		Status:      &activeStatus,
+	}
+
+	if err := controller.application.DB.Create(&student).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   fmt.Sprintf("Failed to create student: %v", err),
+		})
+	}
+
+	if err := controller.application.DB.Model(&report).Update("application_statuses", model.Student).Error; err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false,
+			Status:    fiber.StatusInternalServerError,
+			Message:   fmt.Sprintf("Failed to update report status: %v", err),
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true,
+		Status:    fiber.StatusOK,
+		Message:   fmt.Sprintf("✅ Applicant #%d transferred successfully to student record (%s).", payload.ApplicantID, studentCode),
 	})
 }

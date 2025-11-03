@@ -252,6 +252,10 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     if (!window.ApplicationStatusService) {
       await this.loadSubModule("services/ApplicationStatusService.js");
     }
+
+    if (!window.ApplicationReportTransferConfirmedStudentService) {
+      await this.loadSubModule("services/ApplicationReportTransferConfirmedStudentService.js");
+    }
     
     if (!window.ApplicationReportTable) return this.renderError("Failed to load ApplicationReportTable");
     const feature = new window.ApplicationReportTable(this.templateEngine, this.rootURL);

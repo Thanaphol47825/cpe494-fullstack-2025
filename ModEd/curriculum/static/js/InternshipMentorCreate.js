@@ -1,19 +1,23 @@
 if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
-    class InternshipMentorCreate {
-        constructor(application) {
-            this.application = application;
-            this.mentors = [];
-            this.tbody = null;
-        }
+  class InternshipMentorCreate {
+      constructor(application) {
+          this.application = application;
+          this.mentors = [];
+          this.tbody = null;
+          this.formFields = [
+              { Id: "mentor_first_name", Label: "First Name", Name: "mentor_first_name", Type: "text" },
+              { Id: "mentor_last_name", Label: "Last Name", Name: "mentor_last_name", Type: "text" },
+              { Id: "mentor_email", Label: "Email", Name: "mentor_email", Type: "email" },
+              { Id: "mentor_phone", Label: "Phone", Name: "mentor_phone", Type: "text" },
+              { Id: "company_id", Label: "Company ID", Name: "company_id", Type: "number" }
+          ];
+      }
 
-        async render() {
-            console.log("Create Internship Mentor Form");
+      async render() {
+          // Clear container
+          this.application.mainContainer.innerHTML = '';
 
-            // Clear the container
-            this.application.mainContainer.innerHTML = "";
-
-            // Create form wrapper
-            const formWrapper = this.application.create(`
+          const formWrapper = this.application.create(`
             <div class="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
               <div class="absolute inset-0 overflow-hidden pointer-events-none">
                 <div class="absolute top-10 left-10 w-32 h-32 bg-gradient-to-br from-amber-200 to-orange-200 rounded-full opacity-20"></div>
@@ -37,7 +41,6 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                     Manage all internship mentors here.
                   </p>
                 </div>
-
                 <!-- Form -->
                 <div class="max-w-3xl mx-auto mb-8">
                   <form id="internship-mentor-form" class="form-container bg-white p-6 rounded-2xl shadow-lg">
@@ -52,8 +55,7 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                     </div>
                   </form>
                 </div>
-
-                <!-- Table -->
+                  <!-- Table -->
                 <div class="max-w-6xl mx-auto">
                   <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
                     <div id="mentor-table-container" class="p-6"></div>
@@ -62,214 +64,165 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
               </div>
             </div>
             `);
+          this.application.mainContainer.appendChild(formWrapper);
 
-            this.application.mainContainer.appendChild(formWrapper);
+          // Render form fields
+          const fieldsContainer = document.getElementById('form-fields');
+          this.formFields.forEach(f => {
+              const fieldHTML = `<div class="mb-4">
+                  <label for="${f.Id}" class="block text-gray-700 mb-1">${f.Label}</label>
+                  <input id="${f.Id}" name="${f.Name}" type="${f.Type}" class="w-full border border-gray-300 rounded-lg px-3 py-2"/>
+              </div>`;
+              fieldsContainer.insertAdjacentHTML('beforeend', fieldHTML);
+          });
 
-            // Add each input field using Mustache templates
-            const fields = [
-                { Id: "mentor_first_name", Label: "First Name", Type: "text", Name: "MentorFirstName" },
-                { Id: "mentor_last_name", Label: "Last Name", Type: "text", Name: "MentorLastName" },
-                { Id: "mentor_email", Label: "Email", Type: "email", Name: "MentorEmail" },
-                { Id: "mentor_phone", Label: "Phone", Type: "text", Name: "MentorPhone" },
-                { Id: "company_id", Label: "Company ID", Type: "number", Name: "CompanyId" }
-            ];
+          // Form events
+          const form = document.getElementById('internship-mentor-form');
+          form.addEventListener('submit', this.handleSubmit.bind(this));
+          document.getElementById('cancel-btn').addEventListener('click', this.cancelEdit.bind(this));
 
-            // Get form fields container
-            const fieldsContainer = document.getElementById('form-fields');
-            fields.forEach(field => {
-                if (this.application.template && this.application.template.Input) {
-                    const inputHTML = Mustache.render(this.application.template.Input, field);
-                    fieldsContainer.appendChild(this.application.create(inputHTML));
-                }
-            });
+          await this.loadMentors();
+      }
 
-            this.formFields = fields;
+      async handleSubmit(event) {
+          event.preventDefault();
+          const form = event.target;
+          const formData = new FormData(form);
+          const data = {};
+          formData.forEach((value, key) => {
+              // Convert number fields
+              if (key === 'company_id') value = parseInt(value) || 0;
+              data[key] = value;
+          });
 
-            // Add event listener for form submission
-            const form = document.getElementById('internship-mentor-form');
-            form.addEventListener('submit', this.handleSubmit.bind(this));
+          const mentorID = form.querySelector('#mentor_id')?.value;
+          const url = mentorID 
+              ? `/curriculum/UpdateInternshipMentor/${mentorID}` 
+              : "/curriculum/CreateInternshipMentor";
 
-            // Add event listener for cancel button
-            const cancelBtn = document.getElementById('cancel-btn');
-            cancelBtn.addEventListener('click', this.cancelEdit.bind(this));
+          try {
+              const res = await fetch(url, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(data),
+              });
 
-            await this.loadMentors();
-        }
+              const result = await res.json();
+              if (!result.isSuccess) throw new Error(result.error || 'Failed');
 
-        async handleSubmit(event) {
-            event.preventDefault();
+              this.showSuccessMessage(mentorID ? 'Mentor updated successfully' : 'Mentor created successfully');
+              this.resetForm();
+              await this.loadMentors();
+          } catch (err) {
+              console.error(err);
+              alert('Failed to save mentor. ' + (err.message || ''));
+          }
+      }
 
-            const form = event.target;
-            const formData = new FormData(form);
+      resetForm() {
+          const form = document.getElementById('internship-mentor-form');
+          form.reset();
+          const hiddenId = form.querySelector('#mentor_id');
+          if (hiddenId) hiddenId.remove();
+          document.querySelector('button[type="submit"]').textContent = 'Create Mentor';
+          document.getElementById('cancel-btn').classList.add('hidden');
+      }
 
-            // Check if editing (has mentor_id hidden field)
-            const mentorID = form.querySelector('#mentor_id')?.value;
+      cancelEdit() {
+          this.resetForm();
+      }
 
-            try {
-                const url = mentorID 
-                    ? `/curriculum/UpdateInternshipMentor/${mentorID}`
-                    : "/curriculum/CreateInternshipMentor";
-                
-                const response = await fetch(url, {
-                    method: "POST",
-                    body: formData,
+      showSuccessMessage(message) {
+          const container = this.application.mainContainer;
+          const alert = document.createElement('div');
+          alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+          alert.textContent = message;
+          container.appendChild(alert);
+          setTimeout(() => alert.remove(), 3000);
+      }
+
+      async loadMentors() {
+          try {
+              const res = await fetch('/curriculum/GetInternshipMentors');
+              const json = await res.json();
+              this.mentors = json.isSuccess ? json.result : [];
+          } catch {
+              this.mentors = [];
+          }
+          this.renderTable();
+      }
+
+      renderTable() {
+          const container = document.getElementById('mentor-table-container');
+          container.innerHTML = '';
+
+          if (!this.mentors || this.mentors.length === 0) {
+            if (this.application.template && this.application.template.EmptyState) {
+                const emptyHTML = Mustache.render(this.application.template.EmptyState, {
+                    title: "No Mentors Found",
+                    description: "There are currently no mentors in the system. Please create one using the form above."
                 });
-
-                if (!response.ok) throw new Error('Failed to save mentor');
-
-                const result = await response.json();
-                
-                this.resetForm();
-                this.showSuccessMessage(mentorID ? 'Mentor updated successfully' : 'Mentor created successfully');
-                
-                // Reload all mentors from server
-                await this.loadMentors();
-            } catch (err) {
-                console.error(err);
-                alert('Failed to save mentor.');
-            }
-        }
-
-        resetForm() {
-            const form = document.getElementById('internship-mentor-form');
-            form.reset();
-            
-            // Remove hidden mentor_id field if exists
-            const hiddenId = form.querySelector('#mentor_id');
-            if (hiddenId) hiddenId.remove();
-            
-            // Change button text back to Create
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.textContent = 'Create Mentor';
-            
-            // Hide cancel button
-            const cancelBtn = document.getElementById('cancel-btn');
-            cancelBtn.classList.add('hidden');
-        }
-
-        cancelEdit() {
-            this.resetForm();
-        }
-
-        showSuccessMessage(message) {
-            const container = this.application.mainContainer;
-            const alert = this.application.create(`
-                <div class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity duration-300">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                container.appendChild(this.application.create(emptyHTML));
+            } else {
+                container.innerHTML = `
+                    <div class="text-center text-gray-500 py-10">
+                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                         </svg>
-                        <span>${message}</span>
+                        <p class="text-lg font-medium">No mentors found</p>
+                        <p class="text-sm mt-2">Create your first mentor using the form above</p>
                     </div>
-                </div>
-            `);
-            container.appendChild(alert);
-            setTimeout(() => {
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 300);
-            }, 3000);
-        }
-
-        async loadMentors() {
-            try {
-                const res = await fetch('/curriculum/GetInternshipMentors');
-                this.mentors = res.ok ? await res.json() : [];
-                this.mentors = this.mentors.result;
-            } catch {
-                this.mentors = [];
+                `;
             }
-    
-            this.renderTable();
-        }
-        
-        renderTable() {
-            const container = document.getElementById('mentor-table-container');
-            container.innerHTML = '';
-        
-            if (!this.mentors || this.mentors.length === 0) {
-                if (this.application.template && this.application.template.EmptyState) {
-                    const emptyHTML = Mustache.render(this.application.template.EmptyState, {
-                        title: "No Mentors Found",
-                        description: "There are currently no mentors in the system. Please create one using the form above."
-                    });
-                    container.appendChild(this.application.create(emptyHTML));
-                } else {
-                    container.innerHTML = `
-                        <div class="text-center text-gray-500 py-10">
-                            <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            <p class="text-lg font-medium">No mentors found</p>
-                            <p class="text-sm mt-2">Create your first mentor using the form above</p>
-                        </div>
-                    `;
-                }
-                return;
-            }
-
-            const tableHTML = Mustache.render(this.application.template.Table, { responsive: true, striped: true });
-            const tableElement = this.application.create(tableHTML);
-            container.appendChild(tableElement);
-
-            const headerRow = tableElement.querySelector('[rel="headerRow"]');
-            const columns = ['First Name', 'Last Name', 'Email', 'Phone', 'Company ID', 'Actions'];
-            columns.forEach(col => {
-                const colHTML = `<th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>${col}</th>`;
-                headerRow.insertAdjacentHTML('beforeend', colHTML);
-            });
-
-            this.tbody = tableElement.querySelector('[rel="tbody"]');
-            console.log(this.mentors.length);
-            this.mentors.forEach(m => this.addMentorRow(m, false));
+            return;
         }
 
-        addMentorRow(mentor, prepend = true) {
-          if (!this.tbody) return;
-      
+          const tableHTML = Mustache.render(this.application.template.Table, { responsive: true, striped: true });
+          const tableElement = this.application.create(tableHTML);
+          container.appendChild(tableElement);
+
+          const headerRow = tableElement.querySelector('[rel="headerRow"]');
+          const columns = ['First Name', 'Last Name', 'Email', 'Phone', 'Company ID', 'Actions'];
+          columns.forEach(col => {
+              const colHTML = `<th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>${col}</th>`;
+              headerRow.insertAdjacentHTML('beforeend', colHTML);
+          });
+
+          this.tbody = tableElement.querySelector('[rel="tbody"]');
+          console.log(this.mentors.length);
+
+          this.mentors.forEach(m => this.addMentorRow(m, false));
+        }
+
+      addMentorRow(mentor) {
           const row = document.createElement('tr');
           row.className = 'bg-white border-b hover:bg-gray-50';
-      
-          const fields = ['mentor_first_name', 'mentor_last_name', 'mentor_email', 'mentor_phone', 'company_id'];
-          fields.forEach(k => {
-              const td = document.createElement('td');
-              td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
-              td.textContent = mentor[k] || ''; 
-              row.appendChild(td);
-          });
-      
-          // Actions
-          const actionsTd = document.createElement('td');
-          actionsTd.className = 'px-6 py-4 whitespace-nowrap text-right text-sm font-medium';
-      
-          const editBtn = document.createElement('button');
-          editBtn.textContent = 'Edit';
-          editBtn.className = 'text-blue-600 hover:text-blue-800 mr-2';
-          editBtn.addEventListener('click', () => this.editMentor(row, mentor));
-      
-          const deleteBtn = document.createElement('button');
-          deleteBtn.textContent = 'Delete';
-          deleteBtn.className = 'text-red-600 hover:text-red-800';
-          deleteBtn.addEventListener('click', () => this.deleteMentor(row, mentor));
-      
-          actionsTd.appendChild(editBtn);
-          actionsTd.appendChild(deleteBtn);
-          row.appendChild(actionsTd);
-      
-          if (prepend) this.tbody.prepend(row);
-          else this.tbody.appendChild(row);
-        }
-      
-        editMentor(row, mentor) {
+          row.innerHTML = `
+              <td class="px-6 py-4">${mentor.mentor_first_name}</td>
+              <td class="px-6 py-4">${mentor.mentor_last_name}</td>
+              <td class="px-6 py-4">${mentor.mentor_email}</td>
+              <td class="px-6 py-4">${mentor.mentor_phone}</td>
+              <td class="px-6 py-4">${mentor.company_id}</td>
+              <td class="px-6 py-4 text-right">
+                  <button class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
+                  <button class="text-red-600 hover:text-red-800">Delete</button>
+              </td>
+          `;
+
+          const editBtn = row.querySelector('button:nth-child(1)');
+          const deleteBtn = row.querySelector('button:nth-child(2)');
+
+          editBtn.addEventListener('click', () => this.editMentor(mentor));
+          deleteBtn.addEventListener('click', () => this.deleteMentor(mentor));
+
+          this.tbody.appendChild(row);
+      }
+
+      editMentor(mentor) {
           const form = document.getElementById('internship-mentor-form');
-          const submitBtn = form.querySelector('button[type="submit"]');
-          const cancelBtn = document.getElementById('cancel-btn');
-          
-          // Change to Update button
-          submitBtn.textContent = 'Update Mentor';
-          
-          // Display Cancel button
-          cancelBtn.classList.remove('hidden');
-          
+          document.querySelector('button[type="submit"]').textContent = 'Update Mentor';
+          document.getElementById('cancel-btn').classList.remove('hidden');
+
           let hiddenId = form.querySelector('#mentor_id');
           if (!hiddenId) {
               hiddenId = document.createElement('input');
@@ -278,45 +231,35 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
               hiddenId.name = 'Id';
               form.appendChild(hiddenId);
           }
-          hiddenId.value = mentor.Id || mentor.id;
-          
+          hiddenId.value = mentor.ID;
+
           this.formFields.forEach(f => {
               const input = form.querySelector(`#${f.Id}`);
-              if (input) {
-                  input.value = mentor[f.Id] || ''; // ใช้ key ตรง ๆ จาก API
-              }
+              if (input) input.value = mentor[f.Name] || '';
           });
-          
-          form.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      
 
-        async deleteMentor(row, mentor) {
-          if (!confirm('Are you sure you want to delete this mentor? This action cannot be undone.')) return;
-          
-          console.log('Deleting mentor:', mentor.ID);
-          const mentorId = mentor.ID;
-          console.log('Mentor ID:', mentorId);
-          
+          form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+
+      async deleteMentor(mentor) {
+          if (!confirm('Are you sure you want to delete this mentor?')) return;
+
           try {
-              const res = await fetch(`/curriculum/DeleteInternshipMentor/${mentorId}`, { 
-                  method: "GET", 
-              });
-              
-              if (res.ok) {
+              const res = await fetch(`/curriculum/DeleteInternshipMentor/${mentor.ID}`, { 
+                method: "GET" });
+                
+              const result = await res.json();
+              if (result.isSuccess) {
                   this.showSuccessMessage('Mentor deleted successfully');
-                  // Reload from server to ensure data consistency
                   await this.loadMentors();
-              } else {
-                  throw new Error('Failed to delete mentor');
-              }
+              } else throw new Error(result.error || 'Failed');
           } catch (err) {
               console.error(err);
               alert('Failed to delete mentor. Please try again.');
           }
       }
-      
-    }
-    
-    window.InternshipMentorCreate = InternshipMentorCreate;
+  }
+
+  window.InternshipMentorCreate = InternshipMentorCreate;
 }
+

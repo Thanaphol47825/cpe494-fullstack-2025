@@ -6,9 +6,9 @@ import (
 
 type CourseSkill struct {
 	core.BaseModel
-	CourseId uint   `json:"CourseId" gorm:"not null;column:course_id" form:"label:Course;type:select;fk:Course;fkLabelField:Name;required:true"`
+	CourseId uint   `gorm:"not null" csv:"course_id" json:"CourseId" form:"label:Course;placeholder:Select Course;type:select;required:true;fk:Course;fklabel:Name"`
 	Course   Course `json:"Course" gorm:"foreignKey:CourseId;references:ID" form:"-"`
-	SkillId  uint   `json:"SkillId" gorm:"not null;column:skill_id" form:"label:Skill;type:select;fk:Skill;fkLabelField:Name;required:true"`
+	SkillId  uint   `json:"SkillId" gorm:"not null;column:skill_id" form:"label:Skill;type:select;required:true;multiple:true;max:3;apiurl:/curriculum/Skill/getSkillOptions"`
 	Skill    Skill  `json:"Skill" gorm:"foreignKey:SkillId;references:ID" form:"-"`
 }
 

@@ -64,7 +64,7 @@ func (h *CourseSkillHandler) GetCourseSkill(context *fiber.Ctx) error {
 	}
 
 	var result model.CourseSkill
-	if err := h.Application.DB.Where("id = ?", id).First(&result).Error; err != nil {
+	if err := h.Application.DB.Preload("Course").Preload("Skill").Where("id = ?", id).First(&result).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get course skill",
@@ -80,7 +80,7 @@ func (h *CourseSkillHandler) GetCourseSkill(context *fiber.Ctx) error {
 // Read all
 func (h *CourseSkillHandler) GetCourseSkills(context *fiber.Ctx) error {
 	var courseSkills []model.CourseSkill
-	if err := h.Application.DB.Find(&courseSkills).Error; err != nil {
+	if err := h.Application.DB.Preload("Course").Preload("Skill").Find(&courseSkills).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get course skills",

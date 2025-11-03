@@ -33,7 +33,7 @@ func (controller *SkillController) GetRoute() []*core.RouteItem {
 		Method:  core.POST,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/Skill/updateSkill",
+		Route:   "/curriculum/Skill/updateSkill/:id",
 		Handler: controller.handler.UpdateSkill,
 		Method:  core.POST,
 	})
@@ -48,8 +48,13 @@ func (controller *SkillController) GetRoute() []*core.RouteItem {
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/Skill/getSkill/:id",
+		Route:   "/curriculum/Skill/getSkills/:id",
 		Handler: controller.handler.GetSkill,
+		Method:  core.GET,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/Skill/getSkillOptions",
+		Handler: controller.handler.GetSkillOptions,
 		Method:  core.GET,
 	})
 	return routeList

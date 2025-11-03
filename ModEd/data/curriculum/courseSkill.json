@@ -1,0 +1,50 @@
+[
+    {
+        "CourseId": 1,
+        "SkillId": 5
+    },
+    {
+        "CourseId": 1,
+        "SkillId": 3
+    },
+    {
+        "CourseId": 2,
+        "SkillId": 1
+    },
+    {
+        "CourseId": 2,
+        "SkillId": 5
+    },
+    {
+        "CourseId": 3,
+        "SkillId": 2
+    },
+    {
+        "CourseId": 4,
+        "SkillId": 3
+    },
+    {
+        "CourseId": 5,
+        "SkillId": 5
+    },
+    {
+        "CourseId": 6,
+        "SkillId": 1
+    },
+    {
+        "CourseId": 7,
+        "SkillId": 3
+    },
+    {
+        "CourseId": 8,
+        "SkillId": 4
+    },
+    {
+        "CourseId": 9,
+        "SkillId": 2
+    },
+    {
+        "CourseId": 9,
+        "SkillId": 3
+    }
+]

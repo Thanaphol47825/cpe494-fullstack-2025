@@ -9,6 +9,23 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             this.skills = [];
             this.certificates = [];
             this.projects = [];
+            this.sectionTemplate = null;
+        }
+
+        async loadSectionTemplate() {
+            try {
+                const response = await fetch(
+                    "/curriculum/static/view/InternStudentSection.tpl"
+                );
+                if (!response.ok) {
+                    throw new Error(`Failed to load section template: ${response.statusText}`);
+                }
+                this.sectionTemplate = await response.text();
+
+            } catch (error) {
+                console.error("Error loading templates:", error);
+                throw error;
+            }
         }
 
         async render() {
@@ -19,6 +36,9 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             
             // Clear the container
             this.application.mainContainer.innerHTML = '';
+
+            // Load section template
+            await this.loadSectionTemplate();
 
             // Load existing intern data and work experiences
             await this.loadData();
@@ -253,117 +273,33 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
 
                             <!-- Right Column: Work Experience, Project, Skill, Certificate -->
                             <div class="col-span-2 grid grid-cols-2 gap-4">
-                                <div id="work-experience-section" class="hidden bg-white rounded-lg shadow">
-                                    <div class="p-6">
-                                        <div class="flex justify-between items-center mb-4">
-                                            <h2 class="text-lg font-semibold text-gray-900">Work Experiences</h2>
-                                            <button id="add-work-experience-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
-                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Work Experience List -->
-                                        <div id="work-experience-list">
-                                            <div id="work-experience-empty" class="text-center py-8 text-gray-500">
-                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
-                                                </svg>
-                                                <p class="text-sm">No work experiences added yet</p>
-                                                <button id="add-first-experience-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                    Add your first work experience
-                                                </button>
-                                            </div>
-                                            <!-- Work experience items will be added here -->
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="project-section" class="hidden bg-white rounded-lg shadow">
-                                    <div class="p-6">
-                                        <div class="flex justify-between items-center mb-4">
-                                            <h2 class="text-lg font-semibold text-gray-900">Projects</h2>
-                                            <button id="add-project-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
-                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Project List -->
-                                        <div id="project-list">
-                                            <div id="project-empty" class="text-center py-8 text-gray-500">
-                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
-                                                </svg>
-                                                <p class="text-sm">No project added yet</p>
-                                                <button id="add-first-project-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                    Add your first project
-                                                </button>
-                                            </div>
-                                            <!-- Project items will be added here -->
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="skill-section" class="hidden bg-white rounded-lg shadow">
-                                    <div class="p-6">
-                                        <div class="flex justify-between items-center mb-4">
-                                            <h2 class="text-lg font-semibold text-gray-900">Skills</h2>
-                                            <button id="add-skill-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
-                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Skill List -->
-                                        <div id="skill-list">
-                                            <div id="skill-empty" class="text-center py-8 text-gray-500">
-                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
-                                                </svg>
-                                                <p class="text-sm">No skills added yet</p>
-                                                <button id="add-first-skill-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                    Add your first skill
-                                                </button>
-                                            </div>
-                                            <!-- Skill items will be added here -->
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="certificate-section" class="hidden bg-white rounded-lg shadow">
-                                    <div class="p-6">
-                                        <div class="flex justify-between items-center mb-4">
-                                            <h2 class="text-lg font-semibold text-gray-900">Certificates</h2>
-                                            <button id="add-certificate-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">
-                                                <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                </svg>
-                                                Add
-                                            </button>
-                                        </div>
-                                        
-                                        <!-- Certificate List -->
-                                        <div id="certificate-list">
-                                            <div id="certificate-empty" class="text-center py-8 text-gray-500">
-                                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h6m-6 4h6m-2 4h2"></path>
-                                                </svg>
-                                                <p class="text-sm">No certificates added yet</p>
-                                                <button id="add-first-certificate-btn" class="mt-3 text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                                    Add your first certificate
-                                                </button>
-                                            </div>
-                                            <!-- Certificate items will be added here -->
-                                        </div>
-                                    </div>
-                                </div>
+                                ${this.renderSection({
+                                    id: 'work-experience',
+                                    title: 'Work Experiences',
+                                    emptyMessage: 'work experiences',
+                                    singularName: 'work experience'
+                                })}
+                                
+                                ${this.renderSection({
+                                    id: 'project',
+                                    title: 'Projects',
+                                    emptyMessage: 'projects',
+                                    singularName: 'project'
+                                })}
+                                
+                                ${this.renderSection({
+                                    id: 'skill',
+                                    title: 'Skills',
+                                    emptyMessage: 'skills',
+                                    singularName: 'skill'
+                                })}
+                                
+                                ${this.renderSection({
+                                    id: 'certificate',
+                                    title: 'Certificates',
+                                    emptyMessage: 'certificates',
+                                    singularName: 'certificate'
+                                })}
                             </div>
                         </div>
 
@@ -386,6 +322,20 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                     </div>
                 </div>
             `;
+        }
+
+        renderSection({ id, title, emptyMessage, singularName }) {
+            if (!this.sectionTemplate) {
+                console.error('Section template not loaded');
+                return '';
+            }
+            
+            return Mustache.render(this.sectionTemplate, {
+                sectionId: id,
+                sectionTitle: title,
+                emptyMessage: emptyMessage,
+                singularName: singularName
+            });
         }
 
         setupEventListeners() {

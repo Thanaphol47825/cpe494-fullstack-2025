@@ -1,4 +1,4 @@
-// Instructor Leave Request Form Feature
+// Instructor Leave Request Form Feature - Using AdvanceFormRender
 if (typeof window !== 'undefined' && !window.HrInstructorLeaveFormFeature) {
   class HrInstructorLeaveFormFeature {
     constructor(templateEngine, rootURL) {
@@ -6,130 +6,160 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveFormFeature) {
       this.rootURL = rootURL;
       this.apiService = new HrApiService(rootURL);
       this.errorHandler = window.HrErrorHandler || null;
+      this.form = null;
     }
 
     async render() {
       try {
-        this.templateEngine.mainContainer.innerHTML = HrUiComponents.showLoadingState(
-          'Instructor Leave Request',
-          'Loading leave form...'
-        );
+        // Ensure templates are loaded
+        if (!this.templateEngine.template) {
+          await this.templateEngine.fetchTemplate();
+        }
 
-        const instructorsResponse = await this.apiService.fetchInstructors();
-        const instructors = instructorsResponse?.result || instructorsResponse || [];
+        // Set up container
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+            <div class="max-w-4xl mx-auto px-4">
+              <div class="mb-6">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">Instructor Leave Request</h1>
+                <p class="text-gray-600">Submit a new leave request for an instructor</p>
+              </div>
+              <div class="bg-white rounded-2xl shadow-lg p-6">
+                <div id="form-container"></div>
+              </div>
+              <div class="mt-6 text-center">
+                <a routerLink="hr/leave/instructor" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                  Back to Instructor Leave Requests
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
 
-        this.#renderFormLayout(instructors);
-        this.#attachEventListeners();
+        // Create form using AdvanceFormRender
+        this.form = new window.AdvanceFormRender(this.templateEngine, {
+          modelPath: 'hr/RequestLeaveInstructor',
+          targetSelector: '#form-container',
+          submitHandler: async (formData) => {
+            await this.#handleSubmit(formData);
+          },
+          autoFocus: true,
+          validateOnBlur: true
+        });
+
+        await this.form.render();
+
+        // Override showFormError and showFormSuccess to avoid DOMObject prepend issues
+        const originalShowFormError = this.form.showFormError.bind(this.form);
+        const originalShowFormSuccess = this.form.showFormSuccess.bind(this.form);
+        
+        this.form.showFormError = (message) => {
+          this.form.clearFormMessages();
+          const errorDiv = document.createElement('div');
+          errorDiv.className = 'form-error';
+          errorDiv.textContent = message;
+          if (this.form && this.form.html) {
+            const formElement = this.form.html;
+            try {
+              if (formElement.firstChild) {
+                Node.prototype.insertBefore.call(formElement, errorDiv, formElement.firstChild);
+              } else {
+                Node.prototype.appendChild.call(formElement, errorDiv);
+              }
+            } catch (e) {
+              console.error('Error inserting error message:', e);
+              if (formElement.appendChild) {
+                formElement.appendChild(errorDiv);
+              }
+            }
+          }
+        };
+
+        this.form.showFormSuccess = (message) => {
+          this.form.clearFormMessages();
+          const successDiv = document.createElement('div');
+          successDiv.className = 'form-success';
+          successDiv.textContent = message;
+          if (this.form && this.form.html) {
+            const formElement = this.form.html;
+            try {
+              if (formElement.firstChild) {
+                Node.prototype.insertBefore.call(formElement, successDiv, formElement.firstChild);
+              } else {
+                Node.prototype.appendChild.call(formElement, successDiv);
+              }
+            } catch (e) {
+              console.error('Error inserting success message:', e);
+              if (formElement.appendChild) {
+                formElement.appendChild(successDiv);
+              }
+            }
+          }
+        };
+
       } catch (error) {
         console.error('Error rendering instructor leave form:', error);
         if (this.errorHandler) {
           this.errorHandler.handleError(error, { context: 'instructor_leave_form_render' });
         }
-        this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
-          title: 'Error Loading Leave Form',
-          message: error.message || 'Unable to load instructor leave form.',
-          hasRetry: true,
-          retryAction: 'hrApp.renderCreateInstructorLeave()',
-          backLink: 'hr/leave',
-          backLabel: 'Back to Leave Management'
-        });
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+            <div class="max-w-4xl mx-auto px-4">
+              <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-red-800">Error Loading Leave Form</h2>
+                <p class="text-red-600 mt-2">${error.message || 'Unable to load instructor leave form.'}</p>
+                <div class="mt-4">
+                  <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Back to Leave Management
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
       }
     }
 
-    #renderFormLayout(instructors) {
-      this.templateEngine.mainContainer.innerHTML = '';
-
-      const wrapper = HrUiComponents.createFormPageWrapper({
-        title: 'Instructor Leave Request',
-        description: 'Submit a new leave request for an instructor',
-        icon: HrUiComponents.iconPaths.instructor,
-        gradientFrom: 'purple-600',
-        gradientTo: 'indigo-600',
-        bgGradient: 'from-slate-50 via-blue-50 to-indigo-100',
-        formTitle: 'Request Details',
-        containerSelector: '.instructor-leave-form-container',
-        backLink: 'hr/leave',
-        backLabel: 'Back to Leave Management'
-      });
-
-      this.templateEngine.mainContainer.appendChild(wrapper);
-
-      const container = wrapper.querySelector('.instructor-leave-form-container');
-      if (!container) {
-        throw new Error('Instructor leave form container not found');
-      }
-
-      container.innerHTML = HrUiComponents.renderInstructorLeaveForm({
-        instructors,
-        submitLabel: 'Submit Leave Request',
-        cancelLabel: 'Cancel',
-        cancelRoute: 'hr/leave/instructor',
-        statusContainerId: 'formStatus'
-      });
-    }
-
-    #attachEventListeners() {
-      const form = document.getElementById('instructorLeaveForm');
-      if (form) {
-        form.addEventListener('submit', this.#handleSubmit.bind(this));
-      }
-    }
-
-    async #handleSubmit(event) {
-      event.preventDefault();
-      
-      const formData = new FormData(event.target);
-      const payload = {
-        InstructorCode: formData.get('InstructorCode'),
-        LeaveType: formData.get('LeaveType'),
-        DateStr: formData.get('DateStr'),
-        Reason: formData.get('Reason')
-      };
-
-      // Validate
-      if (!payload.InstructorCode || !payload.LeaveType || !payload.DateStr || !payload.Reason) {
-        this.#setStatus('Please fill in all required fields', 'error');
-        return;
-      }
-
+    async #handleSubmit(formData) {
       try {
-        this.#setStatus('Submitting leave request...', 'info');
-        
+        // Validate required fields
+        if (!formData.instructor_code || !formData.leave_type || !formData.leave_date || !formData.reason) {
+          this.form.showFormError('Please fill in all required fields');
+          return;
+        }
+
+        // Show loading state
+        this.form.showFormSuccess('Submitting leave request...');
+
+        // Submit to API - transform date if needed
+        const payload = {
+          InstructorCode: formData.instructor_code,
+          LeaveType: formData.leave_type,
+          DateStr: formData.leave_date, // API expects DateStr
+          Reason: formData.reason
+        };
+
         const response = await this.apiService.createInstructorLeaveRequest(payload);
-        
-        this.#setStatus('Leave request submitted successfully!', 'success');
-        
+
+        // Show success message
+        this.form.showFormSuccess('Leave request submitted successfully!');
+
         // Redirect after short delay
         setTimeout(() => {
-          this.templateEngine.routerLinks.navigateTo('hr/leave/instructor');
+          if (this.templateEngine.routerLinks && this.templateEngine.routerLinks.navigateTo) {
+            this.templateEngine.routerLinks.navigateTo('hr/leave/instructor');
+          } else {
+            window.location.href = `${this.rootURL}/hr/leave/instructor`;
+          }
         }, 1500);
-        
+
       } catch (error) {
         console.error('Error submitting leave request:', error);
-        this.#setStatus(`Error: ${error.message}`, 'error');
-        
+        this.form.showFormError(`Error: ${error.message || 'Failed to submit leave request'}`);
+
         if (this.errorHandler) {
           this.errorHandler.handleError(error, { context: 'instructor_leave_submit' });
         }
-      }
-    }
-
-    #setStatus(message, type = 'info') {
-      const statusEl = document.getElementById('formStatus');
-      if (!statusEl) return;
-
-      const styles = {
-        success: 'bg-green-50 border-green-200 text-green-800',
-        error: 'bg-red-50 border-red-200 text-red-800',
-        info: 'bg-blue-50 border-blue-200 text-blue-800'
-      };
-
-      statusEl.className = `border rounded-lg p-4 ${styles[type] || styles.info}`;
-      statusEl.textContent = message;
-      statusEl.classList.remove('hidden');
-
-      if (type === 'success') {
-        setTimeout(() => statusEl.classList.add('hidden'), 3000);
       }
     }
   }

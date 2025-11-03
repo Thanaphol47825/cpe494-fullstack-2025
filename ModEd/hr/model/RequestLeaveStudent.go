@@ -4,7 +4,7 @@ import "ModEd/core/validation"
 
 type RequestLeaveStudent struct {
 	BaseLeaveRequest
-	StudentCode string `gorm:"not null" validation:"studentId" json:"student_code"`
+	StudentCode string `gorm:"not null" validation:"studentId" json:"student_code" form:"label:Student;type:select;fk:Student;fklabel:StudentCode;required:true"`
 }
 
 func (RequestLeaveStudent) TableName() string {

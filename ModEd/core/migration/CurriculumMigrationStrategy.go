@@ -9,6 +9,8 @@ func (s *CurriculumMigrationStrategy) GetModels() []interface{} {
 	return []interface{}{
 		&model.Curriculum{},
 		&model.Course{},
+		&model.Skill{},
+		&model.CourseSkill{},
 		&model.Class{},
 		&model.ClassMaterial{},
 		&model.CoursePlan{},
@@ -39,6 +41,7 @@ func (s *CurriculumMigrationStrategy) GetSeedPath() []SeedPath {
 	return []SeedPath{
 		{Path: "data/curriculum/curriculum.csv", Model: &[]model.Curriculum{}},
 		{Path: "data/curriculum/course.json", Model: &[]model.Course{}},
+		{Path: "data/curriculum/skill.json", Model: &[]model.Skill{}},
 		{Path: "data/curriculum/class.json", Model: &[]model.Class{}},
 		{Path: "data/curriculum/classMaterial.json", Model: &[]model.ClassMaterial{}},
 		{Path: "data/curriculum/coursePlan.json", Model: &[]model.CoursePlan{}},

@@ -1,0 +1,22 @@
+[
+    {
+        "Name": "Software Development",
+        "Description": "Ability to design, develop, test, and maintain software applications using various programming languages and frameworks."
+    },
+    {
+        "Name": "Hardware Design",
+        "Description": "Proficiency in designing and developing computer hardware components, including circuits, processors, and memory systems."
+    },
+    {
+        "Name": "Network Engineering",
+        "Description": "Skills in designing, implementing, and managing computer networks, including LANs, WANs, and cloud-based networks."
+    },
+    {
+        "Name": "Cybersecurity",
+        "Description": "Knowledge of protecting computer systems and networks from cyber threats through various security measures and protocols."
+    },
+    {
+        "Name": "Data Analysis",
+        "Description": "Ability to collect, process, and analyze large datasets to extract meaningful insights and support decision-making."
+    }
+]

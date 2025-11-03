@@ -1,99 +1,188 @@
-// Student Leave Request List Feature
+// Student Leave Request List Feature - Using AdvanceTableRender
 if (typeof window !== 'undefined' && !window.HrStudentLeaveListFeature) {
   class HrStudentLeaveListFeature {
     constructor(templateEngine, rootURL) {
       this.templateEngine = templateEngine;
       this.rootURL = rootURL;
       this.apiService = new HrApiService(rootURL);
-      this.errorHandler = this.#resolveErrorHandler();
-      this.requests = [];
+      this.errorHandler = window.HrErrorHandler || null;
+      this.table = null;
     }
 
     async render() {
       try {
-        const renderers = this.#resolveRenderers();
-        this.templateEngine.mainContainer.innerHTML = renderers.showLoading(
-          'Student Leave Requests',
-          'Loading leave requests...'
-        );
+        // Ensure templates are loaded
+        if (!this.templateEngine.template) {
+          await this.templateEngine.fetchTemplate();
+        }
 
-        await this.#loadRequests();
-        this.templateEngine.mainContainer.innerHTML = renderers.renderList(this.requests);
+        // Set up container
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+            <div class="max-w-7xl mx-auto px-4">
+              <div class="mb-8">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Student Leave Requests</h1>
+                    <p class="text-gray-600">View and manage student leave requests</p>
+                  </div>
+                  <div class="flex gap-3">
+                    <button id="refreshBtn" class="inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200">
+                      Refresh
+                    </button>
+                    <a routerLink="hr/leave/student/create" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200">
+                      New Leave Request
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <div id="table-container" class="bg-white rounded-2xl shadow-lg p-6">
+                <div class="text-center py-8 text-gray-500">Loading...</div>
+              </div>
+              <div class="mt-6 text-center">
+                <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                  Back to Leave Management
+                </a>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Load data first and normalize response format
+        const response = await this.apiService.fetchStudentLeaveRequests();
+        let data = [];
+        if (Array.isArray(response)) {
+          data = response;
+        } else if (response && Array.isArray(response.result)) {
+          data = response.result;
+        } else if (response && Array.isArray(response.data)) {
+          data = response.data;
+        }
+        
+        // Ensure all records have an 'id' field for template interpolation
+        data = data.map(item => {
+          // Normalize ID field - try different possible field names
+          if (!item.id && item.ID !== undefined) {
+            item.id = item.ID;
+          } else if (!item.id && item.Id !== undefined) {
+            item.id = item.Id;
+          }
+          return item;
+        });
+
+        // Create table using AdvanceTableRender with pre-loaded data
+        this.table = new window.AdvanceTableRender(this.templateEngine, {
+          modelPath: 'hr/RequestLeaveStudent',
+          data: data, // Use pre-loaded data instead of dataPath
+          targetSelector: '#table-container',
+          customColumns: [
+            {
+              name: 'actions',
+              label: 'Actions',
+              template: `
+                <div class="flex gap-2">
+                  <a routerLink="hr/leave/student/edit/{id}" class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 bg-yellow-50 text-yellow-700 hover:bg-yellow-100">
+                    Edit
+                  </a>
+                  ${this.#getActionButtonsTemplate()}
+                </div>
+              `
+            }
+          ]
+        });
+
+        await this.table.render();
         this.#attachEventListeners();
+
       } catch (error) {
         console.error('Error rendering student leave list:', error);
         if (this.errorHandler && typeof this.errorHandler.handleError === 'function') {
           this.errorHandler.handleError(error, { context: 'student_leave_list_render' });
         }
-
-        if (window.HrTemplates && typeof HrTemplates.render === 'function') {
-          this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
-            title: 'Error Loading Leave Requests',
-            message: error.message || 'Unable to load student leave requests.',
-            hasRetry: true,
-            retryAction: 'hrApp.renderStudentLeaveList()',
-            backLink: 'hr/leave',
-            backLabel: 'Back to Leave Management'
-          });
-        } else {
-          this.templateEngine.mainContainer.textContent = error.message || 'Unable to load student leave requests.';
-        }
+        this.templateEngine.mainContainer.innerHTML = `
+          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
+            <div class="max-w-7xl mx-auto px-4">
+              <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-red-800">Error Loading Leave Requests</h2>
+                <p class="text-red-600 mt-2">${error.message || 'Unable to load student leave requests.'}</p>
+                <div class="mt-4">
+                  <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Back to Leave Management
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
       }
     }
 
-    async #loadRequests() {
-      const response = await this.apiService.fetchStudentLeaveRequests();
-
-      if (Array.isArray(response)) {
-        this.requests = response;
-        return;
-      }
-
-      if (response && Array.isArray(response.result)) {
-        this.requests = response.result;
-        return;
-      }
-
-      if (response && Array.isArray(response.data)) {
-        this.requests = response.data;
-        return;
-      }
-
-      this.requests = [];
+    #getActionButtonsTemplate() {
+      // Dynamic buttons based on status
+      // Note: This will be processed after data is loaded
+      return `
+        <button onclick="window.hrStudentLeaveList?.reviewRequest('{id}', 'approve')" data-action-type="review" data-id="{id}" data-action="approve" 
+          class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 js-review-btn" 
+          style="display: {status === 'Pending' ? 'inline-flex' : 'none'}">
+          Approve
+        </button>
+        <button onclick="window.hrStudentLeaveList?.reviewRequest('{id}', 'reject')" data-action-type="review" data-id="{id}" data-action="reject" 
+          class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 bg-rose-50 text-rose-700 hover:bg-rose-100 js-review-btn" 
+          style="display: {status === 'Pending' ? 'inline-flex' : 'none'}">
+          Reject
+        </button>
+        <button onclick="window.hrStudentLeaveList?.deleteRequest('{id}')" data-action-type="delete" data-id="{id}" 
+          class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 bg-red-50 text-red-700 hover:bg-red-100 js-delete-btn">
+          Delete
+        </button>
+      `;
     }
 
     #attachEventListeners() {
+      // Make instance globally accessible for button handlers
+      window.hrStudentLeaveList = this;
+
       const refreshBtn = document.getElementById('refreshBtn');
       if (refreshBtn) {
         refreshBtn.addEventListener('click', () => this.render());
       }
 
-      document.querySelectorAll('[data-action-type="review"]').forEach((btn) => {
-        btn.addEventListener('click', (event) => {
-          const target = event.currentTarget;
-          const id = target.dataset.id;
-          const action = target.dataset.action;
-          this.#showReviewModal(id, action);
+      // Attach event listeners for review and delete buttons
+      // These will be attached after table renders
+      setTimeout(() => {
+        document.querySelectorAll('[data-action-type="review"]').forEach((btn) => {
+          btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const id = btn.dataset.id;
+            const action = btn.dataset.action;
+            this.#showReviewModal(id, action);
+          });
         });
-      });
 
-      document.querySelectorAll('[data-action-type="delete"]').forEach((btn) => {
-        btn.addEventListener('click', (event) => {
-          const target = event.currentTarget;
-          const id = target.dataset.id;
-          this.#handleDelete(id);
+        document.querySelectorAll('[data-action-type="delete"]').forEach((btn) => {
+          btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            const id = btn.dataset.id;
+            this.#handleDelete(id);
+          });
         });
-      });
+      }, 500);
     }
 
     #showReviewModal(requestId, action) {
       const modal = document.getElementById('reviewModal');
+      if (!modal) {
+        // Create modal if it doesn't exist
+        this.#createReviewModal();
+      }
+
+      const modalEl = document.getElementById('reviewModal');
       const messageEl = document.getElementById('reviewModalMessage');
       const reasonInput = document.getElementById('reviewReason');
       const confirmBtn = document.getElementById('confirmReview');
       const cancelBtn = document.getElementById('cancelReview');
 
-      if (!modal || !messageEl || !reasonInput || !confirmBtn || !cancelBtn) {
+      if (!modalEl || !messageEl || !reasonInput || !confirmBtn || !cancelBtn) {
         return;
       }
 
@@ -112,14 +201,34 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveListFeature) {
       confirmBtn.onclick = () => {
         const reason = reasonInput.value;
         this.#handleReview(requestId, action, reason);
-        modal.classList.add('hidden');
+        modalEl.classList.add('hidden');
       };
 
       cancelBtn.onclick = () => {
-        modal.classList.add('hidden');
+        modalEl.classList.add('hidden');
       };
 
-      modal.classList.remove('hidden');
+      modalEl.classList.remove('hidden');
+    }
+
+    #createReviewModal() {
+      const modalHTML = `
+        <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">Review Leave Request</h3>
+            <p id="reviewModalMessage" class="mb-4 text-gray-700"></p>
+            <textarea id="reviewReason" placeholder="Optional: add a reason for your decision..." 
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"></textarea>
+            <div class="flex gap-3">
+              <button id="confirmReview" class="flex-1 font-semibold py-2 px-4 rounded-lg"></button>
+              <button id="cancelReview" class="flex-1 font-semibold py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
     }
 
     async #handleDelete(requestId) {
@@ -136,7 +245,7 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveListFeature) {
 
       try {
         await this.apiService.deleteStudentLeaveRequest(id);
-        alert('Leave request deleted successfully.');
+        // Silently refresh without showing another alert
         await this.render();
       } catch (error) {
         console.error('Error deleting leave request:', error);
@@ -145,6 +254,14 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveListFeature) {
           this.errorHandler.handleError(error, { context: 'student_leave_delete' });
         }
       }
+    }
+
+    async reviewRequest(requestId, action) {
+      await this.#showReviewModal(requestId, action);
+    }
+
+    async deleteRequest(requestId) {
+      await this.#handleDelete(requestId);
     }
 
     async #handleReview(requestId, action, reason) {
@@ -160,233 +277,6 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveListFeature) {
           this.errorHandler.handleError(error, { context: 'student_leave_review' });
         }
       }
-    }
-
-    #resolveRenderers() {
-      const ui = window.HrUiComponents;
-      const templates = window.HrTemplates;
-
-      const hasLoadingTemplate = templates && typeof templates.render === 'function' && typeof templates.has === 'function' && templates.has('loadingStatePage');
-      const showLoading = (title, message) => {
-        if (ui && typeof ui.showLoadingState === 'function') {
-          return ui.showLoadingState(title, message);
-        }
-
-        if (hasLoadingTemplate) {
-          return templates.render('loadingStatePage', {
-            bgGradient: 'from-blue-50 via-indigo-50 to-purple-50',
-            gradientFrom: 'blue-600',
-            gradientTo: 'purple-600',
-            title,
-            message,
-            iconLoading: templates.iconPaths?.loading || ''
-          });
-        }
-
-        return `${title}: ${message}`;
-      };
-
-      const hasLeaveListTemplate = templates && typeof templates.render === 'function' && typeof templates.has === 'function' && templates.has('leaveListPage');
-      const renderList = (requests) => {
-        if (ui && typeof ui.renderStudentLeaveListPage === 'function') {
-          return ui.renderStudentLeaveListPage(requests);
-        }
-
-        if (hasLeaveListTemplate) {
-          return templates.render('leaveListPage', this.#buildTemplateData(requests));
-        }
-
-        return this.#renderPlainTable(requests);
-      };
-
-      return { showLoading, renderList };
-    }
-
-    #buildTemplateData(requests) {
-      const templates = window.HrTemplates || {};
-      const iconPaths = templates.iconPaths || {};
-      const getStatusClass = typeof templates.getStatusClass === 'function'
-        ? templates.getStatusClass.bind(templates)
-        : () => 'bg-gray-100 text-gray-800';
-      const formatDate = typeof templates.formatDate === 'function'
-        ? templates.formatDate.bind(templates)
-        : (value) => {
-            if (!value) {
-              return 'N/A';
-            }
-            const parsed = new Date(value);
-            return Number.isFinite(parsed.getTime()) ? parsed.toLocaleDateString() : 'N/A';
-          };
-
-      const parsedRequests = (Array.isArray(requests) ? requests : []).map((request) => {
-        const idValue = request.ID ?? request.id ?? request.Id ?? null;
-        const id = idValue !== null && idValue !== undefined ? String(idValue) : '';
-        const studentCode = request.student_code || request.StudentCode || request.studentCode || 'N/A';
-        const leaveType = request.leave_type || request.LeaveType || 'N/A';
-        const leaveDateRaw = request.leave_date || request.LeaveDate || request.leaveDate || '';
-        const status = request.Status || request.status || 'Pending';
-
-        const baseActionClasses = 'inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200';
-        const actions = [
-          {
-            isLink: true,
-            route: `hr/leave/student/edit/${id}`,
-            label: 'Edit',
-            className: `${baseActionClasses} bg-yellow-50 text-yellow-700 hover:bg-yellow-100`,
-            id
-          },
-          {
-            isButton: true,
-            action: 'delete',
-            actionType: 'delete',
-            label: 'Delete',
-            className: `${baseActionClasses} js-delete-btn bg-red-50 text-red-700 hover:bg-red-100`,
-            id
-          }
-        ];
-
-        if (status === 'Pending') {
-          actions.unshift({
-            isButton: true,
-            action: 'reject',
-            actionType: 'review',
-            label: 'Reject',
-            className: `${baseActionClasses} review-btn js-review-btn bg-rose-50 text-rose-700 hover:bg-rose-100`,
-            id
-          });
-          actions.unshift({
-            isButton: true,
-            action: 'approve',
-            actionType: 'review',
-            label: 'Approve',
-            className: `${baseActionClasses} review-btn js-review-btn bg-blue-50 text-blue-700 hover:bg-blue-100`,
-            id
-          });
-        }
-
-        return {
-          id,
-          personLabel: studentCode,
-          leaveType,
-          leaveDate: formatDate(leaveDateRaw),
-          status,
-          statusClass: getStatusClass(status),
-          actions
-        };
-      });
-
-      return {
-        bgGradient: 'from-slate-50 via-blue-50 to-indigo-100',
-        gradientFrom: 'blue-600',
-        gradientTo: 'indigo-600',
-        title: 'Student Leave Requests',
-        description: 'View and manage student leave requests',
-        icon: iconPaths.student || '',
-        actions: [
-          {
-            route: 'hr/leave/student/create',
-            label: 'New Leave Request',
-            className: 'inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200',
-            icon: iconPaths.add || ''
-          }
-        ],
-        showRefresh: true,
-        refreshId: 'refreshBtn',
-        refreshClass: 'inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200',
-        refreshLabel: 'Refresh',
-        hasRequests: parsedRequests.length > 0,
-        requests: parsedRequests,
-        columns: [
-          { label: 'ID' },
-          { label: 'Student' },
-          { label: 'Leave Type' },
-          { label: 'Leave Date' },
-          { label: 'Status' },
-          { label: 'Actions' }
-        ],
-        emptyTitle: 'No Leave Requests Yet',
-        emptyMessage: 'There are no student leave requests to display.',
-        emptyActionRoute: 'hr/leave/student/create',
-        emptyActionLabel: 'Create First Request',
-        backRoute: 'hr/leave',
-        modalId: 'reviewModal',
-        modalTitle: 'Review Leave Request',
-        modalMessageId: 'reviewModalMessage',
-        modalMessage: 'Are you sure you want to review this leave request?',
-        reasonFieldId: 'reviewReason',
-        reasonPlaceholder: 'Optional: add a reason for your decision...',
-        confirmButtonId: 'confirmReview',
-        confirmLabel: 'Confirm',
-        cancelButtonId: 'cancelReview',
-        cancelLabel: 'Cancel',
-        iconReset: iconPaths.reset || ''
-      };
-    }
-
-    #renderPlainTable(requests) {
-      const safeRequests = Array.isArray(requests) ? requests : [];
-      if (safeRequests.length === 0) {
-        return `
-          <div class="p-4 bg-white rounded-lg border border-amber-300 text-sm text-amber-700">
-            Core HR templates have not finished loading yet, so a minimal view is shown.
-            No student leave requests found.
-          </div>
-        `;
-      }
-
-      const summary = safeRequests.map((req) => {
-        const id = req.ID ?? req.id ?? req.Id ?? '—';
-        const studentCode = req.student_code || req.StudentCode || req.studentCode || 'N/A';
-        const leaveType = req.leave_type || req.LeaveType || 'N/A';
-        const status = req.Status || req.status || 'Pending';
-        return `#${id} • ${studentCode} • ${leaveType} • ${status}`;
-      }).join('\n');
-
-      return `
-        <div class="p-4 bg-white rounded-lg border border-amber-300 space-y-2">
-          <p class="text-sm text-amber-700">
-            Core HR templates have not finished loading yet, so a minimal list is shown temporarily.
-          </p>
-          <pre class="text-sm text-gray-700 whitespace-pre-wrap">${summary}</pre>
-        </div>
-      `;
-    }
-
-    #resolveErrorHandler() {
-      if (window.hrApp && window.hrApp.errorHandler && typeof window.hrApp.errorHandler.handleError === 'function') {
-        return window.hrApp.errorHandler;
-      }
-
-      const handler = window.HrErrorHandler;
-      if (!handler) {
-        return null;
-      }
-
-      if (typeof handler.handleError === 'function') {
-        return handler;
-      }
-
-      if (typeof handler.getInstance === 'function') {
-        const instance = handler.getInstance();
-        if (instance && typeof instance.handleError === 'function') {
-          return instance;
-        }
-        return instance;
-      }
-
-      if (typeof handler === 'function') {
-        try {
-          const instance = new handler();
-          if (instance && typeof instance.handleError === 'function') {
-            return instance;
-          }
-          return instance;
-        } catch (err) {
-          console.warn('Failed to instantiate HrErrorHandler:', err);
-        }
-      }
-
-      return null;
     }
   }
 

@@ -3,6 +3,7 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/hr/model"
+	cmodel "ModEd/common/model"
 	"ModEd/hr/util"
 	"fmt"
 	"net/http"
@@ -198,6 +199,7 @@ func (ctl *LeaveStudentHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/leave-student-requests/create", Method: core.GET, Handler: ctl.RenderCreateForm},
 		{Route: "/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
+		{Route: "/api/data/hr/leave-student-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
 		{Route: "/hr/leave-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-student-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
 		{Route: "/hr/leave-student-requests/:id/edit", Method: core.POST, Handler: ctl.HandleEditRequest},
@@ -248,7 +250,20 @@ func (ctl *LeaveStudentHRController) HandleSubmitRequest(c *fiber.Ctx) error {
 	if !model.LeaveType(dto.LeaveType).IsValid() {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid leave type")
 	}
-	if err := ctl.SubmitStudentLeaveRequest(dto.StudentCode, dto.LeaveType, dto.Reason, dto.LeaveDate); err != nil {
+
+	// Handle case where student_code might be an ID (uint) instead of StudentCode (string)
+	// If it's numeric, look up the actual StudentCode from the database
+	studentCode := dto.StudentCode
+	if _, err := strconv.ParseUint(dto.StudentCode, 10, 64); err == nil {
+		// It's a numeric ID, look up the StudentCode
+		var student cmodel.Student
+		if err := ctl.application.DB.First(&student, dto.StudentCode).Error; err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, "student not found")
+		}
+		studentCode = student.StudentCode
+	}
+
+	if err := ctl.SubmitStudentLeaveRequest(studentCode, dto.LeaveType, dto.Reason, dto.LeaveDate); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -319,6 +334,9 @@ func (ctl *LeaveStudentHRController) HandleDeleteRequest(c *fiber.Ctx) error {
 	if err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, "invalid request ID")
 	}
+	if id <= 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request ID: ID must be greater than 0")
+	}
 	if err := ctl.DeleteStudentLeaveRequest(id); err != nil {
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
@@ -328,8 +346,9 @@ func (ctl *LeaveStudentHRController) HandleDeleteRequest(c *fiber.Ctx) error {
 }
 
 func (ctl *LeaveStudentHRController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "hr/RequestLeaveStudent", Model: &model.RequestLeaveStudent{}},
+	}
 }
 
 func (ctl *LeaveStudentHRController) SetApplication(app *core.ModEdApplication) {

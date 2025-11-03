@@ -84,6 +84,7 @@ func (c *LeaveInstructorHRController) ReviewInstructorLeaveRequest(requestID, ac
 func (ctl *LeaveInstructorHRController) GetRoute() []*core.RouteItem {
 	return []*core.RouteItem{
 		{Route: "/hr/leave-instructor-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
+		{Route: "/api/data/hr/leave-instructor-requests", Method: core.GET, Handler: ctl.HandleGetAllRequests},
 		{Route: "/hr/leave-instructor-requests/:id", Method: core.GET, Handler: ctl.HandleGetRequestByID},
 		{Route: "/hr/leave-instructor-requests", Method: core.POST, Handler: ctl.HandleSubmitRequest},
 		{Route: "/hr/leave-instructor-requests/:id/review", Method: core.POST, Handler: ctl.HandleReviewRequest},
@@ -300,8 +301,9 @@ func (ctl *LeaveInstructorHRController) HandleDeleteRequest(c *fiber.Ctx) error 
 }
 
 func (ctl *LeaveInstructorHRController) GetModelMeta() []*core.ModelMeta {
-	modelMetaList := []*core.ModelMeta{}
-	return modelMetaList
+	return []*core.ModelMeta{
+		{Path: "hr/RequestLeaveInstructor", Model: &model.RequestLeaveInstructor{}},
+	}
 }
 
 func (ctl *LeaveInstructorHRController) SetApplication(app *core.ModEdApplication) {

@@ -4,7 +4,7 @@ import "ModEd/core/validation"
 
 type RequestLeaveInstructor struct {
 	BaseLeaveRequest
-	InstructorCode string `gorm:"not null"`
+	InstructorCode string `gorm:"not null" json:"instructor_code" form:"label:Instructor;type:select;fk:Instructor;fklabel:InstructorCode;required:true"`
 }
 
 func (r *RequestLeaveInstructor) Validate() error {

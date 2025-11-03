@@ -17,10 +17,10 @@ const (
 
 type BaseLeaveRequest struct {
 	core.BaseModel
-	Status    string    `gorm:"default:Pending"`
-	LeaveType LeaveType `gorm:"type:varchar(20)" json:"leave_type"`
-	Reason    string    `gorm:"type:text" json:"reason"`
-	LeaveDate time.Time `json:"leave_date"`
+	Status    string    `gorm:"default:Pending" json:"status" form:"-"`
+	LeaveType LeaveType `gorm:"type:varchar(20)" json:"leave_type" form:"label:Leave Type;type:select;required:true"`
+	Reason    string    `gorm:"type:text" json:"reason" form:"label:Reason;type:textarea;placeholder:Enter reason for leave;required:true"`
+	LeaveDate time.Time `json:"leave_date" form:"label:Leave Date;type:date;required:true"`
 }
 
 func (b *BaseLeaveRequest) SetStatus(status string) {

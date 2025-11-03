@@ -1,6 +1,6 @@
 [
     {
-        "Name": "Computer Engineering 2555",
+        "Name": "Computer Engineering Regular 2555",
         "StartYear": 2555,
         "EndYear": 2559,
         "DepartmentId": 1,
@@ -14,7 +14,7 @@
         "ProgramType": 1
     },
     {
-        "Name": "Computer Engineering 2560",
+        "Name": "Computer Engineering Regular 2560",
         "StartYear": 2560,
         "EndYear": 2564,
         "DepartmentId": 1,
@@ -28,7 +28,7 @@
         "ProgramType": 1
     },
     {
-        "Name": "Computer Engineering 2565",
+        "Name": "Computer Engineering Regular 2565",
         "StartYear": 2565,
         "EndYear": 2569,
         "DepartmentId": 1,

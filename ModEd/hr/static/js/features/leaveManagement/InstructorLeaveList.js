@@ -16,37 +16,10 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
           await this.templateEngine.fetchTemplate();
         }
 
-        // Set up container
-        this.templateEngine.mainContainer.innerHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-            <div class="max-w-7xl mx-auto px-4">
-              <div class="mb-8">
-                <div class="flex items-center justify-between mb-4">
-                  <div>
-                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Instructor Leave Requests</h1>
-                    <p class="text-gray-600">View and manage instructor leave requests</p>
-                  </div>
-                  <div class="flex gap-3">
-                    <button id="refreshBtn" class="inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200">
-                      Refresh
-                    </button>
-                    <a routerLink="hr/leave/instructor/create" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200">
-                      New Leave Request
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div id="table-container" class="bg-white rounded-2xl shadow-lg p-6">
-                <div class="text-center py-8 text-gray-500">Loading...</div>
-              </div>
-              <div class="mt-6 text-center">
-                <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                  Back to Leave Management
-                </a>
-              </div>
-            </div>
-          </div>
-        `;
+        // Set up container using DOM APIs (no HTML strings)
+        this.templateEngine.mainContainer.innerHTML = '';
+        const pageContainer = this.#createPageContainer();
+        this.templateEngine.mainContainer.appendChild(pageContainer);
 
         // Load data first and normalize response format
         const response = await this.apiService.fetchInstructorLeaveRequests();
@@ -96,21 +69,9 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
         if (this.errorHandler && typeof this.errorHandler.handleError === 'function') {
           this.errorHandler.handleError(error, { context: 'instructor_leave_list_render' });
         }
-        this.templateEngine.mainContainer.innerHTML = `
-          <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-            <div class="max-w-7xl mx-auto px-4">
-              <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-red-800">Error Loading Leave Requests</h2>
-                <p class="text-red-600 mt-2">${error.message || 'Unable to load instructor leave requests.'}</p>
-                <div class="mt-4">
-                  <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                    Back to Leave Management
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+        this.templateEngine.mainContainer.innerHTML = '';
+        const errorPage = this.#createErrorPage(error.message || 'Unable to load instructor leave requests.');
+        this.templateEngine.mainContainer.appendChild(errorPage);
       }
     }
 
@@ -208,23 +169,158 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
     }
 
     #createReviewModal() {
-      const modalHTML = `
-        <div id="reviewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 class="text-lg font-semibold mb-4">Review Leave Request</h3>
-            <p id="reviewModalMessage" class="mb-4 text-gray-700"></p>
-            <textarea id="reviewReason" placeholder="Optional: add a reason for your decision..." 
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"></textarea>
-            <div class="flex gap-3">
-              <button id="confirmReview" class="flex-1 font-semibold py-2 px-4 rounded-lg"></button>
-              <button id="cancelReview" class="flex-1 font-semibold py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      const modal = this.#createModalElement();
+      document.body.appendChild(modal);
+    }
+    
+    #createModalElement() {
+      const modalDiv = document.createElement('div');
+      modalDiv.id = 'reviewModal';
+      modalDiv.className = 'hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+      
+      const modalContent = document.createElement('div');
+      modalContent.className = 'bg-white rounded-lg p-6 max-w-md w-full mx-4';
+      
+      const h3 = document.createElement('h3');
+      h3.className = 'text-lg font-semibold mb-4';
+      h3.textContent = 'Review Leave Request';
+      
+      const messageP = document.createElement('p');
+      messageP.id = 'reviewModalMessage';
+      messageP.className = 'mb-4 text-gray-700';
+      
+      const textarea = document.createElement('textarea');
+      textarea.id = 'reviewReason';
+      textarea.placeholder = 'Optional: add a reason for your decision...';
+      textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4';
+      
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'flex gap-3';
+      
+      const confirmBtn = document.createElement('button');
+      confirmBtn.id = 'confirmReview';
+      confirmBtn.className = 'flex-1 font-semibold py-2 px-4 rounded-lg';
+      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.id = 'cancelReview';
+      cancelBtn.className = 'flex-1 font-semibold py-2 px-4 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300';
+      cancelBtn.textContent = 'Cancel';
+      
+      buttonsDiv.appendChild(confirmBtn);
+      buttonsDiv.appendChild(cancelBtn);
+      
+      modalContent.appendChild(h3);
+      modalContent.appendChild(messageP);
+      modalContent.appendChild(textarea);
+      modalContent.appendChild(buttonsDiv);
+      modalDiv.appendChild(modalContent);
+      
+      return modalDiv;
+    }
+    
+    #createPageContainer() {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8';
+      
+      const innerDiv = document.createElement('div');
+      innerDiv.className = 'max-w-7xl mx-auto px-4';
+      
+      const headerSection = document.createElement('div');
+      headerSection.className = 'mb-8';
+      
+      const headerContent = document.createElement('div');
+      headerContent.className = 'flex items-center justify-between mb-4';
+      
+      const titleDiv = document.createElement('div');
+      const h1 = document.createElement('h1');
+      h1.className = 'text-3xl font-bold text-gray-900 mb-2';
+      h1.textContent = 'Instructor Leave Requests';
+      const p = document.createElement('p');
+      p.className = 'text-gray-600';
+      p.textContent = 'View and manage instructor leave requests';
+      titleDiv.appendChild(h1);
+      titleDiv.appendChild(p);
+      
+      const buttonsDiv = document.createElement('div');
+      buttonsDiv.className = 'flex gap-3';
+      
+      const refreshBtn = document.createElement('button');
+      refreshBtn.id = 'refreshBtn';
+      refreshBtn.className = 'inline-flex items-center px-4 py-2 bg-white text-gray-700 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-200';
+      refreshBtn.textContent = 'Refresh';
+      
+      const newRequestLink = document.createElement('a');
+      newRequestLink.className = 'inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 transition-all duration-200';
+      newRequestLink.setAttribute('routerLink', 'hr/leave/instructor/create');
+      newRequestLink.textContent = 'New Leave Request';
+      
+      buttonsDiv.appendChild(refreshBtn);
+      buttonsDiv.appendChild(newRequestLink);
+      
+      headerContent.appendChild(titleDiv);
+      headerContent.appendChild(buttonsDiv);
+      headerSection.appendChild(headerContent);
+      
+      const tableContainer = document.createElement('div');
+      tableContainer.id = 'table-container';
+      tableContainer.className = 'bg-white rounded-2xl shadow-lg p-6';
+      
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'text-center py-8 text-gray-500';
+      loadingDiv.textContent = 'Loading...';
+      tableContainer.appendChild(loadingDiv);
+      
+      const backButtonContainer = document.createElement('div');
+      backButtonContainer.className = 'mt-6 text-center';
+      
+      const backLink = document.createElement('a');
+      backLink.className = 'inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200';
+      backLink.setAttribute('routerLink', 'hr/leave');
+      backLink.textContent = 'Back to Leave Management';
+      backButtonContainer.appendChild(backLink);
+      
+      innerDiv.appendChild(headerSection);
+      innerDiv.appendChild(tableContainer);
+      innerDiv.appendChild(backButtonContainer);
+      pageDiv.appendChild(innerDiv);
+      
+      return pageDiv;
+    }
+    
+    #createErrorPage(message) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8';
+      
+      const innerDiv = document.createElement('div');
+      innerDiv.className = 'max-w-7xl mx-auto px-4';
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-6';
+      
+      const h2 = document.createElement('h2');
+      h2.className = 'text-lg font-semibold text-red-800';
+      h2.textContent = 'Error Loading Leave Requests';
+      
+      const p = document.createElement('p');
+      p.className = 'text-red-600 mt-2';
+      p.textContent = message;
+      
+      const buttonDiv = document.createElement('div');
+      buttonDiv.className = 'mt-4';
+      
+      const backLink = document.createElement('a');
+      backLink.className = 'inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50';
+      backLink.setAttribute('routerLink', 'hr/leave');
+      backLink.textContent = 'Back to Leave Management';
+      buttonDiv.appendChild(backLink);
+      
+      errorDiv.appendChild(h2);
+      errorDiv.appendChild(p);
+      errorDiv.appendChild(buttonDiv);
+      innerDiv.appendChild(errorDiv);
+      pageDiv.appendChild(innerDiv);
+      
+      return pageDiv;
     }
 
     async #handleDelete(requestId) {

@@ -226,7 +226,7 @@ func (ctl *LeaveInstructorHRController) HandleUpdateRequest(c *fiber.Ctx) error 
 		})
 	}
 
-	// หาเรคคอร์ด
+	// Find record
 	req, err := ctl.getByID(body.ID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -235,7 +235,7 @@ func (ctl *LeaveInstructorHRController) HandleUpdateRequest(c *fiber.Ctx) error 
 		})
 	}
 
-	// อัปเดตเฉพาะฟิลด์ที่ส่งมา
+	// Update only fields that are provided
 	if body.Status != "" {
 		req.Status = body.Status
 	}
@@ -246,7 +246,7 @@ func (ctl *LeaveInstructorHRController) HandleUpdateRequest(c *fiber.Ctx) error 
 		req.LeaveType = model.LeaveType(body.LeaveType)
 	}
 
-	// บันทึก
+	// Save changes
 	if err := ctl.update(req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"isSuccess": false,
@@ -277,7 +277,7 @@ func (ctl *LeaveInstructorHRController) HandleDeleteRequest(c *fiber.Ctx) error 
 		})
 	}
 
-	// หาเรคคอร์ด
+	// Find record
 	req, err := ctl.getByID(body.ID)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -286,7 +286,7 @@ func (ctl *LeaveInstructorHRController) HandleDeleteRequest(c *fiber.Ctx) error 
 		})
 	}
 
-	// ลบ
+	// Delete record
 	if err := ctl.delete(req); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"isSuccess": false,

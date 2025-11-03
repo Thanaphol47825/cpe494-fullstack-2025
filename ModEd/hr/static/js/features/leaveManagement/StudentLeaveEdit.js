@@ -13,10 +13,9 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveEditFeature) {
 
     async render() {
       try {
-        this.templateEngine.mainContainer.innerHTML = HrUiComponents.showLoadingState(
-          'Edit Student Leave',
-          'Loading leave request...'
-        );
+        this.templateEngine.mainContainer.innerHTML = '';
+        const loadingPage = this.#createLoadingPage('Edit Student Leave', 'Loading leave request...');
+        this.templateEngine.mainContainer.appendChild(loadingPage);
 
         await Promise.all([
           this.#loadStudents(),
@@ -39,14 +38,14 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveEditFeature) {
         if (this.errorHandler) {
           this.errorHandler.handleError(error, { context: 'student_leave_edit_render' });
         }
-        this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
-          title: 'Error Loading Leave Request',
-          message: error.message || 'Unable to load the selected leave request.',
-          hasRetry: true,
-          retryAction: `hrApp.renderEditStudentLeave({ id: ${this.requestId} })`,
-          backLink: 'hr/leave/student',
-          backLabel: 'Back to Student Leave'
-        });
+        this.templateEngine.mainContainer.innerHTML = '';
+        const errorPage = this.#createErrorPage(
+          'Error Loading Leave Request',
+          error.message || 'Unable to load the selected leave request.',
+          'hr/leave/student',
+          'Back to Student Leave'
+        );
+        this.templateEngine.mainContainer.appendChild(errorPage);
       }
     }
 
@@ -85,40 +84,118 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveEditFeature) {
         throw new Error('Edit form container not found');
       }
 
-      container.innerHTML = HrUiComponents.renderStudentLeaveForm({
-        students: this.students,
-        initialData: this.request,
-        submitLabel: 'Update Leave Request',
-        cancelLabel: 'Back to List',
-        cancelRoute: 'hr/leave/student',
-        showDelete: true,
-        statusContainerId: 'formStatus',
-        deleteButtonId: 'deleteRequestBtn',
-        deleteLabel: 'Delete Request'
+      // Create status container using DOM
+      const statusDiv = document.createElement('div');
+      statusDiv.id = 'formStatus';
+      statusDiv.className = 'hidden mb-4';
+      container.appendChild(statusDiv);
+      
+      // Create form container
+      const formContainer = document.createElement('div');
+      formContainer.id = 'form-container';
+      container.appendChild(formContainer);
+      
+      // Use AdvanceFormRender for the edit form
+      this.formRender = new window.AdvanceFormRender(this.templateEngine, {
+        modelPath: 'hr/RequestLeaveStudent',
+        targetSelector: '#form-container',
+        submitHandler: this.#handleSubmitFormData.bind(this),
+        autoFocus: false,
+        validateOnBlur: false
       });
+      
+      await this.formRender.render();
+      
+      // Populate form with existing data
+      if (this.request) {
+        this.formRender.setData({
+          student_code: this.request.StudentCode || this.request.student_code,
+          leave_type: this.request.LeaveType || this.request.leave_type,
+          leave_date: this.request.LeaveDate ? new Date(this.request.LeaveDate).toISOString().split('T')[0] : '',
+          reason: this.request.Reason || this.request.reason
+        });
+      }
+      
+      // Create delete button manually using DOM
+      const deleteBtn = document.createElement('button');
+      deleteBtn.id = 'deleteRequestBtn';
+      deleteBtn.type = 'button';
+      deleteBtn.className = 'mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
+      deleteBtn.textContent = 'Delete Request';
+      container.appendChild(deleteBtn);
+    }
+
+    #createLoadingPage(title, message) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8 flex items-center justify-center';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'text-center';
+      
+      const h1 = document.createElement('h1');
+      h1.className = 'text-2xl font-bold text-gray-900 mb-2';
+      h1.textContent = title;
+      
+      const p = document.createElement('p');
+      p.className = 'text-gray-600';
+      p.textContent = message;
+      
+      contentDiv.appendChild(h1);
+      contentDiv.appendChild(p);
+      pageDiv.appendChild(contentDiv);
+      
+      return pageDiv;
+    }
+    
+    #createErrorPage(title, message, backLink, backLabel) {
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8';
+      
+      const innerDiv = document.createElement('div');
+      innerDiv.className = 'max-w-4xl mx-auto px-4';
+      
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-6';
+      
+      const h2 = document.createElement('h2');
+      h2.className = 'text-lg font-semibold text-red-800';
+      h2.textContent = title;
+      
+      const p = document.createElement('p');
+      p.className = 'text-red-600 mt-2';
+      p.textContent = message;
+      
+      const buttonDiv = document.createElement('div');
+      buttonDiv.className = 'mt-4';
+      
+      const backLinkEl = document.createElement('a');
+      backLinkEl.className = 'inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50';
+      backLinkEl.setAttribute('routerLink', backLink);
+      backLinkEl.textContent = backLabel;
+      buttonDiv.appendChild(backLinkEl);
+      
+      errorDiv.appendChild(h2);
+      errorDiv.appendChild(p);
+      errorDiv.appendChild(buttonDiv);
+      innerDiv.appendChild(errorDiv);
+      pageDiv.appendChild(innerDiv);
+      
+      return pageDiv;
     }
 
     #attachEventListeners() {
-      const form = document.getElementById('studentLeaveForm');
-      if (form) {
-        form.addEventListener('submit', this.#handleSubmit.bind(this));
-      }
-
       const deleteBtn = document.getElementById('deleteRequestBtn');
       if (deleteBtn) {
         deleteBtn.addEventListener('click', this.#handleDelete.bind(this));
       }
     }
 
-    async #handleSubmit(event) {
-      event.preventDefault();
-
-      const formData = new FormData(event.target);
+    async #handleSubmitFormData(formData) {
       const payload = {
-        student_code: formData.get('student_code'),
-        leave_type: formData.get('leave_type'),
-        leave_date: formData.get('leave_date'),
-        reason: formData.get('reason')
+        student_code: formData.student_code,
+        leave_type: formData.leave_type,
+        leave_date: formData.leave_date,
+        reason: formData.reason
       };
 
       if (!payload.student_code || !payload.leave_type || !payload.leave_date || !payload.reason) {

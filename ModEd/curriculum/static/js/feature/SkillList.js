@@ -1,14 +1,13 @@
-if (typeof window !== 'undefined' && !window.CourseList) {
-  class CourseList {
+if (typeof window !== 'undefined' && !window.SkillList) {
+  class SkillList {
     constructor(application) {
       this.application = application;
-      this.skillCache = new Map();
-      window._deleteCourse = this.handleDelete.bind(this);
-      window._editCourse = this.handleEdit.bind(this);
+      window._deleteSkill = this.handleDelete.bind(this);
+      window._editSkill = this.handleEdit.bind(this);
     }
 
-    async getAllCourses() {
-      const res = await fetch(`${RootURL}/curriculum/Course/getCourses`, {
+    async getAllSkills() {
+      const res = await fetch(`${RootURL}/curriculum/Skill/getSkills`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -16,47 +15,12 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       return data.result || [];
     }
 
-    async getSkillsByCourse(courseId) {
-      if (this.skillCache.has(courseId)) return this.skillCache.get(courseId);
-
-      const res = await fetch(`${RootURL}/curriculum/CourseSkill/getSkillsByCourse/${courseId}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const data = await res.json().catch(() => ({}));
-      const label = data?.result?.SkillLabel || "";
-      this.skillCache.set(courseId, label);
-      return label;
-    }
-
-    async getAllCoursesWithSkills() {
-      const courses = await this.getAllCourses();
-      if (!Array.isArray(courses) || courses.length === 0) return [];
-
-      const ids = courses.map(c => Number(c.ID ?? c.Id ?? c.id));
-      const labels = await Promise.all(
-        ids.map(id => Number.isFinite(id)
-          ? this.getSkillsByCourse(id).catch(() => "")
-          : Promise.resolve(""))
-      );
-
-      return courses.map((c, i) => ({
-        ...c,
-        Skills: labels[i] || ""
-      }));
-    }
-
-
     async handleSubmit(formData) {
       try {
-        formData.ID = parseInt(this.courseData.ID);
-        formData.CurriculumId = parseInt(formData.CurriculumId);
-        formData.CourseStatus = parseInt(formData.CourseStatus);
-        formData.Optional = !!formData.Optional;
+        formData.ID = parseInt(this.skillData.ID);
 
         const resp = await fetch(
-          RootURL + `/curriculum/Course/updateCourse/${formData.ID}`,
+          RootURL + `/curriculum/Skill/updateSkill/${formData.ID}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -66,7 +30,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
         const data = await resp.json();
         if (data.isSuccess) {
-          alert("Course updated!");
+          alert("Skill updated!");
           await this.refreshTable();
         } else {
           alert("Error: " + (data.result || "Failed to save"));
@@ -78,40 +42,33 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       return false;
     }
 
-    async handleEdit(courseId) {
-      if (!courseId) return;
+    async handleEdit(skillId) {
+      if (!skillId) return;
 
       try {
         if (!window.EditModalTemplate) {
           await this.application.loadSubModule('template/CurriculumEditModalTemplate.js');
         }
 
-        const res = await fetch(`${RootURL}/curriculum/Course/getCourses/${courseId}`, {
+        const res = await fetch(`${RootURL}/curriculum/Skill/getSkills/${skillId}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
         const data = await res.json().catch(() => ({}));
-        this.courseData = data.result || {};
+        this.skillData = data.result || {};
 
-        if (this.courseData?.CurriculumId !== undefined) {
-            this.courseData.CurriculumId = this.courseData.CurriculumId.toString();
-        }
-        if (this.courseData?.CourseStatus !== undefined) {
-            this.courseData.CourseStatus = this.courseData.CourseStatus.toString();
-        }
-
-        const modalId = `course-${courseId}`;
+        const modalId = `skill-${skillId}`;
         
         await EditModalTemplate.createModalWithForm({
-          modalType: 'Course',
+          modalType: 'Skill',
           modalId,
           application: this.application,
-          modelPath: 'curriculum/course',
-          data: this.courseData,
+          modelPath: 'curriculum/skill',
+          data: this.skillData,
           submitHandler: async (formData) => {
-            formData.ID = parseInt(courseId);
+            formData.ID = parseInt(skillId);
             await this.handleSubmit(formData);
-              return { success: true, message: "Course updated!" };
+              return { success: true, message: "Skill updated!" };
           },
         });
 
@@ -121,12 +78,12 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       }
     }
 
-    async handleDelete(courseId) {
-      if (!courseId) return;
-      if (!confirm('Delete Course?')) return;
+    async handleDelete(skillId) {
+      if (!skillId) return;
+      if (!confirm('Delete Skill?')) return;
 
       try {
-        const resp = await fetch(`${RootURL}/curriculum/Course/deleteCourse/${courseId}`, {
+        const resp = await fetch(`${RootURL}/curriculum/Skill/deleteSkill/${skillId}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -142,19 +99,19 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     }
 
     async refreshTable() {
-      const courses = await this.getAllCoursesWithSkills();
-      this.table.setData(courses);
+      const skills = await this.getAllSkills();
+      this.table.setData(skills);
       this.render();
     }
 
     async render() {
       this.application.templateEngine.mainContainer.innerHTML = "";
-      const listWrapper = await ListTemplate.getList('CourseList');
+      const listWrapper = await ListTemplate.getList('SkillList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-      const courses = await this.getAllCoursesWithSkills();
+      const skills = await this.getAllSkills();
       this.setupTable();
-      this.table.setData(courses);
+      this.table.setData(skills);
       await this.table.render();
 
       this.setupForm();
@@ -162,17 +119,13 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
     setupTable() {
       this.table = new AdvanceTableRender(this.application.templateEngine, {
-        modelPath: "curriculum/course",
+        modelPath: "curriculum/skill",
         data: [],
-        targetSelector: "#course-table",
+        targetSelector: "#skill-table",
         schema: [
           { name: "ID", label: "No.", type: "number" },
           { name: "Name", label: "Name", type: "text" },
           { name: "Description", label: "Description", type: "text" },
-          { name: "CurriculumId", label: "Curriculum", type: "text" },
-          { name: "Optional", label: "Optional", type: "checkbox" },
-          { name: "CourseStatus", label: "Status", type: "text" },
-          { name: "Skills", label: "Skills", type: "text" },
         ],
         customColumns: [
           {
@@ -180,14 +133,14 @@ if (typeof window !== 'undefined' && !window.CourseList) {
             label: "Actions",
             template: `
               <div class="flex space-x-2">
-                  <button onclick="_editCourse({ID})" 
+                  <button onclick="_editSkill({ID})" 
                       class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                       Edit
                   </button>
-                  <button onclick="_deleteCourse({ID})" 
+                  <button onclick="_deleteSkill({ID})" 
                       class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
                           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -203,14 +156,14 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
     setupForm() {
       this.form = new AdvanceFormRender(this.application.templateEngine, {
-        modelPath: "curriculum/course",
-        targetSelector: "#course-form",
+        modelPath: "curriculum/skill",
+        targetSelector: "#skill-form",
         submitHandler: this.handleSubmit.bind(this),
       });
     }
   }
 
   if (typeof window !== 'undefined') {
-    window.CourseList = CourseList;
+    window.SkillList = SkillList;
   }
 }

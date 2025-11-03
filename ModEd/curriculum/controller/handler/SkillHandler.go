@@ -136,3 +136,25 @@ func (h *SkillHandler) DeleteSkill(context *fiber.Ctx) error {
 		"result":    "success",
 	})
 }
+
+// Get Skill Options for select dropdown
+func (h *SkillHandler) GetSkillOptions(context *fiber.Ctx) error {
+	var skills []model.Skill
+	var results []map[string]any
+	if err := h.Application.DB.Order("name ASC").Find(&skills).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "failed to get skills",
+		})
+	}
+	for _, skill := range skills {
+		results = append(results, map[string]any{
+			"value": skill.ID,
+			"label": skill.Name,
+		})
+	}
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    results,
+	})
+}

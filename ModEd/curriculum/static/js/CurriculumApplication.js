@@ -7,6 +7,8 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       { label: "Class", route: "curriculum/class" },
       { label: "Class Material", route: "curriculum/classmaterial" },
       { label: "Course Plan", route: "curriculum/courseplan" },
+      { label: "Skill", route: "curriculum/skill" },
+      { label: "Course Skill", route: "curriculum/courseskill" },
     ];
 
 
@@ -52,6 +54,12 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
 
       this.addRouteWithSubModule('/courseplan', this.renderCoursePlan.bind(this), 'feature/CoursePlanList.js')
       this.addRouteWithSubModule('/courseplan/create', this.renderCreateCoursePlan.bind(this), 'feature/CoursePlanCreate.js')
+
+      this.addRouteWithSubModule('/skill', this.renderSkill.bind(this), 'feature/SkillList.js')
+      this.addRouteWithSubModule('/skill/create', this.renderCreateSkill.bind(this), 'feature/SkillCreate.js')
+
+      this.addRouteWithSubModule('/courseskill', this.renderCourseSkill.bind(this), 'feature/CourseSkillList.js')
+      this.addRouteWithSubModule('/courseskill/create', this.renderCreateCourseSkill.bind(this), 'feature/CourseSkillCreate.js')
     }
 
     async renderMainPage() {
@@ -207,6 +215,70 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       } else {
         console.error('CoursePlanCreate coursePlan not found');
         this.templateEngine.mainContainer.innerHTML = '<div>Error: CoursePlanCreate module not loaded</div>';
+      }
+    }
+
+    async renderSkill() {
+      await this.loadTemplates();
+
+      if (window.SkillList) {
+        const skillList = new window.SkillList(this);
+        await skillList.render();
+      } else {
+        console.error('SkillList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Error loading.
+        </div>
+      `;
+      }
+    }
+
+    async renderCreateSkill() {
+      await this.loadTemplates();
+
+      if (window.SkillCreate) {
+        const skillCreate = new window.SkillCreate(this);
+        await skillCreate.render();
+      } else {
+        console.error('SkillCreate not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="text-red-600">
+          Error loading.
+        </div>
+      `;
+      }
+    }
+
+    async renderCourseSkill() {
+      await this.loadTemplates();
+
+      if (window.CourseSkillList) {
+        const courseSkillList = new window.CourseSkillList(this);
+        await courseSkillList.render();
+      } else {
+        console.error('CourseSkillList not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="red-text-600">
+          Error loading.
+        </div>
+      `;
+      }
+    }
+
+    async renderCreateCourseSkill() {
+      await this.loadTemplates();
+
+      if (window.CourseSkillCreate) {
+        const courseSkillCreate = new window.CourseSkillCreate(this);
+        await courseSkillCreate.render();
+      } else {
+        console.error('CourseSkillCreate not available after loading');
+        this.templateEngine.mainContainer.innerHTML = `
+        <div class="text-red-600">
+          Error loading.
+        </div>
+      `;
       }
     }
 

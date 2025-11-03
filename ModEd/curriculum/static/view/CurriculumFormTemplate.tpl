@@ -32,14 +32,27 @@
             </form>
         </div>
 
-        <!-- Back Button -->
-        <div class="text-center mt-12">
-            <a routerLink="{{backLink}}" class="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:bg-white/90 border border-gray-200/50 font-medium">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                {{backText}}
-            </a>
+        <!-- Action Buttons -->
+        <div class="text-center mt-12 space-y-4">
+            <!-- View List Button -->
+            <div>
+                <a routerLink="{{listLink}}" class="inline-flex items-center gap-3 px-8 py-3 bg-gradient-to-r from-{{gradientFrom}} to-{{gradientTo}} text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    {{listText}}
+                </a>
+            </div>
+            
+            <!-- Back Button -->
+            <div>
+                <a routerLink="{{backLink}}" class="inline-flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-sm text-gray-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 hover:bg-white/90 border border-gray-200/50 font-medium">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    {{backText}}
+                </a>
+            </div>
         </div>
     </div>
 </div>

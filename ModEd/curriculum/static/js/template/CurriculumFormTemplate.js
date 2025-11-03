@@ -10,6 +10,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'rose-600',
                 gradientTo: 'pink-700',
                 formId: 'class-material-form',
+                listLink: 'curriculum/classmaterial',
+                listText: 'View All Class Materials',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             },
@@ -20,6 +22,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'amber-600',
                 gradientTo: 'orange-700',
                 formId: 'course-form',
+                listLink: 'curriculum/course',
+                listText: 'View All Courses',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             },
@@ -30,6 +34,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'purple-600',
                 gradientTo: 'indigo-700',
                 formId: 'class-form',
+                listLink: 'curriculum/class',
+                listText: 'View All Classes',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             },
@@ -40,6 +46,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'emerald-600',
                 gradientTo: 'teal-700',
                 formId: 'curriculum-form',
+                listLink: 'curriculum/curriculum',
+                listText: 'View All Curriculums',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             },
@@ -50,6 +58,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'cyan-600',
                 gradientTo: 'blue-700',
                 formId: 'course-plan-form',
+                listLink: 'curriculum/courseplan',
+                listText: 'View All Course Plans',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             },
@@ -60,6 +70,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'yellow-600',
                 gradientTo: 'orange-700',
                 formId: 'skill-form',
+                listLink: 'curriculum/skill',
+                listText: 'View All Skills',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             },
@@ -70,6 +82,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom: 'indigo-600',
                 gradientTo: 'purple-700',
                 formId: 'courseskill-form',
+                listLink: 'curriculum/courseskill',
+                listText: 'View All Course Skills',
                 backLink: 'curriculum',
                 backText: 'Back to Curriculum Menu'
             }
@@ -102,6 +116,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                 gradientFrom,
                 gradientTo,
                 formId,
+                listLink,
+                listText,
                 backLink,
                 backText
             } = config;
@@ -125,6 +141,8 @@ if (typeof window !== 'undefined' && !window.FormTemplate) {
                     gradientFromHover: gradientFrom.replace('-600', '-700'),
                     gradientToHover: gradientTo.replace('-700', '-800'),
                     formId,
+                    listLink,
+                    listText,
                     backLink,
                     backText
                 };

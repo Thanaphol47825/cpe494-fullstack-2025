@@ -3,8 +3,10 @@ package handler
 import (
 	"ModEd/core"
 	"ModEd/curriculum/model"
+	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -87,12 +89,36 @@ func (h *CoursePlanHandler) GetCoursePlanById(context *fiber.Ctx) error {
 
 func (h *CoursePlanHandler) GetCoursePlans(context *fiber.Ctx) error {
 	var coursePlans []model.CoursePlan
-	if err := h.Application.DB.Find(&coursePlans).Error; err != nil {
+
+	// allowed sort fields mapping from query param -> DB column
+	allowed := map[string]string{
+		"id":       "id",
+		"CourseId": "course_id",
+		"Course":   "course",
+		"Date":     "date",
+		"Week":     "week",
+	}
+
+	sortParam := context.Query("sort", "id")
+	orderParam := strings.ToLower(context.Query("order", "asc"))
+	if orderParam != "asc" && orderParam != "desc" {
+		orderParam = "asc"
+	}
+
+	column, ok := allowed[sortParam]
+	if !ok {
+		column = "Week"
+	}
+
+	orderClause := fmt.Sprintf("%s %s", column, orderParam)
+
+	if err := h.Application.DB.Order(orderClause).Find(&coursePlans).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get course plans",
 		})
 	}
+
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    coursePlans,

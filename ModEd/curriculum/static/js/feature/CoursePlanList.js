@@ -4,10 +4,20 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
             this.application = application;
             // bind global delete handler (เหมือน _deleteCurriculum)
             window._deleteCoursePlan = this.handleDelete.bind(this);
+            // sorting state: keys should match backend allowed sort keys
+            this._sort = { sort: 'id', order: 'asc' };
         }
 
-        async getAllCoursePlans() {
-            const res = await fetch(`${RootURL}/curriculum/CoursePlan/getCoursePlans`, {
+        // opts: { sort: 'id'|'CourseId'|'Course'|'Date'|'Week', order: 'asc'|'desc' }
+        async getAllCoursePlans(opts = {}) {
+            const params = new URLSearchParams();
+            const sort = opts.sort || this._sort.sort || 'id';
+            const order = opts.order || this._sort.order || 'asc';
+            if (sort) params.set('sort', sort);
+            if (order) params.set('order', order);
+
+            const url = `${RootURL}/curriculum/CoursePlan/getCoursePlans` + (params.toString() ? `?${params.toString()}` : '');
+            const res = await fetch(url, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
@@ -69,11 +79,12 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
         }
 
         async refreshTable() {
-            const plans = await this.getAllCoursePlans();
+            const plans = await this.getAllCoursePlans(this._sort);
             if (this.table && typeof this.table.setData === 'function') {
                 this.table.setData(plans);
+                return;
             }
-            // คงสไตล์เดียวกับตัวอย่าง: เรียก render ใหม่
+            // if table not created yet, create it by rendering
             await this.render();
         }
 
@@ -85,8 +96,87 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
             const listWrapper = await ListTemplate.getList('CoursePlanList');
             this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
+            // create sort controls (toolbar)
+            const toolbar = document.createElement('div');
+            toolbar.className = 'flex items-center gap-3';
+
+            const label = document.createElement('span');
+            label.textContent = 'Sort:';
+            label.className = 'text-sm justify-center font-medium mr-2';
+            toolbar.appendChild(label);
+
+            const sortSelect = document.createElement('select');
+            sortSelect.className = 'rounded px-2 py-1 border';
+            const sortOptions = [
+                { label: 'ID', value: 'id' },
+                { label: 'Course ID', value: 'CourseId' },
+                { label: 'Course', value: 'Course' },
+                { label: 'Date', value: 'Date' },
+                { label: 'Week', value: 'Week' },
+            ];
+            sortOptions.forEach(o => {
+                const opt = document.createElement('option');
+                opt.value = o.value;
+                opt.text = o.label;
+                sortSelect.appendChild(opt);
+            });
+
+            const orderBtn = document.createElement('button');
+            orderBtn.type = 'button';
+            orderBtn.className = 'rounded px-3 py-1 border';
+            orderBtn.textContent = this._sort.order || 'asc';
+
+            toolbar.appendChild(sortSelect);
+            toolbar.appendChild(orderBtn);
+
+            // Try inserting toolbar into the action buttons area (near the Create button)
+            // Fallback: insert before the table container
+            let inserted = false;
+            try {
+                const createBtn = listWrapper.querySelector('a[routerLink="curriculum/courseplan/create"]');
+                if (createBtn) {
+                    // find the parent container that holds action buttons
+                    const actionGroup = createBtn.closest('div.flex.gap-3') || createBtn.parentNode;
+                    if (actionGroup && actionGroup.parentNode) {
+                        // insert toolbar after the actionGroup to align with buttons
+                        actionGroup.parentNode.insertBefore(toolbar, actionGroup.nextSibling);
+                        inserted = true;
+                    }
+                }
+            } catch (e) {
+                // ignore and fallback
+            }
+
+            if (!inserted) {
+                // fallback: insert toolbar before table target
+                const tableContainer = listWrapper.querySelector('#courseplan-table');
+                if (tableContainer && tableContainer.parentNode) {
+                    tableContainer.parentNode.insertBefore(toolbar, tableContainer);
+                } else {
+                    // fallback: append to wrapper
+                    listWrapper.insertBefore(toolbar, listWrapper.firstChild);
+                }
+            }
+
+            // set initial values
+            try {
+                sortSelect.value = this._sort.sort;
+            } catch (e) { /* ignore */ }
+            orderBtn.textContent = this._sort.order || 'asc';
+
+            // handlers
+            sortSelect.addEventListener('change', async (e) => {
+                this._sort.sort = e.target.value;
+                await this.refreshTable();
+            });
+            orderBtn.addEventListener('click', async (e) => {
+                this._sort.order = (this._sort.order === 'asc') ? 'desc' : 'asc';
+                orderBtn.textContent = this._sort.order;
+                await this.refreshTable();
+            });
+
             // โหลดข้อมูล
-            const plans = await this.getAllCoursePlans();
+            const plans = await this.getAllCoursePlans(this._sort);
 
             // สร้างตารางด้วย AdvanceTableRender
             this.table = new AdvanceTableRender(this.application.templateEngine, {

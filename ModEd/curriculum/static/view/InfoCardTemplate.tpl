@@ -1,4 +1,4 @@
-<div id="{{sectionId}}-section" class="hidden bg-white rounded-lg shadow p-6"></div>
+<div id="{{sectionId}}-section" class="hidden bg-white rounded-lg shadow p-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-semibold text-gray-900">{{sectionTitle}}</h2>
         <button id="add-{{sectionId}}-btn" class="px-4 py-2 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors">

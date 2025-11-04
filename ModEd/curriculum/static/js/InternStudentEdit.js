@@ -9,19 +9,28 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             this.skills = [];
             this.certificates = [];
             this.projects = [];
-            this.sectionTemplate = null;
+            this.template = {
+                Main: null,
+                InfoCard: null,
+                StatusMessage: null
+            };
         }
 
-        async loadSectionTemplate() {
-            try {
-                const response = await fetch(
-                    "/curriculum/static/view/InternStudentSection.tpl"
-                );
-                if (!response.ok) {
-                    throw new Error(`Failed to load section template: ${response.statusText}`);
-                }
-                this.sectionTemplate = await response.text();
+        async loadTemplate() {
+            const templates = {
+                Main: "/curriculum/static/view/InternStudentEditTemplate.tpl",
+                InfoCard: "/curriculum/static/view/InfoCardTemplate.tpl",
+                StatusMessage: "/curriculum/static/view/StatusMessageTemplate.tpl"
+            };
 
+            try {
+                await Promise.all(
+                    Object.entries(templates).map(async ([key, path]) => {
+                        const response = await fetch(path);
+                        if (!response.ok) throw new Error(`Failed to load ${key}: ${response.statusText}`);
+                        this.template[key] = await response.text();
+                    })
+                );
             } catch (error) {
                 console.error("Error loading templates:", error);
                 throw error;
@@ -30,21 +39,32 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
 
         async render() {
             console.log("Rendering Intern Student Edit Form for ID:", this.internId);
-            
+
             // Set global instance for onclick handlers
             window.internStudentEdit = this;
-            
+
             // Clear the container
             this.application.mainContainer.innerHTML = '';
 
-            // Load section template
-            await this.loadSectionTemplate();
+            // Load templates
+            await this.loadTemplate();
 
             // Load existing intern data and work experiences
             await this.loadData();
 
-            // Create the main page layout
-            const pageHTML = this.createPageHTML();
+            // Prepare sections data
+            const sections = [
+                { id: 'work-experience', title: 'Work Experiences', emptyMessage: 'work experiences', singularName: 'work experience' },
+                { id: 'project', title: 'Projects', emptyMessage: 'projects', singularName: 'project' },
+                { id: 'skill', title: 'Skills', emptyMessage: 'skills', singularName: 'skill' },
+                { id: 'certificate', title: 'Certificates', emptyMessage: 'certificates', singularName: 'certificate' }
+            ];
+
+            // Render all sections HTML
+            const sectionsHTML = sections.map(section => this.renderSection(section)).join('');
+
+            // Create the main page layout with sections
+            const pageHTML = Mustache.render(this.template.Main, { sectionsHTML });
             const pageWrapper = this.application.create(pageHTML);
             this.application.mainContainer.appendChild(pageWrapper);
 
@@ -60,11 +80,11 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
                 // Load intern data (which already contains Student data)
                 const internResponse = await fetch(`/curriculum/InternStudent/${this.internId}`);
                 const internData = await internResponse.json();
-                
+
                 if (internData.isSuccess) {
                     this.internData = internData.result;
                     this.students = this.internData.Student ? [this.internData.Student] : [];
-                    
+
                     // Load work experiences, skills, certificates, and projects for this student
                     await this.loadWorkExperiences();
                     await this.loadSkills();
@@ -79,258 +99,45 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             }
         }
 
-        async loadWorkExperiences() {
+        async loadRelatedData(type, endpoint) {
             try {
-                // Get work experiences for this student
                 const studentId = this.internData.ID;
                 if (!studentId) return;
 
-                const response = await fetch(`/curriculum/internWorkExperience/getByStudentID/${studentId}`);
+                const response = await fetch(`/curriculum/${endpoint}/getByStudentID/${studentId}`);
                 const data = await response.json();
-                
-                if (data.isSuccess) {
-                    this.workExperiences = data.result || [];
-                } else {
-                    console.warn('Failed to load work experiences:', data.error);
-                    this.workExperiences = [];
-                }
+
+                this[type] = data.isSuccess ? (data.result || []) : [];
+                if (!data.isSuccess) console.warn(`Failed to load ${type}:`, data.error);
             } catch (error) {
-                console.error('Error loading work experiences:', error);
-                this.workExperiences = [];
+                console.error(`Error loading ${type}:`, error);
+                this[type] = [];
             }
+        }
+
+        async loadWorkExperiences() {
+            await this.loadRelatedData('workExperiences', 'internWorkExperience');
         }
 
         async loadSkills() {
-            try {
-                // Get skills for this student
-                const studentId = this.internData.ID;
-                if (!studentId) return;
-
-                const response = await fetch(`/curriculum/internSkill/getByStudentID/${studentId}`);
-                const data = await response.json();
-                
-                if (data.isSuccess) {
-                    this.skills = data.result || [];
-                } else {
-                    console.warn('Failed to load skills:', data.error);
-                    this.skills = [];
-                }
-            } catch (error) {
-                console.error('Error loading skills:', error);
-                this.skills = [];
-            }
+            await this.loadRelatedData('skills', 'internSkill');
         }
 
         async loadCertificates() {
-            try {
-                // Get certificates for this student
-                const studentId = this.internData.ID;
-                if (!studentId) return;
-
-                const response = await fetch(`/curriculum/internCertificate/getByStudentID/${studentId}`);
-                const data = await response.json();
-                
-                if (data.isSuccess) {
-                    this.certificates = data.result || [];
-                } else {
-                    console.warn('Failed to load certificates:', data.error);
-                    this.certificates = [];
-                }
-            } catch (error) {
-                console.error('Error loading certificates:', error);
-                this.certificates = [];
-            }
+            await this.loadRelatedData('certificates', 'internCertificate');
         }
 
         async loadProjects() {
-            try {
-                // Get projects for this student
-                const studentId = this.internData.ID;
-                if (!studentId) return;
-
-                const response = await fetch(`/curriculum/internProject/getByStudentID/${studentId}`);
-                const data = await response.json();
-                
-                if (data.isSuccess) {
-                    this.projects = data.result || [];
-                } else {
-                    console.warn('Failed to load projects:', data.error);
-                    this.projects = [];
-                }
-            } catch (error) {
-                console.error('Error loading projects:', error);
-                this.projects = [];
-            }
-        }
-
-        createPageHTML() {
-            return `
-                <div class="bg-gray-100 min-h-screen py-8">
-                    <div class="max-w-7xl mx-auto px-4">
-                        <!-- Header -->
-                        <div class="mb-6">
-                            <button id="back-to-list" class="text-blue-600 hover:text-blue-800 text-sm flex items-center mb-4">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                </svg>
-                                Back to List
-                            </button>
-                            <h1 class="text-3xl font-bold text-gray-900">Edit Intern Student</h1>
-                            <p class="mt-2 text-sm text-gray-600">Update intern student information and manage work experiences</p>
-                        </div>
-
-                        <!-- Loading State -->
-                        <div id="loading-form" class="bg-white rounded-lg shadow p-6 text-center">
-                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                            <p class="mt-2 text-gray-600">Loading form...</p>
-                        </div>
-
-                        <!-- Error State -->
-                        <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-red-800">Error</h3>
-                                    <div class="mt-2 text-sm text-red-700">
-                                        <span id="error-text"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Main Content Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <!-- Left Column: Basic Info -->
-                            <div id="edit-form-container" class="hidden bg-white rounded-lg shadow">
-                                <div class="p-6">
-                                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
-                                    <form id="intern-student-edit-form" class="space-y-6">
-                                        <!-- Current Student Info (Read-only display) -->
-                                        <div id="current-student-info" class="bg-gray-50 rounded-lg p-4">
-                                            <h4 class="text-sm font-medium text-gray-700 mb-3">Student Information</h4>
-                                            <div class="grid grid-cols-1 gap-4 text-sm">
-                                                <div>
-                                                    <span class="text-gray-600">Code:</span>
-                                                    <span id="current-student-code" class="ml-2 font-medium">-</span>
-                                                </div>
-                                                <div>
-                                                    <span class="text-gray-600">Name:</span>
-                                                    <span id="current-student-name" class="ml-2 font-medium">-</span>
-                                                </div>
-                                                <div>
-                                                    <span class="text-gray-600">Email:</span>
-                                                    <span id="current-student-email" class="ml-2 font-medium">-</span>
-                                                </div>
-                                                <div>
-                                                    <span class="text-gray-600">Phone:</span>
-                                                    <span id="current-student-phone" class="ml-2 font-medium">-</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Intern Status -->
-                                        <div>
-                                            <label for="intern_status" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Intern Status <span class="text-red-500">*</span>
-                                            </label>
-                                            <select id="intern_status" name="intern_status" required class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                                                <option value="NOT_STARTED">Not Started</option>
-                                                <option value="ACTIVE">Active</option>
-                                                <option value="COMPLETED">Completed</option>
-                                            </select>
-                                            <p class="mt-1 text-sm text-gray-500">Current status of the internship</p>
-                                        </div>
-
-                                        <!-- Overview -->
-                                        <div>
-                                            <label for="overview" class="block text-sm font-medium text-gray-700 mb-2">
-                                                Overview
-                                            </label>
-                                            <textarea id="overview" name="overview" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Enter internship overview or description..."></textarea>
-                                            <p class="mt-1 text-sm text-gray-500">Brief description of the internship (optional)</p>
-                                        </div>
-
-                                        <!-- Form Actions -->
-                                        <div class="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-                                            <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                                Cancel
-                                            </button>
-                                            <button type="submit" id="update-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                                <span id="update-btn-text">Update Intern Student</span>
-                                                <svg id="update-btn-spinner" class="hidden animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-
-                            <!-- Right Column: Work Experience, Project, Skill, Certificate -->
-                            <div class="col-span-2 grid grid-cols-2 gap-4">
-                                ${this.renderSection({
-                                    id: 'work-experience',
-                                    title: 'Work Experiences',
-                                    emptyMessage: 'work experiences',
-                                    singularName: 'work experience'
-                                })}
-                                
-                                ${this.renderSection({
-                                    id: 'project',
-                                    title: 'Projects',
-                                    emptyMessage: 'projects',
-                                    singularName: 'project'
-                                })}
-                                
-                                ${this.renderSection({
-                                    id: 'skill',
-                                    title: 'Skills',
-                                    emptyMessage: 'skills',
-                                    singularName: 'skill'
-                                })}
-                                
-                                ${this.renderSection({
-                                    id: 'certificate',
-                                    title: 'Certificates',
-                                    emptyMessage: 'certificates',
-                                    singularName: 'certificate'
-                                })}
-                            </div>
-                        </div>
-
-                        <!-- Success Message -->
-                        <div id="success-message" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mt-6">
-                            <div class="flex">
-                                <div class="flex-shrink-0">
-                                    <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-green-800">Success</h3>
-                                    <div class="mt-2 text-sm text-green-700">
-                                        <span id="success-text"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            await this.loadRelatedData('projects', 'internProject');
         }
 
         renderSection({ id, title, emptyMessage, singularName }) {
-            if (!this.sectionTemplate) {
+            if (!this.template.InfoCard) {
                 console.error('Section template not loaded');
                 return '';
             }
-            
-            return Mustache.render(this.sectionTemplate, {
+
+            return Mustache.render(this.template.InfoCard, {
                 sectionId: id,
                 sectionTitle: title,
                 emptyMessage: emptyMessage,
@@ -338,573 +145,433 @@ if (typeof window !== 'undefined' && !window.InternStudentEdit) {
             });
         }
 
-        setupEventListeners() {
-            // Back to list button
-            document.getElementById('back-to-list')?.addEventListener('click', () => this.goBackToList());
-            
-            // Cancel button
-            document.getElementById('cancel-btn')?.addEventListener('click', () => this.goBackToList());
-            
-            // Form submission
-            document.getElementById('intern-student-edit-form')?.addEventListener('submit', (e) => this.handleSubmit(e));
+        renderStatusMessage(isSuccess, isError) {
+            if (!this.template.StatusMessage) {
+                console.error('Status message template not loaded');
+                return '';
+            }
 
-            // Work Experience, Project, Skill, Certificate buttons
-            document.getElementById('add-work-experience-btn')?.addEventListener('click', () => this.navigateToCreateWorkExperience());
-            document.getElementById('add-first-experience-btn')?.addEventListener('click', () => this.navigateToCreateWorkExperience());
-            document.getElementById('add-project-btn')?.addEventListener('click', () => this.navigateToCreateProject());
-            document.getElementById('add-first-project-btn')?.addEventListener('click', () => this.navigateToCreateProject());
-            document.getElementById('add-skill-btn')?.addEventListener('click', () => this.navigateToCreateSkill());
-            document.getElementById('add-first-skill-btn')?.addEventListener('click', () => this.navigateToCreateSkill());
-            document.getElementById('add-certificate-btn')?.addEventListener('click', () => this.navigateToCreateCertificate());
-            document.getElementById('add-first-certificate-btn')?.addEventListener('click', () => this.navigateToCreateCertificate());
+            return Mustache.render(this.template.StatusMessage, {
+                isError: isError,
+                isSuccess: isSuccess
+            });
+        }
+
+        setupEventListeners() {
+            const listeners = {
+                'back-to-list': () => this.goBackToList(),
+                'cancel-btn': () => this.goBackToList(),
+                'intern-student-edit-form': (e) => this.handleSubmit(e),
+                'add-work-experience-btn': () => this.navigateToCreateWorkExperience(),
+                'add-first-experience-btn': () => this.navigateToCreateWorkExperience(),
+                'add-project-btn': () => this.navigateToCreateProject(),
+                'add-first-project-btn': () => this.navigateToCreateProject(),
+                'add-skill-btn': () => this.navigateToCreateSkill(),
+                'add-first-skill-btn': () => this.navigateToCreateSkill(),
+                'add-certificate-btn': () => this.navigateToCreateCertificate(),
+                'add-first-certificate-btn': () => this.navigateToCreateCertificate()
+            };
+
+            Object.entries(listeners).forEach(([id, handler]) => {
+                const element = document.getElementById(id);
+                const event = id === 'intern-student-edit-form' ? 'submit' : 'click';
+                element?.addEventListener(event, handler);
+            });
         }
 
         populateForm() {
-            if (!this.internData) {
-                this.showError('No intern data available');
-                return;
-            }
+            if (!this.internData) return this.showError('No intern data available');
 
             try {
-                // Populate current student info from internstudent response
+                // Populate student info
                 if (this.internData.Student) {
                     const student = this.internData.Student;
-                    document.getElementById('current-student-code').textContent = student.student_code || 'N/A';
-                    document.getElementById('current-student-name').textContent = 
-                        `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A';
-                    document.getElementById('current-student-email').textContent = student.email || 'N/A';
-                    document.getElementById('current-student-phone').textContent = student.phone || 'N/A';
+                    const studentInfo = {
+                        'current-student-code': student.student_code || 'N/A',
+                        'current-student-name': `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'N/A',
+                        'current-student-email': student.email || 'N/A',
+                        'current-student-phone': student.phone || 'N/A'
+                    };
+                    Object.entries(studentInfo).forEach(([id, value]) => {
+                        const el = document.getElementById(id);
+                        if (el) el.textContent = value;
+                    });
                 }
 
-                // Populate other fields
+                // Populate form fields
                 document.getElementById('intern_status').value = this.internData.intern_status || 'NOT_STARTED';
                 document.getElementById('overview').value = this.internData.overview || '';
 
-                // Show the form and work experience, project, skill, and certificate sections
-                document.getElementById('loading-form')?.classList.add('hidden');
-                document.getElementById('edit-form-container')?.classList.remove('hidden');
-                document.getElementById('work-experience-section')?.classList.remove('hidden');
-                document.getElementById('project-section')?.classList.remove('hidden');
-                document.getElementById('skill-section')?.classList.remove('hidden');
-                document.getElementById('certificate-section')?.classList.remove('hidden');
+                // Toggle visibility
+                ['loading-form'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+                ['edit-form-container', 'work-experience-section', 'project-section', 'skill-section', 'certificate-section']
+                    .forEach(id => document.getElementById(id)?.classList.remove('hidden'));
 
-                // Render work experiences, skills, certificates, and projects
-                this.renderWorkExperiences();
-                this.renderSkills();
-                this.renderCertificates();
-                this.renderProjects();
-
+                // Render all lists
+                ['WorkExperiences', 'Skills', 'Certificates', 'Projects'].forEach(type => this[`render${type}`]());
             } catch (error) {
                 console.error('Error populating form:', error);
                 this.showError('Failed to populate form data');
             }
         }
 
-        renderWorkExperiences() {
-            const listContainer = document.getElementById('work-experience-list');
-            const emptyState = document.getElementById('work-experience-empty');
-            
-            if (!this.workExperiences || this.workExperiences.length === 0) {
-                emptyState.classList.remove('hidden');
+        // Generic render function for lists
+        renderList(type) {
+            const listContainer = document.getElementById(`${type}-list`);
+            const emptyState = document.getElementById(`${type}-empty`);
+            const items = this[`${type}s`] || [];
+
+            if (!items || items.length === 0) {
+                emptyState?.classList.remove('hidden');
                 return;
             }
-            
-            emptyState.classList.add('hidden');
-            
+
+            emptyState?.classList.add('hidden');
+
             // Clear existing items (except empty state)
-            const existingItems = listContainer.querySelectorAll('.work-experience-item');
+            const existingItems = listContainer.querySelectorAll(`.${type}-item`);
             existingItems.forEach(item => item.remove());
-            
-            // Add work experience items
-            this.workExperiences.forEach(exp => {
-                const expElement = this.createWorkExperienceItem(exp);
-                listContainer.appendChild(expElement);
-            });
+
+            // Add items using corresponding creator function
+            const creatorFn = this[`create${this.capitalize(type)}Item`];
+            if (creatorFn) {
+                items.forEach(item => {
+                    const element = creatorFn.call(this, item);
+                    listContainer.appendChild(element);
+                });
+            }
         }
 
-        createWorkExperienceItem(experience) {
+        // Helper to capitalize first letter
+        capitalize(str) {
+            const map = {
+                'work-experience': 'WorkExperience',
+                'skill': 'Skill',
+                'certificate': 'Certificate',
+                'project': 'Project'
+            };
+            return map[str] || str.charAt(0).toUpperCase() + str.slice(1);
+        }
+
+        renderWorkExperiences() {
+            this.renderList('work-experience');
+        }
+
+        renderSkills() {
+            this.renderList('skill');
+        }
+
+        renderCertificates() {
+            this.renderList('certificate');
+        }
+
+        renderProjects() {
+            this.renderList('project');
+        }
+
+        // Generic item creator
+        createItemCard(config) {
             const div = document.createElement('div');
-            div.className = 'work-experience-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
-            
-            const startDate = experience.start_date ? new Date(experience.start_date).toLocaleDateString() : 'N/A';
-            const endDate = experience.end_date ? new Date(experience.end_date).toLocaleDateString() : 'Present';
-            
+            div.className = `${config.type}-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3`;
+
             div.innerHTML = `
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
                         <div class="mb-2">
                             <h4 class="text-sm font-semibold text-gray-900">
-                                ${experience.Company?.company_name || `Company ID: ${experience.company_id}`}
+                                ${config.title}
                             </h4>
-                            <p class="text-xs text-gray-600">${startDate} - ${endDate}</p>
+                            ${config.subtitle ? `<p class="text-xs text-gray-600">${config.subtitle}</p>` : ''}
+                            ${config.meta ? `<p class="text-xs text-gray-500">${config.meta}</p>` : ''}
                         </div>
                         <div class="text-sm text-gray-700">
-                            <p class="line-clamp-2">${experience.detail || 'No details provided'}</p>
+                            <p class="line-clamp-2">${config.description || 'No description provided'}</p>
                         </div>
                     </div>
                     <div class="ml-4">
-                        <button onclick="window.internStudentEdit.navigateToEditWorkExperience(${experience.ID})" 
+                        <button onclick="window.internStudentEdit.navigateTo${config.editHandler}(${config.id})" 
                                 class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                             Edit
                         </button>
                     </div>
                 </div>
             `;
-            
+
             return div;
         }
 
-        renderSkills() {
-            const listContainer = document.getElementById('skill-list');
-            const emptyState = document.getElementById('skill-empty');
-            
-            if (!this.skills || this.skills.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            
-            // Clear existing items (except empty state)
-            const existingItems = listContainer.querySelectorAll('.skill-item');
-            existingItems.forEach(item => item.remove());
-            
-            // Add skill items
-            this.skills.forEach(skill => {
-                const skillElement = this.createSkillItem(skill);
-                listContainer.appendChild(skillElement);
+        createWorkExperienceItem(experience) {
+            const startDate = experience.start_date ? new Date(experience.start_date).toLocaleDateString() : 'N/A';
+            const endDate = experience.end_date ? new Date(experience.end_date).toLocaleDateString() : 'Present';
+
+            return this.createItemCard({
+                type: 'work-experience',
+                id: experience.ID,
+                title: experience.Company?.company_name || `Company ID: ${experience.company_id}`,
+                subtitle: `${startDate} - ${endDate}`,
+                description: experience.detail,
+                editHandler: 'EditWorkExperience'
             });
         }
 
         createSkillItem(skill) {
-            const div = document.createElement('div');
-            div.className = 'skill-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
-            
-            div.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <div class="mb-2">
-                            <h4 class="text-sm font-semibold text-gray-900">
-                                ${(skill.Skill && skill.Skill.skill_name) || 'Unnamed Skill'}
-                            </h4>
-                            <p class="text-xs text-gray-600">Level: ${skill.level ?? 'N/A'}</p>
-                        </div>
-                        <div class="text-sm text-gray-700">
-                            <p class="line-clamp-2">${skill.description || 'No description provided'}</p>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <button onclick="window.internStudentEdit.navigateToEditSkill(${skill.ID})" 
-                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                            Edit
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            return div;
-        }
-
-        renderCertificates() {
-            const listContainer = document.getElementById('certificate-list');
-            const emptyState = document.getElementById('certificate-empty');
-            
-            if (!this.certificates || this.certificates.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            
-            // Clear existing items (except empty state)
-            const existingItems = listContainer.querySelectorAll('.certificate-item');
-            existingItems.forEach(item => item.remove());
-            
-            // Add certificate items
-            this.certificates.forEach(cert => {
-                const certElement = this.createCertificateItem(cert);
-                listContainer.appendChild(certElement);
+            return this.createItemCard({
+                type: 'skill',
+                id: skill.ID,
+                title: (skill.Skill && skill.Skill.skill_name) || 'Unnamed Skill',
+                subtitle: `Level: ${skill.level ?? 'N/A'}`,
+                description: skill.description,
+                editHandler: 'EditSkill'
             });
         }
 
         createCertificateItem(certificate) {
-            const div = document.createElement('div');
-            div.className = 'certificate-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
-            
             const issueDate = certificate.issue_date ? new Date(certificate.issue_date).toLocaleDateString() : 'N/A';
             const expiryDate = certificate.expiry_date ? new Date(certificate.expiry_date).toLocaleDateString() : 'No Expiry';
-            
-            div.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <div class="mb-2">
-                            <h4 class="text-sm font-semibold text-gray-900">
-                                ${certificate.certificate_name || 'Unnamed Certificate'}
-                            </h4>
-                            <p class="text-xs text-gray-600">Issued: ${issueDate} | Expires: ${expiryDate}</p>
-                            <p class="text-xs text-gray-500">Issuer: ${certificate.issuing_organization || 'N/A'}</p>
-                        </div>
-                        <div class="text-sm text-gray-700">
-                            <p class="line-clamp-2">${certificate.description || 'No description provided'}</p>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <button onclick="window.internStudentEdit.navigateToEditCertificate(${certificate.ID})" 
-                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                            Edit
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            return div;
-        }
 
-        renderProjects() {
-            const listContainer = document.getElementById('project-list');
-            const emptyState = document.getElementById('project-empty');
-            
-            if (!this.projects || this.projects.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            
-            // Clear existing items (except empty state)
-            const existingItems = listContainer.querySelectorAll('.project-item');
-            existingItems.forEach(item => item.remove());
-            
-            // Add project items
-            this.projects.forEach(project => {
-                const projectElement = this.createProjectItem(project);
-                listContainer.appendChild(projectElement);
+            return this.createItemCard({
+                type: 'certificate',
+                id: certificate.ID,
+                title: certificate.certificate_name || 'Unnamed Certificate',
+                subtitle: `Issued: ${issueDate} | Expires: ${expiryDate}`,
+                meta: `Issuer: ${certificate.issuing_organization || 'N/A'}`,
+                description: certificate.description,
+                editHandler: 'EditCertificate'
             });
         }
 
         createProjectItem(project) {
-            const div = document.createElement('div');
-            div.className = 'project-item bg-gray-50 rounded-lg p-4 border border-gray-200 mb-3';
-            
             const startDate = project.start_date ? new Date(project.start_date).toLocaleDateString() : 'N/A';
             const endDate = project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Ongoing';
-            
-            div.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <div class="flex-1">
-                        <div class="mb-2">
-                            <h4 class="text-sm font-semibold text-gray-900">
-                                ${project.project_name || 'Unnamed Project'}
-                            </h4>
-                        </div>
-                        <div class="text-sm text-gray-700">
-                            <p class="line-clamp-2">${project.project_detail || 'No description provided'}</p>
-                        </div>
-                    </div>
-                    <div class="ml-4">
-                        <button onclick="window.internStudentEdit.navigateToEditProject(${project.ID})" 
-                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                            Edit
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            return div;
+
+            return this.createItemCard({
+                type: 'project',
+                id: project.ID,
+                title: project.project_name || 'Unnamed Project',
+                subtitle: `${startDate} - ${endDate}`,
+                description: project.project_detail,
+                editHandler: 'EditProject'
+            });
+        }
+
+        // Generic navigation function
+        async navigateToForm(config) {
+            try {
+                await this.application.fetchModule(config.modulePath);
+
+                const FormClass = window[config.className];
+                if (!FormClass) {
+                    console.error(`${config.className} class not found`);
+                    this.showError(`Failed to load ${config.formType} form`);
+                    return;
+                }
+
+                // Determine the ID to pass (for create or edit)
+                const id = config.isEdit
+                    ? (this.internData.StudentID || this.internData.student_id)
+                    : this.internId;
+
+                const formInstance = config.isEdit
+                    ? new FormClass(this.application, id, config.itemId)
+                    : new FormClass(this.application, id);
+
+                await formInstance.render();
+            } catch (error) {
+                console.error(`Error loading ${config.formType} form:`, error);
+                this.showError(`Failed to load ${config.formType} form: ${error.message}`);
+            }
         }
 
         async navigateToCreateWorkExperience() {
-            try {
-                // Load the InternWorkExperienceCreate module
-                await this.application.fetchModule('/curriculum/static/js/InternWorkExperienceCreate.js');
-                
-                if (window.InternWorkExperienceCreate) {
-                    // Pass the InternStudent ID (this.internId)
-                    const createForm = new window.InternWorkExperienceCreate(this.application, this.internId);
-                    await createForm.render();
-                } else {
-                    console.error('InternWorkExperienceCreate class not found');
-                    this.showError('Failed to load work experience form');
-                }
-            } catch (error) {
-                console.error('Error loading work experience create form:', error);
-                this.showError('Failed to load work experience form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternWorkExperienceCreate.js',
+                className: 'InternWorkExperienceCreate',
+                formType: 'work experience',
+                isEdit: false
+            });
         }
 
         async navigateToEditWorkExperience(experienceId) {
-            try {
-                // Load the InternWorkExperienceCreate module for editing
-                await this.application.fetchModule('/curriculum/static/js/InternWorkExperienceCreate.js');
-                
-                if (window.InternWorkExperienceCreate) {
-                    const studentId = this.internData.StudentID || this.internData.student_id;
-                    // Pass the experience ID to edit mode
-                    const editForm = new window.InternWorkExperienceCreate(this.application, studentId, experienceId);
-                    await editForm.render();
-                } else {
-                    console.error('InternWorkExperienceCreate class not found');
-                    this.showError('Failed to load work experience edit form');
-                }
-            } catch (error) {
-                console.error('Error loading work experience edit form:', error);
-                this.showError('Failed to load work experience edit form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternWorkExperienceCreate.js',
+                className: 'InternWorkExperienceCreate',
+                formType: 'work experience',
+                isEdit: true,
+                itemId: experienceId
+            });
         }
 
         async navigateToCreateProject() {
-            try {
-                // Load the InternProjectCreate module
-                await this.application.fetchModule('/curriculum/static/js/InternProjectCreate.js');
-
-                if (window.InternProjectCreate) {
-                    // Pass the InternStudent ID (this.internId)
-                    const createForm = new window.InternProjectCreate(this.application, this.internId);
-                    await createForm.render();
-                } else {
-                    console.error('InternProjectCreate class not found');
-                    this.showError('Failed to load project form');
-                }
-            } catch (error) {
-                console.error('Error loading project create form:', error);
-                this.showError('Failed to load project form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternProjectCreate.js',
+                className: 'InternProjectCreate',
+                formType: 'project',
+                isEdit: false
+            });
         }
 
         async navigateToEditProject(projectId) {
-            try {
-                // Load the InternProjectCreate module for editing
-                await this.application.fetchModule('/curriculum/static/js/InternProjectCreate.js');
-
-                if (window.InternProjectCreate) {
-                    const studentId = this.internData.StudentID || this.internData.student_id;
-                    // Pass the project ID and student ID to edit mode
-                    const editForm = new window.InternProjectCreate(this.application, studentId, projectId);
-                    await editForm.render();
-                } else {
-                    console.error('InternProjectCreate class not found');
-                    this.showError('Failed to load project edit form');
-                }
-            } catch (error) {
-                console.error('Error loading project edit form:', error);
-                this.showError('Failed to load project edit form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternProjectCreate.js',
+                className: 'InternProjectCreate',
+                formType: 'project',
+                isEdit: true,
+                itemId: projectId
+            });
         }
 
         async navigateToCreateSkill() {
-            try {
-                // Load the InternSkillCreate module
-                await this.application.fetchModule('/curriculum/static/js/InternStudentSkillCreate.js');
-
-                if (window.InternStudentSkillCreate) {
-                    // Pass the InternStudent ID (this.internId)
-                    const createForm = new window.InternStudentSkillCreate(this.application, this.internId);
-                    await createForm.render();
-                } else {
-                    console.error('InternStudentSkillCreate class not found');
-                    this.showError('Failed to load skill form');
-                }
-            } catch (error) {
-                console.error('Error loading skill create form:', error);
-                this.showError('Failed to load skill form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternStudentSkillCreate.js',
+                className: 'InternStudentSkillCreate',
+                formType: 'skill',
+                isEdit: false
+            });
         }
 
         async navigateToEditSkill(skillId) {
-            try {
-                // Load the InternStudentSkillCreate module for editing
-                await this.application.fetchModule('/curriculum/static/js/InternStudentSkillCreate.js');
-
-                if (window.InternStudentSkillCreate) {
-                    const studentId = this.internData.StudentID || this.internData.student_id;
-                    // Pass the skill ID and student ID to edit mode
-                    const editForm = new window.InternStudentSkillCreate(this.application, studentId, skillId);
-                    await editForm.render();
-                } else {
-                    console.error('InternStudentSkillCreate class not found');
-                    this.showError('Failed to load skill edit form');
-                }
-            } catch (error) {
-                console.error('Error loading skill edit form:', error);
-                this.showError('Failed to load skill edit form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternStudentSkillCreate.js',
+                className: 'InternStudentSkillCreate',
+                formType: 'skill',
+                isEdit: true,
+                itemId: skillId
+            });
         }
 
         async navigateToCreateCertificate() {
-            try {
-                // Load the InternStudentCertificateCreate module
-                await this.application.fetchModule('/curriculum/static/js/InternStudentCertificateCreate.js');
-
-                if (window.InternStudentCertificateCreate) {
-                    // Pass the InternStudent ID (this.internId)
-                    const createForm = new window.InternStudentCertificateCreate(this.application, this.internId);
-                    await createForm.render();
-                } else {
-                    console.error('InternStudentCertificateCreate class not found');
-                    this.showError('Failed to load certificate form');
-                }
-            } catch (error) {
-                console.error('Error loading certificate create form:', error);
-                this.showError('Failed to load certificate form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternStudentCertificateCreate.js',
+                className: 'InternStudentCertificateCreate',
+                formType: 'certificate',
+                isEdit: false
+            });
         }
 
         async navigateToEditCertificate(certificateId) {
-            try {
-                // Load the InternStudentCertificateCreate module for editing
-                await this.application.fetchModule('/curriculum/static/js/InternStudentCertificateCreate.js');
-
-                if (window.InternStudentCertificateCreate) {
-                    const studentId = this.internData.StudentID || this.internData.student_id;
-                    // Pass the certificate ID and student ID to edit mode
-                    const editForm = new window.InternStudentCertificateCreate(this.application, studentId, certificateId);
-                    await editForm.render();
-                } else {
-                    console.error('InternStudentCertificateCreate class not found');
-                    this.showError('Failed to load certificate edit form');
-                }
-            } catch (error) {
-                console.error('Error loading certificate edit form:', error);
-                this.showError('Failed to load certificate edit form: ' + error.message);
-            }
+            await this.navigateToForm({
+                modulePath: '/curriculum/static/js/InternStudentCertificateCreate.js',
+                className: 'InternStudentCertificateCreate',
+                formType: 'certificate',
+                isEdit: true,
+                itemId: certificateId
+            });
         }
 
         handleStudentChange(event) {
-            const selectedStudentId = parseInt(event.target.value);
-            const selectedStudent = this.students.find(s => s.ID === selectedStudentId);
-            
-            if (selectedStudent) {
-                // Update current student info display
-                document.getElementById('current-student-code').textContent = selectedStudent.student_code || 'N/A';
-                document.getElementById('current-student-name').textContent = 
-                    `${selectedStudent.first_name || ''} ${selectedStudent.last_name || ''}`.trim() || 'N/A';
-                document.getElementById('current-student-email').textContent = selectedStudent.email || 'N/A';
-                document.getElementById('current-student-phone').textContent = selectedStudent.phone || 'N/A';
-            }
+            const selectedStudent = this.students.find(s => s.ID === parseInt(event.target.value));
+            if (!selectedStudent) return;
+
+            const studentInfo = {
+                'current-student-code': selectedStudent.student_code || 'N/A',
+                'current-student-name': `${selectedStudent.first_name || ''} ${selectedStudent.last_name || ''}`.trim() || 'N/A',
+                'current-student-email': selectedStudent.email || 'N/A',
+                'current-student-phone': selectedStudent.phone || 'N/A'
+            };
+            Object.entries(studentInfo).forEach(([id, value]) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = value;
+            });
         }
 
         async handleSubmit(event) {
             event.preventDefault();
-            
+
             const updateBtn = document.getElementById('update-btn');
             const updateBtnText = document.getElementById('update-btn-text');
             const updateBtnSpinner = document.getElementById('update-btn-spinner');
-            
-            // Show loading state
-            updateBtn.disabled = true;
-            updateBtnText.textContent = 'Updating...';
-            updateBtnSpinner.classList.remove('hidden');
-            
+
+            this.toggleButtonState(updateBtn, updateBtnText, updateBtnSpinner, true);
+
             try {
                 const formData = new FormData(event.target);
-                const updateData = {
-                    intern_status: formData.get('intern_status'),
-                    overview: formData.get('overview')
-                };
-
-                // Remove empty fields
-                Object.keys(updateData).forEach(key => {
-                    if (updateData[key] === '' || updateData[key] === null || updateData[key] === undefined) {
-                        delete updateData[key];
-                    }
-                });
+                const updateData = Object.fromEntries(
+                    [...formData.entries()].filter(([_, value]) => value !== '' && value !== null)
+                );
 
                 const response = await fetch(`/curriculum/UpdateInternStudent/${this.internId}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(updateData)
                 });
 
                 const result = await response.json();
-                
+
                 if (result.isSuccess) {
                     this.showSuccess('Intern student updated successfully!');
-                    // Optionally refresh work experiences, skills, certificates, and projects
-                    await this.loadWorkExperiences();
-                    await this.loadSkills();
-                    await this.loadCertificates();
-                    await this.loadProjects();
-                    this.renderWorkExperiences();
-                    this.renderSkills();
-                    this.renderCertificates();
-                    this.renderProjects();
+                    await Promise.all([
+                        this.loadWorkExperiences(),
+                        this.loadSkills(),
+                        this.loadCertificates(),
+                        this.loadProjects()
+                    ]);
+                    ['WorkExperiences', 'Skills', 'Certificates', 'Projects'].forEach(type => this[`render${type}`]());
                 } else {
                     throw new Error(result.error || 'Failed to update intern student');
                 }
-                
             } catch (error) {
                 console.error('Error updating intern student:', error);
                 this.showError(error.message);
             } finally {
-                // Reset button state
-                updateBtn.disabled = false;
-                updateBtnText.textContent = 'Update Intern Student';
-                updateBtnSpinner.classList.add('hidden');
+                this.toggleButtonState(updateBtn, updateBtnText, updateBtnSpinner, false);
             }
+        }
+
+        toggleButtonState(btn, text, spinner, isLoading) {
+            btn.disabled = isLoading;
+            text.textContent = isLoading ? 'Updating...' : 'Update Intern Student';
+            spinner.classList.toggle('hidden', !isLoading);
         }
 
         async goBackToList() {
-            try {
-                // Load the list module
-                await this.application.fetchModule('/curriculum/static/js/InternStudentList.js');
-                
-                if (window.InternStudentList) {
-                    const listView = new window.InternStudentList(this.application);
-                    await listView.render();
-                } else {
-                    console.error('InternStudentList class not found');
-                }
-            } catch (error) {
-                console.error('Error loading list view:', error);
+            if (this.application.navigate) {
+                this.application.navigate("/internship/internstudent");
+            } else {
+                window.location.hash = "#internship/internstudent";
             }
         }
 
+        showMessage(message, isSuccess) {
+            const statusContainer = document.getElementById('status-container');
+            if (statusContainer) {
+                statusContainer.innerHTML = this.renderStatusMessage(isSuccess, !isSuccess);
+            }
+
+            const messageType = isSuccess ? 'success' : 'error';
+            const messageEl = document.getElementById(`${messageType}-message`);
+            const textEl = document.getElementById(`${messageType}-text`);
+
+            if (textEl) textEl.textContent = message;
+            if (messageEl) messageEl.classList.remove('hidden');
+
+            // Hide other elements
+            const hideIds = isSuccess
+                ? ['loading-form', 'error-message']
+                : ['loading-form', 'success-message'];
+            hideIds.forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        }
+
         showError(message) {
-            const errorMessage = document.getElementById('error-message');
-            const errorText = document.getElementById('error-text');
-            
-            if (errorText) errorText.textContent = message;
-            if (errorMessage) errorMessage.classList.remove('hidden');
-            
-            // Hide loading and success
-            document.getElementById('loading-form')?.classList.add('hidden');
-            document.getElementById('success-message')?.classList.add('hidden');
+            this.showMessage(message, false);
         }
 
         showSuccess(message) {
-            const successMessage = document.getElementById('success-message');
-            const successText = document.getElementById('success-text');
-            
-            if (successText) successText.textContent = message;
-            if (successMessage) successMessage.classList.remove('hidden');
-            
-            // Hide error message
-            document.getElementById('error-message')?.classList.add('hidden');
+            this.showMessage(message, true);
         }
 
         async showWorkExperienceForm(experienceId = null) {
             try {
-                // Load the InternWorkExperienceCreate module
                 await this.application.fetchModule('/curriculum/static/js/InternWorkExperienceCreate.js');
-                
-                if (window.InternWorkExperienceCreate) {
-                    // Pass the InternStudent ID (this.internId), not the StudentID
-                    this.workExpForm = new window.InternWorkExperienceCreate(this.application, this.internId);
-                    await this.workExpForm.render();
-                    
-                } else {
-                    console.error('InternWorkExperienceCreate class not found');
-                    this.showError('Failed to load work experience form');
-                }
+                if (!window.InternWorkExperienceCreate) throw new Error('InternWorkExperienceCreate class not found');
+                this.workExpForm = new window.InternWorkExperienceCreate(this.application, this.internId);
+                await this.workExpForm.render();
             } catch (error) {
                 console.error('Error loading work experience form:', error);
                 this.showError('Failed to load work experience form: ' + error.message);
             }
         }
     }
-    
+
     // Make it globally accessible
     window.InternStudentEdit = InternStudentEdit;
 }

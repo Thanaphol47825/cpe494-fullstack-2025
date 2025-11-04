@@ -96,17 +96,17 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
     }
 
     models = [
-      { label: "internship report", route: "/internshipreport" },
+      { label: "Intern Student", route: "/internstudent" },
+      // { label: "internship report", route: "/internshipreport" },
       { label: "Company", route: "/company" },
       { label: "Internship Mentor", route: "/internshipmentor" },
       { label: "Internship Attendance", route: "/internshipattendance" },
-      { label: "Internship Criteria", route: "/internshipcriteria" },
-      { label: "Intern Student", route: "/internstudent" },
-      { label: "Intern Student Create", route: "/internstudent/create" },
-      {
-        label: "Internship Work Experience Create",
-        route: "/internshipworkexperience/create",
-      },
+      // { label: "Internship Criteria", route: "/internshipcriteria" },
+      // { label: "Intern Student Create", route: "/internstudent/create" },
+      // {
+      //   label: "Internship Work Experience Create",
+      //   route: "/internshipworkexperience/create",
+      // },
       { label: "Intern Skill Create", route: "/internskill/create" },
       // {
       //   label: "Intern Student Skill Create",

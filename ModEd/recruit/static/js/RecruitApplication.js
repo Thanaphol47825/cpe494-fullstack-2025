@@ -7,18 +7,12 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       this.setSubModuleBasePath("/recruit/static/js");
     
     this.features = {
-      "admin/create": { title: "Create Admin", icon: "👤", script: "AdminCreate.js" },
-      "applicant/create": { title: "Create Applicant", icon: "🧑‍💼", script: "ApplicantForm.js" },
       "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantTable.js" },
-      "applicationreport/create": { title: "Create Application Report", icon: "📝", script: "ApplicationReportForm.js" },
       "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js" },
-      "applicationround/create": { title: "Create Application Round", icon: "➕", script: "ApplicationRoundForm.js" },
       "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundTable.js" },
-      "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewForm.js" },
       "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js" },
       "my/interviews": { title: "My Interview Queue", icon: "📋", script: "MyInterviewList.js" },
       "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
-      "interviewcriteria/create": { title: "Create Interview Criteria", icon: "✏️", script: "InterviewCriteriaCreate.js" },
     };
 
     this.setupRoutes();

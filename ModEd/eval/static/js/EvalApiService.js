@@ -1,7 +1,7 @@
 // EvalApiService - API service for Eval module
 class EvalApiService {
   constructor() {
-    this.rootURL = window.__ROOT_URL__ || "";
+    this.rootURL = RootURL || "";
     this.baseUrl = `${this.rootURL}/eval`;
   }
 
@@ -61,10 +61,6 @@ class EvalApiService {
         dueDate: this.formatToRFC3339(assignmentData.dueDate),
         startDate: this.formatToRFC3339(assignmentData.startDate),
         maxScore: Number(assignmentData.maxScore),
-        instructorId: 1,
-        courseId: 101,
-        isReleased: true,
-        isActive: true
       };
       
       formData.append('data', JSON.stringify(payload));
@@ -84,10 +80,6 @@ class EvalApiService {
         dueDate: this.formatToRFC3339(assignmentData.dueDate),
         startDate: this.formatToRFC3339(assignmentData.startDate),
         maxScore: Number(assignmentData.maxScore),
-        instructorId: 1,
-        courseId: 101,
-        isReleased: true,
-        isActive: true
       };
 
       return await this.fetchJSON(`${this.baseUrl}/assignment/create`, {
@@ -95,6 +87,7 @@ class EvalApiService {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
+    }
   }
 
   async getAllAssignments() {
@@ -105,6 +98,57 @@ class EvalApiService {
     return await this.fetchJSON(`${this.baseUrl}/assignment/delete/${id}`, {
       method: 'POST'
     });
+  }
+
+  async getAssignmentById(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/get/${id}`);
+  }
+
+  async updateAssignment(assignmentData) {
+    if (assignmentData.files) {
+      // Handle file upload with FormData
+      const formData = new FormData();
+      
+      // Add assignment data
+      const payload = {
+        ID: Number(assignmentData.ID),
+        title: assignmentData.name || assignmentData.title,
+        description: assignmentData.description,
+        dueDate: this.formatToRFC3339(assignmentData.dueDate),
+        startDate: this.formatToRFC3339(assignmentData.startDate),
+        maxScore: Number(assignmentData.maxScore),
+      };
+      
+      formData.append('data', JSON.stringify(payload));
+      
+      // Append all files
+      for (const file of assignmentData.files) {
+        formData.append('files', file);
+      }
+
+      // Use helper to upload multipart FormData
+      return await this.uploadFormData(`${this.baseUrl}/assignment/update`, formData);
+    } else {
+      // Handle regular assignment update without files
+      const payload = {
+        ID: Number(assignmentData.ID),
+        title: assignmentData.name || assignmentData.title,
+        description: assignmentData.description,
+        dueDate: this.formatToRFC3339(assignmentData.dueDate),
+        startDate: this.formatToRFC3339(assignmentData.startDate),
+        maxScore: Number(assignmentData.maxScore),
+      };
+
+      return await this.fetchJSON(`${this.baseUrl}/assignment/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+    }
+  }
+
+  async getAssignmentFiles(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/files/${id}`);
   }
 
   // Quiz Submission API calls
@@ -165,18 +209,17 @@ class EvalApiService {
   }
 
   // Quiz API calls
-  async createQuiz(quizData) {
+  async createQuiz(requestData) {
     const payload = {
-      title: quizData.title,
-      description: quizData.description,
-      startDate: quizData.startDate,
-      dueDate: quizData.dueDate,
-      timeLimit: Number(quizData.timeLimit),
-      maxScore: Number(quizData.maxScore),
-      instructorId: Number(quizData.instructorId),
-      courseId: Number(quizData.courseId),
-      isReleased: quizData.isReleased,
-      isActive: quizData.isActive
+      quiz: {
+        title: requestData.quiz.title,
+        description: requestData.quiz.description || '',
+        startDate: this.formatToRFC3339(new Date(requestData.quiz.startDate)),
+        dueDate: this.formatToRFC3339(new Date(requestData.quiz.dueDate)),
+        timeLimit: Number(requestData.quiz.timeLimit),
+        maxScore: Number(requestData.quiz.maxScore)
+      },
+      questions: requestData.questions || []
     };
 
     return await this.fetchJSON(`${this.baseUrl}/quiz/create`, {
@@ -194,11 +237,24 @@ class EvalApiService {
     return await this.fetchJSON(`${this.baseUrl}/quiz/get/${id}`);
   }
 
-  async updateQuiz(quizData) {
+  async updateQuiz(requestData) {
+    const payload = {
+      quiz: {
+        ID: Number(requestData.quiz.ID),
+        title: requestData.quiz.title,
+        description: requestData.quiz.description || '',
+        startDate: this.formatToRFC3339(new Date(requestData.quiz.startDate)),
+        dueDate: this.formatToRFC3339(new Date(requestData.quiz.dueDate)),
+        timeLimit: Number(requestData.quiz.timeLimit),
+        maxScore: Number(requestData.quiz.maxScore)
+      },
+      questions: requestData.questions || []
+    };
+
     return await this.fetchJSON(`${this.baseUrl}/quiz/update`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(quizData)
+      body: JSON.stringify(payload)
     });
   }
 
@@ -262,6 +318,33 @@ class EvalApiService {
 
   async deleteEvaluation(id) {
     return await this.fetchJSON(`${this.baseUrl}/evaluation/delete/${id}`);
+  }
+
+  // Assignment Submission API calls
+  async createAssignmentSubmission(formData) {
+    return await this.uploadFormData(`${this.baseUrl}/assignment/submission/create`, formData);
+  }
+
+  async getAllAssignmentSubmissions() {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/submission/getAll`);
+  }
+
+  async getSubmissionsByAssignment(assignmentId) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/submission/getByAssignment/${assignmentId}`);
+  }
+
+  async getAssignmentSubmissionById(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/submission/get/${id}`);
+  }
+
+  async getSubmissionFiles(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/submission/files/${id}`);
+  }
+
+  async deleteAssignmentSubmission(id) {
+    return await this.fetchJSON(`${this.baseUrl}/assignment/submission/delete/${id}`, {
+      method: 'POST'
+    });
   }
 }
 

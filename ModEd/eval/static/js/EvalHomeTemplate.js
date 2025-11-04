@@ -93,19 +93,19 @@ if (typeof window !== "undefined" && !window.EvalHomeTemplate) {
             }
           },
           {
-            card_title: "Submission",
-            card_description: "Submission management and evaluation",
+            card_title: "Assignment Submission",
+            card_description: "Submit and manage assignment submissions",
             icon_path: "M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13",
             icon_color: "from-purple-500 to-indigo-600",
             box_color: "purple",
             create_button: {
               create_link: "eval/submission/create",
               create_color: "bg-purple-600 hover:bg-purple-700",
-              create_text: "Create Submission"
+              create_text: "Submit Assignment"
             },
             manage_button: {
               manage_link: "eval/submission",
-              manage_text: "Manage Submissions"
+              manage_text: "Track assignments"
             }
           }
         ];

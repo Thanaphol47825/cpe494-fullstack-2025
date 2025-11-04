@@ -14,6 +14,4 @@ type Quiz struct {
 	StartDate   time.Time `json:"startDate" gorm:"type:timestamptz;not null" form:"label:Start Date;type:datetime-local;required:true"`
 	TimeLimit   uint      `json:"timeLimit" gorm:"type:int;not null;default:60" form:"label:Time Limit (minutes);type:number;placeholder:60;required:true"`
 	MaxScore    uint      `json:"maxScore" gorm:"not null;default:100" form:"label:Maximum Score;type:number;placeholder:100;required:true"`
-	IsReleased  bool      `json:"isReleased" gorm:"default:false" form:"label:Released;type:checkbox"`
-	IsActive    bool      `json:"isActive" gorm:"default:true" form:"label:Active;type:checkbox"`
 }

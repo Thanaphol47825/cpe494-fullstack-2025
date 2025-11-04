@@ -139,12 +139,6 @@ class AssignmentCreate {
 
       // Ensure numeric fields
       if (formData.maxScore) formData.maxScore = Number(formData.maxScore);
-      if (formData.instructorId) formData.instructorId = Number(formData.instructorId);
-      if (formData.courseId) formData.courseId = Number(formData.courseId);
-
-      // Convert checkbox values
-      formData.isReleased = formData.isReleased === 'on' || formData.isReleased === true;
-      formData.isActive = formData.isActive === 'on' || formData.isActive === true;
 
       // Handle file upload if files are present (look inside assignment form container)
       const fileInput = document.querySelector('#assignment-form-container input[type="file"]');

@@ -7,7 +7,7 @@ class EvalApplication extends BaseModuleApplication {
     this.moduleName = 'eval';
     this.moduleVersion = '1.0.0';
     this.isInitialized = false;
-    this.rootURL = window.__ROOT_URL__ || "";
+    this.rootURL = RootURL || "";
     
     // Initialize feature modules
     this.assignmentCreate = null;

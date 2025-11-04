@@ -29,7 +29,7 @@ class EvalFormRenderer extends AdvanceFormRender {
       const rawSchema = await response.json();
 
       // Filter out unwanted fields
-      const unwantedFields = ['model', 'id', 'createdat', 'updatedat', 'deletedat', 'instructorid', 'courseid', 'studentid', 'quizid'];
+      const unwantedFields = ['model', 'id', 'createdat', 'updatedat', 'deletedat', 'instructorid', 'courseid', 'studentid', 'quizid', 'isreleased', 'isactive'];
       this.schema = rawSchema.filter(field => 
         !unwantedFields.includes(field.name.toLowerCase())
       );

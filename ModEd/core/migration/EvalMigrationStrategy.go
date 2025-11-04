@@ -13,6 +13,7 @@ func (s *EvalMigrationStrategy) GetModels() []interface{} {
 		&model.AssignmentSubmission{},
 		&model.Evaluation{},
 		&model.Quiz{},
+		&model.QuizQuestion{},
 		&model.QuizSubmission{},
 		&model.Submission{},
 	}

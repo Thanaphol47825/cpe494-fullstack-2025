@@ -9,6 +9,12 @@ if (typeof window !== 'undefined' && !window.InterviewService) {
       this.ENDPOINT_UPDATE  = `${this.rootURL}/recruit/UpdateInterview`;
       this.ENDPOINT_DELETE  = `${this.rootURL}/recruit/DeleteInterview`;
       this.ENDPOINT_SETUP_TEST = `${this.rootURL}/recruit/SetupTestData`;
+      
+      // My Interview endpoints (for Instructor)
+      this.ENDPOINT_MY_INTERVIEWS = `${this.rootURL}/recruit/my/interviews`;
+      this.ENDPOINT_MY_PENDING = `${this.rootURL}/recruit/my/interviews/pending`;
+      this.ENDPOINT_MY_EVALUATED = `${this.rootURL}/recruit/my/interviews/evaluated`;
+      this.ENDPOINT_MY_UPDATE = (id) => `${this.rootURL}/recruit/my/interview/${id}`;
     }
 
     transformData(formData) {
@@ -18,6 +24,16 @@ if (typeof window !== 'undefined' && !window.InterviewService) {
         return isNaN(d.getTime()) ? null : d.toISOString();
       };
 
+      // Handle criteria_scores - can be object or JSON string
+      let criteriaScores = formData.criteria_scores;
+      if (criteriaScores && typeof criteriaScores === 'string') {
+        try {
+          criteriaScores = JSON.parse(criteriaScores);
+        } catch (e) {
+          // If parsing fails, keep as string
+        }
+      }
+
       return {
         ...formData,
         scheduled_appointment: toRFC3339(formData.scheduled_appointment),
@@ -25,6 +41,7 @@ if (typeof window !== 'undefined' && !window.InterviewService) {
         instructor_id: formData.instructor_id ? parseInt(formData.instructor_id) : 0,
         application_report_id: formData.application_report_id ? parseInt(formData.application_report_id) : 0,
         total_score: formData.total_score ? parseFloat(formData.total_score) : 0,
+        criteria_scores: criteriaScores,
       };
     }
 
@@ -169,6 +186,85 @@ if (typeof window !== 'undefined' && !window.InterviewService) {
 
         if (!resp.ok || data?.isSuccess !== true) {
           throw new Error(data?.message || data?.result || 'Failed to setup test data');
+        }
+
+        return { success: true, data: data.result };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    // My Interview methods (for Instructor)
+    async getMyInterviews() {
+      try {
+        const resp = await fetch(this.ENDPOINT_MY_INTERVIEWS);
+        const data = await resp.json().catch(() => ({}));
+        
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.result || data?.message || 'Failed to load my interviews');
+        }
+        
+        const rows = (data?.result || []).map(r => ({ ...r, ID: r.ID ?? r.Id ?? r.id }));
+        return { success: true, data: rows };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async getMyPendingInterviews() {
+      try {
+        const resp = await fetch(this.ENDPOINT_MY_PENDING);
+        const data = await resp.json().catch(() => ({}));
+        
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.result || data?.message || 'Failed to load pending interviews');
+        }
+        
+        const rows = (data?.result || []).map(r => ({ ...r, ID: r.ID ?? r.Id ?? r.id }));
+        return { success: true, data: rows };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    async getMyEvaluatedInterviews() {
+      try {
+        const resp = await fetch(this.ENDPOINT_MY_EVALUATED);
+        const data = await resp.json().catch(() => ({}));
+        
+        if (!resp.ok || data?.isSuccess === false) {
+          throw new Error(data?.result || data?.message || 'Failed to load evaluated interviews');
+        }
+        
+        const rows = (data?.result || []).map(r => ({ ...r, ID: r.ID ?? r.Id ?? r.id }));
+        return { success: true, data: rows };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    // Update my interview with scores (for Instructor evaluation)
+    async updateMyInterview(interviewId, criteriaScores, totalScore) {
+      if (!interviewId) {
+        return { success: false, error: 'Interview ID is required' };
+      }
+
+      try {
+        const payload = {
+          criteria_scores: criteriaScores || {},
+          total_score: parseFloat(totalScore) || 0
+        };
+
+        const resp = await fetch(this.ENDPOINT_MY_UPDATE(interviewId), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok || data?.isSuccess !== true) {
+          throw new Error(data?.result || data?.message || 'Failed to update interview');
         }
 
         return { success: true, data: data.result };

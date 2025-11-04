@@ -22,6 +22,7 @@ func (s *CommonMigrationStrategy) GetSeedPath() []SeedPath {
 		{Path: "data/common/Users.csv", Model: &[]model.User{}},
 		{Path: "data/common/DepartmentList.csv", Model: &[]model.Department{}},
 		{Path: "data/common/FacultyList.csv", Model: &[]model.Faculty{}},
+		{Path: "data/common/InstructorsList.csv", Model: &[]model.Instructor{}},
 		{Path: "data/common/TestStudent.json", Model: &[]model.Student{}},
 	}
 }

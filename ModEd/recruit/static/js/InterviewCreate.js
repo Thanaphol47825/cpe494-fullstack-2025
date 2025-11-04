@@ -120,7 +120,6 @@ if (typeof window !== 'undefined' && !window.InterviewCreate) {
         }
       }
 
-      // Load existing data if editing
       if (this.interviewId) {
         await this.loadExistingData(this.interviewId);
       }

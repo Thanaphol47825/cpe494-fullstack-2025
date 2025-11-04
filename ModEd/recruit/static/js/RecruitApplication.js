@@ -5,10 +5,6 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       this.rootURL = window.__ROOT_URL__ || RootURL || "";
 
       this.setSubModuleBasePath("/recruit/static/js");
-    // Don't load templates in constructor - load them when needed
-    // this.loadRecruitFormTemplate();
-    // this.loadRecruitTableTemplate();
-    // this.loadRecruitHomeTemplate();
     
     this.features = {
       "admin/create": { title: "Create Admin", icon: "👤", script: "AdminCreate.js" },
@@ -20,6 +16,7 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundTable.js" },
       "interview/create": { title: "Create Interview", icon: "💬", script: "InterviewForm.js" },
       "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js" },
+      "my/interviews": { title: "My Interview Queue", icon: "📋", script: "MyInterviewList.js" },
       "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
       "interviewcriteria/create": { title: "Create Interview Criteria", icon: "✏️", script: "InterviewCriteriaCreate.js" },
     };
@@ -123,6 +120,27 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
       "/interviewcriteria/create",
       this.renderInterviewCriteriaCreate.bind(this),
       "InterviewCriteriaCreate.js"
+    );
+    
+    this.addRouteWithSubModule(
+      "/my/interviews",
+      this.renderMyInterviewList.bind(this),
+      "MyInterviewList.js"
+    );
+    this.addRouteWithSubModule(
+      "/my/interviews/pending",
+      this.renderMyInterviewListPending.bind(this),
+      "MyInterviewList.js"
+    );
+    this.addRouteWithSubModule(
+      "/my/interviews/evaluated",
+      this.renderMyInterviewListEvaluated.bind(this),
+      "MyInterviewList.js"
+    );
+    this.addRouteWithSubModule(
+      "/interview/evaluate/:id",
+      this.renderInterviewEvaluate.bind(this),
+      "InterviewEvaluateForm.js"
     );
   }
 
@@ -375,6 +393,61 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     await this.loadRecruitTableTemplate();
     if (!window.InterviewCriteriaList) return this.renderError("Failed to load InterviewCriteriaList");
     const feature = new window.InterviewCriteriaList(this.templateEngine, this.rootURL);
+    return await feature.render();
+  }
+
+  // My Interview routes (for Instructor)
+  async renderMyInterviewList() {
+    await this.loadRecruitTableTemplate();
+    
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.MyInterviewList) return this.renderError("Failed to load MyInterviewList");
+    const feature = new window.MyInterviewList(this.templateEngine, this.rootURL);
+    return await feature.render('all');
+  }
+
+  async renderMyInterviewListPending() {
+    await this.loadRecruitTableTemplate();
+    
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.MyInterviewList) return this.renderError("Failed to load MyInterviewList");
+    const feature = new window.MyInterviewList(this.templateEngine, this.rootURL);
+    return await feature.render('pending');
+  }
+
+  async renderMyInterviewListEvaluated() {
+    await this.loadRecruitTableTemplate();
+    
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.MyInterviewList) return this.renderError("Failed to load MyInterviewList");
+    const feature = new window.MyInterviewList(this.templateEngine, this.rootURL);
+    return await feature.render('evaluated');
+  }
+
+  async renderInterviewEvaluate(params) {
+    await this.loadRecruitFormTemplate();
+    
+    if (!window.InterviewService) {
+      await this.loadSubModule("services/InterviewService.js");
+    }
+    
+    if (!window.InterviewEvaluateForm) return this.renderError("Failed to load InterviewEvaluateForm");
+    
+    const id = params?.id;
+    if (!id) {
+      return this.renderError("Interview ID is required for evaluation");
+    }
+    
+    const feature = new window.InterviewEvaluateForm(this.templateEngine, this.rootURL, id);
     return await feature.render();
   }
 

@@ -8,6 +8,8 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
       this.ENDPOINT_CREATE  = `${this.rootURL}/recruit/CreateApplicationReport`;
       this.ENDPOINT_UPDATE  = `${this.rootURL}/recruit/UpdateApplicationReport`;
       this.ENDPOINT_DELETE  = `${this.rootURL}/recruit/DeleteApplicationReport`;
+      this.ENDPOINT_VERIFY_ELIGIBILITY = `${this.rootURL}/recruit/VerifyApplicationEligibility`;
+      this.ENDPOINT_CONFIRM_ACCEPTANCE = `${this.rootURL}/recruit/ConfirmAcceptance`;
     }
 
     transformData(formData) {
@@ -171,6 +173,56 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
         return await this.update(formData, resolvedId);
       } else {
         return await this.create(formData);
+      }
+    }
+
+    // VerifyApplicationEligibility - ตรวจเกณฑ์รอบเบื้องต้น
+    async verifyEligibility(applicationReportId) {
+      if (!applicationReportId) {
+        return { success: false, error: 'Application Report ID is required' };
+      }
+
+      try {
+        const resp = await fetch(this.ENDPOINT_VERIFY_ELIGIBILITY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ application_report_id: Number(applicationReportId) })
+        });
+
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok || data?.isSuccess !== true) {
+          throw new Error(data?.message || 'Failed to verify eligibility');
+        }
+
+        return { success: true, message: data.message || 'Eligibility verified successfully' };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
+    // ConfirmAcceptance - ยืนยันสิทธิ์เมื่อผ่าน
+    async confirmAcceptance(applicationReportId) {
+      if (!applicationReportId) {
+        return { success: false, error: 'Application Report ID is required' };
+      }
+
+      try {
+        const resp = await fetch(this.ENDPOINT_CONFIRM_ACCEPTANCE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ application_report_id: Number(applicationReportId) })
+        });
+
+        const data = await resp.json().catch(() => ({}));
+
+        if (!resp.ok || data?.isSuccess !== true) {
+          throw new Error(data?.message || 'Failed to confirm acceptance');
+        }
+
+        return { success: true, message: data.message || 'Acceptance confirmed successfully' };
+      } catch (err) {
+        return { success: false, error: err.message };
       }
     }
   }

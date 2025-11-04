@@ -62,6 +62,8 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
               <div style="white-space:nowrap;">
                 <button class="al-btn-edit text-blue-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
                 <button class="al-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}" style="margin-right:8px;">Delete</button>
+                <button class="al-btn-verify text-orange-600 hover:underline" data-action="verify" data-id="{ID}" data-status="{application_statuses}" style="margin-right:8px;">🔍 Verify</button>
+                <button class="al-btn-confirm text-green-600 hover:underline" data-action="confirm" data-id="{ID}" data-status="{application_statuses}" style="margin-right:8px;">✅ Confirm</button>
                 <button class="al-btn-schedule text-green-600 hover:underline" data-action="schedule" data-id="{ID}" data-status="{application_statuses}">Schedule</button>
                 <button class="al-btn-transfer text-purple-600 hover:underline" data-action="transfer" data-id="{ID}">Transfer</button>
               </div>
@@ -80,6 +82,21 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
         
         const status = (rowData.application_statuses || '').toUpperCase();
         const pendingStatus = (this.statusConstants.Pending || 'Pending').toUpperCase();
+        const acceptedStatus = (this.statusConstants.Accepted || 'Accepted').toUpperCase();
+        
+        if (status !== pendingStatus && status !== '') {
+          result = result.replace(
+            /(<button[^>]*class="al-btn-verify[^>]*>🔍 Verify<\/button>)/,
+            '<button class="al-btn-verify" style="display:none;">🔍 Verify</button>'
+          );
+        }
+        
+        if (status !== acceptedStatus) {
+          result = result.replace(
+            /(<button[^>]*class="al-btn-confirm[^>]*>✅ Confirm<\/button>)/,
+            '<button class="al-btn-confirm" style="display:none;">✅ Confirm</button>'
+          );
+        }
         
         if (status !== pendingStatus) {
           result = result.replace(
@@ -103,6 +120,8 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
         
         if (action === 'edit') this.handleEdit(id);
         else if (action === 'delete') this.handleDelete(id);
+        else if (action === 'verify') this.handleVerifyEligibility(id);
+        else if (action === 'confirm') this.handleConfirmAcceptance(id);
         else if (action === 'schedule') this.handleSchedule(id);
         else if (action === 'transfer') this.handleTransferConfirmed(id);
       });
@@ -179,6 +198,39 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
       }
     }
 
+    async handleVerifyEligibility(applicationReportId) {
+      if (!applicationReportId) return;
+      
+      if (!confirm(`ตรวจเกณฑ์รอบเบื้องต้นสำหรับ Application Report #${applicationReportId}?`)) return;
+      
+      this.ui?.showMessage('กำลังตรวจเกณฑ์...', 'info');
+      
+      const result = await this.reportService.verifyEligibility(applicationReportId);
+      
+      if (result.success) {
+        this.ui?.showMessage(result.message || 'ตรวจเกณฑ์สำเร็จ! สถานะถูกอัปเดตแล้ว', 'success');
+        await this.refreshTable();
+      } else {
+        this.ui?.showMessage(`ตรวจเกณฑ์ล้มเหลว: ${result.error}`, 'error');
+      }
+    }
+
+    async handleConfirmAcceptance(applicationReportId) {
+      if (!applicationReportId) return;
+      
+      if (!confirm(`ยืนยันสิทธิ์สำหรับ Application Report #${applicationReportId}?`)) return;
+      
+      this.ui?.showMessage('กำลังยืนยันสิทธิ์...', 'info');
+      
+      const result = await this.reportService.confirmAcceptance(applicationReportId);
+      
+      if (result.success) {
+        this.ui?.showMessage(result.message || 'ยืนยันสิทธิ์สำเร็จ! สถานะถูกอัปเดตเป็น Confirmed แล้ว', 'success');
+        await this.refreshTable();
+      } else {
+        this.ui?.showMessage(`ยืนยันสิทธิ์ล้มเหลว: ${result.error}`, 'error');
+      }
+    }
 
   }
 

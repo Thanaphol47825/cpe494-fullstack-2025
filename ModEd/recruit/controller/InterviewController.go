@@ -4,8 +4,10 @@ import (
 	commonModel "ModEd/common/model"
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"ModEd/recruit/service"
+	"fmt"
 	"path/filepath"
-	"strconv"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -94,6 +96,18 @@ func (controller *InterviewController) GetRoute() []*core.RouteItem {
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interviews",
 		Handler:        controller.GetMyInterviews,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAny},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/my/interviews/pending",
+		Handler:        controller.GetMyPendingInterviews,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAny},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/my/interviews/evaluated",
+		Handler:        controller.GetMyEvaluatedInterviews,
 		Method:         core.GET,
 		Authentication: core.Authentication{AuthType: core.AuthAny},
 	})
@@ -267,19 +281,39 @@ func (controller *InterviewController) DeleteInterview(context *fiber.Ctx) error
 }
 
 func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx) (uint, bool) {
-	token := context.Cookies("token", "")
-	if token == "" || controller.application == nil || controller.application.SessionManager == nil {
+	// RBAC middleware sets userId (User.ID) in ctx.Locals after authentication
+	userIdInterface := context.Locals("userId")
+	if userIdInterface == nil {
 		return 0, false
 	}
-	userID, ok := controller.application.SessionManager.Get(token)
-	if !ok || userID == "" {
+	
+	// Convert userId to string
+	var userIDStr string
+	switch v := userIdInterface.(type) {
+	case string:
+		userIDStr = v
+	case uint:
+		userIDStr = fmt.Sprintf("%d", v)
+	case int:
+		userIDStr = fmt.Sprintf("%d", v)
+	default:
 		return 0, false
 	}
-	uid, err := strconv.ParseUint(userID, 10, 64)
-	if err != nil {
+	
+	if userIDStr == "" {
 		return 0, false
 	}
-	return uint(uid), true
+	
+	// Query Instructor from User.ID (since Instructor.UserId references User.ID)
+	var instructor commonModel.Instructor
+	if err := controller.application.DB.
+		Where("user_id = ?", userIDStr).
+		First(&instructor).Error; err != nil {
+		// If no instructor found for this user, return false
+		return 0, false
+	}
+	
+	return instructor.ID, true
 }
 
 func (controller *InterviewController) GetMyInterviews(context *fiber.Ctx) error {
@@ -294,6 +328,62 @@ func (controller *InterviewController) GetMyInterviews(context *fiber.Ctx) error
 	var interviews []*model.Interview
 	if err := controller.application.DB.
 		Where("instructor_id = ?", instructorID).
+		Preload("Instructor").
+		Preload("ApplicationReport").
+		Find(&interviews).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    interviews,
+	})
+}
+
+// GetMyPendingInterviews - ดูคิวสัมภาษณ์ที่ค้างประเมิน (Flow: ดูคิวสัมภาษณ์ → ค้างประเมิน)
+func (controller *InterviewController) GetMyPendingInterviews(context *fiber.Ctx) error {
+	instructorID, ok := controller.getCurrentInstructorID(context)
+	if !ok {
+		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "unauthorized",
+		})
+	}
+
+	var interviews []*model.Interview
+	if err := controller.application.DB.
+		Where("instructor_id = ? AND (interview_status = ? OR interview_status = ? OR total_score = 0)",
+			instructorID, model.Pending, "").
+		Preload("Instructor").
+		Preload("ApplicationReport").
+		Find(&interviews).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    interviews,
+	})
+}
+
+// GetMyEvaluatedInterviews - ดูคิวสัมภาษณ์ที่ประเมินแล้ว (Flow: ดูคิวสัมภาษณ์ → ประเมินแล้ว)
+func (controller *InterviewController) GetMyEvaluatedInterviews(context *fiber.Ctx) error {
+	instructorID, ok := controller.getCurrentInstructorID(context)
+	if !ok {
+		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "unauthorized",
+		})
+	}
+
+	var interviews []*model.Interview
+	if err := controller.application.DB.
+		Where("instructor_id = ? AND interview_status = ? AND total_score > 0",
+			instructorID, model.Evaluated).
 		Preload("Instructor").
 		Preload("ApplicationReport").
 		Find(&interviews).Error; err != nil {
@@ -364,6 +454,7 @@ func (controller *InterviewController) GetMyInterviewByID(context *fiber.Ctx) er
 	})
 }
 
+// UpdateMyInterview - กรอกคะแนนตามเกณฑ์ → ระบบอัปเดตสถานะตามคะแนนรวมเทียบเกณฑ์
 func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) error {
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
@@ -375,14 +466,20 @@ func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) err
 	id := context.Params("id")
 
 	var existing model.Interview
-	if err := controller.application.DB.Where(ErrWhereIDAndInstructor, id, instructorID).First(&existing).Error; err != nil {
+	if err := controller.application.DB.
+		Preload("ApplicationReport").
+		Where(ErrWhereIDAndInstructor, id, instructorID).
+		First(&existing).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    ErrInterviewNotFound,
 		})
 	}
 
-	var updateData model.Interview
+	var updateData struct {
+		CriteriaScores map[string]float64 `json:"criteria_scores"`
+		TotalScore     float64            `json:"total_score"`
+	}
 	if err := context.BodyParser(&updateData); err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -390,23 +487,19 @@ func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) err
 		})
 	}
 
-	if updateData.ApplicationReportID != 0 {
-		existing.ApplicationReportID = updateData.ApplicationReportID
+	// Update interview with scores
+	if updateData.CriteriaScores != nil {
+		if err := existing.SetCriteriaScores(updateData.CriteriaScores); err != nil {
+			return context.JSON(fiber.Map{
+				"isSuccess": false,
+				"result":    fmt.Sprintf("failed to set criteria scores: %v", err),
+			})
+		}
 	}
-	if !updateData.ScheduledAppointment.IsZero() {
-		existing.ScheduledAppointment = updateData.ScheduledAppointment
-	}
-	if updateData.CriteriaScores != "" {
-		existing.CriteriaScores = updateData.CriteriaScores
-	}
-	if updateData.TotalScore != 0 {
+	if updateData.TotalScore > 0 {
 		existing.TotalScore = updateData.TotalScore
-	}
-	if !updateData.EvaluatedAt.IsZero() {
-		existing.EvaluatedAt = updateData.EvaluatedAt
-	}
-	if updateData.InterviewStatus != "" {
-		existing.InterviewStatus = updateData.InterviewStatus
+		existing.EvaluatedAt = time.Now()
+		existing.InterviewStatus = model.Evaluated
 	}
 
 	if err := controller.application.DB.Save(&existing).Error; err != nil {
@@ -415,6 +508,21 @@ func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) err
 			"result":    err.Error(),
 		})
 	}
+
+	// Use service to determine and update application report status
+	if updateData.TotalScore > 0 && existing.ApplicationReportID > 0 {
+		evaluateService := service.NewInstructorEvaluateApplicantService(controller.application.DB)
+
+		// Determine status based on score and criteria
+		finalStatus, err := evaluateService.DetermineInterviewStatus(existing.ApplicationReportID, updateData.TotalScore)
+		if err == nil {
+			// Update application report status
+			controller.application.DB.Model(&model.ApplicationReport{}).
+				Where("id = ?", existing.ApplicationReportID).
+				Update("application_statuses", string(finalStatus))
+		}
+	}
+
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    existing,

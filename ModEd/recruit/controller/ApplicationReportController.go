@@ -4,6 +4,7 @@ import (
 	commonModel "ModEd/common/model"
 	"ModEd/core"
 	"ModEd/recruit/model"
+	"ModEd/recruit/service"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -128,6 +129,12 @@ func (controller *ApplicationReportController) GetRoute() []*core.RouteItem {
 		Route:   "/recruit/GetApplicationReportOptions",
 		Handler: controller.GetApplicationReportOptions,
 		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/recruit/ConfirmAcceptance",
+		Handler: controller.ConfirmAcceptance,
+		Method:  core.POST,
 	})
 
 	return routeList
@@ -333,7 +340,7 @@ func (controller *ApplicationReportController) GetApplicationReportByApplicant(c
 
 func (controller *ApplicationReportController) VerifyApplicationEligibility(c *fiber.Ctx) error {
 	var payload struct {
-		ApplicantID uint `json:"applicantId"`
+		ApplicationReportID uint `json:"application_report_id"`
 	}
 	if err := c.BodyParser(&payload); err != nil {
 		return core.SendResponse(c, core.BaseApiResponse{
@@ -341,18 +348,39 @@ func (controller *ApplicationReportController) VerifyApplicationEligibility(c *f
 		})
 	}
 
-	status := "Eligible"
-
-	if err := controller.application.DB.Model(&model.ApplicationReport{}).
-		Where("applicant_id = ?", payload.ApplicantID).
-		Update("application_statuses", status).Error; err != nil {
+	// Use service to verify eligibility
+	service := service.NewApplicantReportService(controller.application.DB)
+	if err := service.VerifyApplicationEligibility(payload.ApplicationReportID); err != nil {
 		return core.SendResponse(c, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
 	}
 
 	return core.SendResponse(c, core.BaseApiResponse{
-		IsSuccess: true, Status: fiber.StatusOK, Message: "Eligibility check complete",
+		IsSuccess: true, Status: fiber.StatusOK, Message: "Eligibility check complete. Status updated based on criteria.",
+	})
+}
+
+// ConfirmAcceptance - ยืนยันสิทธิ์เมื่อผ่าน (Flow: ดูสถานะ/ยืนยันสิทธิ์เมื่อผ่าน)
+func (controller *ApplicationReportController) ConfirmAcceptance(c *fiber.Ctx) error {
+	var payload struct {
+		ApplicationReportID uint `json:"application_report_id"`
+	}
+	if err := c.BodyParser(&payload); err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: "Invalid request payload",
+		})
+	}
+
+	service := service.NewApplicantReportService(controller.application.DB)
+	if err := service.ConfirmAcceptance(payload.ApplicationReportID); err != nil {
+		return core.SendResponse(c, core.BaseApiResponse{
+			IsSuccess: false, Status: fiber.StatusBadRequest, Message: err.Error(),
+		})
+	}
+
+	return core.SendResponse(c, core.BaseApiResponse{
+		IsSuccess: true, Status: fiber.StatusOK, Message: "Acceptance confirmed successfully. Status updated to Confirmed.",
 	})
 }
 

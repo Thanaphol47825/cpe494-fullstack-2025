@@ -10,8 +10,148 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
       this.ENDPOINT_DELETE  = `${this.rootURL}/recruit/DeleteApplicationReport`;
       this.ENDPOINT_VERIFY_ELIGIBILITY = `${this.rootURL}/recruit/VerifyApplicationEligibility`;
       this.ENDPOINT_CONFIRM_ACCEPTANCE = `${this.rootURL}/recruit/ConfirmAcceptance`;
+      this.ENDPOINT_PROGRAM_TYPES = `${this.rootURL}/recruit/GetProgramTypeOptions`;
+      
+      this.programTypeMap = {};
+      this.actionsTemplate = null;
+      this.hiddenButtonTemplate = null;
     }
 
+    async loadActionsTemplate() {
+      if (this.actionsTemplate) {
+        return this.actionsTemplate;
+      }
+      const response = await fetch(`${this.rootURL}/recruit/static/view/ApplicationReportTableActions.tpl`);
+      if (!response.ok) {
+        throw new Error(`Failed to load actions template: ${response.status} ${response.statusText}`);
+      }
+      this.actionsTemplate = await response.text();
+      return this.actionsTemplate;
+    }
+
+    async loadHiddenButtonTemplate() {
+      if (this.hiddenButtonTemplate) {
+        return this.hiddenButtonTemplate;
+      }
+      const response = await fetch(`${this.rootURL}/recruit/static/view/HiddenButtonTemplate.tpl`);
+      if (!response.ok) {
+        throw new Error(`Failed to load hidden button template: ${response.status} ${response.statusText}`);
+      }
+      this.hiddenButtonTemplate = await response.text();
+      return this.hiddenButtonTemplate;
+    }
+
+    async loadProgramTypes() {
+      try {
+        const response = await fetch(this.ENDPOINT_PROGRAM_TYPES);
+        const result = await response.json();
+        
+        if (result.isSuccess && result.result) {
+
+          result.result.forEach(option => {
+            this.programTypeMap[option.value] = option.label;
+          });
+        }
+        return this.programTypeMap;
+      } catch (error) {
+        console.error('Failed to load program types:', error);
+        return {};
+      }
+    }
+
+    async getCustomColumns() {
+
+      await this.loadActionsTemplate();
+
+      return [
+        {
+          name: 'applicant_name',
+          label: 'Applicant Name',
+          template: `{applicant_first_name} {applicant_last_name}`
+        },
+        {
+          name: 'applicant_email',
+          label: 'Email',
+          template: `{applicant_email}`
+        },
+        {
+          name: 'round_name',
+          label: 'Application Round',
+          template: `{round_name}`
+        },
+        {
+          name: 'faculty_name',
+          label: 'Faculty',
+          template: `{faculty_name}`
+        },
+        {
+          name: 'department_name',
+          label: 'Department',
+          template: `{department_name}`
+        },
+        {
+          name: 'program_label',
+          label: 'Program',
+          template: `{program_label}`
+        },
+        {
+          name: 'actions',
+          label: 'Actions',
+          template: this.actionsTemplate
+        }
+      ];
+    }
+
+    transformRowData(item) {
+      return {
+        ...item,
+        applicant_first_name: item.applicant?.first_name || '',
+        applicant_last_name: item.applicant?.last_name || '',
+        applicant_email: item.applicant?.email || '',
+        round_name: item.application_round?.round_name || '',
+        faculty_name: item.faculty?.name || '',
+        department_name: item.department?.name || '',
+        program_label: this.programTypeMap[item.program] || item.program || 'N/A'
+      };
+    }
+
+    applyButtonVisibilityRules(template, rowData, statusConstants) {
+      let result = template;
+      
+      const status = (rowData.application_statuses || '').toUpperCase();
+      const pendingStatus = (statusConstants.Pending || 'Pending').toUpperCase();
+      const acceptedStatus = (statusConstants.Accepted || 'Accepted').toUpperCase();
+      
+      const createHiddenButton = (className, content) => {
+        return this.hiddenButtonTemplate
+          .replace('{className}', className)
+          .replace('{content}', content);
+      };
+      
+      if (status !== pendingStatus && status !== '') {
+        result = result.replace(
+          /(<button[^>]*class="al-btn-verify[^>]*>🔍 Verify<\/button>)/,
+          createHiddenButton('al-btn-verify', '🔍 Verify')
+        );
+      }
+      
+      if (status !== acceptedStatus) {
+        result = result.replace(
+          /(<button[^>]*class="al-btn-confirm[^>]*>✅ Confirm<\/button>)/,
+          createHiddenButton('al-btn-confirm', '✅ Confirm')
+        );
+      }
+      
+      if (status !== pendingStatus) {
+        result = result.replace(
+          /(<button[^>]*class="al-btn-schedule[^>]*>Schedule<\/button>)/,
+          createHiddenButton('al-btn-schedule', 'Schedule')
+        );
+      }
+      
+      return result;
+    }
+    
     transformData(formData) {
       const parseNum = (val) => {
         if (val === null || val === undefined || val === '') return null;
@@ -176,7 +316,6 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
       }
     }
 
-    // VerifyApplicationEligibility - ตรวจเกณฑ์รอบเบื้องต้น
     async verifyEligibility(applicationReportId) {
       if (!applicationReportId) {
         return { success: false, error: 'Application Report ID is required' };
@@ -201,7 +340,6 @@ if (typeof window !== 'undefined' && !window.ApplicationReportService) {
       }
     }
 
-    // ConfirmAcceptance - ยืนยันสิทธิ์เมื่อผ่าน
     async confirmAcceptance(applicationReportId) {
       if (!applicationReportId) {
         return { success: false, error: 'Application Report ID is required' };

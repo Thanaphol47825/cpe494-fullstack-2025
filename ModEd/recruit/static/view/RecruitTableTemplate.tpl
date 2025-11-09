@@ -122,6 +122,12 @@
     .recruit-table-wrap {
       overflow: auto;
       border: 1px solid var(--rt-border);
+      scrollbar-width: none;
+      -ms-overflow-style: none; 
+    }
+
+    .recruit-table-wrap::-webkit-scrollbar {
+      display: none; 
     }
 
     .recruit-table-fullwidth {
@@ -132,25 +138,6 @@
     }
     #recruit-table-container {
       min-width: 720px;
-    }
-
-    .recruit-sidepanel {
-      display: flex;
-      flex-direction: column;
-      overflow: auto;
-      background: var(--rt-bg);
-      border: 1px solid var(--rt-border-soft);
-      border-radius: 12px;
-      padding: 16px;
-      min-width: 0; 
-    }
-    .sidepanel-title {
-      font-weight: 600;
-      margin: 0 0 8px 0;
-    }
-    .sidepanel-body {
-      flex: 1;
-      overflow: auto;
     }
 
     .result-slot {

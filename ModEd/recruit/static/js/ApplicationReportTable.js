@@ -22,7 +22,10 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
 
       this.reportService = new window.ApplicationReportService(this.rootURL);
       this.statusService = new window.ApplicationStatusService(this.rootURL);
-      this.transferService = new window.ApplicationReportTransferConfirmedStudentService(this.rootURL); 
+      this.transferService = new window.ApplicationReportTransferConfirmedStudentService(this.rootURL);
+      
+      await this.reportService.loadProgramTypes();
+      await this.reportService.loadHiddenButtonTemplate();
 
       this.container.innerHTML = '';
 
@@ -50,26 +53,13 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
 
       root.querySelector('[data-action="create"]')?.addEventListener('click', () => this.handleCreate());
 
+      const customColumns = await this.reportService.getCustomColumns();
+
       this.table = new window.AdvanceTableRender(this.engine, {
         modelPath: 'recruit/applicationreport',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: [
-          {
-            name: 'actions',
-            label: 'Actions',
-            template: `
-              <div style="white-space:nowrap;">
-                <button class="al-btn-edit text-blue-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
-                <button class="al-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}" style="margin-right:8px;">Delete</button>
-                <button class="al-btn-verify text-orange-600 hover:underline" data-action="verify" data-id="{ID}" data-status="{application_statuses}" style="margin-right:8px;">🔍 Verify</button>
-                <button class="al-btn-confirm text-green-600 hover:underline" data-action="confirm" data-id="{ID}" data-status="{application_statuses}" style="margin-right:8px;">✅ Confirm</button>
-                <button class="al-btn-schedule text-green-600 hover:underline" data-action="schedule" data-id="{ID}" data-status="{application_statuses}">Schedule</button>
-                <button class="al-btn-transfer text-purple-600 hover:underline" data-action="transfer" data-id="{ID}">Transfer</button>
-              </div>
-            `
-          }
-        ]
+        customColumns: customColumns
       });
 
       await this.table.loadSchema();
@@ -80,30 +70,7 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
       this.table.bindTemplate = (template, rowData, index) => {
         let result = originalBindTemplate(template, rowData, index);
         
-        const status = (rowData.application_statuses || '').toUpperCase();
-        const pendingStatus = (this.statusConstants.Pending || 'Pending').toUpperCase();
-        const acceptedStatus = (this.statusConstants.Accepted || 'Accepted').toUpperCase();
-        
-        if (status !== pendingStatus && status !== '') {
-          result = result.replace(
-            /(<button[^>]*class="al-btn-verify[^>]*>🔍 Verify<\/button>)/,
-            '<button class="al-btn-verify" style="display:none;">🔍 Verify</button>'
-          );
-        }
-        
-        if (status !== acceptedStatus) {
-          result = result.replace(
-            /(<button[^>]*class="al-btn-confirm[^>]*>✅ Confirm<\/button>)/,
-            '<button class="al-btn-confirm" style="display:none;">✅ Confirm</button>'
-          );
-        }
-        
-        if (status !== pendingStatus) {
-          result = result.replace(
-            /(<button[^>]*class="al-btn-schedule[^>]*>Schedule<\/button>)/,
-            '<button class="al-btn-schedule" style="display:none;">Schedule</button>'
-          );
-        }
+        result = this.reportService.applyButtonVisibilityRules(result, rowData, this.statusConstants);
         
         return result;
       };
@@ -134,8 +101,10 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
     async refreshTable() {
       const result = await this.reportService.getAll();
       if (result.success) {
-        this.table.setData(result.data);
-        if (result.data.length === 0) {
+        const transformedData = result.data.map(item => this.reportService.transformRowData(item));
+        
+        this.table.setData(transformedData);
+        if (transformedData.length === 0) {
           this.ui?.showMessage('No application report records found. Click "Create New" to add a report.', 'info');
         }
       } else {

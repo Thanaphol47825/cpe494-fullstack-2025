@@ -51,7 +51,7 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
         modelPath: 'recruit/applicant',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: RecruitTableTemplate.getDefaultColumns()
+        customColumns: await RecruitTableTemplate.getDefaultColumns()
       });
 
       await this.table.loadSchema();

@@ -57,7 +57,7 @@ if (typeof window !== 'undefined' && !window.InterviewTable) {
         modelPath: 'recruit/interview',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: RecruitTableTemplate.getDefaultColumns()
+        customColumns: await RecruitTableTemplate.getDefaultColumns()
       });
 
       await this.table.loadSchema();

@@ -80,17 +80,15 @@ if (typeof window !== 'undefined' && !window.RecruitTableTemplate) {
       }));
     }
 
-    static getDefaultColumns() {
+    static async getDefaultColumns() {
+      const res = await fetch(`${RootURL}/recruit/static/view/ActionButtonsTemplate.tpl`);
+      const template = await res.text();
+      
       return [
         {
           name: 'actions',
           label: 'Actions',
-          template: `
-            <div style="white-space:nowrap;">
-              <button class="al-btn-edit text-blue-600 hover:underline" data-action="edit" data-id="{ID}" style="margin-right:8px;">Edit</button>
-              <button class="al-btn-delete text-red-600 hover:underline" data-action="delete" data-id="{ID}">Delete</button>
-            </div>
-          `
+          template: template.trim()
         }
       ];
     }

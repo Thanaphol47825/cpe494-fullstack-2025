@@ -298,28 +298,89 @@ async function editEmployee(id) {
 }
 ```
 
-### 2. Search & Filter
+### 2. Search & Filter & Pagination
 
-```javascript
-// Search form
-const searchForm = new AdvanceFormRender(application, {
-    schema: [
-        {name: "search", label: "Search", type: "text"},
-        {name: "department", label: "Department", type: "select", data: departments}
-    ],
-    submitHandler: async (searchData) => {
-        // Update table with search results
-        const results = await searchEmployees(searchData);
-        employeeTable.setData(results);
+``` javascript
+const table = new AdvanceTableRender(application, {
+    modelPath: "curriculum/Student",
+    dataPath: "curriculum/students",
+    targetSelector: "#table-container",
+
+    // optional //
+    enableSearch: true,
+    enableSorting: true,
+    enablePagination: true,
+    pageSize: 10
+
+});
+
+await table.render();
+```
+
+### Field Search + Dropdown
+
+``` javascript
+// searchConfig is optional
+searchConfig: {
+    placeholder: "Ex. 'Programming', 'SQL', 'Week 3'",
+    fields: [
+        { value: "all", label: "All" },
+        { value: "CourseName", label: "Course" }
+    ] 
+    // fields is optional, if you don't declare a field, it will use the name of your column in the table
+
+}
+```
+
+### Sorting
+
+``` javascript
+// sortConfig is optional
+sortConfig: {
+    defaultField: "your column name",
+    defaultDirection: "asc"
+}
+```
+
+### Pagination
+
+``` javascript
+enablePagination: true,
+pageSize: 10
+```
+
+
+### Common Full Example
+
+``` javascript
+this.table = new AdvanceTableRender(this.application.templateEngine, {
+    modelPath: "curriculum/courseplan",
+    data: "curriculum/courseplan",
+    targetSelector: "#courseplan-table",
+
+    enableSearch: true,
+    enableSorting: true,
+    enablePagination: true,
+    pageSize: 10,
+
+    searchConfig: {
+        placeholder: "Search Course / ID / Week...",
+        fields: [
+            { value: "all", label: "All" },
+            { value: "CourseName", label: "Course" },
+            { value: "CourseId", label: "Course ID" },
+            { value: "Week", label: "Week" },
+            { value: "Topic", label: "Topic" }
+        ]
+    },
+
+    sortConfig: {
+        defaultField: "Week",
+        defaultDirection: "asc"
     }
 });
-
-// Results table
-const employeeTable = new AdvanceTableRender(application, {
-    modelPath: "hr/Employee",
-    data: [] // Start empty, populated by search
-});
 ```
+
 
 ### 3. CRUD Operations
 

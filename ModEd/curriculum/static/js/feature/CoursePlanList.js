@@ -4,32 +4,28 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
             this.application = application;
             // bind global delete handler (เหมือน _deleteCurriculum)
             window._deleteCoursePlan = this.handleDelete.bind(this);
-            // sorting state: keys should match backend allowed sort keys
-            this._sort = { sort: 'id', order: 'asc' };
+            this.rawCoursePlans = []; // store raw data for possible edit/detail modals
         }
-
-        // opts: { sort: 'id'|'CourseId'|'Course'|'Date'|'Week', order: 'asc'|'desc' }
-        async getAllCoursePlans(opts = {}) {
-            const params = new URLSearchParams();
-            const sort = opts.sort || this._sort.sort || 'id';
-            const order = opts.order || this._sort.order || 'asc';
-            if (sort) params.set('sort', sort);
-            if (order) params.set('order', order);
-
-            const url = `${RootURL}/curriculum/CoursePlan/getCoursePlans` + (params.toString() ? `?${params.toString()}` : '');
-            const res = await fetch(url, {
+        // raw fetch
+        async getCoursePlans() {
+            const res = await fetch(`${RootURL}/curriculum/CoursePlan/getCoursePlans`, {
                 method: "GET",
                 headers: { "Content-Type": "application/json" },
             });
             const data = await res.json().catch(() => ({ result: [] }));
+            return data.result || [];
+        }
 
-            const items = Array.isArray(data?.result) ? data.result : [];
+        // format and return display rows
+        async getAllCoursePlans() {
+            const rawData = await this.getCoursePlans();
+            this.rawCoursePlans = rawData; // store raw data for edit/modal
 
             const plans = [];
-            items.forEach(item => {
+            rawData.forEach(item => {
                 const id = item.ID;
                 const courseId = item.CourseId ?? item.Course?.ID ?? null;
-                const courseName = item.Course?.Name ?? item.CourseName ?? item.Course?.name ?? 'N/A';
+                const courseName = item.Course ? item.Course.Name : 'N/A';
 
                 const raw = item.Date ?? item.date ?? null;
                 let dateISO = null;
@@ -38,7 +34,6 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
                     const d = new Date(raw);
                     if (!isNaN(d.getTime())) {
                         dateISO = d.toISOString();
-                        // ใช้ locale ผู้ใช้; จะให้คงที่ก็เปลี่ยนได้
                         dateDisplay = d.toLocaleString();
                     }
                 }
@@ -79,12 +74,11 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
         }
 
         async refreshTable() {
-            const plans = await this.getAllCoursePlans(this._sort);
+            const plans = await this.getAllCoursePlans();
             if (this.table && typeof this.table.setData === 'function') {
                 this.table.setData(plans);
-                return;
             }
-            // if table not created yet, create it by rendering
+            // follow ClassList pattern: re-render the view after updating data
             await this.render();
         }
 
@@ -96,87 +90,8 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
             const listWrapper = await ListTemplate.getList('CoursePlanList');
             this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-            // create sort controls (toolbar)
-            const toolbar = document.createElement('div');
-            toolbar.className = 'flex items-center gap-3';
-
-            const label = document.createElement('span');
-            label.textContent = 'Sort:';
-            label.className = 'text-sm justify-center font-medium mr-2';
-            toolbar.appendChild(label);
-
-            const sortSelect = document.createElement('select');
-            sortSelect.className = 'rounded px-2 py-1 border';
-            const sortOptions = [
-                { label: 'ID', value: 'id' },
-                { label: 'Course ID', value: 'CourseId' },
-                { label: 'Course', value: 'Course' },
-                { label: 'Date', value: 'Date' },
-                { label: 'Week', value: 'Week' },
-            ];
-            sortOptions.forEach(o => {
-                const opt = document.createElement('option');
-                opt.value = o.value;
-                opt.text = o.label;
-                sortSelect.appendChild(opt);
-            });
-
-            const orderBtn = document.createElement('button');
-            orderBtn.type = 'button';
-            orderBtn.className = 'rounded px-3 py-1 border';
-            orderBtn.textContent = this._sort.order || 'asc';
-
-            toolbar.appendChild(sortSelect);
-            toolbar.appendChild(orderBtn);
-
-            // Try inserting toolbar into the action buttons area (near the Create button)
-            // Fallback: insert before the table container
-            let inserted = false;
-            try {
-                const createBtn = listWrapper.querySelector('a[routerLink="curriculum/courseplan/create"]');
-                if (createBtn) {
-                    // find the parent container that holds action buttons
-                    const actionGroup = createBtn.closest('div.flex.gap-3') || createBtn.parentNode;
-                    if (actionGroup && actionGroup.parentNode) {
-                        // insert toolbar after the actionGroup to align with buttons
-                        actionGroup.parentNode.insertBefore(toolbar, actionGroup.nextSibling);
-                        inserted = true;
-                    }
-                }
-            } catch (e) {
-                // ignore and fallback
-            }
-
-            if (!inserted) {
-                // fallback: insert toolbar before table target
-                const tableContainer = listWrapper.querySelector('#courseplan-table');
-                if (tableContainer && tableContainer.parentNode) {
-                    tableContainer.parentNode.insertBefore(toolbar, tableContainer);
-                } else {
-                    // fallback: append to wrapper
-                    listWrapper.insertBefore(toolbar, listWrapper.firstChild);
-                }
-            }
-
-            // set initial values
-            try {
-                sortSelect.value = this._sort.sort;
-            } catch (e) { /* ignore */ }
-            orderBtn.textContent = this._sort.order || 'asc';
-
-            // handlers
-            sortSelect.addEventListener('change', async (e) => {
-                this._sort.sort = e.target.value;
-                await this.refreshTable();
-            });
-            orderBtn.addEventListener('click', async (e) => {
-                this._sort.order = (this._sort.order === 'asc') ? 'desc' : 'asc';
-                orderBtn.textContent = this._sort.order;
-                await this.refreshTable();
-            });
-
             // โหลดข้อมูล
-            const plans = await this.getAllCoursePlans(this._sort);
+            const plans = await this.getAllCoursePlans();
 
             // สร้างตารางด้วย AdvanceTableRender
             this.table = new AdvanceTableRender(this.application.templateEngine, {

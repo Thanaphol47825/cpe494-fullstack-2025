@@ -35,6 +35,13 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await this.loadSubModule('template/CurriculumEditModalTemplate.js');
       }
 
+      if (!window.CourseExtension) {
+        await this.loadSubModule('feature/CourseExtension.js');
+      }
+      if (!window.CourseSkillList) {
+        await this.loadSubModule('feature/CourseSkillList.js');
+      }
+
     }
 
     setupRoutes() {
@@ -115,6 +122,12 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
 
       if (window.CourseList) {
         const courseList = new window.CourseList(this);
+        if (window.CourseSkillList) {
+          const courseSkillList = new window.CourseSkillList(this)
+          courseList.appendExtension(courseSkillList)
+        } else {
+          console.error("CourseListSkill not available after loading")
+        }
         await courseList.render();
       } else {
         console.error('CourseList not available after loading');
@@ -122,6 +135,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
           <div class="text-red-600">Error loading CourseList.</div>`;
       }
     }
+
     async renderCreateCourse() {
       await this.loadTemplates();
 

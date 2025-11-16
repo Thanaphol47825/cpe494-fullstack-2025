@@ -1,10 +1,104 @@
 if (typeof window !== 'undefined' && !window.CourseSkillList) {
-  class CourseSkillList {
+  class CourseSkillList extends CourseExtension {
     constructor(application) {
+      super(application);
       this.application = application;
       this.rawCourseSkills = []; // Store raw data for edit modal
       window._deleteCourseSkill = this.handleDelete.bind(this);
       window._editCourseSkill = this.handleEdit.bind(this);
+      window._addSkillToCourse = this.handleAddSkills.bind(this);
+    }
+
+    getCustomColumns() {
+      return [
+        {
+          name: "skill-actions",
+          label: "Skil Actions",
+          template: `
+                    <button onclick="_addSkillToCourse({ID})" 
+                            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg ...">
+                        Add Skill
+                    </button>
+                `
+        }
+      ];
+    }
+
+    async handleSubmitCreateNew(formData) {
+      try {
+        formData.CourseId = parseInt(formData.CourseId);
+
+        // Check if SkillId is array (multiple selection)
+        if (Array.isArray(formData.SkillId)) {
+          if (formData.SkillId.length > 3) {
+            alert("You can select maximum 3 skills only.");
+            return false;
+          }
+          if (formData.SkillId.length === 0) {
+            alert("Please select at least one skill.");
+            return false;
+          }
+          formData.SkillId = formData.SkillId.map(id => parseInt(id));
+        } else {
+          formData.SkillId = parseInt(formData.SkillId);
+        }
+
+        const resp = await fetch(
+          RootURL + `/curriculum/CourseSkill/createCourseSkill`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          }
+        );
+
+        const data = await resp.json();
+        if (data.isSuccess) {
+          alert("Course Skill created!");
+          if (this.host && typeof this.host.refreshTable === 'function') {
+            await this.host.refreshTable();
+          } else {
+            alert("Error: " + (data.result || "Failed to refresh"));
+          }
+        } else {
+          alert("Error: " + (data.result || "Failed to save"));
+        }
+      } catch (error) {
+        alert("Error: " + (error || "Failed to save"));
+      }
+
+      return false;
+    }
+
+    async handleAddSkills(courseId) {
+      if (!courseId) return;
+
+      try {
+        if (!window.CreateRelatedModalTemplate) {
+          await this.application.loadSubModule('template/CurriculumCreateRelatedModalTemplate.js');
+        }
+
+        const modalId = `courseskill-create-${courseId}`;
+        const newCourseSkill = {
+          CourseId: courseId
+        }
+
+        await CreateRelatedModalTemplate.createModalWithForm({
+          modalType: 'CourseSkill',
+          modalId,
+          application: this.application,
+          data: newCourseSkill,
+          modelPath: 'curriculum/courseskill',
+          submitHandler: async (formData) => {
+            await this.handleSubmitCreateNew(formData);
+            return { success: true, message: "Course Skill created!" };
+          },
+        });
+
+      } catch (err) {
+        console.error('Error opening create course skill modal:', err);
+        alert('Error opening create course skill modal: ' + (err?.message || err));
+      }
     }
 
     getCourseSkills = async () => {
@@ -19,7 +113,7 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
     async getAllCourseSkills() {
       const rawData = await this.getCourseSkills();
       this.rawCourseSkills = rawData; // Store raw data for edit modal
-      
+
       let courseSkills = [];
       rawData.forEach(item => {
         courseSkills.push({
@@ -36,7 +130,7 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
       try {
         formData.ID = parseInt(this.courseSkillData.ID);
         formData.CourseId = parseInt(formData.CourseId);
-        
+
         // Check if SkillId is array (multiple selection)
         if (Array.isArray(formData.SkillId)) {
           if (formData.SkillId.length > 3) {
@@ -93,14 +187,14 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         this.courseSkillData = courseSkillData;
 
         if (this.courseSkillData?.CourseId !== undefined) {
-            this.courseSkillData.CourseId = this.courseSkillData.CourseId.toString();
+          this.courseSkillData.CourseId = this.courseSkillData.CourseId.toString();
         }
         if (this.courseSkillData?.SkillId !== undefined) {
-            this.courseSkillData.SkillId = this.courseSkillData.SkillId.toString();
+          this.courseSkillData.SkillId = this.courseSkillData.SkillId.toString();
         }
 
         const modalId = `courseskill-${courseSkillId}`;
-        
+
         await EditModalTemplate.createModalWithForm({
           modalType: 'CourseSkill',
           modalId,
@@ -110,7 +204,7 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
           submitHandler: async (formData) => {
             formData.ID = parseInt(courseSkillId);
             await this.handleSubmit(formData);
-              return { success: true, message: "Course Skill updated!" };
+            return { success: true, message: "Course Skill updated!" };
           },
         });
 
@@ -151,30 +245,30 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
       const listWrapper = await ListTemplate.getList('CourseSkillList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-    //   const courseSkills = await this.getAllCourseSkills();
+      //   const courseSkills = await this.getAllCourseSkills();
       await this.setupTable();
-    //   this.table.setData(courseSkills);
+      //   this.table.setData(courseSkills);
       await this.table.render();
 
       this.setupForm();
     }
 
     async setupTable() {
-        const courseSkills = await this.getAllCourseSkills();
-        this.table = new AdvanceTableRender(this.application.templateEngine, {
-            // modelPath: "curriculum/courseskill",
-            data: courseSkills,
-            targetSelector: "#courseskill-table",
-            schema: [
-                { name: "ID", label: "No.", type: "number" },
-                { name: "CourseName", label: "Course", type: "text" },
-                { name: "SkillName", label: "Skill", type: "text" },
-            ],
-            customColumns: [
-            {
-                name: "actions",
-                label: "Actions",
-                template: `
+      const courseSkills = await this.getAllCourseSkills();
+      this.table = new AdvanceTableRender(this.application.templateEngine, {
+        // modelPath: "curriculum/courseskill",
+        data: courseSkills,
+        targetSelector: "#courseskill-table",
+        schema: [
+          { name: "ID", label: "No.", type: "number" },
+          { name: "CourseName", label: "Course", type: "text" },
+          { name: "SkillName", label: "Skill", type: "text" },
+        ],
+        customColumns: [
+          {
+            name: "actions",
+            label: "Actions",
+            template: `
                 <div class="flex space-x-2">
                     <button onclick="_editCourseSkill({ID})" 
                         class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
@@ -192,9 +286,9 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
                     </button>
                 </div>
                 `
-            },
-            ],
-        });
+          },
+        ],
+      });
     }
 
     setupForm() {

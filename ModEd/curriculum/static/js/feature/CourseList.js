@@ -2,9 +2,16 @@ if (typeof window !== 'undefined' && !window.CourseList) {
   class CourseList {
     constructor(application) {
       this.application = application;
-      this.skillCache = new Map();
+      this.extensions = [];
       window._deleteCourse = this.handleDelete.bind(this);
       window._editCourse = this.handleEdit.bind(this);
+    }
+
+    appendExtension(extension) {
+      if (extension instanceof CourseExtension) {
+        this.extensions.push(extension);
+        extension.setHost(this);
+      }
     }
 
     async getAllCourses() {
@@ -17,8 +24,6 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     }
 
     async getSkillsByCourse(courseId) {
-      if (this.skillCache.has(courseId)) return this.skillCache.get(courseId);
-
       const res = await fetch(`${RootURL}/curriculum/CourseSkill/getSkillsByCourse/${courseId}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
@@ -26,7 +31,6 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
       const data = await res.json().catch(() => ({}));
       const label = data?.result?.SkillLabel || "";
-      this.skillCache.set(courseId, label);
       return label;
     }
 
@@ -94,14 +98,14 @@ if (typeof window !== 'undefined' && !window.CourseList) {
         this.courseData = data.result || {};
 
         if (this.courseData?.CurriculumId !== undefined) {
-            this.courseData.CurriculumId = this.courseData.CurriculumId.toString();
+          this.courseData.CurriculumId = this.courseData.CurriculumId.toString();
         }
         if (this.courseData?.CourseStatus !== undefined) {
-            this.courseData.CourseStatus = this.courseData.CourseStatus.toString();
+          this.courseData.CourseStatus = this.courseData.CourseStatus.toString();
         }
 
         const modalId = `course-${courseId}`;
-        
+
         await EditModalTemplate.createModalWithForm({
           modalType: 'Course',
           modalId,
@@ -111,7 +115,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
           submitHandler: async (formData) => {
             formData.ID = parseInt(courseId);
             await this.handleSubmit(formData);
-              return { success: true, message: "Course updated!" };
+            return { success: true, message: "Course updated!" };
           },
         });
 
@@ -144,7 +148,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     async refreshTable() {
       const courses = await this.getAllCoursesWithSkills();
       this.table.setData(courses);
-      this.render();
+      this.table.render();
     }
 
     async render() {
@@ -161,25 +165,14 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     }
 
     setupTable() {
-      this.table = new AdvanceTableRender(this.application.templateEngine, {
-        modelPath: "curriculum/course",
-        data: [],
-        targetSelector: "#course-table",
-        schema: [
-          { name: "ID", label: "No.", type: "number" },
-          { name: "Name", label: "Name", type: "text" },
-          { name: "Description", label: "Description", type: "text" },
-          { name: "CurriculumId", label: "Curriculum", type: "text" },
-          { name: "Optional", label: "Optional", type: "checkbox" },
-          { name: "CourseStatus", label: "Status", type: "text" },
-          { name: "Skills", label: "Skills", type: "text" },
-        ],
-        customColumns: [
-          {
-            name: "actions",
-            label: "Actions",
-            template: `
-              <div class="flex space-x-2">
+      let extensionColumns = [];
+      for (const ext of this.extensions) {
+        extensionColumns = extensionColumns.concat(ext.getCustomColumns());
+      }
+      const defaultColumns = {
+        name: "actions",
+        label: "Action",
+        template: `<div class="flex space-x-2">
                   <button onclick="_editCourse({ID})" 
                       class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,10 +187,25 @@ if (typeof window !== 'undefined' && !window.CourseList) {
                           </svg>
                        Delete
                    </button>
-              </div>
-            `
-          },
+              </div>`
+      }
+      const allColumns = [defaultColumns].concat(extensionColumns);
+      this.table = new AdvanceTableRender(this.application.templateEngine, {
+        modelPath: "curriculum/course",
+        data: [],
+        targetSelector: "#course-table",
+        schema: [
+          { name: "ID", label: "No.", type: "number" },
+          { name: "Name", label: "Name", type: "text" },
+          { name: "Description", label: "Description", type: "text" },
+          { name: "CurriculumId", label: "Curriculum", type: "text" },
+          { name: "Optional", label: "Optional", type: "checkbox" },
+          { name: "CourseStatus", label: "Status", type: "text" },
+          { name: "Skills", label: "Skills", type: "text" },
         ],
+
+        // Use the dynamic list
+        customColumns: allColumns
       });
     }
 

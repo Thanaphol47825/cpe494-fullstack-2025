@@ -1,4 +1,3 @@
-// Company Edit Feature
 if (typeof window !== 'undefined' && !window.CompanyEdit) {
   class CompanyEdit {
     constructor(application, companyId) {

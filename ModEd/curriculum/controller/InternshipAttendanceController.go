@@ -42,9 +42,17 @@ func (controller *InternshipAttendanceController) GetRoute() []*core.RouteItem {
 		Handler: controller.handler.GetInternshipAttendanceByID,
 		Method:  core.GET,
 	})
+
+	// Add new route for today's attendance by student ID
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/InternshipAttendance/getTodayByStudentID/:student_id",
+		Handler: controller.handler.GetTodayAttendanceByStudentID,
+		Method:  core.GET,
+	})
+
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/InternshipAttendance/UpdateInternshipAttendance",
-		Handler: controller.handler.UpdateInternshipAttendanceByID,
+		Handler: controller.handler.UpdateInternshipAttendance,
 		Method:  core.POST,
 	})
 

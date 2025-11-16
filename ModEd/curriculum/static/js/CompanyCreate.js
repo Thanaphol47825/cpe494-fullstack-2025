@@ -1,5 +1,4 @@
-// Company Create Feature
-if (typeof window !== 'undefined' && !window.CompanyCreate) {
+if (typeof window !== "undefined" && !window.CompanyCreate) {
   class CompanyCreate {
     constructor(application) {
       this.application = application;
@@ -116,7 +115,8 @@ if (typeof window !== 'undefined' && !window.CompanyCreate) {
               : field.Type === "textarea"
               ? "Textarea"
               : "Input";
-          const template = this.application.templateEngine.template[templateName];
+          const template =
+            this.application.templateEngine.template[templateName];
 
           if (template) {
             inputHTML = Mustache.render(template, field);

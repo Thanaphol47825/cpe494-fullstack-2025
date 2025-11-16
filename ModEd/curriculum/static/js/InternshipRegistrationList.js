@@ -5,6 +5,29 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
       this.templateEngine = templateEngine;
       this.rootURL = rootURL || window.__ROOT_URL__ || "";
       this.tableRender = null;
+      this.userRole = localStorage.getItem('role') || 'Student'; // Default to Student if not set
+      this.currentUserId = parseInt(localStorage.getItem('userId')) || null; // Student ID for Student role
+    }
+
+    // Check if user can edit/delete a registration
+    #canModifyRegistration(registration) {
+      const userRole = this.userRole;
+      
+      if (userRole === 'Admin') {
+        return true; // Admin can modify everything
+      }
+      
+      if (userRole === 'Instructor') {
+        return false; // Instructor can only read
+      }
+      
+      if (userRole === 'Student') {
+        // Student can only modify their own registrations
+        console.log("this currentUserId:", this.currentUserId, "registration.StudentId:", registration.StudentId, "registration.student_id:", registration.student_id);
+        return registration.StudentId === this.currentUserId || registration.student_id === this.currentUserId;
+      }
+      
+      return false;
     }
 
     async render() {
@@ -108,13 +131,21 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
       cardTitle.className = 'text-2xl font-bold text-white';
       cardTitle.textContent = 'Registration List';
 
-      const addButton = document.createElement('button');
-      addButton.className = 'inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-200 shadow-lg font-semibold';
-      addButton.onclick = () => window.location.href = '#internship/internshipregistration/create';
-      addButton.appendChild(document.createTextNode('Add New Registration'));
+      // Show Add button only for Admin and Student (not Instructor)
+      if (this.userRole === 'Admin' || this.userRole === 'Student') {
+        const addButton = document.createElement('button');
+        addButton.className = 'inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-200 shadow-lg font-semibold';
+        addButton.onclick = () => window.location.href = '#internship/internshipregistration/create';
+        addButton.appendChild(document.createTextNode('Add New Registration'));
+        cardHeader.appendChild(addButton);
+      }
 
       cardHeader.appendChild(cardTitle);
-      cardHeader.appendChild(addButton);
+      if (cardHeader.querySelector('button')) {
+        // If button exists, keep the flex layout
+      } else {
+        cardHeader.classList.remove('justify-between');
+      }
 
       const tableContainer = document.createElement('div');
       tableContainer.id = 'registrationsTableContainer';
@@ -138,7 +169,18 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
         throw new Error('Failed to fetch internship registrations');
       }
       
-      return data.result;
+      let registrations = data.result;
+      
+      // Filter based on role
+      if (this.userRole === 'Student') {
+        // Students only see their own registrations
+        registrations = registrations.filter(reg => 
+          reg.StudentId === this.currentUserId || reg.student_id === this.currentUserId
+        );
+      }
+      // Admin and Instructor can see all registrations
+      
+      return registrations;
     }
 
     async #renderWithAdvanceTableRender(registrations) {
@@ -148,6 +190,9 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
 
       const preparedData = registrations.map(reg => ({
         ...reg,
+        // Ensure StudentId is available (use either field name from API)
+        StudentId: reg.StudentId || reg.student_id,
+        student_id: reg.StudentId || reg.student_id,
         student_name: reg.Student?.Student?.first_name && reg.Student?.Student?.last_name 
           ? `${reg.Student.Student.first_name} ${reg.Student.Student.last_name}`
           : 'N/A',
@@ -215,15 +260,17 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
           label: 'Actions',
           template: `
             <div class="flex gap-2">
-              <button onclick="window.InternshipRegistrationListInstance.editRegistration({ID})" 
-                      class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors">
+              <button onclick="window.InternshipRegistrationListInstance.checkAndEdit({ID}, {StudentId})" 
+                      class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors"
+                      id="edit-btn-{ID}">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
                 Edit
               </button>
-              <button onclick="window.InternshipRegistrationListInstance.deleteRegistration({ID}, '{student_name}')" 
-                      class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors">
+              <button onclick="window.InternshipRegistrationListInstance.checkAndDelete({ID}, '{student_name}', {StudentId})" 
+                      class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors"
+                      id="delete-btn-{ID}">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                 </svg>
@@ -358,19 +405,30 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
         const actionsContainer = document.createElement('div');
         actionsContainer.className = 'flex gap-2';
 
-        // Edit button
-        const editBtn = this.#createEditButton(reg.ID);
-        editBtn.onclick = () => this.editRegistration(reg.ID);
+        // Check if user can modify this registration
+        const canModify = this.#canModifyRegistration(reg);
+        
+        if (canModify) {
+          // Edit button
+          const editBtn = this.#createEditButton(reg.ID);
+          editBtn.onclick = () => this.editRegistration(reg.ID);
 
-        // Delete button
-        const studentName = reg.Student?.Student?.first_name && reg.Student?.Student?.last_name
-          ? `${reg.Student.Student.first_name} ${reg.Student.Student.last_name}`
-          : 'Unknown';
-        const deleteBtn = this.#createDeleteButton(reg.ID, studentName);
-        deleteBtn.onclick = () => this.deleteRegistration(reg.ID, studentName);
+          // Delete button
+          const studentName = reg.Student?.Student?.first_name && reg.Student?.Student?.last_name
+            ? `${reg.Student.Student.first_name} ${reg.Student.Student.last_name}`
+            : 'Unknown';
+          const deleteBtn = this.#createDeleteButton(reg.ID, studentName);
+          deleteBtn.onclick = () => this.deleteRegistration(reg.ID, studentName);
 
-        actionsContainer.appendChild(editBtn);
-        actionsContainer.appendChild(deleteBtn);
+          actionsContainer.appendChild(editBtn);
+          actionsContainer.appendChild(deleteBtn);
+        } else {
+          // Show "View Only" for Instructor or other students' records
+          const viewOnlySpan = document.createElement('span');
+          viewOnlySpan.className = 'text-sm text-gray-500 italic';
+          viewOnlySpan.textContent = this.userRole === 'Instructor' ? 'View Only' : 'No Access';
+          actionsContainer.appendChild(viewOnlySpan);
+        }
         actionsCell.appendChild(actionsContainer);
         row.appendChild(actionsCell);
 
@@ -442,7 +500,7 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
           <h3 class="mt-4 text-lg font-medium text-gray-900">No registrations found</h3>
           <p class="mt-2 text-sm text-gray-500">Get started by creating a new internship registration.</p>
           <div class="mt-6">
-            <button onclick="window.location.href='#internship/registration/create'" 
+            <button onclick="window.location.href='#internship/internshipregistration/create'" 
                     class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors shadow-lg">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -452,6 +510,29 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationList) {
           </div>
         </div>
       `;
+    }
+
+    // Wrapper methods with role checking
+    checkAndEdit(id, studentId) {
+      const registration = { ID: id, StudentId: studentId };
+      
+      if (!this.#canModifyRegistration(registration)) {
+        alert('Access Denied: You do not have permission to edit this registration.');
+        return;
+      }
+      
+      this.editRegistration(id);
+    }
+
+    checkAndDelete(id, studentName, studentId) {
+      const registration = { ID: id, StudentId: studentId };
+      
+      if (!this.#canModifyRegistration(registration)) {
+        alert('Access Denied: You do not have permission to delete this registration.');
+        return;
+      }
+      
+      this.deleteRegistration(id, studentName);
     }
 
     editRegistration(id) {

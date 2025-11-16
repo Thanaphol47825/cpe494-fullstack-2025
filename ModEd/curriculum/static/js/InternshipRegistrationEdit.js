@@ -4,6 +4,38 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
       this.application = application;
       this.registrationId = registrationId;
       this.registrationData = null;
+      this.userRole = localStorage.getItem('role') || 'Student';
+      this.currentUserId = parseInt(localStorage.getItem('userId')) || null;
+      this.approvalStatusOptions = []; // Will be loaded from API
+    }
+
+    async loadApprovalStatusOptions() {
+      try {
+        const response = await fetch('/curriculum/approvedStatus/options');
+        const data = await response.json();
+        
+        if (data.isSuccess) {
+          this.approvalStatusOptions = data.result;
+        } else {
+          console.error('Failed to load approval status options');
+          // Fallback to hardcoded values
+          this.approvalStatusOptions = [
+            { label: "Not Started", value: "Not Started" },
+            { label: "In Progress", value: "In Progress" },
+            { label: "Approved", value: "Approved" },
+            { label: "Rejected", value: "Rejected" }
+          ];
+        }
+      } catch (error) {
+        console.error('Error loading approval status options:', error);
+        // Fallback to hardcoded values
+        this.approvalStatusOptions = [
+          { label: "Not Started", value: "Not Started" },
+          { label: "In Progress", value: "In Progress" },
+          { label: "Approved", value: "Approved" },
+          { label: "Rejected", value: "Rejected" }
+        ];
+      }
     }
 
     async loadInternshipPageTemplate() {
@@ -30,6 +62,7 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
       console.log("Edit Internship Registration Form");
       try {
         await this.loadInternshipPageTemplate();
+        await this.loadApprovalStatusOptions(); // Load options from API
         await this.loadRegistrationData();
 
         this.application.templateEngine.mainContainer.innerHTML = "";
@@ -64,6 +97,19 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
         
         this.registrationData = data.result;
         console.log('Loaded registration data:', this.registrationData);
+        
+        // Check permissions after loading data
+        if (this.userRole === 'Instructor') {
+          throw new Error('Access Denied: Instructors can only view registrations, not edit them.');
+        }
+        
+        if (this.userRole === 'Student') {
+          const registrationStudentId = this.registrationData.StudentId || this.registrationData.student_id;
+          if (registrationStudentId !== this.currentUserId) {
+            throw new Error('Access Denied: You can only edit your own registrations.');
+          }
+        }
+        
       } catch (error) {
         console.error('Error loading registration data:', error);
         throw error;
@@ -80,7 +126,7 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
         description: `Update registration information for: ${studentName}`,
         showBackButton: true,
         backButtonText: "Back to Registration List",
-        backButtonRoute: "/#internship/registration",
+        backButtonRoute: "/#internship/internshipregistration",
         pageClass: "registration-edit-page",
         headerClass: "registration-header",
         contentClass: "registration-content",
@@ -124,6 +170,7 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
           Required: true,
           Placeholder: "Enter Student ID",
           Value: this.registrationData?.student_id || this.registrationData?.StudentId || '',
+          Readonly: this.userRole === 'Student' ? true : false, // Students can't change their own ID
         },
         {
           Id: "company_id",
@@ -145,30 +192,22 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
         {
           Id: "approval_university_status",
           Label: "University Approval Status",
-          Type: "select",
+          Type: this.userRole === 'Student' ? "text" : "select",
           Name: "approval_university_status",
           Required: true,
           Value: this.registrationData?.approval_university_status || 'Not Started',
-          data: [
-            { label: "Not Started", value: "Not Started" },
-            { label: "In Progress", value: "In Progress" },
-            { label: "Approved", value: "Approved" },
-            { label: "Rejected", value: "Rejected" }
-          ]
+          Readonly: this.userRole === 'Student' ? true : false,
+          data: this.approvalStatusOptions
         },
         {
           Id: "approval_company_status",
           Label: "Company Approval Status",
-          Type: "select",
+          Type: this.userRole === 'Student' ? "text" : "select",
           Name: "approval_company_status",
           Required: true,
           Value: this.registrationData?.approval_company_status || 'Not Started',
-          data: [
-            { label: "Not Started", value: "Not Started" },
-            { label: "In Progress", value: "In Progress" },
-            { label: "Approved", value: "Approved" },
-            { label: "Rejected", value: "Rejected" }
-          ]
+          Readonly: this.userRole === 'Student' ? true : false,
+          data: this.approvalStatusOptions
         },
       ];
 
@@ -178,11 +217,19 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
         try {
           const templateName =
             field.Type === "select"
-              ? "Select"
+              ? "SelectInput"
               : field.Type === "textarea"
-              ? "Textarea"
+              ? "TextareaInput"
               : "Input";
           const template = this.application.templateEngine.template[templateName];
+
+          // For select fields, rename 'data' to 'options' and mark selected option
+          if (field.Type === "select" && field.data) {
+            field.options = field.data.map(option => ({
+              ...option,
+              selected: option.value === field.Value
+            }));
+          }
 
           console.log(`Rendering field ${field.Name}:`, field);
 
@@ -235,6 +282,12 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
       jsonData.student_id = parseInt(jsonData.student_id);
       jsonData.company_id = parseInt(jsonData.company_id);
       jsonData.turnin_date = new Date(jsonData.turnin_date).toISOString();
+      
+      // For Students, preserve existing approval status (don't send changes)
+      if (this.userRole === 'Student') {
+        jsonData.approval_university_status = this.registrationData.approval_university_status;
+        jsonData.approval_company_status = this.registrationData.approval_company_status;
+      }
 
       window.InternshipPageTemplate.showLoading(form, "Updating...");
 
@@ -255,7 +308,7 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
           this.application.templateEngine.mainContainer
         );
         setTimeout(() => {
-          window.location.hash = "#internship/registration";
+          window.location.hash = "#internship/internshipregistration";
         }, 2000);
       } catch (error) {
         console.error("Error:", error);
@@ -272,7 +325,7 @@ if (typeof window !== 'undefined' && !window.InternshipRegistrationEdit) {
       if (this.application.navigate) {
         this.application.navigate("/registration");
       } else {
-        window.location.hash = "#internship/registration";
+        window.location.hash = "#internship/internshipregistration";
       }
     }
 

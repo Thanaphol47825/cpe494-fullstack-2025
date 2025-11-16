@@ -7,14 +7,16 @@ import (
 )
 
 type InternshipRegistrationController struct {
-	application *core.ModEdApplication
-	handler     *handler.InternshipRegistrationHandler
+	application           *core.ModEdApplication
+	handler               *handler.InternshipRegistrationHandler
+	approvedStatusHandler *handler.ApprovedStatusHandler
 }
 
 func NewInternshipRegistrationController(app *core.ModEdApplication) *InternshipRegistrationController {
 	controller := &InternshipRegistrationController{
-		application: app,
-		handler:     handler.NewInternshipRegistrationHandler(app.DB, app),
+		application:           app,
+		handler:               handler.NewInternshipRegistrationHandler(app.DB, app),
+		approvedStatusHandler: handler.NewApprovedStatusHandler(),
 	}
 	return controller
 }
@@ -45,6 +47,11 @@ func (controller *InternshipRegistrationController) GetRoute() []*core.RouteItem
 		Route:   "/curriculum/internshipRegistration/delete/:id",
 		Handler: controller.handler.DeleteInternshipRegistrationById,
 		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/approvedStatus/options",
+		Handler: controller.approvedStatusHandler.GetApprovedStatusOptions,
+		Method:  core.GET,
 	})
 	return routeList
 }

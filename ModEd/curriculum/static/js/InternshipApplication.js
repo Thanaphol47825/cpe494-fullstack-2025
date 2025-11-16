@@ -5,6 +5,8 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
 
       this.setSubModuleBasePath("/curriculum/static/js");
       this.setupRoutes();
+      localStorage.setItem('role', 'Instructor');
+      localStorage.setItem('userId', 2);
     }
 
     setupRoutes() {

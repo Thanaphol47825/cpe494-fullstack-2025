@@ -8,7 +8,7 @@
     {{#Required}}required{{/Required}}>
     <option value="">Select {{Label}}</option>
     {{#options}}
-    <option value="{{value}}">{{label}}</option>
+    <option value="{{value}}" {{#selected}}selected{{/selected}}>{{label}}</option>
     {{/options}}
   </select>
 </div>

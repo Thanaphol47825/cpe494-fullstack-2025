@@ -2,6 +2,38 @@ if (typeof window !== "undefined" && !window.InternshipRegistrationCreate) {
   class InternshipRegistrationCreate {
     constructor(application) {
       this.application = application;
+      this.userRole = localStorage.getItem('role') || 'Student';
+      this.currentUserId = parseInt(localStorage.getItem('userId')) || null;
+      this.approvalStatusOptions = []; // Will be loaded from API
+    }
+
+    async loadApprovalStatusOptions() {
+      try {
+        const response = await fetch('/curriculum/approvedStatus/options');
+        const data = await response.json();
+        
+        if (data.isSuccess) {
+          this.approvalStatusOptions = data.result;
+        } else {
+          console.error('Failed to load approval status options');
+          // Fallback to hardcoded values
+          this.approvalStatusOptions = [
+            { label: "Not Started", value: "Not Started" },
+            { label: "In Progress", value: "In Progress" },
+            { label: "Approved", value: "Approved" },
+            { label: "Rejected", value: "Rejected" }
+          ];
+        }
+      } catch (error) {
+        console.error('Error loading approval status options:', error);
+        // Fallback to hardcoded values
+        this.approvalStatusOptions = [
+          { label: "Not Started", value: "Not Started" },
+          { label: "In Progress", value: "In Progress" },
+          { label: "Approved", value: "Approved" },
+          { label: "Rejected", value: "Rejected" }
+        ];
+      }
     }
 
     async loadInternshipPageTemplate() {
@@ -26,8 +58,19 @@ if (typeof window !== "undefined" && !window.InternshipRegistrationCreate) {
 
     async render() {
       console.log("Create Internship Registration Form");
+      
+      // Check role permissions
+      if (this.userRole === 'Instructor') {
+        this.showError('Access Denied: Instructors can only view registrations, not create them.');
+        setTimeout(() => {
+          window.location.hash = '#internship/internshipregistration';
+        }, 2000);
+        return;
+      }
+      
       try {
         await this.loadInternshipPageTemplate();
+        await this.loadApprovalStatusOptions(); // Load options from API
 
         this.application.templateEngine.mainContainer.innerHTML = "";
 
@@ -94,6 +137,8 @@ if (typeof window !== "undefined" && !window.InternshipRegistrationCreate) {
           Name: "student_id",
           Required: true,
           Placeholder: "Enter Student ID",
+          Value: this.userRole === 'Student' ? this.currentUserId : '',
+          Readonly: this.userRole === 'Student' ? true : false, // Students can't change their own ID
         },
         {
           Id: "company_id",
@@ -113,28 +158,22 @@ if (typeof window !== "undefined" && !window.InternshipRegistrationCreate) {
         {
           Id: "approval_university_status",
           Label: "University Approval Status",
-          Type: "select",
+          Type: this.userRole === 'Student' ? "text" : "select",
           Name: "approval_university_status",
           Required: true,
-          data: [
-            { label: "Not Started", value: "Not Started" },
-            { label: "In Progress", value: "In Progress" },
-            { label: "Approved", value: "Approved" },
-            { label: "Rejected", value: "Rejected" }
-          ]
+          Value: this.userRole === 'Student' ? 'In Progress' : '',
+          Readonly: this.userRole === 'Student' ? true : false,
+          data: this.approvalStatusOptions
         },
         {
           Id: "approval_company_status",
           Label: "Company Approval Status",
-          Type: "select",
+          Type: this.userRole === 'Student' ? "text" : "select",
           Name: "approval_company_status",
           Required: true,
-          data: [
-            { label: "Not Started", value: "Not Started" },
-            { label: "In Progress", value: "In Progress" },
-            { label: "Approved", value: "Approved" },
-            { label: "Rejected", value: "Rejected" }
-          ]
+          Value: this.userRole === 'Student' ? 'In Progress' : '',
+          Readonly: this.userRole === 'Student' ? true : false,
+          data: this.approvalStatusOptions
         },
       ];
 
@@ -144,12 +183,17 @@ if (typeof window !== "undefined" && !window.InternshipRegistrationCreate) {
         try {
           const templateName =
             field.Type === "select"
-              ? "Select"
+              ? "SelectInput"
               : field.Type === "textarea"
-              ? "Textarea"
+              ? "TextareaInput"
               : "Input";
           const template =
             this.application.templateEngine.template[templateName];
+
+          // For select fields, rename 'data' to 'options' for the template
+          if (field.Type === "select" && field.data) {
+            field.options = field.data;
+          }
 
           if (template) {
             inputHTML = Mustache.render(template, field);
@@ -198,6 +242,12 @@ if (typeof window !== "undefined" && !window.InternshipRegistrationCreate) {
       jsonData.student_id = parseInt(jsonData.student_id);
       jsonData.company_id = parseInt(jsonData.company_id);
       jsonData.turnin_date = new Date(jsonData.turnin_date).toISOString();
+      
+      // For Students, always set approval status to 'In Progress'
+      if (this.userRole === 'Student') {
+        jsonData.approval_university_status = 'In Progress';
+        jsonData.approval_company_status = 'In Progress';
+      }
 
       window.InternshipPageTemplate.showLoading(form, "Creating...");
 

@@ -75,13 +75,6 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
       const iconContainer = document.createElement('div');
       iconContainer.className = 'bg-white/20 backdrop-blur-sm rounded-2xl p-4';
       
-      const icon = document.createElement('svg');
-      icon.className = 'w-12 h-12 text-white';
-      icon.setAttribute('fill', 'none');
-      icon.setAttribute('stroke', 'currentColor');
-      icon.setAttribute('viewBox', '0 0 24 24');
-      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>';
-      iconContainer.appendChild(icon);
 
       const headerText = document.createElement('div');
       
@@ -95,7 +88,6 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
 
       headerText.appendChild(title);
       headerText.appendChild(description);
-      headerLeft.appendChild(iconContainer);
       headerLeft.appendChild(headerText);
 
       // Back button
@@ -103,14 +95,6 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
       backButton.className = 'inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl hover:bg-white/30 transition-all duration-200 shadow-lg';
       backButton.onclick = () => window.location.href = '#internship';
       
-      const backIcon = document.createElement('svg');
-      backIcon.className = 'w-5 h-5 mr-2';
-      backIcon.setAttribute('fill', 'none');
-      backIcon.setAttribute('stroke', 'currentColor');
-      backIcon.setAttribute('viewBox', '0 0 24 24');
-      backIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>';
-      
-      backButton.appendChild(backIcon);
       backButton.appendChild(document.createTextNode('Back to Internship'));
 
       headerContent.appendChild(headerLeft);
@@ -133,14 +117,6 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
       addButton.className = 'inline-flex items-center px-6 py-3 bg-white text-blue-600 rounded-xl hover:bg-blue-50 transition-all duration-200 shadow-lg font-semibold';
       addButton.onclick = () => window.location.href = '#internship/company/create';
       
-      const addIcon = document.createElement('svg');
-      addIcon.className = 'w-5 h-5 mr-2';
-      addIcon.setAttribute('fill', 'none');
-      addIcon.setAttribute('stroke', 'currentColor');
-      addIcon.setAttribute('viewBox', '0 0 24 24');
-      addIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>';
-      
-      addButton.appendChild(addIcon);
       addButton.appendChild(document.createTextNode('Add New Company'));
 
       cardHeader.appendChild(cardTitle);
@@ -314,14 +290,14 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
       button.className = 'inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors';
       button.type = 'button';
       
-      const icon = document.createElement('svg');
-      icon.className = 'w-4 h-4 mr-1';
-      icon.setAttribute('fill', 'none');
-      icon.setAttribute('stroke', 'currentColor');
-      icon.setAttribute('viewBox', '0 0 24 24');
-      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>';
+      // const icon = document.createElement('svg');
+      // icon.className = 'w-4 h-4 mr-1';
+      // icon.setAttribute('fill', 'none');
+      // icon.setAttribute('stroke', 'currentColor');
+      // icon.setAttribute('viewBox', '0 0 24 24');
+      // icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>';
       
-      button.appendChild(icon);
+      // button.appendChild(icon);
       button.appendChild(document.createTextNode('Edit'));
       return button;
     }

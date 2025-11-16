@@ -87,27 +87,38 @@ func (controller *InternshipRegistrationHandler) UpdateInternshipRegistrationByI
 	id := context.Params("id")
 	var registration model.InternshipRegistration
 
-	if err := controller.DB.Preload("Student.Student").Preload("Company").First(&registration, id).Error; err != nil {
+	if err := controller.DB.First(&registration, id).Error; err != nil {
 		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "internship registration not found",
 		})
 	}
 
-	var updateInternshipRegistration model.InternshipRegistration
+	var updateData model.InternshipRegistration
 
-	if err := context.BodyParser(&updateInternshipRegistration); err != nil {
+	if err := context.BodyParser(&updateData); err != nil {
 		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "invalid request body",
 		})
 	}
 
-	registration.StudentId = updateInternshipRegistration.StudentId
-	registration.TurninDate = updateInternshipRegistration.TurninDate
-	registration.ApprovalUniversityStatus = updateInternshipRegistration.ApprovalUniversityStatus
-	registration.ApprovalCompanyStatus = updateInternshipRegistration.ApprovalCompanyStatus
-	registration.CompanyId = updateInternshipRegistration.CompanyId
+	// Update only the fields that are sent
+	if updateData.StudentId != 0 {
+		registration.StudentId = updateData.StudentId
+	}
+	if updateData.CompanyId != 0 {
+		registration.CompanyId = updateData.CompanyId
+	}
+	if !updateData.TurninDate.IsZero() {
+		registration.TurninDate = updateData.TurninDate
+	}
+	if updateData.ApprovalUniversityStatus != "" {
+		registration.ApprovalUniversityStatus = updateData.ApprovalUniversityStatus
+	}
+	if updateData.ApprovalCompanyStatus != "" {
+		registration.ApprovalCompanyStatus = updateData.ApprovalCompanyStatus
+	}
 
 	if err := controller.DB.Save(&registration).Error; err != nil {
 		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -117,7 +128,12 @@ func (controller *InternshipRegistrationHandler) UpdateInternshipRegistrationByI
 	}
 
 	// Reload with preloaded data
-	controller.DB.Preload("Student.Student").Preload("Company").First(&registration, registration.ID)
+	if err := controller.DB.Preload("Student.Student").Preload("Company").First(&registration, registration.ID).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "failed to reload updated registration",
+		})
+	}
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,

@@ -91,10 +91,11 @@ func (c *InternshipAttendanceHandler) CreateInternshipAttendance(context *fiber.
 		}
 	}
 
-	// Parse check-out time (RFC3339 format: 2025-11-03T17:00:00Z)
+	// Parse check-out time (RFC3339 format: 2025-11-03T17:00:00Z) - OPTIONAL
+	// Check-out time can be added later via update endpoint
 	if checkOutStr, ok := payload["check_out_time"].(string); ok && checkOutStr != "" {
 		if checkOut, err := time.Parse(time.RFC3339, checkOutStr); err == nil {
-			newAttendance.CheckOutTime = checkOut
+			newAttendance.CheckOutTime = &checkOut
 		} else {
 			return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"isSuccess": false,
@@ -112,20 +113,47 @@ func (c *InternshipAttendanceHandler) CreateInternshipAttendance(context *fiber.
 		newAttendance.AssingWork = work
 	}
 
-	// Get student_info_id from payload
+	// Resolve student_info_id: accept either student_info_id directly or student_id (Student table primary ID)
 	if studentInfoID, ok := payload["student_info_id"].(float64); ok {
 		newAttendance.StudentInfoID = uint(studentInfoID)
 	}
 
-	// Validate that student_info_id is provided
+	// If student_info_id not provided, accept student_id (Student.ID) and resolve to InternshipInformation
+	if newAttendance.StudentInfoID == 0 {
+		if studentIDFloat, ok := payload["student_id"].(float64); ok {
+			studentID := uint(studentIDFloat)
+
+			// Find intern student record by student_id (foreign key to Student table)
+			var internStudent model.InternStudent
+			if err := c.Application.DB.Where("student_id = ?", studentID).First(&internStudent).Error; err != nil {
+				return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"isSuccess": false,
+					"error":     fmt.Sprintf("no intern student found for student_id %d", studentID),
+				})
+			}
+
+			// Find internship information associated with the intern student
+			var internInfo model.InternshipInformation
+			if err := c.Application.DB.Where("intern_student_id = ?", internStudent.ID).First(&internInfo).Error; err != nil {
+				return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+					"isSuccess": false,
+					"error":     fmt.Sprintf("no internship information found for intern student %d", internStudent.ID),
+				})
+			}
+
+			newAttendance.StudentInfoID = internInfo.ID
+		}
+	}
+
+	// Validate that student_info_id is provided after resolution
 	if newAttendance.StudentInfoID == 0 {
 		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"isSuccess": false,
-			"error":     "student_info_id is required",
+			"error":     "student_info_id or student_id is required",
 		})
 	}
 
-	// Check if InternshipInformation exists
+	// Check if InternshipInformation exists (final check)
 	var internInfo model.InternshipInformation
 	if err := c.Application.DB.First(&internInfo, newAttendance.StudentInfoID).Error; err != nil {
 		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -225,6 +253,100 @@ func (c *InternshipAttendanceHandler) UpdateInternshipAttendanceByID(context *fi
 	})
 }
 
+// UpdateInternshipAttendance updates attendance record (ID from request body)
+func (c *InternshipAttendanceHandler) UpdateInternshipAttendance(context *fiber.Ctx) error {
+	var payload map[string]interface{}
+
+	if err := context.BodyParser(&payload); err != nil {
+		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fmt.Sprintf("invalid request body: %v", err),
+		})
+	}
+
+	// Get ID from payload
+	var attendanceID uint
+	if id, ok := payload["ID"].(float64); ok {
+		attendanceID = uint(id)
+	} else if id, ok := payload["id"].(float64); ok {
+		attendanceID = uint(id)
+	}
+
+	if attendanceID == 0 {
+		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "attendance ID is required in request body",
+		})
+	}
+
+	var attendance model.InternshipAttendance
+	if err := c.Application.DB.First(&attendance, attendanceID).Error; err != nil {
+		return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "internship attendance not found",
+		})
+	}
+
+	// Update check-out time if provided
+	if checkOutStr, ok := payload["check_out_time"].(string); ok && checkOutStr != "" {
+		if checkOut, err := time.Parse(time.RFC3339, checkOutStr); err == nil {
+			attendance.CheckOutTime = &checkOut
+		} else {
+			return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"isSuccess": false,
+				"error":     fmt.Sprintf("invalid check-out time format: %v", err),
+			})
+		}
+	}
+
+	// Update other fields if provided
+	if checkInStr, ok := payload["check_in_time"].(string); ok && checkInStr != "" {
+		if checkIn, err := time.Parse(time.RFC3339, checkInStr); err == nil {
+			attendance.CheckInTime = checkIn
+		}
+	}
+
+	if dateStr, ok := payload["date"].(string); ok && dateStr != "" {
+		if date, err := time.Parse(time.RFC3339, dateStr); err == nil {
+			attendance.Date = date
+		}
+	}
+
+	if status, ok := payload["check_in_status"].(bool); ok {
+		attendance.CheckInStatus = status
+	}
+
+	if work, ok := payload["assing_work"].(string); ok {
+		attendance.AssingWork = work
+	}
+
+	// Save updates
+	if err := c.Application.DB.Save(&attendance).Error; err != nil {
+		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fmt.Sprintf("failed to update internship attendance: %v", err),
+		})
+	}
+
+	// Reload with relationships
+	var updatedAttendance model.InternshipAttendance
+	if err := c.Application.DB.
+		Preload("InternshipInformation").
+		Preload("InternshipInformation.InternStudent").
+		Preload("InternshipInformation.InternStudent.Student").
+		First(&updatedAttendance, attendanceID).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": true,
+			"result":    attendance,
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    updatedAttendance,
+	})
+}
+
 func (c *InternshipAttendanceHandler) DeleteInternshipAttendanceByID(context *fiber.Ctx) error {
 	id := context.Params("id")
 	var attendance model.InternshipAttendance
@@ -246,5 +368,67 @@ func (c *InternshipAttendanceHandler) DeleteInternshipAttendanceByID(context *fi
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
 		"result":    "internship attendance deleted successfully",
+	})
+}
+
+// GetTodayAttendanceByStudentID gets today's attendance for a specific student by student ID
+func (c *InternshipAttendanceHandler) GetTodayAttendanceByStudentID(context *fiber.Ctx) error {
+	studentIDParam := context.Params("student_id")
+
+	if studentIDParam == "" {
+		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     "student_id is required",
+		})
+	}
+
+	// Get today's date (start and end of day)
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	endOfDay := startOfDay.Add(24 * time.Hour)
+
+	// Step 1: Find the intern student record using student_id (from Student table)
+	var internStudent model.InternStudent
+	if err := c.Application.DB.Where("student_id = ?", studentIDParam).First(&internStudent).Error; err != nil {
+		// No intern student found
+		return context.JSON(fiber.Map{
+			"isSuccess": true,
+			"result":    nil,
+			"message":   "No internship student record found for this student",
+		})
+	}
+
+	// Step 2: Find internship information using intern_student_id
+	var internInfo model.InternshipInformation
+	if err := c.Application.DB.Where("intern_student_id = ?", internStudent.ID).First(&internInfo).Error; err != nil {
+		// No internship information found
+		return context.JSON(fiber.Map{
+			"isSuccess": true,
+			"result":    nil,
+			"message":   "No internship information found for this intern student",
+		})
+	}
+
+	// Step 3: Find today's attendance using student_info_id
+	var attendance model.InternshipAttendance
+	if err := c.Application.DB.
+		Preload("InternshipInformation").
+		Preload("InternshipInformation.InternStudent").
+		Preload("InternshipInformation.InternStudent.Student").
+		Where("student_info_id = ?", internInfo.ID).
+		Where("date >= ?", startOfDay).
+		Where("date < ?", endOfDay).
+		First(&attendance).Error; err != nil {
+		// No attendance found for today
+		return context.JSON(fiber.Map{
+			"isSuccess": true,
+			"result":    nil,
+			"message":   "No attendance record found for today",
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    attendance,
 	})
 }

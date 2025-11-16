@@ -91,6 +91,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderInternCertificateCreate.bind(this),
         "InternCertificateCreate.js"
       );
+      this.addRouteWithSubModule(
+        "/internshipattendance/personal",
+        this.renderPersonalAttendance.bind(this),
+        "InternshipPersonalAttendance.js"
+      );
 
       this.setDefaultRoute("");
     }
@@ -112,7 +117,10 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       //   label: "Intern Student Skill Create",
       //   route: "/internstudentskill/create",
       // },
-      { label: "Intern Certificate Create", route: "/interncertificate/create" },
+      {
+        label: "Intern Certificate Create",
+        route: "/interncertificate/create",
+      },
     ];
 
     async renderMainPage() {
@@ -189,33 +197,27 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       console.log("Rendering Company List");
       await this.loadSubModule("CompanyList.js");
       console.log("Finish await");
-      if (window.CompanyList){
+      if (window.CompanyList) {
         const companyList = new window.CompanyList(
           this.templateEngine,
           RootURL || ""
         );
         await companyList.render();
-      }
-      else{
+      } else {
         console.error("CompanyList class not found");
       }
     }
 
-
-    async renderCompanyEdit(){
+    async renderCompanyEdit() {
       console.log("Rendering Company Edit");
       const currentPath = this.templateEngine.getCurrentPath();
       const pathParts = currentPath.split("/");
       const companyId = pathParts[pathParts.length - 1];
 
-      if(window.CompanyEdit){
-        const companyEdit = new window.CompanyEdit(
-          this,
-          companyId
-        );
+      if (window.CompanyEdit) {
+        const companyEdit = new window.CompanyEdit(this, companyId);
         await companyEdit.render();
-      }
-      else{
+      } else {
         console.log("CompanyEdit class not found");
       }
     }
@@ -353,6 +355,18 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         await page.render();
       } else {
         console.error("InternCertificateCreate class not found");
+      }
+    }
+
+    async renderPersonalAttendance() {
+      console.log("Rendering Personal Attendance");
+      if (window.InternshipPersonalAttendance) {
+        const personalAttendance = new window.InternshipPersonalAttendance(
+          this.templateEngine
+        );
+        await personalAttendance.render();
+      } else {
+        console.error("InternshipPersonalAttendance class not found");
       }
     }
 

@@ -96,6 +96,21 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderPersonalAttendance.bind(this),
         "InternshipPersonalAttendance.js"
       );
+      this.addRouteWithSubModule(
+        "/internshipregistration",
+        this.renderInternshipRegistrationList.bind(this),
+        "InternshipRegistrationList.js"
+      )
+      this.addRouteWithSubModule(
+        "/internshipregistration/create",
+        this.renderInternshipRegistrationCreate.bind(this),
+        "InternshipRegistrationCreate.js"
+      );
+      this.addRouteWithSubModule(
+        "/internshipregistration/edit/:id",
+        this.renderInternshipRegistrationEdit.bind(this),
+        "InternshipRegistrationEdit.js"
+      );
 
       this.setDefaultRoute("");
     }
@@ -121,6 +136,7 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         label: "Intern Certificate Create",
         route: "/interncertificate/create",
       },
+      { label:"Internship Registration", route:"/internshipregistration"}
     ];
 
     async renderMainPage() {
@@ -219,6 +235,47 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         await companyEdit.render();
       } else {
         console.log("CompanyEdit class not found");
+      }
+    }
+
+    async renderInternshipRegistrationList(){
+      console.log("Rendering Internship Registration List");
+      if (window.InternshipRegistrationList) {
+        const registrationList = new window.InternshipRegistrationList(
+          this.templateEngine
+        );
+        await registrationList.render();
+      } else {
+        console.error("InternshipRegistrationList class not found");
+      }
+    }
+
+    async renderInternshipRegistrationCreate(){
+      console.log("Rendering Internship Registration Create Form");
+      if (window.InternshipRegistrationCreate) {
+        const registrationCreate = new window.InternshipRegistrationCreate(
+          this
+        );
+        await registrationCreate.render();
+      } else {
+        console.error("InternshipRegistrationCreate class not found");
+      }
+    }
+
+    async renderInternshipRegistrationEdit(){
+      console.log("Rendering Internship Registration Edit Form");
+      const currentPath = this.templateEngine.getCurrentPath();
+      const pathParts = currentPath.split("/");
+      const registrationId = pathParts[pathParts.length - 1];
+
+      if (window.InternshipRegistrationEdit) {
+        const registrationEdit = new window.InternshipRegistrationEdit(
+          this,
+          registrationId
+        );
+        await registrationEdit.render();
+      } else {
+        console.error("InternshipRegistrationEdit class not found");
       }
     }
 

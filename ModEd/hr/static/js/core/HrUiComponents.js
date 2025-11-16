@@ -1,100 +1,109 @@
 // HR UI Components - Refactored to use Template Registry
 if (typeof window !== 'undefined' && !window.HrUiComponents) {
   class HrUiComponents {
-    static renderMainPage() {
+  static renderMainPage() {
       return `
-        <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-8">
-          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+          <!-- Background Ornaments -->
+          <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-10 -left-10 w-64 h-64 bg-gradient-to-br from-blue-200 to-indigo-200 rounded-full opacity-20"></div>
+            <div class="absolute bottom-0 right-0 w-80 h-80 bg-gradient-to-br from-emerald-200 to-teal-200 rounded-full opacity-20"></div>
+          </div>
+
+          <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <!-- Header Section -->
             <div class="text-center mb-12">
-              <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-6">
-                <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl mb-6 shadow-2xl">
+                <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
               </div>
-              <h1 class="text-4xl font-bold text-gray-900 mb-4">Human Resources Management</h1>
-              <p class="text-xl text-gray-600 max-w-3xl mx-auto">Manage instructors, students, and HR processes with our comprehensive management system</p>
+              <h1 class="text-5xl font-extrabold text-slate-900 mb-3">
+                <span class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  Human Resources
+                </span>
+              </h1>
+              <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                Manage instructors, students, departments, resignations, and leave requests in a single, modern HR workspace.
+              </p>
             </div>
 
             <!-- Main Menu Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
 
               <!-- Instructors Card -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                <div class="p-6">
-                  <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                      </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Instructors</h3>
-                  </div>
-                  <p class="text-gray-600 mb-6">Manage teaching staff and academic personnel</p>
-                  <div class="flex flex-col space-y-2">
-                    <a routerLink="hr/instructors" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-blue-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-indigo-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Instructors</h3>
+                  <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage teaching staff and academic personnel</p>
+                  <div class="space-y-3">
+                    <a routerLink="hr/instructors" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
-                      View All
+                      Browse Instructors
                     </a>
-                    <a routerLink="hr/instructors/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    <a routerLink="hr/instructors/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
-                      Add New
+                      Create New
                     </a>
                   </div>
                 </div>
               </div>
 
               <!-- Students Card -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                <div class="p-6">
-                  <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-4">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z"></path>
-                      </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Students</h3>
-                  </div>
-                  <p class="text-gray-600 mb-6">Manage student records and academic progress</p>
-                  <div class="flex flex-col space-y-2">
-                    <a routerLink="hr/students" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-emerald-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z"></path>
+                  </svg>
+                </div>
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Students</h3>
+                  <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage student records and academic progress</p>
+                  <div class="space-y-3">
+                    <a routerLink="hr/students" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
-                      View All
+                      Browse Students
                     </a>
-                    <a routerLink="hr/students/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    <a routerLink="hr/students/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
-                      Add New
+                      Create New
                     </a>
                   </div>
                 </div>
               </div>
 
-              <!-- Resignation - Students -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                <div class="p-6">
-                  <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mr-4">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Student Resignation</h3>
-                  </div>
-                  <p class="text-gray-600 mb-6">Handle student withdrawal and resignation requests</p>
-                  <div class="flex flex-col space-y-2">
-                    <a routerLink="hr/resignation/student" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Student Resignation Card -->
+              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-amber-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500 to-amber-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Student Resignation</h3>
+                  <p class="text-slate-600 mb-5 text-sm leading-relaxed">Handle student withdrawal and resignation requests</p>
+                  <div class="space-y-3">
+                    <a routerLink="hr/resignation/student" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
@@ -104,21 +113,20 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                 </div>
               </div>
 
-              <!-- Resignation - Instructors -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                <div class="p-6">
-                  <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg flex items-center justify-center mr-4">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Instructor Resignation</h3>
-                  </div>
-                  <p class="text-gray-600 mb-6">Handle instructor resignation and exit processes</p>
-                  <div class="flex flex-col space-y-2">
-                    <a routerLink="hr/resignation/instructor" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Instructor Resignation Card -->
+              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-rose-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500 to-rose-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Instructor Resignation</h3>
+                  <p class="text-slate-600 mb-5 text-sm leading-relaxed">Handle instructor resignation and exit processes</p>
+                  <div class="space-y-3">
+                    <a routerLink="hr/resignation/instructor" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
@@ -129,26 +137,25 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
               </div>
 
               <!-- Leave Management Card -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                <div class="p-6">
-                  <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-4">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                      </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Leave Management</h3>
-                  </div>
-                  <p class="text-gray-600 mb-6">Manage leave requests and vacation tracking</p>
-                  <div class="flex flex-col space-y-2">
-                    <a routerLink="hr/leave" class="inline-flex items-center px-4 py-2 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-purple-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-indigo-600 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Leave Management</h3>
+                  <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage leave requests and vacation tracking</p>
+                  <div class="space-y-3">
+                    <a routerLink="hr/leave" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                       </svg>
                       Manage Leave
                     </a>
-                    <a routerLink="hr/leave/history" class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a routerLink="hr/leave/history" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
                       View History
@@ -158,30 +165,29 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
               </div>
 
               <!-- Departments Card -->
-              <div class="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 overflow-hidden">
-                <div class="p-6">
-                  <div class="flex items-center mb-4">
-                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg flex items-center justify-center mr-4">
-                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
-                      </svg>
-                    </div>
-                    <h3 class="text-xl font-semibold text-gray-900">Departments</h3>
-                  </div>
-                  <p class="text-gray-600 mb-6">Manage academic departments and budgets</p>
-                  <div class="flex flex-col space-y-2">
-                    <a routerLink="hr/departments" class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-sky-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sky-500 to-blue-600 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
+                <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
+                  <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M3 12h18M3 17h18"></path>
+                  </svg>
+                </div>
+                <div class="relative z-10">
+                  <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Departments</h3>
+                  <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage academic departments and budgets</p>
+                  <div class="space-y-3">
+                    <a routerLink="hr/departments" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
-                      View All
+                      Browse Departments
                     </a>
-                    <a routerLink="hr/departments/create" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200">
-                      <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    <a routerLink="hr/departments/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
-                      Add New
+                      Create New
                     </a>
                   </div>
                 </div>
@@ -190,7 +196,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
 
             <!-- Back to Main Menu -->
             <div class="text-center">
-              <a routerLink="" class="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-xl border-2 border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md hover:shadow-lg">
+              <a routerLink="" class="inline-flex items-center px-6 py-3 bg-white/80 backdrop-blur text-gray-700 font-medium rounded-xl border-2 border-gray-200 hover:bg-white focus:outline-none focus:ring-4 focus:ring-gray-200 transition-all duration-300 shadow-md hover:shadow-lg">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                 </svg>

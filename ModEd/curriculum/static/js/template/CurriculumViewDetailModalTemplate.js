@@ -8,6 +8,13 @@ if (typeof window !== 'undefined' && !window.ViewDetailModalTemplate) {
             { name: 'FileName', label: 'File Name', type: 'text' },
             { name: 'FilePath', label: 'File Path', type: 'text' },
         ],
+        CoursePlan: [
+            { name: 'ID', label: 'No', type: 'number' },
+            { name: 'Week', label: 'Week', type: 'number' },
+            { name: 'Date', label: 'Schedule', type: 'datetime' },
+            { name: 'Topic', label: 'Topic', type: 'text' },
+            { name: 'Description', label: 'Description', type: 'text' },
+        ],
         Class: [
             { name: 'ID', label: 'No', type: 'number' },
             { name: 'Section', label: 'Section', type: 'text' },
@@ -81,6 +88,22 @@ if (typeof window !== 'undefined' && !window.ViewDetailModalTemplate) {
                                 nestedObjects: [NESTED_OBJECT_CONFIGS.Curriculum]
                             }
                         ]
+                    }
+                ]
+            },
+            'CoursePlan': {
+                title: 'Course Plan Details',
+                subtitle: 'View detailed information about this course plan',
+                icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
+                gradientFrom: 'from-cyan-600',
+                gradientTo: 'to-blue-700',
+                gradientFromHover: 'from-cyan-700',
+                gradientToHover: 'to-blue-800',
+                fields: FIELD_CONFIGS.CoursePlan,
+                nestedObjects: [
+                    {
+                        ...NESTED_OBJECT_CONFIGS.Course,
+                        nestedObjects: []
                     }
                 ]
             },

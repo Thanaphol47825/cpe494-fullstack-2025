@@ -79,7 +79,8 @@ if (typeof window !== 'undefined' && !window.CurriculumErrorTemplate) {
           errorMessage: options.message || 'An unexpected error occurred while processing your request.',
           technicalDetails: options.technicalDetails || options.error?.message || '',
           suggestions: options.suggestions || defaultConfig.suggestions,
-          backRoute: options.backRoute || '',
+          hasSuggestions: !!(options.suggestions || defaultConfig.suggestions),
+          backRoute: options.backRoute || '/curriculum',
           retryAction: options.retryAction || '',
           timestamp: options.timestamp || new Date().toLocaleString()
         };

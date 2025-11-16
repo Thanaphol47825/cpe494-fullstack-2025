@@ -199,6 +199,21 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
             ]);
 
             console.log(classMaterials);
+
+            // Check current user role
+            const currentRole = localStorage.getItem('userRole');
+            const isStudent = currentRole === 'Student';
+
+            // Prepare custom columns - only include Actions if not Student
+            const customColumns = [];
+            if (!isStudent) {
+                customColumns.push({
+                    name: "actions",
+                    label: "Actions",
+                    template: actionTemplate
+                });
+            }
+
             // สร้างตารางด้วย AdvanceTableRender
             this.table = new AdvanceTableRender(this.application.templateEngine, {
                 modelPath: "curriculum/classmaterial",
@@ -211,14 +226,8 @@ if (typeof window !== 'undefined' && !window.ClassMaterialList) {
                     { name: "Schedule", label: "Schedule", type: "text" },
                     { name: "FileName", label: "File Name", type: "text" },
                 ],
-                // คอลัมน์เสริมสำหรับปุ่มแอ็คชัน
-                customColumns: [
-                    {
-                        name: "actions",
-                        label: "Actions",
-                        template: actionTemplate
-                    }
-                ],
+                // คอลัมน์เสริมสำหรับปุ่มแอ็คชัน - แสดงเฉพาะเมื่อไม่ใช่ Student
+                customColumns: customColumns,
                 // เปิดใช้งาน Search และ Sorting
                 enableSearch: true,
                 searchConfig: {

@@ -70,7 +70,16 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = renderedHTML.trim();
                 
-                return tempDiv.firstChild;
+                const element = tempDiv.firstChild;
+
+                // Initialize RoleManager after template is added to DOM
+                setTimeout(() => {
+                    if (window.roleManager) {
+                        window.roleManager.updateRoleDisplay();
+                    }
+                }, 100);
+
+                return element;
 
             } catch (error) {
                 console.error('Error loading curriculum home template:', error);

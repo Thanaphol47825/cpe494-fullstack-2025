@@ -7,6 +7,27 @@
   </div>
   
   <div class="relative z-10 max-w-7xl mx-auto px-6 py-12">
+    <!-- Role Selector -->
+    <div class="flex justify-end mb-6">
+      <div class="bg-white rounded-xl shadow-lg p-3 border border-slate-200">
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-medium text-slate-600">Role:</span>
+          <div class="flex gap-1">
+            <button onclick="setRole('Student')" id="role-student" class="role-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 bg-slate-100 text-slate-600 hover:bg-blue-500 hover:text-white">
+              Student
+            </button>
+            <button onclick="setRole('Instructor')" id="role-instructor" class="role-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white">
+              Instructor
+            </button>
+            <button onclick="setRole('Admin')" id="role-admin" class="role-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 bg-slate-100 text-slate-600 hover:bg-purple-500 hover:text-white">
+              Admin
+            </button>
+          </div>
+          <span id="current-role-display" class="ml-2 text-xs font-semibold text-emerald-600"></span>
+        </div>
+      </div>
+    </div>
+
     <!-- Academic Header -->
     <div class="text-center mb-16">
       <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl mb-6 shadow-2xl">
@@ -52,7 +73,7 @@
               </svg>
               Browse {{label}}
             </button>
-            <button routerLink="{{route}}/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r {{color}} text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+            <button routerLink="{{route}}/create" data-model="{{label}}" class="create-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r {{color}} text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>

@@ -19,6 +19,14 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
     }
 
     async loadTemplates() {
+      if (!window.RoleManager) {
+        await this.loadSubModule('util/RoleManager.js')
+      }
+
+      if (!window.CurriculumErrorTemplate) {
+        await this.loadSubModule('template/CurriculumErrorTemplate.js')
+      }
+
       if (!window.CurriculumHomeTemplate) {
         await this.loadSubModule('template/CurriculumHomeTemplate.js')
       }
@@ -38,6 +46,7 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
       if (!window.CourseExtension) {
         await this.loadSubModule('feature/CourseExtension.js');
       }
+
       if (!window.CourseSkillList) {
         await this.loadSubModule('feature/CourseSkillList.js');
       }
@@ -93,11 +102,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await curriculumList.render();
       } else {
         console.error('CurriculumList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Eror loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer, 
+          'CurriculumList',
+          '/curriculum'
+        );
       }
     }
 
@@ -109,11 +118,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await curriculumCreate.render();
       } else {
         console.error('CurriculumCreate not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Eror loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CurriculumCreate',
+          '/curriculum/curriculum'
+        );
       }
     }
 
@@ -131,8 +140,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await courseList.render();
       } else {
         console.error('CourseList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-          <div class="text-red-600">Error loading CourseList.</div>`;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CourseList',
+          '/curriculum'
+        );
       }
     }
 
@@ -144,9 +156,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await feature.render();
       } else {
         console.error('CourseCreate not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-          <div class="text-red-600">Error loading.</div>
-        `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CourseCreate',
+          '/curriculum/course'
+        );
       }
     }
 
@@ -158,7 +172,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await classList.render();
       } else {
         console.error('ClassList class not found');
-        this.templateEngine.mainContainer.innerHTML = '<div>Error: ClassList module not loaded</div>';
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'ClassList',
+          '/curriculum'
+        );
       }
     }
 
@@ -170,7 +188,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await classCreate.render();
       } else {
         console.error('ClassCreate class not found');
-        this.templateEngine.mainContainer.innerHTML = '<div>Error: ClassCreate module not loaded</div>';
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'ClassCreate',
+          '/curriculum/class'
+        );
       }
     }
 
@@ -182,11 +204,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await classMaterialList.render();
       } else {
         console.error('ClassMaterialList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Eror loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'ClassMaterialList',
+          '/curriculum'
+        );
       }
     }
     async renderCreateClassMaterial() {
@@ -197,11 +219,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await formFeature.render();
       } else {
         console.error('ClassMaterialCreate not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="text-red-600">
-          Error loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'ClassMaterialCreate',
+          '/curriculum/classmaterial'
+        );
       }
     }
 
@@ -213,11 +235,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await CoursePlanList.render();
       } else {
         console.error('CoursePlanList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Eror loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CoursePlanList',
+          '/curriculum'
+        );
       }
     }
     async renderCreateCoursePlan() {
@@ -228,7 +250,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await coursePlanCreate.render();
       } else {
         console.error('CoursePlanCreate coursePlan not found');
-        this.templateEngine.mainContainer.innerHTML = '<div>Error: CoursePlanCreate module not loaded</div>';
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CoursePlanCreate',
+          '/curriculum/courseplan'
+        );
       }
     }
 
@@ -240,11 +266,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await skillList.render();
       } else {
         console.error('SkillList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Error loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'SkillList',
+          '/curriculum'
+        );
       }
     }
 
@@ -256,11 +282,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await skillCreate.render();
       } else {
         console.error('SkillCreate not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="text-red-600">
-          Error loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'SkillCreate',
+          '/curriculum/skill'
+        );
       }
     }
 
@@ -272,11 +298,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await courseSkillList.render();
       } else {
         console.error('CourseSkillList not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="red-text-600">
-          Error loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CourseSkillList',
+          '/curriculum'
+        );
       }
     }
 
@@ -288,11 +314,11 @@ if (typeof window !== 'undefined' && !window.CurriculumApplication) {
         await courseSkillCreate.render();
       } else {
         console.error('CourseSkillCreate not available after loading');
-        this.templateEngine.mainContainer.innerHTML = `
-        <div class="text-red-600">
-          Error loading.
-        </div>
-      `;
+        await CurriculumErrorTemplate.displayModuleNotLoaded(
+          this.templateEngine.mainContainer,
+          'CourseSkillCreate',
+          '/curriculum/courseskill'
+        );
       }
     }
 

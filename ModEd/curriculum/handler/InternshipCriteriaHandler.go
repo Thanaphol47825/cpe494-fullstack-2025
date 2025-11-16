@@ -38,7 +38,7 @@ func (c *InternshipCriteriaHandler) RenderMain(context *fiber.Ctx) error {
 func (c *InternshipCriteriaHandler) GetInternshipCriterias(context *fiber.Ctx) error {
 	var criterias []model.InternshipCriteria
 
-	if err := c.DB.Preload("InternshipApplication").Find(&criterias).Error; err != nil {
+	if err := c.DB.Preload("InternshipRegistration").Find(&criterias).Error; err != nil {
 		return context.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"isSuccess": false,
 			"error":     "failed to get criterias",
@@ -54,7 +54,7 @@ func (c *InternshipCriteriaHandler) GetInternshipCriteriaByID(context *fiber.Ctx
 	id := context.Params("id")
 
 	var criteria model.InternshipCriteria
-	if err := c.DB.Preload("InternshipApplication").First(&criteria, id).Error; err != nil {
+	if err := c.DB.Preload("InternshipRegistration").First(&criteria, id).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return context.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"isSuccess": false,
@@ -117,8 +117,8 @@ func (c *InternshipCriteriaHandler) UpdateInternshipCriteriaByID(context *fiber.
 	existing.Title = payload.Title
 	existing.Description = payload.Description
 	existing.Score = payload.Score
-	if payload.InternshipApplicationId != 0 {
-		existing.InternshipApplicationId = payload.InternshipApplicationId
+	if payload.InternshipRegistrationId != 0 {
+		existing.InternshipRegistrationId = payload.InternshipRegistrationId
 	}
 
 	if err := c.DB.Save(&existing).Error; err != nil {

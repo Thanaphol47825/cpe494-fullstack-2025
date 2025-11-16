@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type InternshipApplication struct {
+type InternshipRegistration struct {
 	core.BaseModel
 	TurninDate               time.Time      `gorm:"not null" csv:"turnin_date" json:"turnin_date"`
 	ApprovalUniversityStatus ApprovedStatus `gorm:"type:varchar(20)" csv:"approval_university_status" json:"approval_university_status"`

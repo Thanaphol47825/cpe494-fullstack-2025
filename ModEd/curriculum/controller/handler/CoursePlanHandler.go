@@ -74,7 +74,7 @@ func (h *CoursePlanHandler) GetCoursePlanById(context *fiber.Ctx) error {
 	}
 
 	var result model.CoursePlan
-	if err := h.Application.DB.Where("id = ?", id).First(&result).Error; err != nil {
+	if err := h.Application.DB.Preload("Course").Where("id = ?", id).First(&result).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get curriculum",
@@ -92,11 +92,10 @@ func (h *CoursePlanHandler) GetCoursePlans(context *fiber.Ctx) error {
 
 	// allowed sort fields mapping from query param -> DB column
 	allowed := map[string]string{
-		"id":       "id",
-		"CourseId": "course_id",
-		"Course":   "course",
-		"Date":     "date",
-		"Week":     "week",
+		"id":       "course_plans.id",
+		"CourseId": "course_plans.course_id",
+		"Date":     "course_plans.date",
+		"Week":     "course_plans.week",
 	}
 
 	sortParam := context.Query("sort", "id")
@@ -107,12 +106,13 @@ func (h *CoursePlanHandler) GetCoursePlans(context *fiber.Ctx) error {
 
 	column, ok := allowed[sortParam]
 	if !ok {
-		column = "Week"
+		column = allowed["id"]
 	}
 
 	orderClause := fmt.Sprintf("%s %s", column, orderParam)
+	query := h.Application.DB.Preload("Course").Order(orderClause)
 
-	if err := h.Application.DB.Order(orderClause).Find(&coursePlans).Error; err != nil {
+	if err := query.Find(&coursePlans).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get course plans",

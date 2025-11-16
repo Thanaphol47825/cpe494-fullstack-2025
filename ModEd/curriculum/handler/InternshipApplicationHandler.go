@@ -8,17 +8,17 @@ import (
 	"gorm.io/gorm"
 )
 
-type InternshipApplicationHandler struct {
+type InternshipRegistrationHandler struct {
 	DB *gorm.DB
 }
 
-func (controller *InternshipApplicationHandler) RenderMain(context *fiber.Ctx) error {
-	return context.SendString("Hello curriculum/InternshipApplication")
+func (controller *InternshipRegistrationHandler) RenderMain(context *fiber.Ctx) error {
+	return context.SendString("Hello curriculum/InternshipRegistration")
 }
 
-func (controller *InternshipApplicationHandler) GetInternshipApplication(context *fiber.Ctx) error {
+func (controller *InternshipRegistrationHandler) GetInternshipRegistration(context *fiber.Ctx) error {
 	filePath := "/workspace/ModEd/curriculum/data/internship/Application.csv"
-	ApplicationMapper, err := core.CreateMapper[model.InternshipApplication](filePath)
+	ApplicationMapper, err := core.CreateMapper[model.InternshipRegistration](filePath)
 	if err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -33,8 +33,8 @@ func (controller *InternshipApplicationHandler) GetInternshipApplication(context
 	})
 }
 
-func (controller *InternshipApplicationHandler) CreateInternshipApplication(context *fiber.Ctx) error {
-	var newApplication model.InternshipApplication
+func (controller *InternshipRegistrationHandler) CreateInternshipRegistration(context *fiber.Ctx) error {
+	var newApplication model.InternshipRegistration
 
 	if err := context.BodyParser(&newApplication); err != nil {
 		return context.Status(fiber.StatusBadRequest).JSON(fiber.Map{

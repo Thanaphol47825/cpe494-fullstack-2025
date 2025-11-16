@@ -5,36 +5,36 @@ import (
 	"ModEd/curriculum/handler"
 )
 
-type InternshipApplicationController struct {
+type InternshipRegistrationController struct {
 	application *core.ModEdApplication
-	handler     *handler.InternshipApplicationHandler
+	handler     *handler.InternshipRegistrationHandler
 }
 
-func NewInternshipApplicationController() *InternshipApplicationController {
-	controller := &InternshipApplicationController{}
+func NewInternshipRegistrationController() *InternshipRegistrationController {
+	controller := &InternshipRegistrationController{}
 	return controller
 }
 
-func (controller *InternshipApplicationController) GetRoute() []*core.RouteItem {
+func (controller *InternshipRegistrationController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/InternshipApplication",
-		Handler: controller.handler.GetInternshipApplication,
+		Route:   "/curriculum/InternshipRegistration",
+		Handler: controller.handler.GetInternshipRegistration,
 		Method:  core.GET,
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/curriculum/CreateInternshipApplication",
-		Handler: controller.handler.CreateInternshipApplication,
+		Route:   "/curriculum/CreateInternshipRegistration",
+		Handler: controller.handler.CreateInternshipRegistration,
 		Method:  core.POST,
 	})
 	return routeList
 }
 
-func (controller *InternshipApplicationController) GetModelMeta() []*core.ModelMeta {
+func (controller *InternshipRegistrationController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{}
 	return modelMetaList
 }
 
-func (controller *InternshipApplicationController) SetApplication(application *core.ModEdApplication) {
+func (controller *InternshipRegistrationController) SetApplication(application *core.ModEdApplication) {
 	controller.application = application
 }

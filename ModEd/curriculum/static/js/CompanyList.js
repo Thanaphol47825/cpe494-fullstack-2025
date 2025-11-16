@@ -168,7 +168,7 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
           name: 'actions',
           label: 'Actions',
           template: `
-            <div class="flex gap-2 justify-center">
+            <div class="flex gap-2">
               <button onclick="window.CompanyListInstance.editCompany({ID})" 
                       class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,12 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
         modelPath: 'curriculum/company',
         data: preparedData,
         targetSelector: '#companiesTableContainer',
-        customColumns: customColumns
+        customColumns: customColumns,
+
+        enableSearch: true,
+        enablePagination: true,
+        rowsPerPage: 10,
+        initialSort: { column: 'ID', direction: 'asc' }
       });
 
       await this.tableRender.render();
@@ -218,9 +223,6 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
       headers.forEach(header => {
         const th = document.createElement('th');
         th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
-        if (header === 'Actions') {
-          th.className += ' text-center';
-        }
         th.textContent = header;
         headerRow.appendChild(th);
       });
@@ -256,10 +258,10 @@ if (typeof window !== 'undefined' && !window.CompanyList) {
 
         // Actions cell
         const actionsCell = document.createElement('td');
-        actionsCell.className = 'px-6 py-4 whitespace-nowrap text-center text-sm font-medium';
+        actionsCell.className = 'px-6 py-4 whitespace-nowrap text-sm font-medium';
         
         const actionsContainer = document.createElement('div');
-        actionsContainer.className = 'flex gap-2 justify-center';
+        actionsContainer.className = 'flex gap-2';
 
         // Edit button
         const editBtn = this.#createEditButton(company.ID || company.id);

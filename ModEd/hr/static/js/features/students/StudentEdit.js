@@ -34,6 +34,9 @@ if (typeof HrStudentEditFeature === 'undefined') {
 
     async #createStudentEditForm() {
       try {
+        // Clear loading state before rendering form
+        this.templateEngine.mainContainer.innerHTML = '';
+
         // Create page wrapper using shared UI components
         const pageWrapper = HrUiComponents.createEditFormPageWrapper({
           title: 'Edit Student',

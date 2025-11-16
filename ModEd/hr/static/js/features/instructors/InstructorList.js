@@ -114,19 +114,36 @@ if (typeof HrInstructorListFeature === 'undefined') {
         full_name: `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim()
       }));
 
+      // Define minimal schema for AdvanceTableRender
+      const schema = [
+        { name: 'instructor_code', label: 'Instructor Code', type: 'text' },
+        { name: 'full_name', label: 'Full Name', type: 'text' },
+        { name: 'email', label: 'Email', type: 'text' },
+        { name: 'department', label: 'Department', type: 'text' },
+        { name: 'start_date_display', label: 'Start Date', type: 'date' }
+      ];
+
       // Create application wrapper for AdvanceTableRender
       const app = this.templateEngine || {
         template: {},
         fetchTemplate: async () => {}
       };
 
-      // Create custom columns for actions
+      // Actions column only
       const customColumns = [
         {
           name: 'actions',
           label: 'Actions',
           template: `
             <div class="flex gap-2 justify-center">
+              <button onclick="hrInstructorList.viewInstructor('{instructor_code}')"
+                      class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100 transition-colors">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                View
+              </button>
               <button onclick="hrInstructorList.editInstructor('{instructor_code}')" 
                       class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +151,7 @@ if (typeof HrInstructorListFeature === 'undefined') {
                 </svg>
                 Edit
               </button>
-              <button onclick="hrInstructorList.deleteInstructor('{instructor_code}', '{full_name}')" 
+              <button onclick="hrInstructorList.deleteInstructor('{instructor_code}', '{full_name}')"
                       class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 text-sm rounded-lg hover:bg-red-100 transition-colors">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -146,12 +163,19 @@ if (typeof HrInstructorListFeature === 'undefined') {
         }
       ];
 
-      // Use AdvanceTableRender - let it fetch schema automatically via modelPath
+      // Use AdvanceTableRender with custom schema
       this.tableRender = new AdvanceTableRender(app, {
-        modelPath: 'hr/instructors',
+        schema,
         data: preparedData,
         targetSelector: '#instructorsTableContainer',
-        customColumns: customColumns
+        customColumns,
+        enableSearch: true,
+        enablePagination: true,
+        pageSize: 10,
+        sortConfig: {
+          defaultField: 'instructor_code',
+          defaultDirection: 'asc'
+        }
       });
 
       await this.tableRender.render();
@@ -204,8 +228,7 @@ if (typeof HrInstructorListFeature === 'undefined') {
       const headerRow = document.createElement('tr');
       
       const headers = [
-        'Instructor Code', 'Full Name', 'Email', 'Department', 'Start Date',
-        'Academic Position', 'Dept Position', 'Salary', 'Gender', 'Phone Number', 'Actions'
+        'Instructor Code', 'Full Name', 'Email', 'Department', 'Start Date', 'Actions'
       ];
       
       headers.forEach((header, index) => {
@@ -235,12 +258,7 @@ if (typeof HrInstructorListFeature === 'undefined') {
           { content: `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim(), className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-900' },
           { content: instructor.email || 'N/A', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
           { content: instructor.department || 'N/A', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
-          { content: formatDate(instructor.start_date), className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
-          { content: formatAcademicPosition(instructor.AcademicPosition), className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
-          { content: formatDepartmentPosition(instructor.DepartmentPosition), className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
-          { content: formatSalary(instructor.Salary), className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
-          { content: instructor.Gender || 'N/A', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' },
-          { content: instructor.PhoneNumber || 'N/A', className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' }
+          { content: formatDate(instructor.start_date), className: 'px-6 py-4 whitespace-nowrap text-sm text-gray-500' }
         ];
 
         cells.forEach(cellData => {
@@ -257,6 +275,10 @@ if (typeof HrInstructorListFeature === 'undefined') {
         const actionsContainer = document.createElement('div');
         actionsContainer.className = 'flex gap-2 justify-center';
 
+        // View button
+        const viewBtn = helpers ? helpers.createActionButton('view', null, instructor.instructor_code, 'View') : this.#createViewButton(instructor.instructor_code);
+        viewBtn.onclick = () => this.viewInstructor(instructor.instructor_code);
+
         // Edit button
         const editBtn = helpers ? helpers.createActionButton('edit', null, instructor.instructor_code, 'Edit') : this.#createEditButton(instructor.instructor_code);
         editBtn.onclick = () => this.editInstructor(instructor.instructor_code);
@@ -266,6 +288,7 @@ if (typeof HrInstructorListFeature === 'undefined') {
         const deleteBtn = helpers ? helpers.createActionButton('delete', null, instructor.instructor_code, 'Delete') : this.#createDeleteButton(instructor.instructor_code, fullName);
         deleteBtn.onclick = () => this.deleteInstructor(instructor.instructor_code, fullName);
 
+        actionsContainer.appendChild(viewBtn);
         actionsContainer.appendChild(editBtn);
         actionsContainer.appendChild(deleteBtn);
         actionsCell.appendChild(actionsContainer);
@@ -282,6 +305,22 @@ if (typeof HrInstructorListFeature === 'undefined') {
     }
 
     // Helper methods for creating buttons (fallback)
+    #createViewButton(code) {
+      const button = document.createElement('button');
+      button.className = 'inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 text-sm rounded-lg hover:bg-blue-100 transition-colors';
+      button.type = 'button';
+      
+      const icon = document.createElement('svg');
+      icon.className = 'w-4 h-4 mr-1';
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>';
+      
+      button.appendChild(icon);
+      button.appendChild(document.createTextNode('View'));
+      return button;
+    }
     #createEditButton(code) {
       const button = document.createElement('button');
       button.className = 'inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 text-sm rounded-lg hover:bg-yellow-100 transition-colors';
@@ -333,66 +372,98 @@ if (typeof HrInstructorListFeature === 'undefined') {
     async viewInstructor(instructorCode) {
       try {
         const instructor = await this.api.fetchInstructor(instructorCode);
-        
-        // Render detail view using DOM manipulation
-        const container = this.templateEngine.mainContainer;
-        container.innerHTML = '';
 
-        const mainWrapper = document.createElement('div');
-        mainWrapper.className = 'min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-8';
+        const existing = document.getElementById('instructorDetailModal');
+        if (existing && existing.parentNode) {
+          existing.parentNode.removeChild(existing);
+        }
 
-        const innerWrapper = document.createElement('div');
-        innerWrapper.className = 'max-w-4xl mx-auto px-4';
+        const overlay = document.createElement('div');
+        overlay.id = 'instructorDetailModal';
+        overlay.className = 'fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50';
 
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-3xl shadow-2xl p-8';
+        const modal = document.createElement('div');
+        modal.className = 'bg-white rounded-3xl shadow-2xl max-w-4xl w-full mx-4 p-6 md:p-8 relative';
 
-        const title = document.createElement('h2');
-        title.className = 'text-2xl font-bold mb-6';
-        title.textContent = `${instructor.first_name} ${instructor.last_name}`;
+        modal.addEventListener('click', (e) => e.stopPropagation());
+        overlay.addEventListener('click', () => overlay.remove());
+
+        const fullName = `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() || 'Unknown';
+
+        const header = document.createElement('div');
+        header.className = 'flex items-start justify-between mb-6';
+        header.innerHTML = `
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-1">${fullName}</h2>
+            <p class="text-sm text-slate-500">Instructor Detail Overview</p>
+          </div>
+          <button class="text-slate-400 hover:text-slate-600" aria-label="Close">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        `;
+        header.querySelector('button')?.addEventListener('click', () => overlay.remove());
 
         const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-2 gap-4';
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700';
+
+        const format = (v, fallback = 'N/A') => (v !== null && v !== undefined && v !== '' ? v : fallback);
+        const formatDate = (d) =>
+          d ? (HrTemplates.formatDate ? HrTemplates.formatDate(d) : new Date(d).toLocaleDateString()) : 'N/A';
+        const formatCurrency = (v) =>
+          v || v === 0 ? (HrTemplates.formatCurrency ? HrTemplates.formatCurrency(v) : `฿${Number(v).toLocaleString()}`) : 'N/A';
 
         const fields = [
-          { label: 'Code', value: instructor.instructor_code },
-          { label: 'Email', value: instructor.email },
-          { label: 'Department', value: instructor.department || 'N/A' },
-          { label: 'Start Date', value: HrTemplates.formatDate ? HrTemplates.formatDate(instructor.start_date) : (instructor.start_date || 'N/A') }
+          { label: 'Code', value: format(instructor.instructor_code || instructor.InstructorCode) },
+          { label: 'Email', value: format(instructor.email || instructor.Email, 'No email') },
+          { label: 'Department', value: format(instructor.department || instructor.Department) },
+          { label: 'Start Date', value: formatDate(instructor.start_date || instructor.StartDate) },
+          { label: 'Academic Position', value: format(instructor.academic_position || instructor.AcademicPosition_display) },
+          { label: 'Department Position', value: format(instructor.department_position || instructor.DepartmentPosition_display) },
+          { label: 'Salary', value: formatCurrency(instructor.salary || instructor.Salary) },
+          { label: 'Phone Number', value: format(instructor.phone_number || instructor.PhoneNumber) },
+          { label: 'Citizen ID', value: format(instructor.citizen_id || instructor.CitizenID) },
+          { label: 'Gender', value: format(instructor.gender || instructor.Gender) }
         ];
 
-        fields.forEach(field => {
+        fields.forEach((field) => {
           const div = document.createElement('div');
-          const strong = document.createElement('strong');
-          strong.textContent = `${field.label}: `;
-          div.appendChild(strong);
-          div.appendChild(document.createTextNode(field.value));
+          div.innerHTML = `
+            <p class="text-xs uppercase tracking-wide text-slate-400 mb-1">${field.label}</p>
+            <p class="text-sm font-medium text-slate-800">${field.value}</p>
+          `;
           grid.appendChild(div);
         });
 
         const buttonsContainer = document.createElement('div');
-        buttonsContainer.className = 'mt-6 flex gap-3';
+        buttonsContainer.className = 'mt-6 flex flex-wrap gap-3';
+        buttonsContainer.innerHTML = `
+          <button type="button"
+                  class="inline-flex items-center px-4 py-2 bg-white text-slate-700 font-medium rounded-xl border border-slate-200 hover:bg-slate-50 shadow-sm"
+          >
+            Back to List
+          </button>
+          <button type="button"
+                  class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-xl shadow-md hover:from-blue-700 hover:to-indigo-700"
+          >
+            Edit
+          </button>
+        `;
 
-        const backBtn = document.createElement('button');
-        backBtn.className = HrUiComponents.buttonClasses.secondary;
-        backBtn.textContent = 'Back to List';
-        backBtn.onclick = () => this.render();
+        const [backBtn, editBtn] = buttonsContainer.querySelectorAll('button');
+        backBtn.onclick = () => overlay.remove();
+        editBtn.onclick = () => {
+          overlay.remove();
+          this.editInstructor(instructorCode);
+        };
 
-        const editBtn = document.createElement('button');
-        editBtn.className = HrUiComponents.buttonClasses.primary;
-        editBtn.textContent = 'Edit';
-        editBtn.onclick = () => this.editInstructor(instructorCode);
+        modal.appendChild(header);
+        modal.appendChild(grid);
+        modal.appendChild(buttonsContainer);
+        overlay.appendChild(modal);
 
-        buttonsContainer.appendChild(backBtn);
-        buttonsContainer.appendChild(editBtn);
-
-        card.appendChild(title);
-        card.appendChild(grid);
-        card.appendChild(buttonsContainer);
-        innerWrapper.appendChild(card);
-        mainWrapper.appendChild(innerWrapper);
-        container.appendChild(mainWrapper);
-
+        document.body.appendChild(overlay);
       } catch (error) {
         console.error('Error viewing instructor:', error);
         alert(`Error loading instructor: ${error.message}`);

@@ -234,7 +234,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
               </div>
 
               <!-- Departments Card -->
-              <div class="department-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-sky-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="department-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-sky-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sky-500 to-blue-600 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

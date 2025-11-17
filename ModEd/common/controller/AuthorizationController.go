@@ -31,6 +31,10 @@ func (controller *AuthorizationController) GetRoute() []*core.RouteItem {
 
 func (controller *AuthorizationController) GetModelMeta() []*core.ModelMeta {
 	modelMetaList := []*core.ModelMeta{}
+	modelMetaList = append(modelMetaList, &core.ModelMeta{
+		Path:  "common/login",
+		Model: dto.LoginDto{},
+	})
 	return modelMetaList
 }
 

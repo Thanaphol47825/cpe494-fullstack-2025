@@ -87,7 +87,7 @@ if (!window.CommonFacultyListFeature) {
     }
 
     editFaculty(id) {
-      location.hash = `#common/faculty/create?id=${id}`;
+      location.hash = `#common/faculty/edit/${encodeURIComponent(id)}`;
     }
 
     async viewFaculty(id) {
@@ -160,13 +160,3 @@ if (!window.CommonFacultyListFeature) {
 
   window.CommonFacultyListFeature = CommonFacultyListFeature;
 }
-
-async function editFaculty(id) {
-  location.hash = `#common/faculty/edit/${encodeURIComponent(id)}`;
-}
-
-async function viewFaculty(id) {
-  alert(`👁 View faculty ID: ${id}`);
-}
-
-async function deleteFaculty(id) {}

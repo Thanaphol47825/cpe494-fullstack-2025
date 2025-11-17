@@ -89,7 +89,7 @@ if (!window.CommonDepartmentListFeature) {
     }
 
     editDepartment(id) {
-      location.hash = `#common/department/create?id=${id}`;
+      location.hash = `#common/department/edit/${encodeURIComponent(id)}`;
     }
 
     async viewDepartment(id) {
@@ -161,19 +161,4 @@ if (!window.CommonDepartmentListFeature) {
   }
 
   window.CommonDepartmentListFeature = CommonDepartmentListFeature;
-}
-
-async function editDepartment(id) {
-  location.hash = `#common/department/edit/${encodeURIComponent(id)}`;
-}
-
-async function viewDepartment(id) {
-  alert(`👁 View department ID: ${id}`);
-}
-
-async function deleteDepartment(id) {
-  if (confirm(`⚠️ Delete department ID ${id}?`)) {
-    await fetch(`/common/departments/delete/${id}`, { method: "DELETE" });
-    alert("✅ Department deleted!");
-  }
 }

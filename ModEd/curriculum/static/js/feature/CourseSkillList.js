@@ -34,25 +34,8 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
 
     async handleSubmitCreateNew(formData) {
       try {
-        formData.CourseId = parseInt(formData.CourseId);
-
-        // Check if SkillId is array (multiple selection)
-        if (Array.isArray(formData.SkillId)) {
-          if (formData.SkillId.length > 3) {
-            alert("You can select maximum 3 skills only.");
-            return false;
-          }
-          if (formData.SkillId.length === 0) {
-            alert("Please select at least one skill.");
-            return false;
-          }
-          formData.SkillId = formData.SkillId.map(id => parseInt(id));
-        } else {
-          formData.SkillId = parseInt(formData.SkillId);
-        }
-
         const resp = await fetch(
-          RootURL + `/curriculum/CourseSkill/createCourseSkill`,
+          RootURL + `/curriculum/CourseSkill/createCourseSkills`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -87,14 +70,17 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         }
 
         const modalId = `courseskill-create-${courseId}`;
-        const newCourseSkill = {
-          CourseId: courseId
-        }
 
+        const courseData = this.host.rawCourses.find(item => item.ID === courseId);
+        const newCourseSkill = {
+          CourseId: courseId,
+          Name: courseData.Name
+        }
+        const allSkills = await this.getAllSkills()
         await CreateRelatedModalTemplate.createModalWithForm({
           modalType: 'CourseSkill',
           modalId,
-          application: this.application,
+          choiceData: allSkills,
           data: newCourseSkill,
           modelPath: 'curriculum/courseskill',
           submitHandler: async (formData) => {
@@ -107,6 +93,15 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         console.error('Error opening create course skill modal:', err);
         alert('Error opening create course skill modal: ' + (err?.message || err));
       }
+    }
+
+    async getAllSkills() {
+      const res = await fetch(`${RootURL}/curriculum/Skill/getSkills`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => []);
+      return data.result || [];
     }
 
     getCourseSkills = async () => {

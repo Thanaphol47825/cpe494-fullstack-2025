@@ -186,7 +186,7 @@ if (typeof window !== 'undefined' && !window.CreateRelatedModalTemplate) {
          * @param {Object} options - การกำหนดค่า
          * @param {string} options.modalId - ID ของ modal
          * @param {string} options.modalType - ประเภทของ modal
-         * @param {Object} options.application - Application instance
+         * @param {Object} options.choiceData - choiceData instance
          * @param {string} options.modelPath - Path สำหรับ schema
          * @param {Object} options.data - ข้อมูลเดิมสำหรับ pre-fill (optional)
          * @param {Function} options.submitHandler - Function สำหรับจัดการ submission
@@ -195,63 +195,179 @@ if (typeof window !== 'undefined' && !window.CreateRelatedModalTemplate) {
         static async createAdvanceForm(options) {
             const {
                 modalId,
-                modalType,
-                application,
-                modelPath,
-                data = {},
+                choiceData = [], // Assuming this has methods to fetch your lists
+                data,
                 submitHandler
             } = options;
 
             try {
-                // Show loading
                 this.showLoading(modalId);
 
-                // Create AdvanceFormRender instance
-                const form = new AdvanceFormRender(application.templateEngine, {
-                    modelPath: modelPath,
-                    targetSelector: `#create-related-form-fields-${modalId}`,
-                    submitHandler: async (formData, event, formInstance) => {
-                        try {
-                            this.showLoading(modalId);
-                            this.clearMessages(modalId);
+                // 1. FETCH DATA
+                // You need to implement the logic to get your lists here. 
 
-                            // Call custom submit handler
-                            if (submitHandler) {
-                                await submitHandler(formData, event, formInstance);
-                            }
+                // 2. DOM ELEMENTS
+                const courseContainer = document.getElementById(`course-select-container-${modalId}`);
+                const skillsContainer = document.getElementById(`skills-list-container-${modalId}`);
+                const addSkillBtn = document.getElementById(`btn-add-skill-${modalId}`);
+                const submitBtn = document.getElementById(`btn-submit-${modalId}`);
 
-                            this.showSuccess(modalId, 'Updated successfully!');
+                // 3. RENDER COURSE SELECT
+                const renderCourseSelect = () => {
+                    const select = document.createElement('select');
+                    select.id = `input-course-${modalId}`;
+                    select.className = "w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none appearance-none bg-white";
 
-                            // Close modal after success
-                            setTimeout(() => {
-                                this.closeModal(modalId);
-                            }, 1500);
+                    // 1. GET DATA
+                    const preSelectedId = data.CourseId || data.courseId;
+                    const preSelectedName = data.Name || data.name; // Get the Name from data
 
-                        } catch (error) {
-                            console.error('Form submission error:', error);
-                            this.showError(modalId, error.message || 'Error updating data');
-                        } finally {
-                            this.hideLoading(modalId);
-                        }
+                    console.log("Pre-selected Course:", { id: preSelectedId, name: preSelectedName });
+
+                    // 2. HANDLE LOCKED STATE
+                    if (preSelectedId) {
+                        select.disabled = true;
+                        select.className += " bg-gray-100 cursor-not-allowed text-gray-500";
                     }
-                });
 
-                // Render form
-                await form.render();
+                    // 3. RENDER OPTIONS
+                    // If we have a specific Name in the data, create that option and select it immediately
+                    if (preSelectedId && preSelectedName) {
+                        select.innerHTML = `<option value="${preSelectedId}" selected>${preSelectedName}</option>`;
+                    }
 
-                // Pre-fill with existing data if provided
-                if (Object.keys(data).length > 0) {
-                    form.setData(data);
+                    courseContainer.innerHTML = '';
+                    courseContainer.appendChild(select);
+                };
+
+                // 4. RENDER SKILL ROW FUNCTION
+                const createSkillRow = (selectedSkillId = null) => {
+                    const rowId = Date.now(); // Unique ID for the DOM element
+                    const row = document.createElement('div');
+                    row.className = "flex items-center gap-2 skill-row animate-fadeIn";
+                    row.id = `skill-row-${rowId}`;
+
+                    // Skill Select HTML
+                    let optionsHtml = `<option value="" disabled ${!selectedSkillId ? 'selected' : ''}>Select Skill</option>`;
+                    choiceData.forEach(s => {
+                        const isSelected = s.ID === selectedSkillId ? 'selected' : '';
+                        optionsHtml += `<option value="${s.ID}" ${isSelected}>${s.Name}</option>`;
+                    });
+
+                    row.innerHTML = `
+                        <div class="flex-grow relative">
+                            <select class="skill-select w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 outline-none bg-white appearance-none">
+                                ${optionsHtml}
+                            </select>
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-remove-skill p-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors" title="Remove">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    `;
+
+                    // Add Remove Event Listener specifically for this row
+                    row.querySelector('.btn-remove-skill').addEventListener('click', () => {
+                        row.remove();
+                    });
+
+                    skillsContainer.appendChild(row);
+                };
+
+                // 5. INITIALIZE UI
+                renderCourseSelect();
+
+                // If editing existing data with multiple skills, render them all
+                if (data.skills && Array.isArray(data.skills) && data.skills.length > 0) {
+                    data.skills.forEach(skillId => createSkillRow(skillId));
+                } else {
+                    // Default to 1 empty row
+                    createSkillRow();
                 }
 
+                // 6. EVENT LISTENERS
+
+                // Add Skill Button
+                addSkillBtn.onclick = () => createSkillRow();
+
+                // Submit Button
+                submitBtn.onclick = async (e) => {
+                    e.preventDefault(); // Prevent default form submission
+
+                    try {
+                        this.showLoading(modalId);
+                        this.clearMessages(modalId);
+
+                        // A. Get Course
+                        const courseSelect = document.getElementById(`input-course-${modalId}`);
+                        const courseId = courseSelect.value;
+
+                        if (!courseId) {
+                            throw new Error("Please select a course.");
+                        }
+
+                        // B. Get All Selected Skills
+                        const skillSelects = document.querySelectorAll(`#skills-list-container-${modalId} .skill-select`);
+                        const selectedSkills = [];
+                        const seenSkills = new Set();
+
+                        skillSelects.forEach(select => {
+                            const val = select.value;
+                            if (val) {
+                                if (seenSkills.has(val)) {
+                                    // Optional: Warn about duplicates or just ignore
+                                } else {
+                                    selectedSkills.push(val);
+                                    seenSkills.add(val);
+                                }
+                            }
+                        });
+
+                        if (selectedSkills.length === 0) {
+                            throw new Error("Please select at least one skill.");
+                        }
+
+                        // C. Construct Payload
+                        const formData = {
+                            CourseId: courseId,
+                            Skills: selectedSkills // This is now an array of IDs
+                        };
+
+                        const lastFormData = []
+                        formData.Skills.forEach(selSkill => {
+                            lastFormData.push({
+                                CourseId: parseInt(formData.CourseId), SkillId: parseInt(selSkill)
+                            })
+                        })
+
+                        // D. Call Submit Handler
+                        if (submitHandler) {
+                            await submitHandler(lastFormData, e);
+                        }
+
+                        this.showSuccess(modalId, 'Saved successfully!');
+
+                        // Close logic
+                        setTimeout(() => {
+                            this.closeModal(modalId);
+                        }, 1500);
+
+                    } catch (error) {
+                        console.error('Form submission error:', error);
+                        this.showError(modalId, error.message || 'Error saving data');
+                    } finally {
+                        this.hideLoading(modalId);
+                    }
+                };
+
                 this.hideLoading(modalId);
-                return form;
 
             } catch (error) {
-                console.error('Error creating advance form:', error);
+                console.error('Error creating form:', error);
                 this.showError(modalId, 'Error loading form: ' + error.message);
                 this.hideLoading(modalId);
-                throw error;
             }
         }
 
@@ -318,7 +434,7 @@ if (typeof window !== 'undefined' && !window.CreateRelatedModalTemplate) {
          * @param {Object} options - การกำหนดค่า
          * @param {string} options.modalType - ประเภทของ modal
          * @param {string} options.modalId - ID เฉพาะของ modal
-         * @param {Object} options.application - Application instance
+         * @param {Object} options.choiceData - choiceData instance
          * @param {string} options.modelPath - Path สำหรับ schema
          * @param {Object} options.data - ข้อมูลเดิมสำหรับ pre-fill (optional)
          * @param {Function} options.submitHandler - Function สำหรับจัดการ submission
@@ -329,7 +445,7 @@ if (typeof window !== 'undefined' && !window.CreateRelatedModalTemplate) {
             const {
                 modalType,
                 modalId,
-                application,
+                choiceData = [],
                 modelPath,
                 data = {},
                 submitHandler,
@@ -357,7 +473,7 @@ if (typeof window !== 'undefined' && !window.CreateRelatedModalTemplate) {
                 const form = await this.createAdvanceForm({
                     modalId,
                     modalType,
-                    application,
+                    choiceData,
                     modelPath,
                     data,
                     submitHandler

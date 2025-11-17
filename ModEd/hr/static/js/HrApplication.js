@@ -164,6 +164,7 @@ class HrApplication extends BaseModuleApplication {
       // Check if features are already loaded
       if (window.HrStudentFormFeature && window.HrInstructorFormFeature && 
           window.HrStudentResignationFormFeature && window.HrStudentResignationListFeature &&
+          window.HrStudentResignationEditFeature &&
           window.HrInstructorResignationFormFeature && window.HrInstructorResignationListFeature &&
           window.HrInstructorResignationEditFeature &&
           window.HrStudentListFeature && window.HrInstructorListFeature &&
@@ -195,6 +196,10 @@ class HrApplication extends BaseModuleApplication {
       // Load StudentResignationList feature
       if (!window.HrStudentResignationListFeature) {
         await this.loadScript('/hr/static/js/features/resignations/StudentResignationList.js?v=' + Date.now())
+      }
+      
+      if (!window.HrStudentResignationEditFeature) {
+        await this.loadScript('/hr/static/js/features/resignations/StudentResignationEdit.js?v=' + Date.now())
       }
       
       // Load InstructorResignationForm feature
@@ -293,6 +298,7 @@ class HrApplication extends BaseModuleApplication {
     this.addRoute('/resignation', this.renderResignation.bind(this))
     this.addRoute('/resignation/student', this.renderStudentResignation.bind(this))
     this.addRoute('/resignation/student/create', this.renderCreateStudentResignation.bind(this))
+    this.addRoute('/resignation/student/edit/:id', this.renderEditStudentResignation.bind(this))
     this.addRoute('/resignation/instructor', this.renderInstructorResignation.bind(this))
     this.addRoute('/resignation/instructor/create', this.renderCreateInstructorResignation.bind(this))
     this.addRoute('/resignation/instructor/edit/:id', this.renderEditInstructorResignation.bind(this))
@@ -1385,6 +1391,33 @@ class HrApplication extends BaseModuleApplication {
         title: 'Create Instructor Resignation',
         errorMessage: 'Error: Form feature could not be loaded.',
         helpMessage: 'Please refresh the page or try again later.'
+      });
+    }
+  }
+
+  async renderEditStudentResignation(params = {}) {
+    try {
+      if (!params.id) {
+        throw new Error('Resignation ID is required');
+      }
+
+      await this.loadFeatureModules();
+
+      if (window.HrStudentResignationEditFeature) {
+        const feature = new window.HrStudentResignationEditFeature(this.templateEngine, this.rootURL, params.id);
+        await feature.render();
+      } else {
+        throw new Error('StudentResignationEditFeature not available');
+      }
+    } catch (error) {
+      console.error('Error loading student resignation edit:', error);
+      this.templateEngine.mainContainer.innerHTML = HrTemplates.render('errorPage', {
+        title: 'Error Loading Student Resignation',
+        message: error.message,
+        hasRetry: true,
+        retryAction: `hrApp.renderEditStudentResignation({ id: '${params.id}' })`,
+        backLink: 'hr/resignation/student',
+        backLabel: 'Back to Student Resignations'
       });
     }
   }

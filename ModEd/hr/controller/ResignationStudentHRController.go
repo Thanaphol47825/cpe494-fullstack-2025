@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -111,6 +112,7 @@ func (ctl *ResignationStudentHRController) GetRoute() []*core.RouteItem {
 		{Route: "/hr/resignation-student-requests", Method: core.GET, Handler: ctl.HandleList},
 		{Route: "/hr/resignation-student-requests/:id", Method: core.GET, Handler: ctl.HandleGetByID},
 		{Route: "/hr/resignation-student-requests", Method: core.POST, Handler: ctl.HandleCreate},
+		{Route: "/hr/resignation-student-requests/:id/update", Method: core.POST, Handler: ctl.HandleUpdate},
 		{Route: "/hr/resignation-student-requests/:id/review", Method: core.POST, Handler: ctl.HandleReview},
 		{Route: "/hr/resignation-student-requests/:id/delete", Method: core.POST, Handler: ctl.HandleDelete},
 	}
@@ -233,6 +235,90 @@ func (ctl *ResignationStudentHRController) HandleReview(c *fiber.Ctx) error {
 	})
 }
 
+func (ctl *ResignationStudentHRController) HandleUpdate(c *fiber.Ctx) error {
+	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid id"},
+		})
+	}
+
+	var body struct {
+		StudentCode *string `json:"StudentCode"`
+		Reason      *string `json:"Reason"`
+		Status      *string `json:"Status"`
+	}
+
+	if err := c.BodyParser(&body); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 400, "message": "invalid request body"},
+		})
+	}
+
+	row, err := ctl.getByID(uint(id64))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 404, "message": err.Error()},
+		})
+	}
+
+	if body.StudentCode != nil {
+		trimmed := strings.TrimSpace(*body.StudentCode)
+		if trimmed == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"isSuccess": false,
+				"error":     fiber.Map{"code": 400, "message": "StudentCode is required"},
+			})
+		}
+		row.StudentCode = trimmed
+	}
+
+	if body.Reason != nil {
+		trimmed := strings.TrimSpace(*body.Reason)
+		if trimmed == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"isSuccess": false,
+				"error":     fiber.Map{"code": 400, "message": "Reason is required"},
+			})
+		}
+		row.Reason = trimmed
+	}
+
+	if body.Status != nil {
+		status := strings.TrimSpace(*body.Status)
+		if status == "" {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"isSuccess": false,
+				"error":     fiber.Map{"code": 400, "message": "Status is required"},
+			})
+		}
+		normalized, ok := normalizeStudentResignationStatus(status)
+		if !ok {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"isSuccess": false,
+				"error":     fiber.Map{"code": 400, "message": "Invalid status"},
+			})
+		}
+		row.Status = normalized
+	}
+
+	if err := ctl.application.DB.Save(row).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"isSuccess": false,
+			"error":     fiber.Map{"code": 500, "message": err.Error()},
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"isSuccess": true,
+		"message":   "updated",
+		"result":    row,
+	})
+}
+
 func (ctl *ResignationStudentHRController) HandleDelete(c *fiber.Ctx) error {
 	id64, _ := strconv.ParseUint(c.Params("id"), 10, 64)
 	if c.Params("id") == "" {
@@ -271,4 +357,17 @@ func (ctl *ResignationStudentHRController) GetModelMeta() []*core.ModelMeta {
 func (ctl *ResignationStudentHRController) SetApplication(app *core.ModEdApplication) {
 	ctl.application = app
 	_ = ctl.application.DB.AutoMigrate(&model.RequestResignationStudent{})
+}
+
+func normalizeStudentResignationStatus(status string) (string, bool) {
+	switch strings.ToLower(status) {
+	case "pending":
+		return "Pending", true
+	case "approved":
+		return "Approved", true
+	case "rejected":
+		return "Rejected", true
+	default:
+		return "", false
+	}
 }

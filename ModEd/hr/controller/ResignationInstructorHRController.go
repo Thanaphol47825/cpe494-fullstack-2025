@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/hoisie/mustache"
@@ -110,6 +111,7 @@ func (ctl *ResignationInstructorHRController) GetRoute() []*core.RouteItem {
 		{Route: "/hr/resignation-instructor-requests", Method: core.GET, Handler: ctl.HandleList},
 		{Route: "/hr/resignation-instructor-requests/:id", Method: core.GET, Handler: ctl.HandleGetByID},
 		{Route: "/hr/resignation-instructor-requests", Method: core.POST, Handler: ctl.HandleCreate},
+		{Route: "/hr/resignation-instructor-requests/:id/update", Method: core.POST, Handler: ctl.HandleUpdate},
 		{Route: "/hr/resignation-instructor-requests/:id/review", Method: core.POST, Handler: ctl.HandleReview},
 		{Route: "/hr/resignation-instructor-requests/:id/delete", Method: core.POST, Handler: ctl.HandleDelete},
 		{Route: "/hr/resignation-instructor-requests/delete", Method: core.POST, Handler: ctl.HandleDeleteLegacy},
@@ -172,6 +174,65 @@ func (ctl *ResignationInstructorHRController) HandleReview(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "updated"})
 }
 
+func (ctl *ResignationInstructorHRController) HandleUpdate(c *fiber.Ctx) error {
+	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+
+	var body struct {
+		InstructorCode *string `json:"InstructorCode"`
+		Reason         *string `json:"Reason"`
+		Status         *string `json:"Status"`
+	}
+
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+
+	row, err := ctl.getByID(uint(id64))
+	if err != nil {
+		return fiber.NewError(fiber.StatusNotFound, err.Error())
+	}
+
+	if body.InstructorCode != nil {
+		trimmed := strings.TrimSpace(*body.InstructorCode)
+		if trimmed == "" {
+			return fiber.NewError(fiber.StatusBadRequest, "InstructorCode is required")
+		}
+		row.InstructorCode = trimmed
+	}
+
+	if body.Reason != nil {
+		trimmed := strings.TrimSpace(*body.Reason)
+		if trimmed == "" {
+			return fiber.NewError(fiber.StatusBadRequest, "Reason is required")
+		}
+		row.Reason = trimmed
+	}
+
+	if body.Status != nil {
+		status := strings.TrimSpace(*body.Status)
+		if status == "" {
+			return fiber.NewError(fiber.StatusBadRequest, "Status is required")
+		}
+		normalized, ok := normalizeStatus(status)
+		if !ok {
+			return fiber.NewError(fiber.StatusBadRequest, "Invalid status")
+		}
+		row.Status = normalized
+	}
+
+	if err := ctl.application.DB.Save(row).Error; err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "updated",
+		"result":  row,
+	})
+}
+
 func (ctl *ResignationInstructorHRController) HandleDelete(c *fiber.Ctx) error {
 	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
 	if err != nil {
@@ -197,6 +258,19 @@ func (ctl *ResignationInstructorHRController) HandleDeleteLegacy(c *fiber.Ctx) e
 		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "deleted"})
+}
+
+func normalizeStatus(status string) (string, bool) {
+	switch strings.ToLower(status) {
+	case "pending":
+		return "Pending", true
+	case "approved":
+		return "Approved", true
+	case "rejected":
+		return "Rejected", true
+	default:
+		return "", false
+	}
 }
 
 func (ctl *ResignationInstructorHRController) GetModelMeta() []*core.ModelMeta {

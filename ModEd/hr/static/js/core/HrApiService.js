@@ -292,6 +292,20 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       return result.result || result;
     }
 
+    async updateInstructorResignation(requestId, payload) {
+      const url = `${this.rootURL}/hr/resignation-instructor-requests/${requestId}/update`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
+      }
+      return result.result || result;
+    }
+
     async reviewInstructorResignation(requestId, action, reason) {
       const url = `${this.rootURL}/hr/resignation-instructor-requests/${requestId}/review`;
       const response = await fetch(url, {

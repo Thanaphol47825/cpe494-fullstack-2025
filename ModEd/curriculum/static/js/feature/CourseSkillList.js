@@ -338,4 +338,5 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
   if (typeof window !== 'undefined') {
     window.CourseSkillList = CourseSkillList;
   }
+  CourseSkillList.actionTemplateHtml = null;
 }

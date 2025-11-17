@@ -8,7 +8,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       window._editCourse = this.handleEdit.bind(this);
       window._viewCourse = this.handleViewDetail.bind(this);
     }
-    
+
     appendExtension(extension) {
       if (extension instanceof CourseExtension) {
         this.extensions.push(extension);
@@ -108,13 +108,13 @@ if (typeof window !== 'undefined' && !window.CourseList) {
         }
 
         const modalId = `course-view-${courseId}`;
-        
+
         await ViewDetailModalTemplate.createModal({
           modalType: 'Course',
           modalId: modalId,
           data: courseData
         });
- 
+
       } catch (error) {
         console.error('Error opening view detail modal:', error);
         alert('Error opening view detail modal: ' + error.message);
@@ -195,6 +195,10 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       const listWrapper = await ListTemplate.getList('CourseList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
+      if (this.extensions && this.extensions.length > 0) {
+        await Promise.all(this.extensions.map(ext => ext.initialize()));
+      }
+
       const [courses, actionTemplate] = await Promise.all([
         this.getAllCoursesWithSkills(),
         this.getActionTemplate(),
@@ -204,7 +208,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       const isStudent = currentRole === 'Student';
       const isInstructor = currentRole === 'Instructor';
 
-      this.setupTable(!(isStudent || isInstructor )? actionTemplate : null);
+      this.setupTable(!(isStudent || isInstructor) ? actionTemplate : null);
       this.table.setData(courses);
       await this.table.render();
 
@@ -241,7 +245,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
         // Use the dynamic list
         customColumns: allColumns,
-        
+
         enableSearch: true,
         searchConfig: {
           placeholder: "Search courses...",
@@ -259,7 +263,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
           defaultField: "ID",
           defaultDirection: "asc"
         },
-        
+
         enablePagination: true,
         pageSize: 10
       });

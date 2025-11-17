@@ -49,6 +49,11 @@ class CommonApplication extends BaseModuleApplication {
     this.addRoute("", this.renderMenu.bind(this));
 
     this.addRouteWithSubModule(
+      "/login",
+      this.renderLogin.bind(this),
+      "LoginForm.js"
+    );
+    this.addRouteWithSubModule(
       "/student/create",
       this.renderStudentCreate.bind(this),
       "StudentForm.js"
@@ -152,6 +157,19 @@ class CommonApplication extends BaseModuleApplication {
 
   getIconForFeature(id) {
     return this.features[id]?.icon || "•";
+  }
+
+  async renderLogin() {
+    if (!window.CommonLoginFormFeature) {
+      console.error("CommonLoginFormFeature not available after loading");
+      this.renderError("Failed to load Login Form");
+      return false;
+    }
+    const feature = new window.CommonLoginFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
   }
 
   async renderStudentCreate() {

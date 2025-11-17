@@ -306,6 +306,45 @@ if (typeof window !== 'undefined' && !window.HrApiService) {
       return result.result || result;
     }
 
+    async deleteInstructorResignation(requestId) {
+      const targets = [
+        {
+          url: `${this.rootURL}/hr/resignation-instructor-requests/${requestId}/delete`,
+          body: null
+        },
+        {
+          url: `${this.rootURL}/hr/resignation-instructor-requests/delete`,
+          body: JSON.stringify({ id: Number(requestId) || requestId })
+        }
+      ];
+
+      let lastError = null;
+      for (const target of targets) {
+        try {
+          const response = await fetch(target.url, {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: target.body
+          });
+          const result = await response.json().catch(() => ({}));
+          if (response.ok) {
+            return result.result || result;
+          }
+          lastError = result?.error?.message || result?.message || `API Error (${response.status})`;
+          if (response.status !== 404 && response.status !== 405) {
+            break;
+          }
+        } catch (error) {
+          lastError = error.message;
+        }
+      }
+
+      throw new Error(lastError || 'Failed to delete instructor resignation');
+    }
+
     // Student CRUD operations
     async fetchStudent(studentCode) {
       const url = `${this.rootURL}/hr/students/${studentCode}`;

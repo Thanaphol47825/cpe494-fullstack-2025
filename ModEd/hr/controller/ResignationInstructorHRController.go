@@ -59,6 +59,10 @@ func (c *ResignationInstructorHRController) getByID(id uint) (*model.RequestResi
 	return &row, nil
 }
 
+func (c *ResignationInstructorHRController) deleteByID(id uint) error {
+	return c.application.DB.Delete(&model.RequestResignationInstructor{}, id).Error
+}
+
 // ---------- domain ops ----------
 
 func (c *ResignationInstructorHRController) SubmitResignationInstructor(instructorID, reason string) error {
@@ -107,6 +111,8 @@ func (ctl *ResignationInstructorHRController) GetRoute() []*core.RouteItem {
 		{Route: "/hr/resignation-instructor-requests/:id", Method: core.GET, Handler: ctl.HandleGetByID},
 		{Route: "/hr/resignation-instructor-requests", Method: core.POST, Handler: ctl.HandleCreate},
 		{Route: "/hr/resignation-instructor-requests/:id/review", Method: core.POST, Handler: ctl.HandleReview},
+		{Route: "/hr/resignation-instructor-requests/:id/delete", Method: core.POST, Handler: ctl.HandleDelete},
+		{Route: "/hr/resignation-instructor-requests/delete", Method: core.POST, Handler: ctl.HandleDeleteLegacy},
 
 		// health (ถ้าอยากมี)
 		// {Route: "/hr/ResignationInstructor", Method: core.GET, Handler: func(c *fiber.Ctx) error { return c.SendString("Resignation Instructor API is up") }},
@@ -164,6 +170,33 @@ func (ctl *ResignationInstructorHRController) HandleReview(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "updated"})
+}
+
+func (ctl *ResignationInstructorHRController) HandleDelete(c *fiber.Ctx) error {
+	id64, err := strconv.ParseUint(c.Params("id"), 10, 64)
+	if err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid id")
+	}
+	if err := ctl.deleteByID(uint(id64)); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "deleted"})
+}
+
+func (ctl *ResignationInstructorHRController) HandleDeleteLegacy(c *fiber.Ctx) error {
+	var body struct {
+		ID uint `json:"id"`
+	}
+	if err := c.BodyParser(&body); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, "invalid request body")
+	}
+	if body.ID == 0 {
+		return fiber.NewError(fiber.StatusBadRequest, "id is required")
+	}
+	if err := ctl.deleteByID(body.ID); err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{"message": "deleted"})
 }
 
 func (ctl *ResignationInstructorHRController) GetModelMeta() []*core.ModelMeta {

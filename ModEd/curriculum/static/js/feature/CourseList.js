@@ -239,7 +239,28 @@ if (typeof window !== 'undefined' && !window.CourseList) {
         ],
 
         // Use the dynamic list
-        customColumns: allColumns
+        customColumns: allColumns,
+        
+        enableSearch: true,
+        searchConfig: {
+          placeholder: "Search courses...",
+          fields: [
+            { value: "all", label: "All" },
+            { value: "Name", label: "Name" },
+            { value: "Description", label: "Description" },
+            { value: "CurriculumId", label: "Curriculum" },
+            { value: "CourseStatus", label: "Status" },
+            { value: "Skills", label: "Skills" },
+          ]
+        },
+        enableSorting: true,
+        sortConfig: {
+          defaultField: "ID",
+          defaultDirection: "asc"
+        },
+        
+        enablePagination: true,
+        pageSize: 10
       });
     }
 

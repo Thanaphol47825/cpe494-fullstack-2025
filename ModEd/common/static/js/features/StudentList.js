@@ -83,15 +83,26 @@ if (!window.CommonStudentListFeature) {
 
     async viewStudent(id) {
       try {
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch student data
         const res = await fetch(`${this.rootURL}/common/students/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        alert(
-          `Student Details\n` +
-            `Name: ${result?.first_name ?? "-"} ${result?.last_name ?? ""}\n` +
-            `Student No: ${result?.student_code ?? "-"}\n` +
-            `Email: ${result?.email ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `student-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Student',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load student details.");

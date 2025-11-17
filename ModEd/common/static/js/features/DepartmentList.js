@@ -85,14 +85,26 @@ if (!window.CommonDepartmentListFeature) {
 
     async viewDepartment(id) {
       try {
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch department data
         const res = await fetch(`${this.rootURL}/common/departments/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        alert(
-          `👁 Department Details\n` +
-            `Name: ${result?.name ?? "-"}\n` +
-            `Faculty: ${result?.faculty ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `department-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Department',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load department details.");

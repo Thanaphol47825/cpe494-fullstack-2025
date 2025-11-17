@@ -83,17 +83,26 @@ if (!window.CommonInstructorListFeature) {
 
     async viewInstructor(id) {
       try {
-        console.log("test1", id);
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch instructor data
         const res = await fetch(`${this.rootURL}/common/instructors/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        console.log("test2", result);
-        alert(
-          `Instructor Details\n` +
-            `Name: ${result?.first_name ?? "-"} ${result?.last_name ?? ""}\n` +
-            `Instructor No: ${result?.instructor_code ?? "-"}\n` +
-            `Email: ${result?.email ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `instructor-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Instructor',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load instructor details.");

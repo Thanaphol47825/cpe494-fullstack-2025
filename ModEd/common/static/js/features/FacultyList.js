@@ -83,15 +83,26 @@ if (!window.CommonFacultyListFeature) {
 
     async viewFaculty(id) {
       try {
-        const res = await fetch(`${this.rootURL}/common/faculty/${id}`);
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch faculty data
+        const res = await fetch(`${this.rootURL}/common/faculties/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        alert(
-          `👁 Faculty Details\n` +
-            `Name: ${result?.name ?? "-"}\n` +
-            `Faculty No: ${result?.facultyNo ?? "-"}\n` +
-            `Dean: ${result?.deanName ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `faculty-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Faculty',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load faculty details.");

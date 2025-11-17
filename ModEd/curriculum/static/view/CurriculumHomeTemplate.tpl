@@ -73,7 +73,7 @@
               </svg>
               Browse {{label}}
             </button>
-            <button routerLink="{{route}}/create" data-model="{{label}}" class="create-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r {{color}} text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+            <button routerLink="{{createRoute}}" data-model="{{label}}" class="create-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r {{color}} text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>

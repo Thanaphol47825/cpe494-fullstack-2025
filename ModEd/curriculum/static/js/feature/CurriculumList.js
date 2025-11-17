@@ -158,25 +158,36 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
         async refreshTable() {
             const curriculums = await this.getAllCurriculums();
             this.table.setData(curriculums);
-            this.render();
+            this.table.render();
         }
 
         async render() {
-
             const [curriculums, actionTemplate] = await Promise.all([
                 this.getAllCurriculums(),
                 this.getActionTemplate(),
             ]);
 
+            // Check current user role
+            const currentRole = localStorage.getItem('userRole');
+            const isAdmin = currentRole === 'Admin';
+            const customColumns = [];
+            if (isAdmin) {
+                customColumns.push({
+                    name: "actions",
+                    label: "Actions",
+                    template: actionTemplate
+                });
+            }
+
             this.application.templateEngine.mainContainer.innerHTML = ""
-            this.setupTable(actionTemplate);
+            this.setupTable(customColumns, curriculums);
             const listWrapper = await ListTemplate.getList('CurriculumList');
             this.application.templateEngine.mainContainer.appendChild(listWrapper);
             this.table.setData(curriculums);
             await this.table.render();
         }
 
-        setupTable(actionTemplate) {
+        setupTable(customColumns) {
             this.tableSchema = [
                 { name: "ID", label: "No.", type: "number", },
                 { name: "Name", label: "Name", type: "text", },
@@ -190,13 +201,7 @@ if (typeof window !== 'undefined' && !window.CurriculumList) {
                 data: [],
                 targetSelector: "#curriculum-table",
                 schema: this.tableSchema,
-                customColumns: [
-                    {
-                        name: "actions",
-                        label: "Actions",
-                        template: actionTemplate
-                    },
-                ],
+                customColumns: customColumns,
                 enableSearch: true,
                 searchConfig: {
                     placeholder: "Search Curriculum...",

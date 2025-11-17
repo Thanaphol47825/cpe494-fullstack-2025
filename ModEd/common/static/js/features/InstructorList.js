@@ -35,34 +35,43 @@ if (!window.CommonInstructorListFeature) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
-        const table = new AdvanceTableRender(this.templateEngine, {
-          modelPath: "common/instructor", // โหลด schema: /api/modelmeta/common/Instructor
-          dataPath: "common/instructors/getall",
-          data: data.result || [], // โหลดข้อมูลจริง
-          targetSelector: "#instructorTable",
+        // Check current user role
+        const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+        const isAdmin = currentRole === 'Admin';
 
-          customColumns: [
-            {
-              name: "actions",
-              label: "Actions",
-              template: `
-                <div class="flex space-x-2">
-                  <button onclick="commonInstructorList.editInstructor('{ID}')"
-                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                    Edit
-                  </button>
-                  <button onclick="commonInstructorList.viewInstructor('{ID}')"
-                          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                    View
-                  </button>
-                  <button onclick="commonInstructorList.deleteInstructor('{ID}', '{first_name} {last_name}')"
-                          class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                    Delete
-                  </button>
-                </div>
-              `,
-            },
-          ],
+        // Build action buttons based on role
+        const customColumns = [];
+
+        // Only Admin can see actions for instructors
+        if (isAdmin) {
+          customColumns.push({
+            name: "actions",
+            label: "Actions",
+            template: `
+              <div class="flex space-x-2">
+                <button onclick="commonInstructorList.viewInstructor('{ID}')"
+                        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                  View
+                </button>
+                <button onclick="commonInstructorList.editInstructor('{ID}')"
+                        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                  Edit
+                </button>
+                <button onclick="commonInstructorList.deleteInstructor('{ID}', '{first_name} {last_name}')"
+                        class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                  Delete
+                </button>
+              </div>
+            `
+          });
+        }
+
+        const table = new AdvanceTableRender(this.templateEngine, {
+          modelPath: "common/instructor",
+          dataPath: "common/instructors/getall",
+          data: data.result || [],
+          targetSelector: "#instructorTable",
+          customColumns: customColumns,
         });
 
         await table.render();

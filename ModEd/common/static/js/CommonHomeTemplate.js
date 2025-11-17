@@ -49,6 +49,89 @@ if (typeof window !== "undefined" && !window.CommonHomeTemplate) {
     };
 
     /**
+     * Define which roles can see which features
+     * Student: Can only view lists (read-only)
+     * Instructor: Can view and manage students
+     * Admin: Full access to everything
+     */
+    static ROLE_PERMISSIONS = {
+      'Student': [
+        'student/list',
+        'instructor/list',
+        'department/list',
+        'faculty/list'
+      ],
+      'Instructor': [
+        'student/create',
+        'student/list',
+        'instructor/list',
+        'department/list',
+        'faculty/list'
+      ],
+      'Admin': [
+        'student/create',
+        'student/list',
+        'instructor/create',
+        'instructor/list',
+        'department/create',
+        'department/list',
+        'faculty/create',
+        'faculty/list'
+      ]
+    };
+
+    /**
+     * Check if current role can access a feature
+     * @param {string} featureId - Feature ID (e.g., 'student/create')
+     * @returns {boolean}
+     */
+    static canAccessFeature(featureId) {
+      const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'Admin';
+      const permissions = this.ROLE_PERMISSIONS[currentRole] || [];
+      return permissions.includes(featureId);
+    }
+
+    /**
+     * Add role switcher UI to menu element
+     * @param {HTMLElement} menuElement - Menu element to add role switcher to
+     */
+    static addRoleSwitcher(menuElement) {
+      const container = menuElement.querySelector('.relative.z-10.max-w-7xl');
+      if (!container) return;
+
+      // Create role switcher HTML
+      const roleSwitcherHTML = `
+        <div class="flex justify-end mb-6">
+          <div class="bg-white rounded-xl shadow-lg p-3 border border-slate-200">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-slate-600">Role:</span>
+              <div class="flex gap-1">
+                <button onclick="setCommonRole('Student')" id="role-student" class="role-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 bg-slate-100 text-slate-600 hover:bg-blue-500 hover:text-white">
+                  Student
+                </button>
+                <button onclick="setCommonRole('Instructor')" id="role-instructor" class="role-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 bg-slate-100 text-slate-600 hover:bg-emerald-500 hover:text-white">
+                  Instructor
+                </button>
+                <button onclick="setCommonRole('Admin')" id="role-admin" class="role-btn px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 bg-slate-100 text-slate-600 hover:bg-purple-500 hover:text-white">
+                  Admin
+                </button>
+              </div>
+              <span id="current-role-display" class="ml-2 text-xs font-semibold text-emerald-600"></span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Insert role switcher before the header section
+      const headerSection = container.querySelector('.text-center.mb-16');
+      if (headerSection) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = roleSwitcherHTML.trim();
+        container.insertBefore(tempDiv.firstChild, headerSection);
+      }
+    }
+
+    /**
      * Generate template using core Menu and MenuCard templates
      * @param {Object} features - Features object from CommonApplication
      * @param {Object} templateEngine - Template engine with templates loaded
@@ -61,16 +144,21 @@ if (typeof window !== "undefined" && !window.CommonHomeTemplate) {
           await templateEngine.fetchTemplate();
         }
 
-        // Prepare MenuCard data for each feature
-        const menuCardsData = Object.entries(features).map(([id, feature]) => ({
-          card_title: feature.title,
-          card_description: this.DESCRIPTIONS[feature.title] || "Manage common module data",
-          icon_path: this.ICON_PATHS[feature.title] || this.ICON_PATHS["List Students"],
-          button_link: `common/${id}`,
-          icon_color: this.GRADIENTS[feature.title] || "from-blue-500 to-indigo-600",
-          box_color: this.BOX_COLORS[feature.title] || "from-blue-500 to-blue-500",
-          button_text: "Manage"
-        }));
+        // Get current role to filter features
+        const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'Admin';
+
+        // Prepare MenuCard data for each feature, filtering by role permissions
+        const menuCardsData = Object.entries(features)
+          .filter(([id, feature]) => this.canAccessFeature(id))
+          .map(([id, feature]) => ({
+            card_title: feature.title,
+            card_description: this.DESCRIPTIONS[feature.title] || "Manage common module data",
+            icon_path: this.ICON_PATHS[feature.title] || this.ICON_PATHS["List Students"],
+            button_link: `common/${id}`,
+            icon_color: this.GRADIENTS[feature.title] || "from-blue-500 to-indigo-600",
+            box_color: this.BOX_COLORS[feature.title] || "from-blue-500 to-blue-500",
+            button_text: "Manage"
+          }));
 
         // Render individual cards using MenuCard template
         const cardsHTML = menuCardsData
@@ -90,8 +178,12 @@ if (typeof window !== "undefined" && !window.CommonHomeTemplate) {
         // Create DOM element from HTML
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = renderedHTML.trim();
+        const menuElement = tempDiv.firstChild;
 
-        return tempDiv.firstChild;
+        // Add role switcher to the menu
+        this.addRoleSwitcher(menuElement);
+
+        return menuElement;
       } catch (error) {
         console.error("Error loading common home template:", error);
 

@@ -37,34 +37,43 @@ if (!window.CommonDepartmentListFeature) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
-        const table = new AdvanceTableRender(this.templateEngine, {
-          modelPath: "common/department", // โหลด schema: /api/modelmeta/common/Department
-          dataPath: "common/departments/getall",
-          data: data || [], // โหลดข้อมูลจริง
-          targetSelector: "#departmentTable",
+        // Check current user role
+        const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+        const isAdmin = currentRole === 'Admin';
 
-          customColumns: [
-            {
-              name: "actions",
-              label: "Actions",
-              template: `
-                <div class="flex space-x-2">
-                  <button onclick="commonDepartmentList.editDepartment('{ID}')"
-                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                    Edit
-                  </button>
-                  <button onclick="commonDepartmentList.viewDepartment('{ID}')"
-                          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                    View
-                  </button>
-                  <button onclick="commonDepartmentList.deleteDepartment('{ID}', '{name}')"
-                          class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                    Delete
-                  </button>
-                </div>
-              `,
-            },
-          ],
+        // Build action buttons based on role
+        const customColumns = [];
+
+        // Only Admin can see actions for departments
+        if (isAdmin) {
+          customColumns.push({
+            name: "actions",
+            label: "Actions",
+            template: `
+              <div class="flex space-x-2">
+                <button onclick="commonDepartmentList.viewDepartment('{ID}')"
+                        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                  View
+                </button>
+                <button onclick="commonDepartmentList.editDepartment('{ID}')"
+                        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                  Edit
+                </button>
+                <button onclick="commonDepartmentList.deleteDepartment('{ID}', '{name}')"
+                        class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                  Delete
+                </button>
+              </div>
+            `
+          });
+        }
+
+        const table = new AdvanceTableRender(this.templateEngine, {
+          modelPath: "common/department",
+          dataPath: "common/departments/getall",
+          data: data || [],
+          targetSelector: "#departmentTable",
+          customColumns: customColumns,
         });
 
         await table.render();

@@ -5,6 +5,14 @@ class CommonApplication extends BaseModuleApplication {
 
     this.setSubModuleBasePath("/common/static/js/features");
 
+    // Make this instance globally accessible for RoleManager
+    window.commonApplication = this;
+
+    if (!localStorage.getItem("userRole") && !localStorage.getItem("role")) {
+      localStorage.setItem("userRole", "Admin");
+      localStorage.setItem("userId", 1);
+    }
+
     this.features = {
       "student/create": {
         title: "Add Student",
@@ -130,6 +138,17 @@ class CommonApplication extends BaseModuleApplication {
     container.innerHTML = "";
 
     try {
+      // Load RoleManager if not available
+      if (!window.CommonRoleManager) {
+        const roleScript = document.createElement("script");
+        roleScript.src = `${this.rootURL}/common/static/js/util/RoleManager.js`;
+        document.head.appendChild(roleScript);
+        await new Promise((resolve, reject) => {
+          roleScript.onload = resolve;
+          roleScript.onerror = reject;
+        });
+      }
+
       // Load CommonHomeTemplate if not available
       if (!window.CommonHomeTemplate) {
         const script = document.createElement("script");
@@ -152,6 +171,11 @@ class CommonApplication extends BaseModuleApplication {
         this.templateEngine
       );
       container.appendChild(homeElement);
+
+      // Initialize role display after rendering
+      if (window.commonRoleManager) {
+        window.commonRoleManager.updateRoleDisplay();
+      }
     } catch (error) {
       console.error("Error loading common home template:", error);
 
@@ -165,14 +189,14 @@ class CommonApplication extends BaseModuleApplication {
 
             <div class="module-list">
               ${Object.entries(this.features)
-          .map(
-            ([id, feature]) => `
+                .map(
+                  ([id, feature]) => `
                     <a href="#common/${id}" class="module-button" routerLink="common/${id}">
                       ${feature.icon} ${feature.title}
                     </a>
                   `
-          )
-          .join("")}
+                )
+                .join("")}
             </div>
           </div>
         </section>
@@ -246,7 +270,7 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
-   async renderInstructorList() {
+  async renderInstructorList() {
     if (!window.CommonInstructorListFeature) {
       console.error("CommonInstructorListFeature not available after loading");
       this.renderError("Failed to load Instructor List");
@@ -259,7 +283,7 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
-   async renderFacultyList() {
+  async renderFacultyList() {
     if (!window.CommonFacultyListFeature) {
       console.error("CommonFacultyListFeature not available after loading");
       this.renderError("Failed to load Faculty List");

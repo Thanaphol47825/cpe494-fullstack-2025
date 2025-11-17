@@ -202,8 +202,9 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
       const currentRole = localStorage.getItem('userRole');
       const isStudent = currentRole === 'Student';
+      const isInstructor = currentRole === 'Instructor';
 
-      this.setupTable(!isStudent ? actionTemplate : null);
+      this.setupTable(!(isStudent || isInstructor )? actionTemplate : null);
       this.table.setData(courses);
       await this.table.render();
 

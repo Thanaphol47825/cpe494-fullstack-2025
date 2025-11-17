@@ -10,10 +10,18 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
     }
 
     getCustomColumns() {
+      const currentRole = localStorage.getItem('userRole');
+      const isStudent = currentRole === 'Student';
+
+      // hide Add Skill  button for Student
+      if (isStudent) {
+        return [];
+      }
+
       return [
         {
           name: "skill-actions",
-          label: "Skil Actions",
+          label: "Skill Actions",
           template: `
                     <button onclick="_addSkillToCourse({ID})" 
                             class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg ...">
@@ -126,6 +134,20 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
       return courseSkills;
     }
 
+    //load action tpl for CourseSkill
+    async getActionTemplate() {
+      if (!CourseSkillList.actionTemplateHtml) {
+        try {
+          const response = await fetch(`${RootURL}/curriculum/static/view/CourseSkillActionButtons.tpl`);
+          CourseSkillList.actionTemplateHtml = (await response.text()).trim();
+        } catch (err) {
+          console.warn('Failed to load CourseSkillActionButtons.tpl', err);
+          CourseSkillList.actionTemplateHtml = null;
+        }
+      }
+      return CourseSkillList.actionTemplateHtml;
+    }
+
     async handleSubmit(formData) {
       try {
         formData.ID = parseInt(this.courseSkillData.ID);
@@ -236,8 +258,13 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
 
     async refreshTable() {
       const courseSkills = await this.getAllCourseSkills();
-      this.table.setData(courseSkills);
-      this.render();
+      if (this.table && typeof this.table.setData === 'function') {
+        this.table.setData(courseSkills);
+        await this.table.render();
+        return;
+      }
+      // fallback to full render
+      await this.render();
     }
 
     async render() {
@@ -245,16 +272,31 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
       const listWrapper = await ListTemplate.getList('CourseSkillList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-      //   const courseSkills = await this.getAllCourseSkills();
-      await this.setupTable();
-      //   this.table.setData(courseSkills);
+      const currentRole = localStorage.getItem('userRole');
+      const isStudent = currentRole === 'Student';
+
+      const [courseSkills, actionTemplate] = await Promise.all([
+        this.getAllCourseSkills(),
+        // Student role does not get action template
+        isStudent ? Promise.resolve(null) : this.getActionTemplate(),
+      ]);
+
+      await this.setupTable(actionTemplate, courseSkills);
       await this.table.render();
 
       this.setupForm();
     }
 
-    async setupTable() {
-      const courseSkills = await this.getAllCourseSkills();
+    async setupTable(actionTemplate, courseSkills = []) {
+      const customCols = [];
+      if (actionTemplate) {
+        customCols.push({
+          name: "actions",
+          label: "Actions",
+          template: actionTemplate
+        });
+      }
+
       this.table = new AdvanceTableRender(this.application.templateEngine, {
         // modelPath: "curriculum/courseskill",
         data: courseSkills,
@@ -264,30 +306,23 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
           { name: "CourseName", label: "Course", type: "text" },
           { name: "SkillName", label: "Skill", type: "text" },
         ],
-        customColumns: [
-          {
-            name: "actions",
-            label: "Actions",
-            template: `
-                <div class="flex space-x-2">
-                    <button onclick="_editCourseSkill({ID})" 
-                        class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                        Edit
-                    </button>
-                    <button onclick="_deleteCourseSkill({ID})" 
-                        class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        Delete
-                    </button>
-                </div>
-                `
-          },
-        ],
+        customColumns: customCols,
+        enableSearch: true,
+        searchConfig: {
+          placeholder: "Search course skills...",
+          fields: [
+            { value: "all", label: "All" },
+            { value: "CourseName", label: "Course" },
+            { value: "SkillName", label: "Skill" },
+          ]
+        },
+        enableSorting: true,
+        sortConfig: {
+          defaultField: "ID",
+          defaultDirection: "asc"
+        },
+        enablePagination: true,
+        pageSize: 10
       });
     }
 

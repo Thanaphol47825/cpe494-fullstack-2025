@@ -3,10 +3,12 @@ if (typeof window !== 'undefined' && !window.CourseList) {
     constructor(application) {
       this.application = application;
       this.extensions = [];
+      this.rawCourses = [];
       window._deleteCourse = this.handleDelete.bind(this);
       window._editCourse = this.handleEdit.bind(this);
+      window._viewCourse = this.handleViewDetail.bind(this);
     }
-
+    
     appendExtension(extension) {
       if (extension instanceof CourseExtension) {
         this.extensions.push(extension);
@@ -36,6 +38,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
 
     async getAllCoursesWithSkills() {
       const courses = await this.getAllCourses();
+      this.rawCourses = courses;
       if (!Array.isArray(courses) || courses.length === 0) return [];
 
       const ids = courses.map(c => Number(c.ID ?? c.Id ?? c.id));
@@ -50,7 +53,6 @@ if (typeof window !== 'undefined' && !window.CourseList) {
         Skills: labels[i] || ""
       }));
     }
-
 
     async handleSubmit(formData) {
       try {
@@ -80,6 +82,43 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       }
 
       return false;
+    }
+
+    async getActionTemplate() {
+      if (!CourseList.actionTemplateHtml) {
+        const response = await fetch(`${RootURL}/curriculum/static/view/CourseActionButtons.tpl`);
+        CourseList.actionTemplateHtml = (await response.text()).trim();
+      }
+      return CourseList.actionTemplateHtml;
+    }
+
+    async handleViewDetail(courseId) {
+      if (!courseId) return;
+
+      try {
+        if (!window.ViewDetailModalTemplate) {
+          await this.application.loadSubModule('template/CurriculumViewDetailModalTemplate.js');
+        }
+
+        const courseData = this.rawCourses.find(item => item.ID === courseId);
+
+        if (!courseData) {
+          alert('Course not found');
+          return;
+        }
+
+        const modalId = `course-view-${courseId}`;
+        
+        await ViewDetailModalTemplate.createModal({
+          modalType: 'Course',
+          modalId: modalId,
+          data: courseData
+        });
+ 
+      } catch (error) {
+        console.error('Error opening view detail modal:', error);
+        alert('Error opening view detail modal: ' + error.message);
+      }
     }
 
     async handleEdit(courseId) {
@@ -156,40 +195,35 @@ if (typeof window !== 'undefined' && !window.CourseList) {
       const listWrapper = await ListTemplate.getList('CourseList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-      const courses = await this.getAllCoursesWithSkills();
-      this.setupTable();
+      const [courses, actionTemplate] = await Promise.all([
+        this.getAllCoursesWithSkills(),
+        this.getActionTemplate(),
+      ]);
+
+      const currentRole = localStorage.getItem('userRole');
+      const isStudent = currentRole === 'Student';
+
+      this.setupTable(!isStudent ? actionTemplate : null);
       this.table.setData(courses);
       await this.table.render();
 
       this.setupForm();
     }
 
-    setupTable() {
+    setupTable(actionTemplate) {
       let extensionColumns = [];
       for (const ext of this.extensions) {
         extensionColumns = extensionColumns.concat(ext.getCustomColumns());
       }
-      const defaultColumns = {
-        name: "actions",
-        label: "Action",
-        template: `<div class="flex space-x-2">
-                  <button onclick="_editCourse({ID})" 
-                      class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                      Edit
-                  </button>
-                  <button onclick="_deleteCourse({ID})" 
-                      class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                       Delete
-                   </button>
-              </div>`
+      const customColumns = [];
+      if (actionTemplate) {
+        customColumns.push({
+          name: "actions",
+          label: "Action",
+          template: actionTemplate
+        });
       }
-      const allColumns = [defaultColumns].concat(extensionColumns);
+      const allColumns = customColumns.concat(extensionColumns);
       this.table = new AdvanceTableRender(this.application.templateEngine, {
         modelPath: "curriculum/course",
         data: [],
@@ -216,6 +250,7 @@ if (typeof window !== 'undefined' && !window.CourseList) {
         submitHandler: this.handleSubmit.bind(this),
       });
     }
+
   }
 
   if (typeof window !== 'undefined') {

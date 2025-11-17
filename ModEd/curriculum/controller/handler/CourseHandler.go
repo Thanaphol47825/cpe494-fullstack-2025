@@ -64,8 +64,8 @@ func (h *CourseHandler) GetCourseById(context *fiber.Ctx) error {
 		})
 	}
 
-	var result model.Course
-	if err := h.Application.DB.Where("id = ?", id).First(&result).Error; err != nil {
+	var Course model.Course
+	if err := h.Application.DB.Preload("Curriculum.Department").First(&Course, id).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get course",
@@ -74,7 +74,7 @@ func (h *CourseHandler) GetCourseById(context *fiber.Ctx) error {
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    result,
+		"result":    Course,
 	})
 }
 
@@ -102,7 +102,7 @@ func (h *CourseHandler) GetCourseStatusOptions(c *fiber.Ctx) error {
 
 func (h *CourseHandler) GetCourses(context *fiber.Ctx) error {
 	var Courses []model.Course
-	if err := h.Application.DB.Find(&Courses).Error; err != nil {
+	if err := h.Application.DB.Preload("Curriculum.Department").Order("id ASC").Find(&Courses).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    "failed to get courses",

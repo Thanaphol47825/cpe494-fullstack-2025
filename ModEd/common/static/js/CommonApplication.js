@@ -125,34 +125,62 @@ class CommonApplication extends BaseModuleApplication {
     return await this.handleRoute(this.templateEngine.getCurrentPath());
   }
 
-  renderMenu() {
+  async renderMenu() {
     const container = this.templateEngine.mainContainer;
     container.innerHTML = "";
 
-    const html = `
-      <section class="menu-container">
-        <div class="form-container">
-          <h1 class="menu-title">Common Module</h1>
-          <a href='#' class="btn-home">🏠 Back to ModEd</a>
-          <p>Manage Faculty, Department, Instructor, and Student information.</p>
+    try {
+      // Load CommonHomeTemplate if not available
+      if (!window.CommonHomeTemplate) {
+        const script = document.createElement("script");
+        script.src = `${this.rootURL}/common/static/js/CommonHomeTemplate.js`;
+        document.head.appendChild(script);
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
 
-          <div class="module-list">
-            ${Object.entries(this.features)
-        .map(
-          ([id, feature]) => `
-                  <a href="#common/${id}" class="module-button" routerLink="common/${id}">
-                    ${feature.icon} ${feature.title}
-                  </a>
-                `
-        )
-        .join("")}
+      // Ensure templates are loaded in templateEngine
+      if (!this.templateEngine.template) {
+        await this.templateEngine.fetchTemplate();
+      }
+
+      // Use CommonHomeTemplate to render with core templates
+      const homeElement = await CommonHomeTemplate.getTemplate(
+        this.features,
+        this.templateEngine
+      );
+      container.appendChild(homeElement);
+    } catch (error) {
+      console.error("Error loading common home template:", error);
+
+      // Fallback to old simple menu
+      const html = `
+        <section class="menu-container">
+          <div class="form-container">
+            <h1 class="menu-title">Common Module</h1>
+            <a href='#' class="btn-home">🏠 Back to ModEd</a>
+            <p>Manage Faculty, Department, Instructor, and Student information.</p>
+
+            <div class="module-list">
+              ${Object.entries(this.features)
+          .map(
+            ([id, feature]) => `
+                    <a href="#common/${id}" class="module-button" routerLink="common/${id}">
+                      ${feature.icon} ${feature.title}
+                    </a>
+                  `
+          )
+          .join("")}
+            </div>
           </div>
-        </div>
-      </section>
-    `;
+        </section>
+      `;
 
-    const element = this.templateEngine.create(html);
-    container.appendChild(element);
+      const element = this.templateEngine.create(html);
+      container.appendChild(element);
+    }
   }
 
   getIconForFeature(id) {

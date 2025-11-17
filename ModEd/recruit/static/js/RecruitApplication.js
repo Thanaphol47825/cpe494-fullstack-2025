@@ -6,18 +6,36 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
 
       this.setSubModuleBasePath("/recruit/static/js");
     
-    this.features = {
-      "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantTable.js" },
-      "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js" },
-      "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundTable.js" },
-      "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js" },
-      "my/interviews": { title: "My Interview Queue", icon: "📋", script: "MyInterviewList.js" },
-      "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js" },
-    };
+      this.userRole = localStorage.getItem('role') || 'Admin';
+      console.log('[RecruitApplication] Current user role:', this.userRole);
+    
+      this.features = this.getFeaturesForRole(this.userRole);
 
-    this.setupRoutes();
-    this.setDefaultRoute("");
-  }
+      this.setupRoutes();
+      this.setDefaultRoute("");
+    }
+
+    getFeaturesForRole(role) {
+      const allFeatures = {
+        "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantTable.js", roles: ["Admin"] },
+        "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js", roles: ["Admin"] },
+        "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundTable.js", roles: ["Admin"] },
+        "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js", roles: ["Admin"] },
+        "my/interviews": { title: "My Interview Queue", icon: "📋", script: "MyInterviewList.js", roles: ["Instructor"] },
+        "interviewcriteria/list": { title: "Manage Interview Criteria", icon: "📋", script: "InterviewCriteriaList.js", roles: ["Admin", "Instructor"] },
+      };
+
+      // Filter features based on user role
+      const filteredFeatures = {};
+      for (const [key, feature] of Object.entries(allFeatures)) {
+        if (feature.roles.includes(role)) {
+          filteredFeatures[key] = feature;
+        }
+      }
+
+      console.log('[RecruitApplication] Features available for', role, ':', Object.keys(filteredFeatures));
+      return filteredFeatures;
+    }
 
   async loadRecruitFormTemplate() {
     if (!window.RecruitFormTemplate) {
@@ -174,6 +192,16 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     }
 
     console.log("Rendering recruit main page with features:", this.features);
+    
+    if (Object.keys(this.features).length === 0) {
+      const templatePath = `${this.rootURL}/recruit/static/view/AccessRestricted.tpl`;
+      const response = await fetch(templatePath);
+      const templateContent = await response.text();
+      const rendered = Mustache.render(templateContent, { userRole: this.userRole });
+      container.innerHTML = rendered;
+      return true;
+    }
+    
     const homeElement = await RecruitHomeTemplate.getTemplate(
       this.features,
       this.templateEngine

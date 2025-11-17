@@ -24,6 +24,34 @@ if (typeof window !== 'undefined' && !window.ApplicantService) {
       };
     }
 
+    formatForDisplay(applicant) {
+      return {
+        id: applicant.ID || applicant.Id || applicant.id || 'N/A',
+        first_name: applicant.first_name || 'N/A',
+        last_name: applicant.last_name || 'N/A',
+        email: applicant.email || 'N/A',
+        phone_number: applicant.phone_number || 'N/A',
+        birth_date: applicant.birth_date ? new Date(applicant.birth_date).toLocaleDateString() : 'N/A',
+        address: applicant.address || 'N/A',
+        gpax: applicant.gpax || 'N/A',
+        high_school_program: applicant.high_school_program || 'N/A',
+        math_grade: applicant.math_grade || '0',
+        science_grade: applicant.science_grade || '0',
+        english_grade: applicant.english_grade || '0',
+        tgat1: applicant.tgat1 || '0',
+        tgat2: applicant.tgat2 || '0',
+        tgat3: applicant.tgat3 || '0',
+        tpat1: applicant.tpat1 || '0',
+        tpat2: applicant.tpat2 || '0',
+        tpat3: applicant.tpat3 || '0',
+        tpat4: applicant.tpat4 || '0',
+        tpat5: applicant.tpat5 || '0',
+        family_income: applicant.family_income ? applicant.family_income.toLocaleString() + ' THB' : 'N/A',
+        portfolio_url: applicant.portfolio_url || '',
+        portfolio_url_link: !!applicant.portfolio_url
+      };
+    }
+
     async getAll() {
       try {
         const resp = await fetch(this.ENDPOINT_LIST);

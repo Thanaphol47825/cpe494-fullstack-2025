@@ -51,10 +51,49 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
         modelPath: 'recruit/applicant',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: await RecruitTableTemplate.getDefaultColumns()
+        customColumns: await RecruitTableTemplate.getDefaultColumns(),
+        
+        enableSearch: true,
+        enableSorting: true,
+        enablePagination: true,
+        pageSize: 10,
+        
+        searchConfig: {
+          placeholder: "Search applicants...",
+          fields: [
+            { value: "all", label: "All Fields" },
+            { value: "first_name", label: "First Name" },
+            { value: "last_name", label: "Last Name" },
+            { value: "email", label: "Email" },
+            { value: "phone_number", label: "Phone Number" },
+            { value: "high_school_program", label: "High School Program" }
+          ]
+        },
+        
+        sortConfig: {
+          defaultField: "id",
+          defaultDirection: "asc"
+        }
       });
 
       await this.table.loadSchema();
+      
+      this.table.schema = this.table.schema.map(col => {
+        const hideColumns = [
+          'created_at', 'updated_at', 'deleted_at',
+          'tgat1', 'tgat2', 'tgat3',
+          'tpat1', 'tpat2', 'tpat3', 'tpat4', 'tpat5',
+          'portfolio_url', 'family_income',
+          'math_grade', 'science_grade', 'english_grade',
+          'applicant_round_information', 'address'
+        ];
+        
+        if (hideColumns.includes(col.name)) {
+          return { ...col, display: false };
+        }
+        return col;
+      });
+      
       this.table.targetSelector = '#recruit-table-container';
       await this.table.render();
       await this.refreshTable();
@@ -64,7 +103,9 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
         if (!btn) return;
         const action = btn.getAttribute('data-action');
         const id = btn.getAttribute('data-id');
-        if (action === 'edit') this.handleEdit(id);
+        console.log('[ApplicantTable] Button clicked:', { action, id });
+        if (action === 'view') this.handleView(id);
+        else if (action === 'edit') this.handleEdit(id);
         else if (action === 'delete') this.handleDelete(id);
       });
 
@@ -79,6 +120,38 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
         this.table.setData(result.data);
       } else {
         this.ui?.showMessage(`Error loading applicants: ${result.error}`, 'error');
+      }
+    }
+
+    async formatApplicantForModal(applicant) {
+      const data = this.service.formatForDisplay(applicant);
+      return await RecruitTableTemplate.formatForModal(
+        data,
+        'recruit/applicant',
+        '🧑‍💼 Applicant Details'
+      );
+    }
+
+    async handleView(id) {
+      if (!id) return;
+      
+      try {
+        this.ui?.showMessage('Loading applicant details...', 'info');
+        
+        const result = await this.service.getById(id);
+        
+        if (!result.success) {
+          this.ui?.showMessage(`Error loading applicant: ${result.error}`, 'error');
+          return;
+        }
+        
+        const modalData = await this.formatApplicantForModal(result.data);
+        await RecruitTableTemplate.showDetailsModal(modalData);
+        
+        this.ui?.clearMessages();
+      } catch (error) {
+        console.error('[ApplicantTable] Error in handleView:', error);
+        this.ui?.showMessage(`Error displaying modal: ${error.message}`, 'error');
       }
     }
 

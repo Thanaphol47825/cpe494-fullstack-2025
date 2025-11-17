@@ -45,6 +45,25 @@ if (typeof window !== 'undefined' && !window.InterviewService) {
       };
     }
 
+    transformRowData(item) {
+      const instructor = item.Instructor || item.instructor;
+      const applicationReport = item.ApplicationReport || item.application_report;
+      const applicant = applicationReport?.applicant || applicationReport?.Applicant;
+      
+      const instructorName = instructor ? `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() : 'N/A';
+      const applicantName = applicant ? `${applicant.first_name || ''} ${applicant.last_name || ''}`.trim() : 'N/A';
+      
+      return {
+        ...item,
+        instructor_name: String(instructorName),
+        instructor_email: String(instructor?.email || 'N/A'),
+        applicant_name: String(applicantName),
+        applicant_email: String(applicant?.email || 'N/A'),
+        scheduled_appointment_display: item.scheduled_appointment ? String(new Date(item.scheduled_appointment).toLocaleString()) : 'N/A',
+        evaluated_at_display: item.evaluated_at ? String(new Date(item.evaluated_at).toLocaleString()) : 'N/A'
+      };
+    }
+
     async getAll() {
       try {
         const resp = await fetch(this.ENDPOINT_LIST);

@@ -53,14 +53,66 @@ if (typeof window !== 'undefined' && !window.InterviewTable) {
         toolbar.appendChild(setupBtn);
       }
 
+      const customColumns = [
+        {
+          name: 'instructor_name',
+          label: 'Instructor',
+          template: '{instructor_name}'
+        },
+        {
+          name: 'applicant_name',
+          label: 'Applicant',
+          template: '{applicant_name}'
+        },
+        {
+          name: 'scheduled_appointment_display',
+          label: 'Scheduled',
+          template: '{scheduled_appointment_display}'
+        },
+        {
+          name: 'interview_status',
+          label: 'Status',
+          template: '{interview_status}'
+        },
+        {
+          name: 'total_score',
+          label: 'Score',
+          template: '{total_score}'
+        },
+        ...await RecruitTableTemplate.getDefaultColumns()
+      ];
+
       this.table = new window.AdvanceTableRender(this.engine, {
         modelPath: 'recruit/interview',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: await RecruitTableTemplate.getDefaultColumns()
+        customColumns: customColumns,
+        schema: [],
+        
+        enableSearch: true,
+        enableSorting: true,
+        enablePagination: true,
+        pageSize: 10,
+        
+        searchConfig: {
+          placeholder: "Search interviews...",
+          fields: [
+            { value: "all", label: "All Fields" },
+            { value: "instructor_name", label: "Instructor Name" },
+            { value: "instructor_email", label: "Instructor Email" },
+            { value: "applicant_name", label: "Applicant Name" },
+            { value: "applicant_email", label: "Applicant Email" },
+            { value: "interview_status", label: "Interview Status" },
+            { value: "total_score", label: "Total Score" }
+          ]
+        },
+        
+        sortConfig: {
+          defaultField: "ID",
+          defaultDirection: "asc"
+        }
       });
 
-      await this.table.loadSchema();
       this.table.targetSelector = '#recruit-table-container';
       await this.table.render();
       await this.refreshTable();
@@ -71,7 +123,8 @@ if (typeof window !== 'undefined' && !window.InterviewTable) {
         const action = btn.getAttribute('data-action');
         const id = btn.getAttribute('data-id');
         
-        if (action === 'edit') this.handleEdit(id);
+        if (action === 'view') this.handleView(id);
+        else if (action === 'edit') this.handleEdit(id);
         else if (action === 'delete') this.handleDelete(id);
       });
 
@@ -83,12 +136,65 @@ if (typeof window !== 'undefined' && !window.InterviewTable) {
     async refreshTable() {
       const result = await this.interviewService.getAll();
       if (result.success) {
-        this.table.setData(result.data);
-        if (result.data.length === 0) {
+        const transformedData = result.data.map(item => this.interviewService.transformRowData(item));
+        
+        this.table.setData(transformedData);
+        if (transformedData.length === 0) {
           this.ui?.showMessage('No interview records found. Click "🔧 Setup Test Data" to create sample data.', 'info');
         }
       } else {
         this.ui?.showMessage(`Error loading interviews: ${result.error}`, 'error');
+      }
+    }
+
+    async formatInterviewForModal(interview) {
+      const data = interview;
+      
+      const instructor = data.Instructor || data.instructor;
+      const applicationReport = data.ApplicationReport || data.application_report;
+      const applicant = applicationReport?.applicant || applicationReport?.Applicant;
+      
+      const instructorName = instructor ? `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() : 'N/A';
+      const applicantName = applicant ? `${applicant.first_name || ''} ${applicant.last_name || ''}`.trim() : 'N/A';
+      
+      const additionalFields = [
+        { label: 'Instructor', value: `${instructorName} (ID: ${data.instructor_id || 'N/A'})` },
+        { label: 'Application Report', value: `Report #${data.application_report_id || 'N/A'}` },
+        { label: 'Applicant', value: `${applicantName} (ID: ${applicationReport?.applicant_id || 'N/A'})` },
+        { label: 'Applicant Email', value: applicant?.email || 'N/A' },
+        { label: 'Scheduled Appointment', value: data.scheduled_appointment ? new Date(data.scheduled_appointment).toLocaleString() : 'N/A' },
+        { label: 'Evaluated At', value: data.evaluated_at ? new Date(data.evaluated_at).toLocaleString() : 'N/A' }
+      ];
+      
+      return await RecruitTableTemplate.formatForModal(
+        data,
+        'recruit/interview',
+        '📅 Interview Details',
+        additionalFields,
+        ['instructor_id', 'application_report_id', 'scheduled_appointment', 'evaluated_at', 'criteria_scores']
+      );
+    }
+
+    async handleView(id) {
+      if (!id) return;
+      
+      try {
+        this.ui?.showMessage('Loading interview details...', 'info');
+        
+        const result = await this.interviewService.getById(id);
+        
+        if (!result.success) {
+          this.ui?.showMessage(`Error loading interview: ${result.error}`, 'error');
+          return;
+        }
+        
+        const modalData = await this.formatInterviewForModal(result.data);
+        await RecruitTableTemplate.showDetailsModal(modalData);
+        
+        this.ui?.clearMessages();
+      } catch (error) {
+        console.error('[InterviewTable] Error in handleView:', error);
+        this.ui?.showMessage(`Error displaying modal: ${error.message}`, 'error');
       }
     }
 

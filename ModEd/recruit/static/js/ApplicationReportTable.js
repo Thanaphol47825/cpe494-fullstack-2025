@@ -59,10 +59,34 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
         modelPath: 'recruit/applicationreport',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: customColumns
+        customColumns: customColumns,
+        schema: [],
+        
+        enableSearch: true,
+        enableSorting: true,
+        enablePagination: true,
+        pageSize: 10,
+        
+        searchConfig: {
+          placeholder: "Search application reports...",
+          fields: [
+            { value: "all", label: "All Fields" },
+            { value: "applicant_first_name", label: "Applicant First Name" },
+            { value: "applicant_last_name", label: "Applicant Last Name" },
+            { value: "applicant_email", label: "Applicant Email" },
+            { value: "round_name", label: "Application Round" },
+            { value: "faculty_name", label: "Faculty" },
+            { value: "department_name", label: "Department" },
+            { value: "program_label", label: "Program Type" },
+            { value: "application_statuses", label: "Application Status" }
+          ]
+        },
+        
+        sortConfig: {
+          defaultField: "ID",
+          defaultDirection: "asc"
+        }
       });
-
-      await this.table.loadSchema();
       
       this.statusConstants = await this.statusService.getStatusConstants();
       
@@ -85,7 +109,8 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
         const action = btn.getAttribute('data-action');
         const id = btn.getAttribute('data-id');
         
-        if (action === 'edit') this.handleEdit(id);
+        if (action === 'view') this.handleView(id);
+        else if (action === 'edit') this.handleEdit(id);
         else if (action === 'delete') this.handleDelete(id);
         else if (action === 'verify') this.handleVerifyEligibility(id);
         else if (action === 'confirm') this.handleConfirmAcceptance(id);
@@ -109,6 +134,58 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
         }
       } else {
         this.ui?.showMessage(`Error loading application reports: ${result.error}`, 'error');
+      }
+    }
+
+    async formatApplicationReportForModal(report) {
+      const data = report;
+      
+      const applicant = data.applicant || data.Applicant;
+      const applicationRound = data.application_round || data.ApplicationRound;
+      const faculty = data.faculty || data.Faculty;
+      const department = data.department || data.Department;
+      
+      const applicantName = `${applicant?.first_name || ''} ${applicant?.last_name || ''}`.trim() || 'N/A';
+      const programLabel = this.reportService.programTypeMap[data.program] || data.program || 'N/A';
+      
+      const additionalFields = [
+        { label: 'Applicant', value: `${applicantName} (ID: ${data.applicant_id || 'N/A'})` },
+        { label: 'Email', value: applicant?.email || 'N/A' },
+        { label: 'Application Round', value: `${applicationRound?.round_name || applicationRound?.name || 'N/A'} (ID: ${data.application_rounds_id || 'N/A'})` },
+        { label: 'Faculty', value: `${faculty?.name || 'N/A'} (ID: ${data.faculty_id || 'N/A'})` },
+        { label: 'Department', value: `${department?.name || 'N/A'} (ID: ${data.department_id || 'N/A'})` },
+        { label: 'Program Type', value: `${programLabel} (ID: ${data.program ?? 'N/A'})` }
+      ];
+      
+      return await RecruitTableTemplate.formatForModal(
+        data,
+        'recruit/applicationreport',
+        '📊 Application Report Details',
+        additionalFields,
+        ['applicant_id', 'application_rounds_id', 'faculty_id', 'department_id', 'program', 'application_statuses']
+      );
+    }
+
+    async handleView(id) {
+      if (!id) return;
+      
+      try {
+        this.ui?.showMessage('Loading application report details...', 'info');
+        
+        const result = await this.reportService.getById(id);
+        
+        if (!result.success) {
+          this.ui?.showMessage(`Error loading application report: ${result.error}`, 'error');
+          return;
+        }
+        
+        const modalData = await this.formatApplicationReportForModal(result.data);
+        await RecruitTableTemplate.showDetailsModal(modalData);
+        
+        this.ui?.clearMessages();
+      } catch (error) {
+        console.error('[ApplicationReportTable] Error in handleView:', error);
+        this.ui?.showMessage(`Error displaying modal: ${error.message}`, 'error');
       }
     }
 

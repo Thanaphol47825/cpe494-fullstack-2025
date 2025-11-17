@@ -92,6 +92,160 @@ if (typeof window !== 'undefined' && !window.RecruitTableTemplate) {
         }
       ];
     }
+
+    static modalTemplate = null;
+    static modalStylesLoaded = false;
+    static schemaCache = {};
+
+    static async loadModalTemplate() {
+      if (this.modalTemplate) return this.modalTemplate;
+      
+      const res = await fetch(`${RootURL}/recruit/static/view/DetailsModal.tpl`);
+      this.modalTemplate = await res.text();
+      return this.modalTemplate;
+    }
+
+    static async ensureModalStyles() {
+      if (this.modalStylesLoaded) return;
+      
+      const res = await fetch(`${RootURL}/recruit/static/view/ModalStyles.css`);
+      const css = await res.text();
+      
+      const style = document.createElement('style');
+      style.id = 'recruit-modal-styles';
+      style.textContent = css;
+      document.head.appendChild(style);
+      
+      this.modalStylesLoaded = true;
+    }
+
+    static async showDetailsModal(data) {
+      await this.ensureModalStyles();
+      await this.loadModalTemplate();
+      
+      const html = Mustache.render(this.modalTemplate, data);
+      
+      const modal = document.createElement('div');
+      modal.innerHTML = html.trim();
+      const modalElement = modal.firstElementChild;
+      
+      document.body.appendChild(modalElement);
+      
+      modalElement.addEventListener('click', (e) => {
+        if (e.target === modalElement) {
+          modalElement.remove();
+        }
+      });
+
+      const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+          modalElement.remove();
+          document.removeEventListener('keydown', handleEscape);
+        }
+      };
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    static async fetchSchema(modelPath) {
+      if (this.schemaCache[modelPath]) {
+        return this.schemaCache[modelPath];
+      }
+      
+      try {
+        const res = await fetch(`${RootURL}/api/modelmeta/${modelPath}`);
+        const schema = await res.json();
+        this.schemaCache[modelPath] = schema;
+        return schema;
+      } catch (error) {
+        console.error(`[RecruitTableTemplate] Error fetching schema for ${modelPath}:`, error);
+        return [];
+      }
+    }
+
+    static async formatForModal(data, modelPath, modalTitle, additionalFields = [], excludeFields = []) {
+      const schema = await this.fetchSchema(modelPath);
+      
+      const fields = [
+        { label: 'ID', value: data.id || data.ID || 'N/A' },
+        ...additionalFields
+      ];
+      
+      schema.forEach(field => {
+        if (field.display !== false && !excludeFields.includes(field.name)) {
+          const value = data[field.name] || 'N/A';
+          const fieldData = { 
+            label: field.label, 
+            value: value
+          };
+          
+          if (field.type === 'url' && value !== 'N/A') {
+            fieldData.isLink = true;
+            fieldData.hasValue = true;
+          }
+          
+          if (field.type === 'text' && field.name === 'address') {
+            fieldData.fullWidth = true;
+          }
+          
+          fields.push(fieldData);
+        }
+      });
+      
+      return {
+        modalTitle: modalTitle,
+        sections: [
+          {
+            sectionTitle: 'Information',
+            fields: fields
+          }
+        ]
+      };
+    }
+
+    static async formatWithCustomSections(data, modelPath, modalTitle, customSections) {
+      const schema = await this.fetchSchema(modelPath);
+      const schemaMap = {};
+      
+      schema.forEach(field => {
+        schemaMap[field.name] = field;
+      });
+      
+      const sections = customSections.map(section => {
+        const fields = section.fields.map(fieldConfig => {
+          if (typeof fieldConfig === 'string') {
+            const schemaField = schemaMap[fieldConfig];
+            if (schemaField && schemaField.display !== false) {
+              const value = data[fieldConfig] || 'N/A';
+              const fieldData = {
+                label: schemaField.label,
+                value: value
+              };
+              
+              if (schemaField.type === 'url' && value !== 'N/A') {
+                fieldData.isLink = true;
+                fieldData.hasValue = true;
+              }
+              
+              return fieldData;
+            }
+            return null;
+          } else {
+            return fieldConfig;
+          }
+        }).filter(f => f !== null);
+        
+        return {
+          sectionTitle: section.sectionTitle,
+          gridClass: section.gridClass,
+          fields: fields
+        };
+      });
+      
+      return {
+        modalTitle: modalTitle,
+        sections: sections
+      };
+    }
   }
 
   window.RecruitTableTemplate = RecruitTableTemplate;

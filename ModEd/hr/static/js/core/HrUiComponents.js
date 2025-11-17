@@ -1,7 +1,19 @@
 // HR UI Components - Refactored to use Template Registry
 if (typeof window !== 'undefined' && !window.HrUiComponents) {
   class HrUiComponents {
-  static renderMainPage() {
+  static setUserMode(mode) {
+      // Save mode to localStorage
+      localStorage.setItem('hrUserMode', mode);
+      // Reload the main page to reflect the new mode
+      if (window.hrApp && window.hrApp.templateEngine) {
+        window.hrApp.renderMainPage();
+      }
+    }
+
+    static renderMainPage() {
+      // Get current mode from localStorage or default to 'instructor'
+      const currentMode = localStorage.getItem('hrUserMode') || 'instructor';
+      
       return `
         <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative overflow-hidden">
           <!-- Background Ornaments -->
@@ -12,7 +24,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
 
           <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <!-- Header Section -->
-            <div class="text-center mb-12">
+            <div class="text-center mb-8">
               <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl mb-6 shadow-2xl">
                 <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -23,16 +35,55 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   Human Resources
                 </span>
               </h1>
-              <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed mb-6">
                 Manage instructors, students, departments, resignations, and leave requests in a single, modern HR workspace.
+              </p>
+              
+              <!-- Mode Selector -->
+              <div class="flex justify-center mb-6">
+                <div class="inline-flex items-center bg-white rounded-2xl p-2 shadow-lg border-2 border-slate-200">
+                  <span class="text-sm font-medium text-slate-600 mr-4 px-2">View Mode:</span>
+                  <button 
+                    id="modeInstructorBtn"
+                    onclick="HrUiComponents.setUserMode('instructor')"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                      currentMode === 'instructor' 
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Instructor
+                  </button>
+                  <button 
+                    id="modeStudentBtn"
+                    onclick="HrUiComponents.setUserMode('student')"
+                    class="px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ml-2 ${
+                      currentMode === 'student' 
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md' 
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }">
+                    <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.083 12.083 0 01.665-6.479L12 14z"></path>
+                    </svg>
+                    Student
+                  </button>
+                </div>
+              </div>
+              <p class="text-sm text-slate-500 italic">
+                ${currentMode === 'instructor' 
+                  ? 'Instructor mode: Full access to all features' 
+                  : 'Student mode: Limited access to student-specific features'}
               </p>
             </div>
 
             <!-- Main Menu Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10" id="mainMenuGrid">
 
               <!-- Instructors Card -->
-              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-blue-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="instructor-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-blue-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-500 to-indigo-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +112,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
               </div>
 
               <!-- Students Card -->
-              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-emerald-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="student-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-emerald-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden" ${currentMode === 'student' ? '' : ''}>
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-500 to-teal-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +124,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Students</h3>
                   <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage student records and academic progress</p>
                   <div class="space-y-3">
-                    <a routerLink="hr/students" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                    <a routerLink="hr/students" class="student-browse-link w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -84,14 +135,14 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
-                      Create New
+                      Create New Student
                     </a>
                   </div>
                 </div>
               </div>
 
               <!-- Student Resignation Card -->
-              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-amber-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="resignation-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-amber-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden" ${currentMode === 'student' ? '' : ''}>
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500 to-amber-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,19 +153,25 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Student Resignation</h3>
                   <p class="text-slate-600 mb-5 text-sm leading-relaxed">Handle student withdrawal and resignation requests</p>
                   <div class="space-y-3">
-                    <a routerLink="hr/resignation/student" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                    <a routerLink="hr/resignation/student" class="resignation-view-link w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
                       View Requests
                     </a>
+                    <a routerLink="hr/resignation/student/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      New Resignation Request
+                    </a>
                   </div>
                 </div>
               </div>
 
               <!-- Instructor Resignation Card -->
-              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-rose-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="resignation-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-rose-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-orange-500 to-rose-500 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-orange-500 to-rose-500 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,19 +182,25 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Instructor Resignation</h3>
                   <p class="text-slate-600 mb-5 text-sm leading-relaxed">Handle instructor resignation and exit processes</p>
                   <div class="space-y-3">
-                    <a routerLink="hr/resignation/instructor" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                    <a routerLink="hr/resignation/instructor" class="instructor-resignation-view-link w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
                       View Requests
                     </a>
+                    <a routerLink="hr/resignation/instructor/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-500 to-rose-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      New Resignation Request
+                    </a>
                   </div>
                 </div>
               </div>
 
               <!-- Leave Management Card -->
-              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-purple-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="leave-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-purple-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden" ${currentMode === 'student' ? '' : ''}>
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-indigo-600 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,24 +211,30 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Leave Management</h3>
                   <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage leave requests and vacation tracking</p>
                   <div class="space-y-3">
-                    <a routerLink="hr/leave" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                    <a routerLink="hr/leave" class="leave-manage-link w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                       </svg>
                       Manage Leave
                     </a>
-                    <a routerLink="hr/leave/history" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                    <a routerLink="hr/leave/history" class="leave-history-link w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                       </svg>
                       View History
+                    </a>
+                    <a routerLink="hr/leave/student/create" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl hover:shadow-lg transition-all duration-200 text-sm font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                      </svg>
+                      New Student Leave Request
                     </a>
                   </div>
                 </div>
               </div>
 
               <!-- Departments Card -->
-              <div class="bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-sky-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
+              <div class="department-card bg-gradient-to-br from-white to-slate-50 rounded-2xl border-2 border-slate-200 p-6 hover:border-sky-300 transition-all duration-300 hover:scale-105 hover:shadow-2xl group relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-sky-500 to-blue-600 opacity-5 rounded-full -translate-y-16 translate-x-16 group-hover:scale-150 transition-transform duration-500"></div>
                 <div class="relative z-10 flex items-center justify-center w-14 h-14 bg-gradient-to-br from-sky-500 to-blue-600 rounded-2xl mb-5 shadow-lg group-hover:rotate-3 transition-transform duration-300">
                   <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -176,7 +245,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                   <h3 class="text-xl font-bold text-slate-800 mb-2 group-hover:text-slate-900 transition-colors">Departments</h3>
                   <p class="text-slate-600 mb-5 text-sm leading-relaxed">Manage academic departments and budgets</p>
                   <div class="space-y-3">
-                    <a routerLink="hr/departments" class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg">
+                    <a routerLink="hr/departments" class="department-browse-link w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 hover:bg-slate-800 text-white rounded-xl transition-all duration-200 text-sm font-medium group-hover:shadow-lg" ${currentMode === 'student' ? 'style="display: none;"' : ''}>
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -187,7 +256,7 @@ if (typeof window !== 'undefined' && !window.HrUiComponents) {
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                       </svg>
-                      Create New
+                      Create New Department
                     </a>
                   </div>
                 </div>

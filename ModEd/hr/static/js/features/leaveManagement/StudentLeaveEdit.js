@@ -22,7 +22,7 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveEditFeature) {
           this.#loadRequest()
         ]);
 
-        this.#renderFormLayout();
+        await this.#renderFormLayout();
         this.#attachEventListeners();
 
         if (this.request && this.request.Status && this.request.Status !== 'Pending') {
@@ -61,7 +61,7 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveEditFeature) {
       this.request = await this.apiService.fetchStudentLeaveRequest(this.requestId);
     }
 
-    #renderFormLayout() {
+    async #renderFormLayout() {
       this.templateEngine.mainContainer.innerHTML = '';
 
       const wrapper = HrUiComponents.createEditFormPageWrapper({

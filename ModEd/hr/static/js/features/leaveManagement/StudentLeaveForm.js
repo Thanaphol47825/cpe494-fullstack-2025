@@ -127,8 +127,8 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveFormFeature) {
       
       const backLink = document.createElement('a');
       backLink.className = 'inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200';
-      backLink.setAttribute('routerLink', 'hr/leave/student');
-      backLink.textContent = 'Back to Student Leave Requests';
+      backLink.setAttribute('routerLink', 'hr');
+      backLink.textContent = 'Back to Home Page';
       backButtonContainer.appendChild(backLink);
       
       innerDiv.appendChild(headerDiv);
@@ -162,8 +162,8 @@ if (typeof window !== 'undefined' && !window.HrStudentLeaveFormFeature) {
       
       const backLink = document.createElement('a');
       backLink.className = 'inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50';
-      backLink.setAttribute('routerLink', 'hr/leave');
-      backLink.textContent = 'Back to Leave Management';
+      backLink.setAttribute('routerLink', 'hr');
+      backLink.textContent = 'Back to Home Page';
       buttonDiv.appendChild(backLink);
       
       errorDiv.appendChild(h2);

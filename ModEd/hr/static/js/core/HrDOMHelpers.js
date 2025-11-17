@@ -213,10 +213,10 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
     static createInput(options = {}) {
       const input = this.createElement('input', {
         type: options.type || 'text',
-        name: options.name,
         id: options.id,
         className: options.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
         attributes: {
+          name: options.name || '',
           placeholder: options.placeholder || '',
           ...(options.required ? { required: '' } : {}),
           ...(options.value ? { value: options.value } : {}),
@@ -252,10 +252,10 @@ if (typeof window !== 'undefined' && !window.HrDOMHelpers) {
      */
     static createTextarea(options = {}) {
       const textarea = this.createElement('textarea', {
-        name: options.name,
         id: options.id,
         className: options.className || 'w-full rounded-xl border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500',
         attributes: {
+          name: options.name || '',
           placeholder: options.placeholder || '',
           rows: options.rows || '4',
           ...(options.required ? { required: '' } : {}),

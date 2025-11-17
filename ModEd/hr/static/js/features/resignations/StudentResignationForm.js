@@ -37,8 +37,19 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
         this.templateEngine.mainContainer.innerHTML = '';
         this.templateEngine.mainContainer.appendChild(pageHTML);
 
-        // Attach form handlers
+        // Wait for DOM to be ready, then attach form handlers
+        // Use multiple strategies to ensure handlers are attached
         this.#attachFormHandlers();
+        
+        // Also try attaching after a short delay as fallback
+        setTimeout(() => {
+          const form = document.getElementById('studentResignationForm');
+          if (form && !form.hasAttribute('data-handlers-attached')) {
+            console.log('Fallback: Attaching form handlers');
+            form.setAttribute('data-handlers-attached', 'true');
+            this.#attachFormHandlers();
+          }
+        }, 200);
 
       } catch (error) {
         console.error('Error creating resignation form:', error);
@@ -128,14 +139,14 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
         children: [
           Hel.createElement('a', {
             attributes: {
-              'routerLink': 'hr/resignation/student'
+              'routerLink': 'hr'
             },
             className: HrUiComponents.buttonClasses.secondary,
             children: [
               Hel.createIcon('M10 19l-7-7m0 0l7-7m-7 7h18', {
                 className: 'w-5 h-5 mr-2'
               }),
-              document.createTextNode(' Back to List')
+              document.createTextNode(' Back to Home Page')
             ]
           })
         ]
@@ -246,53 +257,138 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
     }
 
     #attachFormHandlers() {
-      const form = document.getElementById('studentResignationForm');
-      const resetButton = document.getElementById('resetButton');
+      // Try immediate attach first
+      let form = document.getElementById('studentResignationForm');
+      let resetButton = document.getElementById('resetButton');
 
-      if (form) {
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          this.#handleSubmit(form);
-        });
+      // If form not found, try again after short delay
+      if (!form) {
+        setTimeout(() => {
+          form = document.getElementById('studentResignationForm');
+          resetButton = document.getElementById('resetButton');
+          if (form) {
+            this.#doAttachHandlers(form, resetButton);
+          } else {
+            console.error('Form not found after retry: studentResignationForm');
+          }
+        }, 50);
+        return;
+      }
 
-        // Focus first field
-        const firstField = form.querySelector('input[name="StudentCode"]');
-        if (firstField) {
-          setTimeout(() => firstField.focus(), 100);
+      this.#doAttachHandlers(form, resetButton);
+    }
+
+    #doAttachHandlers(form, resetButton) {
+      if (!form) return;
+
+      // Check if handlers already attached
+      if (form.hasAttribute('data-handlers-attached')) {
+        console.log('Handlers already attached, skipping');
+        return;
+      }
+      form.setAttribute('data-handlers-attached', 'true');
+
+      // Store form reference on instance for use in handlers
+      this._currentForm = form;
+
+      // Bind this context for event handlers
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Form submit triggered');
+        // Use the actual form element from DOM, not cloned one
+        const actualForm = document.getElementById('studentResignationForm');
+        if (actualForm) {
+          this.#handleSubmit(actualForm);
+        } else {
+          console.error('Form not found in DOM');
         }
+        return false;
+      };
+
+      form.addEventListener('submit', handleSubmit, false);
+
+      // Also attach to button click as fallback
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('Submit button clicked');
+          const actualForm = document.getElementById('studentResignationForm');
+          if (actualForm) {
+            // Trigger submit on actual form
+            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            actualForm.dispatchEvent(submitEvent);
+          }
+          return false;
+        }, false);
+      }
+
+      // Focus first field
+      const firstField = form.querySelector('input[name="StudentCode"]');
+      if (firstField) {
+        setTimeout(() => firstField.focus(), 100);
       }
 
       if (resetButton) {
         resetButton.addEventListener('click', () => {
-          form.reset();
-          HrUiComponents.hideFormResult();
+          const actualForm = document.getElementById('studentResignationForm');
+          if (actualForm) {
+            actualForm.reset();
+          }
+          const resultArea = document.getElementById('formResultArea');
+          if (resultArea) {
+            resultArea.innerHTML = '';
+          }
           const firstField = form.querySelector('input[name="StudentCode"]');
           if (firstField) {
             setTimeout(() => firstField.focus(), 100);
           }
         });
       }
+
+      console.log('Form handlers attached successfully');
     }
 
     async #handleSubmit(form) {
       try {
+        console.log('handleSubmit called');
         // Hide previous results
-        HrUiComponents.hideFormResult();
+        const resultArea = document.getElementById('formResultArea');
+        if (resultArea) {
+          resultArea.innerHTML = '';
+        }
 
-        // Collect form data
-        const formData = new FormData(form);
+        // Collect form data - make sure we're using the actual form from DOM
+        const actualForm = document.getElementById('studentResignationForm');
+        if (!actualForm) {
+          throw new Error('Form not found in DOM');
+        }
+
+        const formData = new FormData(actualForm);
         const data = {};
         for (const [key, value] of formData.entries()) {
-          data[key] = value.trim();
+          data[key] = value ? value.trim() : '';
         }
+
+        console.log('Form data collected from actual form:', data);
+        console.log('FormData entries:', Array.from(formData.entries()));
 
         // Validate required fields
         if (!this.#validateFormData(data)) {
+          console.log('Validation failed');
           return;
         }
 
         // Transform payload for API
         const transformedPayload = this.#transformPayload(data);
+        console.log('Transformed payload:', transformedPayload);
+
+        // Show loading state
+        if (resultArea) {
+          resultArea.innerHTML = '<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-blue-800">Submitting resignation request...</div>';
+        }
 
         // Submit to API
         const response = await fetch(`${this.rootURL}/hr/resignation-student-requests`, {
@@ -304,39 +400,70 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
           body: JSON.stringify(transformedPayload)
         });
 
+        console.log('API response status:', response.status);
         const result = await response.json().catch(() => ({}));
+        console.log('API response:', result);
 
         if (!response.ok) {
           throw new Error(result?.error?.message || result?.message || `API Error (${response.status})`);
         }
 
         // Show success message
-        HrUiComponents.showFormSuccess('Student resignation request submitted successfully!', result);
+        if (resultArea) {
+          resultArea.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-lg p-4 text-green-800"><strong>Success!</strong> Student resignation request submitted successfully!</div>';
+        } else {
+          HrUiComponents.showFormSuccess('Student resignation request submitted successfully!', result);
+        }
 
         // Reset form after delay
         setTimeout(() => {
           form.reset();
-          HrUiComponents.hideFormResult();
+          if (resultArea) {
+            resultArea.innerHTML = '';
+          }
           const firstField = form.querySelector('input[name="StudentCode"]');
           if (firstField) firstField.focus();
         }, 3000);
 
       } catch (error) {
         console.error('Form submission error:', error);
-        HrUiComponents.showFormError(error.message, error);
+        const resultArea = document.getElementById('formResultArea');
+        if (resultArea) {
+          resultArea.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800"><strong>Error!</strong> ${error.message || 'Failed to submit resignation request'}</div>`;
+        } else {
+          HrUiComponents.showFormError(error.message, error);
+        }
       }
     }
 
     #validateFormData(formData) {
       // Basic validation for required fields
       const requiredFields = ['StudentCode', 'Reason'];
-      const missing = requiredFields.filter(field => !formData[field]);
+      const missing = requiredFields.filter(field => {
+        const value = formData[field];
+        const isEmpty = !value || (typeof value === 'string' && value.trim() === '');
+        console.log(`Validating field ${field}: value="${value}", isEmpty=${isEmpty}`);
+        return isEmpty;
+      });
+
+      console.log('Missing fields:', missing);
+      console.log('Full formData object:', formData);
 
       if (missing.length > 0) {
-        HrUiComponents.showFormError(`Please fill required fields: ${missing.join(', ')}`);
+        const errorMessage = `Please fill required fields: ${missing.join(', ')}`;
+        console.log('Validation failed:', errorMessage);
+        
+        // Show error in resultArea
+        const resultArea = document.getElementById('formResultArea');
+        if (resultArea) {
+          resultArea.innerHTML = `<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800"><strong>Validation Error!</strong> ${errorMessage}</div>`;
+        } else {
+          HrUiComponents.showFormError(errorMessage);
+        }
         return false;
       }
 
+      console.log('Validation passed');
       return true;
     }
 
@@ -381,8 +508,8 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
         title: 'Error Loading Form',
         message: message,
         retryText: 'Retry',
-        backText: 'Back to List',
-        backUrl: `${this.rootURL}/#hr/resignation/student`,
+        backText: 'Back to Home Page',
+        backUrl: `${this.rootURL}/#hr`,
         retryButtonClass: HrUiComponents.buttonClasses.danger,
         backButtonClass: `${HrUiComponents.buttonClasses.secondary} ml-3`
       });

@@ -9,25 +9,26 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
       window._addSkillToCourse = this.handleAddSkills.bind(this);
     }
 
+    async initialize() {
+      // This ensures the template is loaded before CourseList asks for columns
+      await this.getActionTemplateExtension();
+    }
+
     getCustomColumns() {
       const currentRole = localStorage.getItem('userRole');
       const isStudent = currentRole === 'Student';
 
-      // hide Add Skill  button for Student
       if (isStudent) {
         return [];
       }
 
+      const actionTemplateExtension = CourseSkillList.actionTemplateHtmlExtension || ""
+      console.log("actionTemplateExtension : ", actionTemplateExtension)
       return [
         {
           name: "skill-actions",
           label: "Skill Actions",
-          template: `
-                    <button onclick="_addSkillToCourse({ID})" 
-                            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg ...">
-                        Add Skill
-                    </button>
-                `
+          template: actionTemplateExtension
         }
       ];
     }
@@ -141,6 +142,19 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         }
       }
       return CourseSkillList.actionTemplateHtml;
+    }
+
+    async getActionTemplateExtension() {
+      if (!CourseSkillList.actionTemplateHtmlExtension) {
+        try {
+          const response = await fetch(`${RootURL}/curriculum/static/view/CourseSkillInCourseActionButton.tpl`);
+          CourseSkillList.actionTemplateHtmlExtension = (await response.text()).trim();
+        } catch (err) {
+          console.warn('Failed to load CourseSkillActionButtons.tpl', err);
+          CourseSkillList.actionTemplateHtmlExtension = null;
+        }
+      }
+      return CourseSkillList.actionTemplateHtmlExtension;
     }
 
     async handleSubmit(formData) {
@@ -272,7 +286,6 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
 
       const [courseSkills, actionTemplate] = await Promise.all([
         this.getAllCourseSkills(),
-        // Student role does not get action template
         isStudent ? Promise.resolve(null) : this.getActionTemplate(),
       ]);
 

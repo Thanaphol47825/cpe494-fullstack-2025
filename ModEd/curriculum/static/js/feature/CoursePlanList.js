@@ -291,6 +291,18 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
                 this.getActionTemplate(),
             ]);
 
+            // Hide action buttons for Student role, mirroring ClassMaterialList behavior
+            const currentRole = localStorage.getItem('userRole');
+            const isStudent = currentRole === 'Student';
+            const customColumns = [];
+            if (!isStudent) {
+                customColumns.push({
+                    name: "actions",
+                    label: "Actions",
+                    template: actionTemplate
+                });
+            }
+
             // สร้างตารางด้วย AdvanceTableRender
             this.table = new AdvanceTableRender(this.application.templateEngine, {
                 modelPath: "curriculum/courseplan",
@@ -304,14 +316,19 @@ if (typeof window !== 'undefined' && !window.CoursePlanList) {
                     { name: "Week",        label: "Week",       type: "number" },
                     { name: "Topic",       label: "Topic",      type: "text" },
                 ],
-                // คอลัมน์เสริมสำหรับปุ่มแอ็คชัน
-                customColumns: [
-                    {
-                        name: "actions",
-                        label: "Actions",
-                        template: actionTemplate
-                    }
-                ]
+                enableSearch: true,
+                searchConfig: {
+                    placeholder: "Search course plans...",
+                    fields: [
+                        { value: "all", label: "All" },
+                        { value: "CourseName", label: "Course" },
+                        { value: "Topic", label: "Topic" },
+                        { value: "Week", label: "Week" },
+                        { value: "DateDisplay", label: "Date" }
+                    ]
+                },
+                // คอลัมน์เสริมสำหรับปุ่มแอ็คชัน (ซ่อนเมื่อเป็น Student)
+                customColumns
             });
 
             await this.table.render();

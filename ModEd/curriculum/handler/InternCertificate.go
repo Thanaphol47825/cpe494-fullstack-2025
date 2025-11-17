@@ -185,3 +185,28 @@ func (controller *InternCertificateHandler) DeleteInternCertificate(context *fib
 		"result":    "intern certificate deleted successfully",
 	})
 }
+
+// ใน handler/InternCertificateHandler.go
+
+func (h *InternCertificateHandler) GetByStudentID(c *fiber.Ctx) error {
+    id := c.Params("id")
+    var list []model.InternCertificate
+
+    if err := h.DB.
+        Preload("Certificate").
+        Preload("InternStudent").
+        Where("intern_student_id = ?", id).
+        Find(&list).Error; err != nil {
+
+        return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+            "isSuccess": false,
+            "error":     "failed to fetch intern certificates",
+        })
+    }
+
+    return c.JSON(fiber.Map{
+        "isSuccess": true,
+        "result":    list,
+    })
+}
+

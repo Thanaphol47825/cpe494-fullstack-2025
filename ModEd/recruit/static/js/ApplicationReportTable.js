@@ -140,30 +140,36 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTable) {
     async formatApplicationReportForModal(report) {
       const data = report;
       
-      const applicant = data.applicant || data.Applicant;
-      const applicationRound = data.application_round || data.ApplicationRound;
-      const faculty = data.faculty || data.Faculty;
-      const department = data.department || data.Department;
+      if (!window.ApplicationReportModalConfig) {
+        console.warn('[ApplicationReportTable] ApplicationReportModalConfig not loaded, loading now...');
+        await this.loadConfig();
+      }
       
-      const applicantName = `${applicant?.first_name || ''} ${applicant?.last_name || ''}`.trim() || 'N/A';
-      const programLabel = this.reportService.programTypeMap[data.program] || data.program || 'N/A';
-      
-      const additionalFields = [
-        { label: 'Applicant', value: `${applicantName} (ID: ${data.applicant_id || 'N/A'})` },
-        { label: 'Email', value: applicant?.email || 'N/A' },
-        { label: 'Application Round', value: `${applicationRound?.round_name || applicationRound?.name || 'N/A'} (ID: ${data.application_rounds_id || 'N/A'})` },
-        { label: 'Faculty', value: `${faculty?.name || 'N/A'} (ID: ${data.faculty_id || 'N/A'})` },
-        { label: 'Department', value: `${department?.name || 'N/A'} (ID: ${data.department_id || 'N/A'})` },
-        { label: 'Program Type', value: `${programLabel} (ID: ${data.program ?? 'N/A'})` }
-      ];
+      const config = window.ApplicationReportModalConfig;
+      const additionalFields = config.resolveAdditionalFields(data, {
+        programTypeMap: this.reportService.programTypeMap
+      });
       
       return await RecruitTableTemplate.formatForModal(
         data,
         'recruit/applicationreport',
         '📊 Application Report Details',
         additionalFields,
-        ['applicant_id', 'application_rounds_id', 'faculty_id', 'department_id', 'program', 'application_statuses']
+        config.excludeFields
       );
+    }
+
+    async loadConfig() {
+      if (!window.ApplicationReportModalConfig) {
+        const script = document.createElement('script');
+        script.src = `${this.rootURL || ''}/recruit/static/js/config/modal/applicationReportFields.js`;
+        script.async = false;
+        return new Promise((resolve, reject) => {
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load ApplicationReportModalConfig'));
+          document.head.appendChild(script);
+        });
+      }
     }
 
     async handleView(id) {

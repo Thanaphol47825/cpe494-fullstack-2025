@@ -257,6 +257,10 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     if (!window.ApplicantImportService) {
       await this.loadSubModule("services/ApplicantImportService.js");
     }
+
+    if (!window.ApplicantModalConfig) {
+      await this.loadSubModule("config/modal/applicantFields.js");
+    }
     
     if (!window.ApplicantTable) return this.renderError("Failed to load ApplicantTable");
     const feature = new window.ApplicantTable(this.templateEngine, this.rootURL);
@@ -306,6 +310,10 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
 
     if (!window.ApplicationReportTransferConfirmedStudentService) {
       await this.loadSubModule("services/ApplicationReportTransferConfirmedStudentService.js");
+    }
+
+    if (!window.ApplicationReportModalConfig) {
+      await this.loadSubModule("config/modal/applicationReportFields.js");
     }
     
     if (!window.ApplicationReportTable) return this.renderError("Failed to load ApplicationReportTable");
@@ -374,6 +382,10 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     
     if (!window.InterviewService) {
       await this.loadSubModule("services/InterviewService.js");
+    }
+
+    if (!window.InterviewModalConfig) {
+      await this.loadSubModule("config/modal/interviewFields.js");
     }
     
     if (!window.InterviewTable) return this.renderError("Failed to load InterviewTable");

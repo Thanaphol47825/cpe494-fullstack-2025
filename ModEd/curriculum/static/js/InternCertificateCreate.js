@@ -3,9 +3,17 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
         constructor(application, internStudentId = null) {
             this.application = application;
             this.internStudentId = internStudentId;
-            this.isEditMode = false; // Default to create mode
+            this.isEditMode = false;
             this.internStudentData = null;
             this.certificateData = null;
+            
+            // Get user role from localStorage
+            this.userRole = localStorage.getItem('role') || 'Student';
+            this.currentUserId = parseInt(localStorage.getItem('userId')) || null;
+            
+            // Check permissions
+            this.canCreate = this.userRole === 'Instructor' || this.userRole === 'Admin';
+            this.canRead = true; // All roles can read
         }
 
         async loadInternshipPageTemplate() {
@@ -31,6 +39,15 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
         async render() {
             console.log("Create Intern Certificate Form");
             console.log("InternStudent ID:", this.internStudentId);
+            console.log("User Role:", this.userRole);
+            console.log("Can Create:", this.canCreate);
+
+            // Check permission before rendering
+            if (!this.canCreate) {
+                this.showError("You don't have permission to create certificates. Only Instructors and Admins can create certificates.");
+                this.goBack();
+                return;
+            }
 
             try {
                 await this.loadInternshipPageTemplate();
@@ -78,9 +95,13 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
 
         async loadData() {
             try {
-                // Load InternStudent data if provided
                 if (this.internStudentId) {
-                    const internResponse = await fetch(`/curriculum/InternStudent/${this.internStudentId}`);
+                    const internResponse = await fetch(`/curriculum/InternStudent/${this.internStudentId}`, {
+                        headers: {
+                            'X-User-Role': this.userRole,
+                            'X-User-Id': this.currentUserId
+                        }
+                    });
                     const internData = await internResponse.json();
                     
                     if (internData.isSuccess) {
@@ -98,7 +119,14 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
         async createFormContent() {
             const formFields = await this.generateFormFields();
 
+            // Show role-based warning
+            const roleWarning = this.userRole === 'Student' ? 
+                `<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">
+                    <strong>Note:</strong> As a Student, you can only view certificates. Contact your Instructor or Admin to create new certificates.
+                </div>` : '';
+
             return `
+                ${roleWarning}
                 <form id="certificate-form" class="space-y-6">
                     <div id="form-fields" class="space-y-4">
                         ${formFields}
@@ -108,7 +136,7 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                         <button type="button" id="cancel-btn" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                             Cancel
                         </button>
-                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700" ${!this.canCreate ? 'disabled' : ''}>
                             Create Certificate
                         </button>
                     </div>
@@ -127,7 +155,7 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     Name: "intern_student_id",
                     Value: this.internStudentData?.ID || this.certificateData?.intern_student_id || "",
                     Required: true,
-                    Disabled: !!this.internStudentData,
+                    Disabled: !!this.internStudentData || !this.canCreate,
                 },
                 {
                     Id: "certificate_name",
@@ -136,7 +164,8 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     Name: "certificate_name",
                     Value: this.certificateData?.certificate_name || "",
                     Required: true,
-                    Placeholder: "Enter certificate name..."
+                    Placeholder: "Enter certificate name...",
+                    Disabled: !this.canCreate
                 },
                 {
                     Id: "company_id",
@@ -145,7 +174,8 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     Name: "company_id",
                     Value: this.certificateData?.company_id || "",
                     Placeholder: "Enter company ID...",
-                    Required: true
+                    Required: true,
+                    Disabled: !this.canCreate
                 }
             ];
 
@@ -162,11 +192,6 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
 
                     if (inputHTML) {
                         fieldsHTML += `<div class="form-field">${inputHTML}</div>`;
-                        
-                        // Handle disabled state after rendering
-                        if (field.Disabled) {
-                            // This will be handled in setupEventListeners after DOM is ready
-                        }
                     }
                 } catch (error) {
                     console.error("Error creating field:", field.Label, error);
@@ -197,8 +222,14 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                 form.addEventListener("submit", this.handleSubmit.bind(this));
             }
 
-            // Handle disabled fields
-            if (this.internStudentData) {
+            // Handle disabled fields based on role
+            if (!this.canCreate) {
+                const allInputs = form.querySelectorAll('input, textarea, select');
+                allInputs.forEach(input => {
+                    input.disabled = true;
+                    input.classList.add('bg-gray-100', 'cursor-not-allowed');
+                });
+            } else if (this.internStudentData) {
                 const studentIdField = document.querySelector('[name="intern_student_id"]');
                 if (studentIdField) {
                     studentIdField.disabled = true;
@@ -209,6 +240,16 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
 
         async handleSubmit(event) {
             event.preventDefault();
+
+            // Double-check permission
+            if (!this.canCreate) {
+                window.InternshipPageTemplate.showError(
+                    'You do not have permission to create certificates.',
+                    this.application.mainContainer
+                );
+                return;
+            }
+
             const form = event.target;
             const formData = new FormData(form);
 
@@ -217,7 +258,6 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
             try {
                 const jsonData = {};
 
-                // Handle internStudentId if provided
                 if (this.internStudentId) {
                     jsonData['intern_student_id'] = parseInt(this.internStudentId, 10);
                 }
@@ -230,7 +270,6 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     }
                 });
 
-                // Ensure intern_student_id is always present
                 if (!jsonData['intern_student_id'] && this.internStudentData?.ID) {
                     jsonData['intern_student_id'] = parseInt(this.internStudentData.ID, 10);
                 }
@@ -243,6 +282,8 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-User-Role': this.userRole,
+                        'X-User-Id': this.currentUserId
                     },
                     body: JSON.stringify(jsonData)
                 });
@@ -250,6 +291,9 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                 const result = await response.json();
 
                 if (!response.ok || !result.isSuccess) {
+                    if (response.status === 403) {
+                        throw new Error('Permission denied. Only Instructors and Admins can create certificates.');
+                    }
                     throw new Error(result.error || 'Failed to create certificate');
                 }
 
@@ -274,28 +318,44 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
             }
         }
 
+        goBack() {
+            if (this.internStudentId) {
+                if (this.application.navigate) {
+                    this.application.navigate(`/internship/internstudent/edit/${this.internStudentId}`);
+                } else {
+                    window.location.hash = `#/internship/internstudent/edit/${this.internStudentId}`;
+                }
+            } else {
+                if (this.application.navigate) {
+                    this.application.navigate("/internship/internstudent");
+                } else {
+                    window.location.hash = "#/internship/internstudent";
+                }
+            }
+        }
+
         goBackToList() {
             if (this.application.navigate) {
-              this.application.navigate("/internship");
+                this.application.navigate("/internship");
             } else {
-              window.location.hash = "#/internship";
+                window.location.hash = "#/internship";
             }
-          }
+        }
 
         showError(message) {
             if (window.InternshipPageTemplate) {
-              window.InternshipPageTemplate.showError(
-                message,
-                this.application.mainContainer
-              );
+                window.InternshipPageTemplate.showError(
+                    message,
+                    this.application.mainContainer
+                );
             } else {
-              const errorDiv = document.createElement("div");
-              errorDiv.className =
-                "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4";
-              errorDiv.textContent = message;
-              this.application.mainContainer.prepend(errorDiv);
+                const errorDiv = document.createElement("div");
+                errorDiv.className =
+                    "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4";
+                errorDiv.textContent = message;
+                this.application.mainContainer.prepend(errorDiv);
             }
-          }
+        }
     }
 
     if (typeof window !== "undefined") {

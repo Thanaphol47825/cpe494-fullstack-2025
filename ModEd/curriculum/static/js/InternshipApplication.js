@@ -116,6 +116,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderInternshipRegistrationEdit.bind(this),
         "InternshipRegistrationEdit.js"
       );
+      this.addRouteWithSubModule(
+  "/internshipannouncement/create",
+  this.renderInternshipAnnouncementCreate.bind(this),
+  "InternshipAnnouncementCreate.js"
+);
 
       this.setDefaultRoute("");
     }
@@ -141,7 +146,9 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         label: "Intern Certificate Create",
         route: "/interncertificate/create",
       },
-      { label:"Internship Registration", route:"/internshipregistration"}
+      { label:"Internship Registration", route:"/internshipregistration"},
+{ label: "Internship Announcement Create", route: "/internshipannouncement/create" },
+
     ];
 
     async renderMainPage() {
@@ -465,6 +472,32 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         console.error("InternshipPersonalAttendance class not found");
       }
     }
+
+    async renderInternshipAnnouncementList() {
+  console.log("Rendering Internship Announcement List");
+  if (window.InternshipAnnouncementList) {
+    const page = new window.InternshipAnnouncementList(this.templateEngine);
+    await page.render();
+  } else if (window.InternshipAnnouncementCreate) {
+    // fallback: ถ้ายังไม่มีหน้า List ให้เด้งไปหน้า Create แทน
+    console.warn("InternshipAnnouncementList class not found. Fallback to Create page.");
+    const createPage = new window.InternshipAnnouncementCreate(this.templateEngine);
+    await createPage.render();
+  } else {
+    console.error("InternshipAnnouncementList/Create class not found");
+  }
+}
+
+async renderInternshipAnnouncementCreate() {
+  console.log("Rendering Internship Announcement Create");
+  if (window.InternshipAnnouncementCreate) {
+    const page = new window.InternshipAnnouncementCreate(this.templateEngine);
+    await page.render();
+  } else {
+    console.error("InternshipAnnouncementCreate class not found");
+  }
+}
+
 
     async render() {
       try {

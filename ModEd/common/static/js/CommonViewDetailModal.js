@@ -1,35 +1,26 @@
-if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
-  /**
-   * Modal configurations for each entity type
-   * Maps entity type to model path for schema fetching
-   */
+if (typeof window !== "undefined" && !window.CommonViewDetailModal) {
   const MODAL_CONFIGS = {
     Student: {
-      title: 'Student Details',
-      modelPath: 'common/student'
+      title: "Student Details",
+      modelPath: "common/student",
     },
     Instructor: {
-      title: 'Instructor Details',
-      modelPath: 'common/instructor'
+      title: "Instructor Details",
+      modelPath: "common/instructor",
     },
     Faculty: {
-      title: 'Faculty Details',
-      modelPath: 'common/faculty'
+      title: "Faculty Details",
+      modelPath: "common/faculty",
     },
     Department: {
-      title: 'Department Details',
-      modelPath: 'common/department'
-    }
+      title: "Department Details",
+      modelPath: "common/department",
+    },
   };
 
   class CommonViewDetailModal {
     static schemaCache = {};
 
-    /**
-     * Fetch schema from API with caching
-     * @param {string} modelPath - Model path (e.g., 'common/student')
-     * @returns {Promise<Array>}
-     */
     static async fetchSchema(modelPath) {
       if (this.schemaCache[modelPath]) {
         return this.schemaCache[modelPath];
@@ -44,19 +35,14 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
         this.schemaCache[modelPath] = schema;
         return schema;
       } catch (error) {
-        console.error(`[CommonViewDetailModal] Error fetching schema for ${modelPath}:`, error);
+        console.error(
+          `[CommonViewDetailModal] Error fetching schema for ${modelPath}:`,
+          error
+        );
         return [];
       }
     }
 
-    /**
-     * Create and show modal
-     * @param {Object} options - Modal options
-     * @param {string} options.modalType - Type of modal (Student, Instructor, Faculty, Department)
-     * @param {string} options.modalId - Unique modal ID
-     * @param {Object} options.data - Data to display
-     * @returns {Promise<Object>}
-     */
     static async createModal(options) {
       const { modalType, modalId, data } = options;
 
@@ -68,20 +54,22 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
 
       try {
         // Load template from server
-        const response = await fetch(`${RootURL}/common/static/view/CommonViewDetailModal.tpl`);
+        const response = await fetch(
+          `${RootURL}/common/static/view/CommonViewDetailModal.tpl`
+        );
         const templateContent = await response.text();
 
         // Prepare data for Mustache
         const templateData = {
           modalId,
-          title: config.title
+          title: config.title,
         };
 
         // Render template with Mustache
         const renderedHTML = Mustache.render(templateContent, templateData);
 
         // Create DOM element from HTML
-        const tempDiv = document.createElement('div');
+        const tempDiv = document.createElement("div");
         tempDiv.innerHTML = renderedHTML.trim();
         const modal = tempDiv.firstChild;
 
@@ -92,7 +80,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
         await this.renderContent(modalId, config, data);
 
         // Add click outside to close
-        modal.addEventListener('click', (e) => {
+        modal.addEventListener("click", (e) => {
           if (e.target === modal) {
             this.closeModal(modalId);
           }
@@ -100,7 +88,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
 
         return { modal, config };
       } catch (error) {
-        console.error('Error creating modal:', error);
+        console.error("Error creating modal:", error);
         this.showError(modalId, error.message);
         throw error;
       }
@@ -110,25 +98,28 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
      * Render modal content with dynamic schema
      */
     static async renderContent(modalId, config, data) {
-      const contentDiv = document.getElementById(`view-detail-content-${modalId}`);
+      const contentDiv = document.getElementById(
+        `view-detail-content-${modalId}`
+      );
       if (!contentDiv) return;
 
       const loadingDiv = document.getElementById(`loading-${modalId}`);
       const errorDiv = document.getElementById(`error-message-${modalId}`);
 
       // Show loading
-      if (loadingDiv) loadingDiv.classList.remove('hidden');
-      if (errorDiv) errorDiv.classList.add('hidden');
+      if (loadingDiv) loadingDiv.classList.remove("hidden");
+      if (errorDiv) errorDiv.classList.add("hidden");
 
       try {
         // Fetch schema dynamically
         const schema = await this.fetchSchema(config.modelPath);
 
         // Build fields HTML
-        let fieldsHTML = '<div class="form-container" style="max-width: 100%; box-shadow: none; padding: 0;">';
+        let fieldsHTML =
+          '<div class="form-container" style="max-width: 100%; box-shadow: none; padding: 0;">';
 
         // Add ID field first
-        const idValue = data.ID || data.id || 'N/A';
+        const idValue = data.ID || data.id || "N/A";
         fieldsHTML += `
           <div class="form-field" style="margin-bottom: 1rem;">
             <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">ID</label>
@@ -139,7 +130,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
         `;
 
         // Add fields from schema
-        schema.forEach(field => {
+        schema.forEach((field) => {
           // Skip fields marked as not displayable
           if (field.display === false) return;
 
@@ -156,16 +147,16 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
           `;
         });
 
-        fieldsHTML += '</div>';
+        fieldsHTML += "</div>";
 
         contentDiv.innerHTML = fieldsHTML;
 
         // Hide loading
-        if (loadingDiv) loadingDiv.classList.add('hidden');
+        if (loadingDiv) loadingDiv.classList.add("hidden");
       } catch (error) {
-        console.error('Error rendering content:', error);
-        this.showError(modalId, 'Failed to render content');
-        if (loadingDiv) loadingDiv.classList.add('hidden');
+        console.error("Error rendering content:", error);
+        this.showError(modalId, "Failed to render content");
+        if (loadingDiv) loadingDiv.classList.add("hidden");
       }
     }
 
@@ -176,11 +167,11 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
       if (!data) return null;
 
       // Support nested properties like "Department.name"
-      const keys = fieldName.split('.');
+      const keys = fieldName.split(".");
       let value = data;
 
       for (const key of keys) {
-        if (value && typeof value === 'object' && key in value) {
+        if (value && typeof value === "object" && key in value) {
           value = value[key];
         } else {
           return null;
@@ -194,16 +185,16 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
      * Format value based on type
      */
     static formatValue(value, type) {
-      if (value === null || value === undefined || value === '') {
+      if (value === null || value === undefined || value === "") {
         return '<span style="color: #9ca3af;">-</span>';
       }
 
       switch (type) {
-        case 'boolean':
-          return value ? '✓ Yes' : '✗ No';
-        case 'datetime':
+        case "boolean":
+          return value ? "✓ Yes" : "✗ No";
+        case "datetime":
           return new Date(value).toLocaleString();
-        case 'date':
+        case "date":
           return new Date(value).toLocaleDateString();
         default:
           return String(value);
@@ -219,7 +210,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
 
       if (errorDiv && errorText) {
         errorText.textContent = message;
-        errorDiv.classList.remove('hidden');
+        errorDiv.classList.remove("hidden");
       }
     }
 
@@ -235,7 +226,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
   }
 
   // Global function to close modal (called from template)
-  window.closeCommonViewModal = function(modalId) {
+  window.closeCommonViewModal = function (modalId) {
     CommonViewDetailModal.closeModal(modalId);
   };
 

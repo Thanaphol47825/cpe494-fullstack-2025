@@ -185,44 +185,52 @@ func (controller *FacultyController) GetInfo(context *fiber.Ctx) error {
 func (controller *FacultyController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties",
-		Handler: controller.RenderMain,
-		Method:  core.GET,
+		Route:          "common/faculties",
+		Handler:        controller.RenderMain,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthNone},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties/getinfo",
-		Handler: controller.GetInfo,
-		Method:  core.GET,
+		Route:          "common/faculties/getinfo",
+		Handler:        controller.GetInfo,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthNone},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties/getall",
-		Handler: controller.GetAllFaculties,
-		Method:  core.GET,
+		Route:          "common/faculties/getall",
+		Handler:        controller.GetAllFaculties,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthNone},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties/:id",
-		Handler: controller.GetFaculty,
-		Method:  core.GET,
+		Route:          "common/faculties/:id",
+		Handler:        controller.GetFaculty,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthNone},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties",
-		Handler: controller.CreateFaculty,
-		Method:  core.POST,
+		Route:          "common/faculties",
+		Handler:        controller.CreateFaculty,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties/:id",
-		Handler: controller.UpdateFaculty,
-		Method:  core.POST,
+		Route:          "common/faculties/:id",
+		Handler:        controller.UpdateFaculty,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties/delete/:id",
-		Handler: controller.DeleteFaculty,
-		Method:  core.GET,
+		Route:          "common/faculties/delete/:id",
+		Handler:        controller.DeleteFaculty,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "common/faculties/import/json",
-		Handler: controller.ImportJSON,
-		Method:  core.GET,
+		Route:          "common/faculties/import/json",
+		Handler:        controller.ImportJSON,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 	return routeList
 }

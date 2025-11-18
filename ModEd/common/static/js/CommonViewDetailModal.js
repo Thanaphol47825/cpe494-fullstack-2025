@@ -1,63 +1,54 @@
 if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
   /**
-   * Field configurations for each entity type
-   */
-  const FIELD_CONFIGS = {
-    Student: [
-      { name: 'ID', label: 'ID', type: 'number' },
-      { name: 'student_code', label: 'Student Code', type: 'text' },
-      { name: 'first_name', label: 'First Name', type: 'text' },
-      { name: 'last_name', label: 'Last Name', type: 'text' },
-      { name: 'email', label: 'Email', type: 'text' },
-      { name: 'phone', label: 'Phone', type: 'text' },
-      { name: 'address', label: 'Address', type: 'text' }
-    ],
-    Instructor: [
-      { name: 'ID', label: 'ID', type: 'number' },
-      { name: 'instructor_code', label: 'Instructor Code', type: 'text' },
-      { name: 'first_name', label: 'First Name', type: 'text' },
-      { name: 'last_name', label: 'Last Name', type: 'text' },
-      { name: 'email', label: 'Email', type: 'text' },
-      { name: 'phone', label: 'Phone', type: 'text' },
-      { name: 'specialization', label: 'Specialization', type: 'text' }
-    ],
-    Faculty: [
-      { name: 'ID', label: 'ID', type: 'number' },
-      { name: 'name', label: 'Faculty Name', type: 'text' },
-      { name: 'code', label: 'Faculty Code', type: 'text' },
-      { name: 'description', label: 'Description', type: 'text' }
-    ],
-    Department: [
-      { name: 'ID', label: 'ID', type: 'number' },
-      { name: 'name', label: 'Department Name', type: 'text' },
-      { name: 'code', label: 'Department Code', type: 'text' },
-      { name: 'description', label: 'Description', type: 'text' }
-    ]
-  };
-
-  /**
    * Modal configurations for each entity type
+   * Maps entity type to model path for schema fetching
    */
   const MODAL_CONFIGS = {
     Student: {
       title: 'Student Details',
-      fields: FIELD_CONFIGS.Student
+      modelPath: 'common/student'
     },
     Instructor: {
       title: 'Instructor Details',
-      fields: FIELD_CONFIGS.Instructor
+      modelPath: 'common/instructor'
     },
     Faculty: {
       title: 'Faculty Details',
-      fields: FIELD_CONFIGS.Faculty
+      modelPath: 'common/faculty'
     },
     Department: {
       title: 'Department Details',
-      fields: FIELD_CONFIGS.Department
+      modelPath: 'common/department'
     }
   };
 
   class CommonViewDetailModal {
+    static schemaCache = {};
+
+    /**
+     * Fetch schema from API with caching
+     * @param {string} modelPath - Model path (e.g., 'common/student')
+     * @returns {Promise<Array>}
+     */
+    static async fetchSchema(modelPath) {
+      if (this.schemaCache[modelPath]) {
+        return this.schemaCache[modelPath];
+      }
+
+      try {
+        const res = await fetch(`${RootURL}/api/modelmeta/${modelPath}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch schema: ${res.status}`);
+        }
+        const schema = await res.json();
+        this.schemaCache[modelPath] = schema;
+        return schema;
+      } catch (error) {
+        console.error(`[CommonViewDetailModal] Error fetching schema for ${modelPath}:`, error);
+        return [];
+      }
+    }
+
     /**
      * Create and show modal
      * @param {Object} options - Modal options
@@ -97,7 +88,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
         // Add modal to body
         document.body.appendChild(modal);
 
-        // Render content
+        // Render content with dynamic schema
         await this.renderContent(modalId, config, data);
 
         // Add click outside to close
@@ -116,7 +107,7 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
     }
 
     /**
-     * Render modal content
+     * Render modal content with dynamic schema
      */
     static async renderContent(modalId, config, data) {
       const contentDiv = document.getElementById(`view-detail-content-${modalId}`);
@@ -130,16 +121,34 @@ if (typeof window !== 'undefined' && !window.CommonViewDetailModal) {
       if (errorDiv) errorDiv.classList.add('hidden');
 
       try {
+        // Fetch schema dynamically
+        const schema = await this.fetchSchema(config.modelPath);
+
         // Build fields HTML
         let fieldsHTML = '<div class="form-container" style="max-width: 100%; box-shadow: none; padding: 0;">';
 
-        config.fields.forEach(field => {
+        // Add ID field first
+        const idValue = data.ID || data.id || 'N/A';
+        fieldsHTML += `
+          <div class="form-field" style="margin-bottom: 1rem;">
+            <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">ID</label>
+            <div style="padding: 0.5rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; color: #1f2937;">
+              ${idValue}
+            </div>
+          </div>
+        `;
+
+        // Add fields from schema
+        schema.forEach(field => {
+          // Skip fields marked as not displayable
+          if (field.display === false) return;
+
           const value = this.getFieldValue(data, field.name);
           const displayValue = this.formatValue(value, field.type);
 
           fieldsHTML += `
             <div class="form-field" style="margin-bottom: 1rem;">
-              <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">${field.label}</label>
+              <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.25rem;">${field.label || field.name}</label>
               <div style="padding: 0.5rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px; color: #1f2937;">
                 ${displayValue}
               </div>

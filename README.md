@@ -1,5 +1,8 @@
 # ModEd
 
+Finally. This subject is over. 
+GoodLuck everyone. Bye CPE494 Fullstack.
+
 ## Resource
 
 https://github.com/okcza515/OOAD2568

@@ -105,7 +105,7 @@ func (controller *AssignmentSubmissionController) CreateSubmission(context *fibe
 		files := form.File["files"]
 		var filePaths []string
 		if len(files) > 0 {
-			saveDir := filepath.Join(controller.application.RootPath, "ModEd", "eval", "static", "submission-file")
+			saveDir := filepath.Join(controller.application.RootPath, "eval", "static", "assignment-submit")
 			if err := os.MkdirAll(saveDir, 0755); err != nil {
 				fmt.Println("cannot create save dir:", err)
 			}
@@ -228,7 +228,7 @@ func (controller *AssignmentSubmissionController) GetSubmissionFiles(context *fi
 	// Parse comma-separated file paths
 	fileNames := strings.Split(submission.AttachmentPath, ",")
 	var fileList []map[string]string
-	saveDir := filepath.Join(controller.application.RootPath, "ModEd", "eval", "static", "submission-file")
+	saveDir := filepath.Join(controller.application.RootPath, "eval", "static", "assignment-submit")
 
 	for _, filename := range fileNames {
 		filename = strings.TrimSpace(filename)
@@ -249,7 +249,7 @@ func (controller *AssignmentSubmissionController) GetSubmissionFiles(context *fi
 			fileList = append(fileList, map[string]string{
 				"filename": filename,
 				"original": originalName,
-				"url":      fmt.Sprintf("/eval/static/submission-file/%s", filename),
+				"url":      fmt.Sprintf("/eval/static/assignment-submit/%s", filename),
 			})
 		}
 	}
@@ -264,6 +264,29 @@ func (controller *AssignmentSubmissionController) GetSubmissionFiles(context *fi
 func (controller *AssignmentSubmissionController) DeleteSubmission(context *fiber.Ctx) error {
 	id := context.Params("id")
 
+	// Get submission to retrieve file paths before deletion
+	var submission model.AssignmentSubmission
+	if err := controller.application.DB.First(&submission, id).Error; err == nil {
+		// Delete associated files
+		if submission.AttachmentPath != "" {
+			saveDir := filepath.Join(controller.application.RootPath, "eval", "static", "assignment-submit")
+			fileNames := strings.Split(submission.AttachmentPath, ",")
+			for _, filename := range fileNames {
+				filename = strings.TrimSpace(filename)
+				if filename == "" {
+					continue
+				}
+				filePath := filepath.Join(saveDir, filename)
+				if err := os.Remove(filePath); err != nil {
+					fmt.Printf("Warning: Failed to delete file %s: %v\n", filename, err)
+				} else {
+					fmt.Printf("Deleted file: %s\n", filename)
+				}
+			}
+		}
+	}
+
+	// Delete submission from database
 	if err := controller.application.DB.Delete(&model.AssignmentSubmission{}, id).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -273,6 +296,6 @@ func (controller *AssignmentSubmissionController) DeleteSubmission(context *fibe
 
 	return context.JSON(fiber.Map{
 		"isSuccess": true,
-		"result":    "Submission deleted successfully",
+		"result":    "Submission and associated files deleted successfully",
 	})
 }

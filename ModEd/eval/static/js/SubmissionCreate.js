@@ -4,6 +4,8 @@ class SubmissionCreate {
     this.application = application;
     this.apiService = new EvalApiService();
     this.assignments = [];
+    this.courses = [];
+    this.selectedCourseId = null;
   }
 
   async initialize() {
@@ -19,11 +21,61 @@ class SubmissionCreate {
     // Clear container
     container.innerHTML = '';
 
+    // Load courses first
+    await this.loadCourses();
+    
     // Load assignments for dropdown
     await this.loadAssignments();
 
     // Render page
     await this.renderPage();
+    
+    // Check for assignmentId in URL hash parameters (hash-based routing)
+    const hash = window.location.hash;
+    const hashMatch = hash.match(/[?&]assignmentId=([^&]+)/);
+    const assignmentId = hashMatch ? hashMatch[1] : null;
+    
+    if (assignmentId) {
+      // Wait a bit for the dropdown to be rendered, then select the assignment
+      setTimeout(() => {
+        const assignment = this.assignments.find(a => (a.ID || a.id || a.Id) == assignmentId);
+        if (assignment) {
+          // First, filter by course if the assignment has a courseId
+          if (assignment.courseId || assignment.CourseId) {
+            const courseSelect = document.getElementById('course-select');
+            if (courseSelect) {
+              courseSelect.value = assignment.courseId || assignment.CourseId;
+              this.onCourseChange(courseSelect.value);
+              // Wait for dropdown to update, then select assignment
+              setTimeout(() => {
+                const assignmentSelect = document.getElementById('assignment-select');
+                if (assignmentSelect) {
+                  assignmentSelect.value = assignmentId;
+                }
+              }, 50);
+            }
+          } else {
+            // No course filter, just select the assignment
+            const assignmentSelect = document.getElementById('assignment-select');
+            if (assignmentSelect) {
+              assignmentSelect.value = assignmentId;
+            }
+          }
+        }
+      }, 100);
+    }
+  }
+
+  async loadCourses() {
+    try {
+      const response = await this.apiService.getAllCourses();
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        this.courses = response.result;
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      this.showError('Failed to load courses');
+    }
   }
 
   async loadAssignments() {
@@ -35,6 +87,46 @@ class SubmissionCreate {
     } catch (error) {
       console.error('Error loading assignments:', error);
       this.showError('Failed to load assignments');
+    }
+  }
+
+  onCourseChange(courseId) {
+    this.selectedCourseId = courseId;
+    this.updateAssignmentDropdown();
+  }
+
+  updateAssignmentDropdown() {
+    const assignmentSelect = document.getElementById('assignment-select');
+    if (!assignmentSelect) return;
+
+    // Get current selected value
+    const currentValue = assignmentSelect.value;
+
+    // Clear existing options except the first one
+    assignmentSelect.innerHTML = '<option value="">-- Select an assignment --</option>';
+
+    // Filter assignments by course if a course is selected
+    let filteredAssignments = this.assignments;
+    if (this.selectedCourseId) {
+      filteredAssignments = this.assignments.filter(a => 
+        (a.courseId || a.CourseId) == this.selectedCourseId
+      );
+    }
+
+    // Add filtered assignments to dropdown
+    filteredAssignments.forEach(a => {
+      const option = document.createElement('option');
+      option.value = a.ID || a.id || a.Id;
+      option.textContent = a.title || 'Untitled Assignment';
+      assignmentSelect.appendChild(option);
+    });
+
+    // Restore previous selection if it's still valid
+    if (currentValue) {
+      const optionExists = Array.from(assignmentSelect.options).some(opt => opt.value === currentValue);
+      if (optionExists) {
+        assignmentSelect.value = currentValue;
+      }
     }
   }
 
@@ -51,7 +143,7 @@ class SubmissionCreate {
           </div>
           
           <div class="mb-6">
-            <a routerLink="eval" class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+            <a routerLink="eval/student" class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
               <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
               </svg>
@@ -61,6 +153,23 @@ class SubmissionCreate {
 
           <div class="bg-white rounded-lg shadow-md p-6">
             <form id="submission-form" onsubmit="event.preventDefault(); submissionCreate.handleSubmit(event);">
+              <!-- Course Selection -->
+              <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                  Select Course
+                </label>
+                <select 
+                  id="course-select" 
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  onchange="submissionCreate.onCourseChange(this.value)"
+                >
+                  <option value="">-- All courses --</option>
+                  ${this.courses.map(c => 
+                    `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+                  ).join('')}
+                </select>
+              </div>
+
               <!-- Assignment Selection -->
               <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -131,7 +240,7 @@ class SubmissionCreate {
               <div class="flex justify-end gap-4">
                 <button 
                   type="button" 
-                  routerLink="eval"
+                  routerLink="eval/student"
                   class="px-6 py-2 bg-gray-300 rounded hover:bg-gray-400"
                 >
                   Cancel

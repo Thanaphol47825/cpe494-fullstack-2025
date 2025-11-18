@@ -8,6 +8,8 @@ class QuizManage {
     this.isEditMode = false;
     this.questions = [];
     this.questionCounter = 0;
+    this.courses = [];
+    this.selectedCourseId = null;
   }
 
   async initialize() {
@@ -26,6 +28,16 @@ class QuizManage {
       data: [],
       targetSelector: "#quiz-table-container",
       customColumns: [
+        {
+          name: "dueDate",
+          label: "Due Date",
+          template: `<span>{dueDateFormatted}</span>`
+        },
+        {
+          name: "startDate",
+          label: "Start Date",
+          template: `<span>{startDateFormatted}</span>`
+        },
         {
           name: "active",
           label: "Active",
@@ -53,11 +65,24 @@ class QuizManage {
 
     try {
       await this.table.loadSchema();
+      await this.loadCourses();
       await this.renderManagePage();
       await this.loadQuizzes();
     } catch (error) {
       console.error('Error rendering table:', error);
       this.showError('Failed to load quizzes: ' + error.message);
+    }
+  }
+
+  async loadCourses() {
+    try {
+      const response = await this.apiService.getAllCourses();
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        this.courses = response.result;
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      this.showError('Failed to load courses');
     }
   }
 
@@ -84,6 +109,22 @@ class QuizManage {
                 Back
               </a>
             </div>
+            <!-- Course Filter -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Course
+              </label>
+              <select 
+                id="course-filter" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                onchange="quizManager.onCourseChange(this.value)"
+              >
+                <option value="">-- All Courses --</option>
+                ${this.courses.map(c => 
+                  `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+                ).join('')}
+              </select>
+            </div>
             <div class="bg-white rounded-lg shadow-md p-6">
               <div id="quiz-table-container"></div>
             </div>
@@ -102,12 +143,21 @@ class QuizManage {
     }
   }
 
+  onCourseChange(courseId) {
+    this.selectedCourseId = courseId;
+    this.loadQuizzes();
+  }
+
   async loadQuizzes() {
     try {
-      const response = await this.apiService.getAllQuizzes();
+      const url = this.selectedCourseId 
+        ? `${RootURL}/eval/quiz/getAll?courseId=${this.selectedCourseId}`
+        : `${RootURL}/eval/quiz/getAll`;
+      
+      const response = await fetch(url).then(r => r.json());
       
       if (response && response.isSuccess && Array.isArray(response.result)) {
-        // Transform data to include Active as computed field
+        // Transform data to include Active as computed field and formatted dates
         const quizzes = response.result.map(q => {
           const active = q.active !== undefined ? q.active : this.computeActive(q.startDate, q.dueDate);
           return {
@@ -115,7 +165,9 @@ class QuizManage {
             ID: q.ID || q.id || q.Id,
             active: active,
             activeClass: active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
-            activeText: active ? 'Yes' : 'No'
+            activeText: active ? 'Yes' : 'No',
+            dueDateFormatted: this.apiService.formatDateForDisplay ? this.apiService.formatDateForDisplay(q.dueDate || q.DueDate) : (q.dueDate || q.DueDate || ''),
+            startDateFormatted: this.apiService.formatDateForDisplay ? this.apiService.formatDateForDisplay(q.startDate || q.StartDate) : (q.startDate || q.StartDate || '')
           };
         });
         
@@ -209,6 +261,9 @@ class QuizManage {
 
     try {
       await this.editForm.render();
+      
+      // Add course dropdown at the top AFTER form is rendered
+      await this.addCourseDropdownToEditForm(quiz);
       
       // Pre-fill form with quiz data
       const form = container.querySelector('form');
@@ -367,8 +422,62 @@ class QuizManage {
     }
   }
 
+  async addCourseDropdownToEditForm(quiz) {
+    const form = document.querySelector('#edit-form-container form');
+    if (!form) {
+      console.error('Form not found');
+      return;
+    }
+
+    // Create course dropdown wrapper
+    const courseField = document.createElement('div');
+    courseField.className = 'mb-6';
+    courseField.innerHTML = `
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Course <span class="text-red-500">*</span>
+      </label>
+      <select 
+        id="edit-course-select" 
+        name="courseId" 
+        required
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+      >
+        <option value="">-- Select a course --</option>
+        ${this.courses.map(c => 
+          `<option value="${c.ID || c.id || c.Id}" ${(quiz.courseId && (c.ID || c.id || c.Id) == quiz.courseId) ? 'selected' : ''}>${c.Name || 'Untitled Course'}</option>`
+        ).join('')}
+      </select>
+    `;
+
+    // Find the first direct child element of the form
+    let insertBefore = null;
+    const possibleFirstElements = form.querySelectorAll(':scope > div, :scope > label, :scope > fieldset');
+    
+    if (possibleFirstElements.length > 0) {
+      insertBefore = possibleFirstElements[0];
+    } else {
+      insertBefore = form.firstElementChild;
+    }
+
+    // Insert the course dropdown at the top
+    if (insertBefore) {
+      form.insertBefore(courseField, insertBefore);
+    } else {
+      form.appendChild(courseField);
+    }
+  }
+
   async handleUpdate(formData, quizId) {
     try {
+      // Get courseId from dropdown
+      const courseSelect = document.getElementById('edit-course-select');
+      if (courseSelect && courseSelect.value) {
+        formData.courseId = Number(courseSelect.value);
+      } else {
+        this.showError('Please select a course');
+        return;
+      }
+
       // Validate questions
       if (this.questions.length === 0) {
         this.showError('Please add at least one question');
@@ -402,6 +511,7 @@ class QuizManage {
       // Prepare quiz data
       const quizData = {
         ID: quizId,
+        courseId: formData.courseId,
         title: formData.title,
         description: formData.description || '',
         startDate: formData.startDate,

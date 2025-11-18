@@ -6,6 +6,8 @@ class AssignmentManage {
     this.table = null;
     this.editForm = null;
     this.isEditMode = false;
+    this.courses = [];
+    this.selectedCourseId = null;
   }
 
   async initialize() {
@@ -24,6 +26,16 @@ class AssignmentManage {
       data: [],
       targetSelector: "#assignment-table-container",
       customColumns: [
+        {
+          name: "dueDate",
+          label: "Due Date",
+          template: `<span>{dueDateFormatted}</span>`
+        },
+        {
+          name: "startDate",
+          label: "Start Date",
+          template: `<span>{startDateFormatted}</span>`
+        },
         {
           name: "active",
           label: "Active",
@@ -56,6 +68,7 @@ class AssignmentManage {
 
     try {
       await this.table.loadSchema();
+      await this.loadCourses();
       await this.renderManagePage();
       await this.loadAssignments();
     } catch (error) {
@@ -87,6 +100,22 @@ class AssignmentManage {
                 Back
               </a>
             </div>
+            <!-- Course Filter -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Filter by Course
+              </label>
+              <select 
+                id="course-filter" 
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                onchange="assignmentManager.onCourseChange(this.value)"
+              >
+                <option value="">-- All courses --</option>
+                ${this.courses.map(c => 
+                  `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+                ).join('')}
+              </select>
+            </div>
             <div class="bg-white rounded-lg shadow-md p-6">
               <div id="assignment-table-container"></div>
             </div>
@@ -100,17 +129,67 @@ class AssignmentManage {
       const manageTemplateContent = await manageTemplateResponse.text();
       const manageElement = new DOMObject(manageTemplateContent, {}, false);
       container.appendChild(manageElement.html);
+      
+      // Add course filter dropdown if not in template
+      const courseFilterContainer = container.querySelector('#course-filter-container');
+      if (!courseFilterContainer) {
+        const tableContainer = container.querySelector('#assignment-table-container');
+        if (tableContainer && tableContainer.parentElement) {
+          const courseFilter = document.createElement('div');
+          courseFilter.className = 'bg-white rounded-lg shadow-md p-6 mb-6';
+          courseFilter.innerHTML = `
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+              Filter by Course
+            </label>
+            <select 
+              id="course-filter" 
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+              onchange="assignmentManager.onCourseChange(this.value)"
+            >
+              <option value="">-- All courses --</option>
+              ${this.courses.map(c => 
+                `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+              ).join('')}
+            </select>
+          `;
+          tableContainer.parentElement.insertBefore(courseFilter, tableContainer);
+        }
+      }
+      
       this.table.targetSelector = "#assignment-table-container";
       await this.table.render();
     }
   }
 
+  async loadCourses() {
+    try {
+      const response = await this.apiService.getAllCourses();
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        this.courses = response.result;
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      this.showError('Failed to load courses');
+    }
+  }
+
+  async onCourseChange(courseId) {
+    this.selectedCourseId = courseId;
+    await this.loadAssignments();
+  }
+
   async loadAssignments() {
     try {
-      const response = await this.apiService.getAllAssignments();
+      // Build URL with courseId filter if selected
+      let url = `${this.apiService.baseUrl}/assignment/getAll`;
+      if (this.selectedCourseId) {
+        url += `?courseId=${this.selectedCourseId}`;
+      }
+      
+      const response = await this.apiService.fetchJSON(url);
       
       if (response && response.isSuccess && Array.isArray(response.result)) {
-        // Transform data to include Active as computed field
+        // Transform data to include Active as computed field and formatted dates
         const assignments = response.result.map(a => {
           const active = a.active !== undefined ? a.active : this.computeActive(a.startDate, a.dueDate);
           const assignment = {
@@ -118,7 +197,9 @@ class AssignmentManage {
             ID: a.ID || a.id || a.Id,
             active: active,
             activeClass: active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800',
-            activeText: active ? 'Yes' : 'No'
+            activeText: active ? 'Yes' : 'No',
+            dueDateFormatted: this.apiService.formatDateForDisplay ? this.apiService.formatDateForDisplay(a.dueDate || a.DueDate) : (a.dueDate || a.DueDate || ''),
+            startDateFormatted: this.apiService.formatDateForDisplay ? this.apiService.formatDateForDisplay(a.startDate || a.StartDate) : (a.startDate || a.StartDate || '')
           };
           return assignment;
         });
@@ -131,6 +212,31 @@ class AssignmentManage {
       console.error('Error loading assignments:', error);
       this.showError('Error loading assignments: ' + error.message);
     }
+  }
+
+  async addCourseDropdownToEditForm(container) {
+    // Create course dropdown for edit form
+    const courseField = document.createElement('div');
+    courseField.className = 'mb-6';
+    courseField.innerHTML = `
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Course <span class="text-red-500">*</span>
+      </label>
+      <select 
+        id="edit-course-select" 
+        name="courseId" 
+        required
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">-- Select a course --</option>
+        ${this.courses.map(c => 
+          `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+        ).join('')}
+      </select>
+    `;
+
+    // Insert at the beginning of container (before form renders)
+    container.insertBefore(courseField, container.firstChild);
   }
 
   computeActive(startDate, dueDate) {
@@ -153,36 +259,28 @@ class AssignmentManage {
           return;
         }
 
-        // Create modal or dropdown to show files
-        let filesHTML = '<div class="bg-white rounded-lg shadow-lg p-6 max-w-md">';
-        filesHTML += '<h3 class="text-lg font-semibold mb-4">Assignment Files</h3>';
-        filesHTML += '<ul class="space-y-2">';
-        
+        // Download all files directly
         files.forEach(file => {
-          filesHTML += `<li class="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
-            <span class="text-sm text-gray-700">${file.original}</span>
-            <a href="${RootURL}${file.url}" target="_blank" class="text-blue-600 hover:underline text-sm">Download</a>
-          </li>`;
+          const downloadUrl = `${RootURL}${file.url}`;
+          const link = document.createElement('a');
+          link.href = downloadUrl;
+          link.download = file.original || file.filename;
+          link.target = '_blank';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
         });
         
-        filesHTML += '</ul>';
-        filesHTML += '<button onclick="this.closest(\'.bg-white\').remove()" class="mt-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Close</button>';
-        filesHTML += '</div>';
-
-        // Show as modal
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        modal.innerHTML = filesHTML;
-        modal.addEventListener('click', (e) => {
-          if (e.target === modal) modal.remove();
-        });
-        document.body.appendChild(modal);
+        // Show success message if multiple files
+        if (files.length > 1) {
+          this.showSuccess(`Downloading ${files.length} files...`);
+        }
       } else {
-        this.showError('No files found for this assignment');
+        this.showError('Failed to retrieve files');
       }
     } catch (error) {
-      console.error('Error loading files:', error);
-      this.showError('Failed to load files: ' + error.message);
+      console.error('Error viewing files:', error);
+      this.showError('Failed to download files: ' + error.message);
     }
   }
 
@@ -237,11 +335,21 @@ class AssignmentManage {
     });
 
     try {
+      // Load courses and add course dropdown first
+      await this.loadCourses();
+      await this.addCourseDropdownToEditForm(container);
+      
       await this.editForm.render();
       
       // Pre-fill form with assignment data
       const form = container.querySelector('form');
       if (form) {
+        // Set courseId first (before other fields)
+        if (assignment.courseId) {
+          const courseSelect = form.querySelector('#edit-course-select');
+          if (courseSelect) courseSelect.value = assignment.courseId;
+        }
+        
         // Set form values
         if (assignment.title) {
           const titleInput = form.querySelector('input[name="title"], input[name="Title"]');
@@ -335,6 +443,15 @@ class AssignmentManage {
   async handleUpdate(formData, assignmentId) {
     try {
       formData.ID = assignmentId;
+      
+      // Get courseId from dropdown
+      const courseSelect = document.querySelector('#edit-course-select');
+      if (courseSelect && courseSelect.value) {
+        formData.courseId = Number(courseSelect.value);
+      } else {
+        this.showError('Please select a course');
+        return;
+      }
       
       // Convert dates
       if (formData.startDate) {

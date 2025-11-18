@@ -109,7 +109,13 @@ func (controller *QuizController) CreateQuiz(context *fiber.Ctx) error {
 func (controller *QuizController) GetAllQuizzes(context *fiber.Ctx) error {
 	var quizzes []model.Quiz
 
-	if err := controller.application.DB.Find(&quizzes).Error; err != nil {
+	// Support filtering by courseId (query parameter)
+	query := controller.application.DB
+	if courseId := context.Query("courseId"); courseId != "" {
+		query = query.Where("course_id = ?", courseId)
+	}
+
+	if err := query.Find(&quizzes).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    err.Error(),
@@ -122,6 +128,7 @@ func (controller *QuizController) GetAllQuizzes(context *fiber.Ctx) error {
 	for i, quiz := range quizzes {
 		result[i] = map[string]interface{}{
 			"ID":          quiz.ID,
+			"courseId":    quiz.CourseId,
 			"title":       quiz.Title,
 			"description": quiz.Description,
 			"dueDate":     quiz.DueDate,
@@ -160,6 +167,7 @@ func (controller *QuizController) GetQuizByID(context *fiber.Ctx) error {
 	now := time.Now()
 	result := map[string]interface{}{
 		"ID":          quiz.ID,
+		"courseId":    quiz.CourseId,
 		"title":       quiz.Title,
 		"description": quiz.Description,
 		"dueDate":     quiz.DueDate,

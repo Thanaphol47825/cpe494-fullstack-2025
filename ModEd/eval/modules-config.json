@@ -1,6 +1,6 @@
 {
     "label": "Eval Module",
     "className": "EvalApplication",
-    "script": "/eval/static/js/EvalApiService.js,/eval/static/js/EvalFormRenderer.js,/eval/static/js/EvalTableRenderer.js,/eval/static/js/EvalHomeTemplate.js,/eval/static/js/AssignmentCreate.js,/eval/static/js/AssignmentManage.js,/eval/static/js/QuizCreate.js,/eval/static/js/QuizManage.js,/eval/static/js/QuizSubmissionCreate.js,/eval/static/js/SubmissionCreate.js,/eval/static/js/SubmissionManage.js,/eval/static/js/EvalApplication.js",
+    "script": "/eval/static/js/EvalApiService.js,/eval/static/js/EvalFormRenderer.js,/eval/static/js/EvalTableRenderer.js,/eval/static/js/EvalHomeTemplate.js,/eval/static/js/AssignmentCreate.js,/eval/static/js/AssignmentManage.js,/eval/static/js/QuizCreate.js,/eval/static/js/QuizManage.js,/eval/static/js/QuizSubmissionCreate.js,/eval/static/js/SubmissionCreate.js,/eval/static/js/SubmissionManage.js,/eval/static/js/TeacherTrackAssignmentSubmission.js,/eval/static/js/TeacherTrackQuizSubmission.js,/eval/static/js/StudentViewAssignments.js,/eval/static/js/StudentViewQuizzes.js,/eval/static/js/StudentQuizTaking.js,/eval/static/js/EvalApplication.js",
     "baseRoute": "/eval"
 }

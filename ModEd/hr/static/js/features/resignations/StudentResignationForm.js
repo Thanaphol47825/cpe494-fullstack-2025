@@ -5,7 +5,7 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
       this.templateEngine = templateEngine;
       this.rootURL = rootURL || window.__ROOT_URL__ || "";
       this.api = new HrApiService(this.rootURL);
-      this.formElement = null;
+      this.formRender = null;
     }
 
     async render() {
@@ -59,84 +59,106 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
         throw new Error('Form container not found in template');
       }
 
-      formContainer.innerHTML = '';
-      this.formElement = this.#createFormElement();
-      formContainer.appendChild(this.formElement);
+      if (!window.AdvanceFormRender) {
+        throw new Error('AdvanceFormRender is required to render the form');
+      }
+
+      this.formRender = new window.AdvanceFormRender(this.templateEngine, {
+        schema: this.#getFormSchema(),
+        targetSelector: '.student-resignation-form-container',
+        submitHandler: (formData) => this.#handleSubmit(formData),
+        config: {
+          autoFocus: true,
+          showErrors: false,
+          validateOnBlur: false
+        }
+      });
+
+      await this.formRender.render();
+      this.#overrideRendererMessages();
+      this.#attachCustomButtons();
     }
 
-    #createFormElement() {
-      const form = document.createElement('form');
-      form.id = 'studentResignationForm';
-      form.className = 'space-y-6';
+    async #handleSubmit(formData) {
+      HrUiComponents.hideFormResult();
+      if (!this.#validateFormData(formData)) {
+        return;
+      }
 
-      form.appendChild(this.#createTextInput({
-        id: 'StudentCode',
-        name: 'StudentCode',
-        label: 'Student Code',
-        placeholder: 'Enter student code (e.g., STD001)',
-        required: true
-      }));
+      const payload = this.#transformPayload(formData);
+      this.#showInfo('Submitting resignation request...');
 
-      form.appendChild(this.#createTextarea({
-        id: 'Reason',
-        name: 'Reason',
-        label: 'Reason for Resignation',
-        placeholder: 'Please provide detailed reason for resignation',
-        required: true
-      }));
-
-      form.appendChild(this.#createActionButtons());
-      form.addEventListener('submit', (event) => this.#handleSubmit(event));
-
-      setTimeout(() => {
-        const firstField = form.querySelector('input[name="StudentCode"]');
-        if (firstField) firstField.focus();
-      }, 100);
-
-      return form;
+      try {
+        const result = await this.api.createStudentResignation(payload);
+        HrUiComponents.showFormSuccess('Student resignation request submitted successfully!', result);
+        setTimeout(() => this.#resetForm(), 2000);
+      } catch (error) {
+        console.error('Student resignation submission error:', error);
+        HrUiComponents.showFormError(error.message || 'Failed to submit resignation request', error);
+      }
     }
 
-    #createTextInput({ id, name, label, placeholder, required }) {
-      const wrapper = document.createElement('div');
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', id);
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = `${label} ${required ? '<span class="text-red-500">*</span>' : ''}`;
+    #resetForm() {
+      if (this.formRender && typeof this.formRender.reset === 'function') {
+        this.formRender.reset();
+      }
+      HrUiComponents.hideFormResult();
 
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id = id;
-      input.name = name;
-      input.placeholder = placeholder;
-      input.required = !!required;
-      input.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors';
-
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(input);
-      return wrapper;
+      const firstField = document.querySelector('.student-resignation-form-container input[name="StudentCode"]');
+      if (firstField) {
+        setTimeout(() => firstField.focus(), 100);
+      }
     }
 
-    #createTextarea({ id, name, label, placeholder, required }) {
-      const wrapper = document.createElement('div');
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', id);
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = `${label} ${required ? '<span class="text-red-500">*</span>' : ''}`;
-
-      const textarea = document.createElement('textarea');
-      textarea.id = id;
-      textarea.name = name;
-      textarea.rows = 4;
-      textarea.placeholder = placeholder;
-      textarea.required = !!required;
-      textarea.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none';
-
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(textarea);
-      return wrapper;
+    #validateFormData(formData) {
+      const missing = ['StudentCode', 'Reason'].filter((field) => !formData[field]);
+      if (missing.length > 0) {
+        HrUiComponents.showFormError(`Please fill required fields: ${missing.join(', ')}`);
+        return false;
+      }
+      return true;
     }
 
-    #createActionButtons() {
+    #transformPayload(payload) {
+      return {
+        StudentCode: payload.StudentCode || '',
+        Reason: payload.Reason || ''
+      };
+    }
+
+    #getFormSchema() {
+      return [
+        {
+          name: 'StudentCode',
+          label: 'Student Code',
+          type: 'text',
+          placeholder: 'Enter student code (e.g., STD001)',
+          required: true
+        },
+        {
+          name: 'Reason',
+          label: 'Reason for Resignation',
+          type: 'textarea',
+          placeholder: 'Please provide detailed reason for resignation',
+          rows: 4,
+          required: true
+        }
+      ];
+    }
+
+    #overrideRendererMessages() {
+      if (!this.formRender) return;
+      this.formRender.showFormError = (message) => HrUiComponents.showFormError(message);
+      this.formRender.showFormSuccess = (message, detail) => HrUiComponents.showFormSuccess(message, detail);
+    }
+
+    #attachCustomButtons() {
+      const form = document.querySelector('.student-resignation-form-container form');
+      if (!form) return;
+
+      const defaultButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+      defaultButtons.forEach((button) => button.remove());
+
       const container = document.createElement('div');
       container.className = 'flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200';
 
@@ -160,74 +182,11 @@ if (typeof HrStudentResignationFormFeature === 'undefined') {
         </svg>
         Reset Form
       `;
-
       resetButton.addEventListener('click', () => this.#resetForm());
 
       container.appendChild(submitButton);
       container.appendChild(resetButton);
-      return container;
-    }
-
-    async #handleSubmit(event) {
-      event.preventDefault();
-      HrUiComponents.hideFormResult();
-
-      if (!this.formElement) {
-        throw new Error('Form element is not ready');
-      }
-
-      const formData = this.#collectFormData(this.formElement);
-      if (!this.#validateFormData(formData)) {
-        return;
-      }
-
-      const payload = this.#transformPayload(formData);
-      this.#showInfo('Submitting resignation request...');
-
-      try {
-        const result = await this.api.createStudentResignation(payload);
-        HrUiComponents.showFormSuccess('Student resignation request submitted successfully!', result);
-        setTimeout(() => this.#resetForm(), 2000);
-      } catch (error) {
-        console.error('Student resignation submission error:', error);
-        HrUiComponents.showFormError(error.message || 'Failed to submit resignation request', error);
-      }
-    }
-
-    #collectFormData(form) {
-      const formData = new FormData(form);
-      const data = {};
-      for (const [key, value] of formData.entries()) {
-        data[key] = typeof value === 'string' ? value.trim() : value;
-      }
-      return data;
-    }
-
-    #resetForm() {
-      if (!this.formElement) return;
-      this.formElement.reset();
-      HrUiComponents.hideFormResult();
-
-      const firstField = this.formElement.querySelector('input[name="StudentCode"]');
-      if (firstField) {
-        setTimeout(() => firstField.focus(), 100);
-      }
-    }
-
-    #validateFormData(formData) {
-      const missing = ['StudentCode', 'Reason'].filter((field) => !formData[field]);
-      if (missing.length > 0) {
-        HrUiComponents.showFormError(`Please fill required fields: ${missing.join(', ')}`);
-        return false;
-      }
-      return true;
-    }
-
-    #transformPayload(payload) {
-      return {
-        StudentCode: payload.StudentCode || '',
-        Reason: payload.Reason || ''
-      };
+      form.appendChild(container);
     }
 
     #showInfo(message) {

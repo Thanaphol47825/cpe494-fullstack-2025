@@ -7,7 +7,7 @@ if (typeof HrStudentResignationEditFeature === 'undefined') {
       this.requestId = requestId;
       this.api = new HrApiService(this.rootURL);
       this.resignationData = null;
-      this.formElement = null;
+      this.formRender = null;
     }
 
     async render() {
@@ -24,7 +24,7 @@ if (typeof HrStudentResignationEditFeature === 'undefined') {
       try {
         this.#showLoading();
         await this.#loadResignation();
-        this.#renderEditForm();
+        await this.#renderEditForm();
         return true;
       } catch (error) {
         console.error('Error rendering student resignation edit:', error);
@@ -37,7 +37,7 @@ if (typeof HrStudentResignationEditFeature === 'undefined') {
       this.resignationData = await this.api.fetchStudentResignation(this.requestId);
     }
 
-    #renderEditForm() {
+    async #renderEditForm() {
       const pageWrapper = HrUiComponents.createEditFormPageWrapper({
         title: 'Edit Student Resignation',
         description: `Request #${this.requestId}`,
@@ -61,124 +61,124 @@ if (typeof HrStudentResignationEditFeature === 'undefined') {
 
       const formContainer = pageWrapper.querySelector('.student-resignation-edit-container');
       formContainer.innerHTML = '';
-      this.formElement = this.#buildForm();
-      formContainer.appendChild(this.formElement);
-    }
 
-    #buildForm() {
-      const form = document.createElement('form');
-      form.id = 'studentResignationEditForm';
-      form.className = 'space-y-6';
+      if (!window.AdvanceFormRender) {
+        throw new Error('AdvanceFormRender is required to render the edit form');
+      }
 
-      form.appendChild(this.#createStatusSelect());
-      form.appendChild(this.#createTextInput({
-        id: 'StudentCode',
-        name: 'StudentCode',
-        label: 'Student Code',
-        placeholder: 'Enter student code (e.g., STD001)',
-        required: true,
-        defaultValue: this.#getValue('StudentCode', 'student_code')
-      }));
-      form.appendChild(this.#createTextarea({
-        id: 'Reason',
-        name: 'Reason',
-        label: 'Reason for Resignation',
-        placeholder: 'Provide the detailed reason',
-        required: true,
-        defaultValue: this.#getValue('Reason', 'reason')
-      }));
-      form.appendChild(this.#createTextarea({
-        id: 'AdditionalNotes',
-        name: 'AdditionalNotes',
-        label: 'Additional Notes',
-        placeholder: 'Optional notes that help reviewers understand the request',
-        required: false,
-        defaultValue: this.#getValue('AdditionalNotes', 'additional_notes')
-      }));
-
-      form.appendChild(this.#createActionButtons());
-      form.addEventListener('submit', (event) => this.#handleSubmit(event));
-
-      setTimeout(() => {
-        const firstField = form.querySelector('input[name="StudentCode"]');
-        if (firstField) firstField.focus();
-      }, 100);
-
-      return form;
-    }
-
-    #createStatusSelect() {
-      const wrapper = document.createElement('div');
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', 'Status');
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = 'Status <span class="text-red-500">*</span>';
-
-      const select = document.createElement('select');
-      select.id = 'Status';
-      select.name = 'Status';
-      select.required = true;
-      select.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors';
-
-      const currentStatus = (this.#getValue('Status', 'status') || 'Pending').toLowerCase();
-      this.#getStatusOptions().forEach((option) => {
-        const optionEl = document.createElement('option');
-        optionEl.value = option.value;
-        optionEl.textContent = option.label;
-        if (option.value.toLowerCase() === currentStatus) {
-          optionEl.selected = true;
+      this.formRender = new window.AdvanceFormRender(this.templateEngine, {
+        schema: this.#getFormSchema(),
+        targetSelector: '.student-resignation-edit-container',
+        submitHandler: (formData) => this.#handleSubmit(formData),
+        config: {
+          autoFocus: true,
+          showErrors: false,
+          validateOnBlur: false
         }
-        select.appendChild(optionEl);
       });
 
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(select);
-      return wrapper;
+      await this.formRender.render();
+      this.formRender.setData(this.#getInitialFormData());
+      this.#overrideRendererMessages();
+      this.#attachActionButtons();
     }
 
-    #createTextInput({ id, name, label, placeholder, required, defaultValue }) {
-      const wrapper = document.createElement('div');
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', id);
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = `${label} ${required ? '<span class="text-red-500">*</span>' : ''}`;
+    async #handleSubmit(formData) {
+      HrUiComponents.hideFormResult();
+      if (!this.#validateFormData(formData)) {
+        return;
+      }
 
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id = id;
-      input.name = name;
-      input.placeholder = placeholder;
-      input.required = !!required;
-      input.value = defaultValue || '';
-      input.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors';
+      const payload = this.#transformPayload(formData);
+      this.#showInfo('Updating resignation request...');
 
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(input);
-      return wrapper;
+      try {
+        const result = await this.api.updateStudentResignation(this.requestId, payload);
+        HrUiComponents.showFormSuccess('Resignation updated successfully!', result);
+        setTimeout(() => {
+          window.location.href = '#hr/resignation/student';
+        }, 2000);
+      } catch (error) {
+        console.error('Student resignation update error:', error);
+        HrUiComponents.showFormError(error.message || 'Failed to update resignation request', error);
+      }
     }
 
-    #createTextarea({ id, name, label, placeholder, required, defaultValue }) {
-      const wrapper = document.createElement('div');
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', id);
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = `${label} ${required ? '<span class="text-red-500">*</span>' : ''}`;
-
-      const textarea = document.createElement('textarea');
-      textarea.id = id;
-      textarea.name = name;
-      textarea.rows = 4;
-      textarea.placeholder = placeholder;
-      textarea.required = !!required;
-      textarea.value = defaultValue || '';
-      textarea.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none';
-
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(textarea);
-      return wrapper;
+    #validateFormData(formData) {
+      const missing = ['StudentCode', 'Reason', 'Status'].filter((field) => !formData[field]);
+      if (missing.length > 0) {
+        HrUiComponents.showFormError(`Please fill required fields: ${missing.join(', ')}`);
+        return false;
+      }
+      return true;
     }
 
-    #createActionButtons() {
+    #transformPayload(payload) {
+      return {
+        StudentCode: payload.StudentCode || '',
+        Reason: payload.Reason || '',
+        AdditionalNotes: payload.AdditionalNotes || null,
+        Status: payload.Status || this.#getValue('Status', 'status') || 'Pending'
+      };
+    }
+
+    #getFormSchema() {
+      return [
+        {
+          name: 'Status',
+          label: 'Status',
+          type: 'select',
+          required: true,
+          options: this.#getStatusOptions()
+        },
+        {
+          name: 'StudentCode',
+          label: 'Student Code',
+          type: 'text',
+          placeholder: 'Enter student code (e.g., STD001)',
+          required: true
+        },
+        {
+          name: 'Reason',
+          label: 'Reason for Resignation',
+          type: 'textarea',
+          placeholder: 'Provide the detailed reason',
+          required: true,
+          rows: 4
+        },
+        {
+          name: 'AdditionalNotes',
+          label: 'Additional Notes',
+          type: 'textarea',
+          placeholder: 'Optional notes that help reviewers understand the request',
+          required: false,
+          rows: 4
+        }
+      ];
+    }
+
+    #getInitialFormData() {
+      return {
+        Status: this.#getValue('Status', 'status') || 'Pending',
+        StudentCode: this.#getValue('StudentCode', 'student_code'),
+        Reason: this.#getValue('Reason', 'reason'),
+        AdditionalNotes: this.#getValue('AdditionalNotes', 'additional_notes')
+      };
+    }
+
+    #overrideRendererMessages() {
+      if (!this.formRender) return;
+      this.formRender.showFormError = (message) => HrUiComponents.showFormError(message);
+      this.formRender.showFormSuccess = (message, detail) => HrUiComponents.showFormSuccess(message, detail);
+    }
+
+    #attachActionButtons() {
+      const form = document.querySelector('.student-resignation-edit-container form');
+      if (!form) return;
+
+      const defaultButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+      defaultButtons.forEach((button) => button.remove());
+
       const container = document.createElement('div');
       container.className = 'flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200';
 
@@ -210,62 +210,7 @@ if (typeof HrStudentResignationEditFeature === 'undefined') {
 
       container.appendChild(saveButton);
       container.appendChild(cancelButton);
-      return container;
-    }
-
-    async #handleSubmit(event) {
-      event.preventDefault();
-      HrUiComponents.hideFormResult();
-
-      if (!this.formElement) {
-        throw new Error('Form element is not ready');
-      }
-
-      const formData = this.#collectFormData(this.formElement);
-      if (!this.#validateFormData(formData)) {
-        return;
-      }
-
-      const payload = this.#transformPayload(formData);
-      this.#showInfo('Updating resignation request...');
-
-      try {
-        const result = await this.api.updateStudentResignation(this.requestId, payload);
-        HrUiComponents.showFormSuccess('Resignation updated successfully!', result);
-        setTimeout(() => {
-          window.location.href = '#hr/resignation/student';
-        }, 2000);
-      } catch (error) {
-        console.error('Student resignation update error:', error);
-        HrUiComponents.showFormError(error.message || 'Failed to update resignation request', error);
-      }
-    }
-
-    #collectFormData(form) {
-      const formData = new FormData(form);
-      const data = {};
-      for (const [key, value] of formData.entries()) {
-        data[key] = typeof value === 'string' ? value.trim() : value;
-      }
-      return data;
-    }
-
-    #validateFormData(formData) {
-      const missing = ['StudentCode', 'Reason', 'Status'].filter((field) => !formData[field]);
-      if (missing.length > 0) {
-        HrUiComponents.showFormError(`Please fill required fields: ${missing.join(', ')}`);
-        return false;
-      }
-      return true;
-    }
-
-    #transformPayload(payload) {
-      return {
-        StudentCode: payload.StudentCode || '',
-        Reason: payload.Reason || '',
-        AdditionalNotes: payload.AdditionalNotes || null,
-        Status: payload.Status || this.#getValue('Status', 'status') || 'Pending'
-      };
+      form.appendChild(container);
     }
 
     #showLoading() {

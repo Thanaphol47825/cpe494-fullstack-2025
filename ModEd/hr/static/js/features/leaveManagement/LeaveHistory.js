@@ -88,19 +88,34 @@ if (typeof window !== 'undefined' && !window.HrLeaveHistoryFeature) {
     }
 
     #normalizeRequests(response) {
+      let records = [];
       if (Array.isArray(response)) {
-        return response;
+        records = response;
+      } else if (response && Array.isArray(response.result)) {
+        records = response.result;
+      } else if (response && Array.isArray(response.data)) {
+        records = response.data;
       }
 
-      if (response && Array.isArray(response.result)) {
-        return response.result;
-      }
+      return records.map((request) => {
+        const normalizedStatus = this.#normalizeStatusValue(request.Status || request.status);
+        return {
+          ...request,
+          Status: normalizedStatus,
+          status: normalizedStatus
+        };
+      });
+    }
 
-      if (response && Array.isArray(response.data)) {
-        return response.data;
+    #normalizeStatusValue(status) {
+      const value = (status || 'Pending').toString().trim().toLowerCase();
+      if (value === 'approve' || value === 'approved') {
+        return 'Approved';
       }
-
-      return [];
+      if (value === 'reject' || value === 'rejected') {
+        return 'Rejected';
+      }
+      return 'Pending';
     }
 
     #createPageContainer(stats) {
@@ -295,9 +310,9 @@ if (typeof window !== 'undefined' && !window.HrLeaveHistoryFeature) {
 
     #calculateStatistics() {
       const allRequests = [...this.studentRequests, ...this.instructorRequests];
-      const approved = allRequests.filter(r => (r.Status || r.status) === 'Approved').length;
-      const pending = allRequests.filter(r => (r.Status || r.status) === 'Pending').length;
-      const rejected = allRequests.filter(r => (r.Status || r.status) === 'Rejected').length;
+      const approved = allRequests.filter(r => this.#normalizeStatusValue(r.Status || r.status) === 'Approved').length;
+      const pending = allRequests.filter(r => this.#normalizeStatusValue(r.Status || r.status) === 'Pending').length;
+      const rejected = allRequests.filter(r => this.#normalizeStatusValue(r.Status || r.status) === 'Rejected').length;
 
       return {
         total: allRequests.length,

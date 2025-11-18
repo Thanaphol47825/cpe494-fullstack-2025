@@ -34,13 +34,20 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
         
         // Ensure all records have an 'id' field for template interpolation
         data = data.map(item => {
+          const normalized = { ...item };
           // Normalize ID field - try different possible field names
-          if (!item.id && item.ID !== undefined) {
-            item.id = item.ID;
-          } else if (!item.id && item.Id !== undefined) {
-            item.id = item.Id;
+          if (normalized.id === undefined && normalized.ID !== undefined) {
+            normalized.id = normalized.ID;
+          } else if (normalized.id === undefined && normalized.Id !== undefined) {
+            normalized.id = normalized.Id;
           }
-          return item;
+
+          const statusValue = (normalized.status || normalized.Status || 'Pending').trim() || 'Pending';
+          normalized.status = statusValue;
+          normalized.Status = statusValue;
+          normalized.pendingDisplay = statusValue === 'Pending' ? 'inline-flex' : 'none';
+
+          return normalized;
         });
 
         // Create table using AdvanceTableRender with pre-loaded data
@@ -82,12 +89,12 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
         </a>
         <button onclick="window.hrInstructorLeaveList?.reviewRequest('{id}', 'approve')" data-action-type="review" data-id="{id}" data-action="approve" 
           class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 bg-blue-50 text-blue-700 hover:bg-blue-100 js-review-btn" 
-          style="display: {status === 'Pending' ? 'inline-flex' : 'none'}">
+          style="display: {pendingDisplay}">
           Approve
         </button>
         <button onclick="window.hrInstructorLeaveList?.reviewRequest('{id}', 'reject')" data-action-type="review" data-id="{id}" data-action="reject" 
           class="inline-flex items-center px-3 py-1.5 text-sm rounded-lg transition-colors duration-200 bg-rose-50 text-rose-700 hover:bg-rose-100 js-review-btn" 
-          style="display: {status === 'Pending' ? 'inline-flex' : 'none'}">
+          style="display: {pendingDisplay}">
           Reject
         </button>
         <button onclick="window.hrInstructorLeaveList?.deleteRequest('{id}')" data-action-type="delete" data-id="{id}" 
@@ -359,7 +366,17 @@ if (typeof window !== 'undefined' && !window.HrInstructorLeaveListFeature) {
     async #handleReview(requestId, action, reason) {
       try {
         const id = Number(requestId);
-        await this.apiService.reviewInstructorLeaveRequest(id, action, reason);
+        if (!Number.isFinite(id)) {
+          throw new Error('Invalid leave request id');
+        }
+
+        const trimmedReason = (reason || '').trim();
+        if (action === 'reject' && !trimmedReason) {
+          alert('Please provide a reason when rejecting a leave request.');
+          return;
+        }
+
+        await this.apiService.reviewInstructorLeaveRequest(id, action, trimmedReason);
         alert(`Leave request ${action}d successfully!`);
         await this.render();
       } catch (error) {

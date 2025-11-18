@@ -5,7 +5,7 @@ if (typeof HrInstructorResignationFormFeature === 'undefined') {
       this.templateEngine = templateEngine;
       this.rootURL = rootURL || window.__ROOT_URL__ || "";
       this.api = new HrApiService(this.rootURL);
-      this.formElement = null;
+      this.formRender = null;
     }
 
     async render() {
@@ -59,138 +59,29 @@ if (typeof HrInstructorResignationFormFeature === 'undefined') {
         throw new Error('Form container not found in template');
       }
 
-      formContainer.innerHTML = '';
-      this.formElement = this.#createFormElement();
-      formContainer.appendChild(this.formElement);
-    }
-
-    #createFormElement() {
-      const form = document.createElement('form');
-      form.id = 'instructorResignationForm';
-      form.className = 'space-y-6';
-
-      form.appendChild(this.#createTextInput({
-        id: 'InstructorCode',
-        name: 'InstructorCode',
-        label: 'Instructor Code',
-        placeholder: 'Enter instructor code (e.g., INS001)',
-        required: true
-      }));
-
-      form.appendChild(this.#createTextarea({
-        id: 'Reason',
-        name: 'Reason',
-        label: 'Reason for Resignation',
-        placeholder: 'Please provide detailed reason for resignation',
-        required: true
-      }));
-
-      form.appendChild(this.#createActionButtons());
-
-      form.addEventListener('submit', (event) => this.#handleSubmit(event));
-
-      // Focus the first field after the form mounts
-      setTimeout(() => {
-        const firstField = form.querySelector('input[name="InstructorCode"]');
-        if (firstField) {
-          firstField.focus();
-        }
-      }, 100);
-
-      return form;
-    }
-
-    #createTextInput({ id, name, label, placeholder, required }) {
-      const wrapper = document.createElement('div');
-
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', id);
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = `${label} ${required ? '<span class="text-red-500">*</span>' : ''}`;
-
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.id = id;
-      input.name = name;
-      input.placeholder = placeholder;
-      input.required = !!required;
-      input.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors';
-
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(input);
-      return wrapper;
-    }
-
-    #createTextarea({ id, name, label, placeholder, required }) {
-      const wrapper = document.createElement('div');
-
-      const labelElement = document.createElement('label');
-      labelElement.setAttribute('for', id);
-      labelElement.className = 'block text-sm font-medium text-gray-700 mb-2';
-      labelElement.innerHTML = `${label} ${required ? '<span class="text-red-500">*</span>' : ''}`;
-
-      const textarea = document.createElement('textarea');
-      textarea.id = id;
-      textarea.name = name;
-      textarea.rows = 4;
-      textarea.placeholder = placeholder;
-      textarea.required = !!required;
-      textarea.className = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none';
-
-      wrapper.appendChild(labelElement);
-      wrapper.appendChild(textarea);
-      return wrapper;
-    }
-
-    #createActionButtons() {
-      const container = document.createElement('div');
-      container.className = 'flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200';
-
-      const submitButton = document.createElement('button');
-      submitButton.type = 'submit';
-      submitButton.className = HrUiComponents.buttonClasses.success;
-
-      const submitIcon = document.createElement('svg');
-      submitIcon.className = 'w-5 h-5 mr-2';
-      submitIcon.setAttribute('fill', 'none');
-      submitIcon.setAttribute('stroke', 'currentColor');
-      submitIcon.setAttribute('viewBox', '0 0 24 24');
-      submitIcon.innerHTML = HrUiComponents.iconPaths.add;
-
-      submitButton.appendChild(submitIcon);
-      submitButton.appendChild(document.createTextNode(' Submit Resignation'));
-
-      const resetButton = document.createElement('button');
-      resetButton.type = 'button';
-      resetButton.className = HrUiComponents.buttonClasses.secondary;
-
-      const resetIcon = document.createElement('svg');
-      resetIcon.className = 'w-5 h-5 mr-2';
-      resetIcon.setAttribute('fill', 'none');
-      resetIcon.setAttribute('stroke', 'currentColor');
-      resetIcon.setAttribute('viewBox', '0 0 24 24');
-      resetIcon.innerHTML = HrUiComponents.iconPaths.reset;
-
-      resetButton.appendChild(resetIcon);
-      resetButton.appendChild(document.createTextNode(' Reset Form'));
-
-      resetButton.addEventListener('click', () => this.#resetForm());
-
-      container.appendChild(submitButton);
-      container.appendChild(resetButton);
-
-      return container;
-    }
-
-    async #handleSubmit(event) {
-      event.preventDefault();
-      HrUiComponents.hideFormResult();
-
-      if (!this.formElement) {
-        throw new Error('Form element is not ready');
+      if (!window.AdvanceFormRender) {
+        throw new Error('AdvanceFormRender is required to render the form');
       }
 
-      const formData = this.#collectFormData(this.formElement);
+      this.formRender = new window.AdvanceFormRender(this.templateEngine, {
+        schema: this.#getFormSchema(),
+        targetSelector: '.instructor-resignation-form-container',
+        submitHandler: (formData) => this.#handleSubmit(formData),
+        config: {
+          autoFocus: true,
+          showErrors: false,
+          validateOnBlur: false
+        }
+      });
+
+      await this.formRender.render();
+      this.#overrideRendererMessages();
+      this.#attachCustomButtons();
+    }
+
+
+    async #handleSubmit(formData) {
+      HrUiComponents.hideFormResult();
       if (!this.#validateFormData(formData)) {
         return;
       }
@@ -208,21 +99,13 @@ if (typeof HrInstructorResignationFormFeature === 'undefined') {
       }
     }
 
-    #collectFormData(form) {
-      const formData = new FormData(form);
-      const data = {};
-      for (const [key, value] of formData.entries()) {
-        data[key] = typeof value === 'string' ? value.trim() : value;
-      }
-      return data;
-    }
-
     #resetForm() {
-      if (!this.formElement) return;
-      this.formElement.reset();
+      if (this.formRender && typeof this.formRender.reset === 'function') {
+        this.formRender.reset();
+      }
       HrUiComponents.hideFormResult();
 
-      const firstField = this.formElement.querySelector('input[name="InstructorCode"]');
+      const firstField = document.querySelector('.instructor-resignation-form-container input[name="InstructorCode"]');
       if (firstField) {
         setTimeout(() => firstField.focus(), 100);
       }
@@ -257,6 +140,68 @@ if (typeof HrInstructorResignationFormFeature === 'undefined') {
       });
 
       return transformed;
+    }
+
+    #getFormSchema() {
+      return [
+        {
+          name: 'InstructorCode',
+          label: 'Instructor Code',
+          type: 'text',
+          placeholder: 'Enter instructor code (e.g., INS001)',
+          required: true
+        },
+        {
+          name: 'Reason',
+          label: 'Reason for Resignation',
+          type: 'textarea',
+          placeholder: 'Please provide detailed reason for resignation',
+          rows: 4,
+          required: true
+        }
+      ];
+    }
+
+    #overrideRendererMessages() {
+      if (!this.formRender) return;
+      this.formRender.showFormError = (message) => HrUiComponents.showFormError(message);
+      this.formRender.showFormSuccess = (message, detail) => HrUiComponents.showFormSuccess(message, detail);
+    }
+
+    #attachCustomButtons() {
+      const form = document.querySelector('.instructor-resignation-form-container form');
+      if (!form) return;
+
+      const defaultButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+      defaultButtons.forEach((button) => button.remove());
+
+      const container = document.createElement('div');
+      container.className = 'flex flex-col sm:flex-row gap-4 justify-center pt-6 border-t border-gray-200';
+
+      const submitButton = document.createElement('button');
+      submitButton.type = 'submit';
+      submitButton.className = HrUiComponents.buttonClasses.success;
+      submitButton.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${HrUiComponents.iconPaths.add}
+        </svg>
+        Submit Resignation
+      `;
+
+      const resetButton = document.createElement('button');
+      resetButton.type = 'button';
+      resetButton.className = HrUiComponents.buttonClasses.secondary;
+      resetButton.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          ${HrUiComponents.iconPaths.reset}
+        </svg>
+        Reset Form
+      `;
+      resetButton.addEventListener('click', () => this.#resetForm());
+
+      container.appendChild(submitButton);
+      container.appendChild(resetButton);
+      form.appendChild(container);
     }
 
     #showInfo(message) {

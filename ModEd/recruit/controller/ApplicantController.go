@@ -49,15 +49,17 @@ func (controller *ApplicantController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/CreateApplicantForm",
-		Handler: controller.RenderCreateForm,
-		Method:  core.GET,
+		Route:          "/recruit/CreateApplicantForm",
+		Handler:        controller.RenderCreateForm,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin"}},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/CreateApplicant",
-		Handler: controller.CreateApplicant,
-		Method:  core.POST,
+		Route:          "/recruit/CreateApplicant",
+		Handler:        controller.CreateApplicant,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin"}},
 	})
 
 	routeList = append(routeList, &core.RouteItem{

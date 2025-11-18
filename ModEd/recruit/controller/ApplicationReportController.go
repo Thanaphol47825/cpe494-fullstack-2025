@@ -36,6 +36,14 @@ func (controller *ApplicationReportController) SetApplication(application *core.
 	controller.application = application
 }
 
+func (controller *ApplicationReportController) isApplicant(userID string) bool {
+	var count int64
+	controller.application.DB.Table("user_roles").
+		Where("user_id = ? AND role = ?", userID, "Applicant").
+		Count(&count)
+	return count > 0
+}
+
 func (controller *ApplicationReportController) RenderCreateForm(c *fiber.Ctx) error {
 	path := filepath.Join(controller.application.RootPath, "recruit", "view", "ApplicationReportCreate.tpl")
 
@@ -52,89 +60,108 @@ func (controller *ApplicationReportController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/RenderCreateForm",
-		Handler: controller.RenderCreateForm,
-		Method:  core.GET,
+		Route:          "/recruit/RenderCreateForm",
+		Handler:        controller.RenderCreateForm,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Applicant", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/CreateApplicationReport",
-		Handler: controller.CreateApplicationReport,
-		Method:  core.POST,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetApplicationReports",
-		Handler: controller.GetAllApplicationReports,
-		Method:  core.GET,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetApplicationReport/:id",
-		Handler: controller.GetApplicationReportByID,
-		Method:  core.GET,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/UpdateApplicationReport",
-		Handler: controller.UpdateApplicationReport,
-		Method:  core.POST,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/DeleteApplicationReport",
-		Handler: controller.DeleteApplicationReport,
-		Method:  core.POST,
+		Route:          "/recruit/CreateApplicationReport",
+		Handler:        controller.CreateApplicationReport,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Applicant", "Admin"}},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetApplicationReportsFromFile",
-		Handler: controller.GetApplicationReportsFromFile,
-		Method:  core.GET,
+		Route:          "/recruit/GetApplicationReports",
+		Handler:        controller.GetAllApplicationReports,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Applicant", "Instructor", "Admin"}},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/GetApplicationReport/:id",
+		Handler:        controller.GetApplicationReportByID,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Applicant", "Instructor", "Admin"}},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/DeleteApplicationReport",
+		Handler:        controller.DeleteApplicationReport,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetApplicationReportByApplicant/:applicantId",
-		Handler: controller.GetApplicationReportByApplicant,
-		Method:  core.GET,
+		Route:          "/recruit/UpdateApplicationReport",
+		Handler:        controller.UpdateApplicationReport,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/VerifyApplicationEligibility",
-		Handler: controller.VerifyApplicationEligibility,
-		Method:  core.POST,
+		Route:          "/recruit/GetApplicationReportsFromFile",
+		Handler:        controller.GetApplicationReportsFromFile,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetFacultyOptions",
-		Handler: controller.GetFacultyOptions,
-		Method:  core.GET,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetDepartmentOptions",
-		Handler: controller.GetDepartmentOptions,
-		Method:  core.GET,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetProgramTypeOptions",
-		Handler: controller.GetProgramTypeOptions,
-		Method:  core.GET,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/TransferConfirmedApplicants",
-		Handler: controller.TransferConfirmedApplicantsHandler,
-		Method:  core.POST,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/TransferConfirmedApplicantByID",
-		Handler: controller.TransferConfirmedApplicantByIDHandler,
-		Method:  core.POST,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetApplicationReportOptions",
-		Handler: controller.GetApplicationReportOptions,
-		Method:  core.GET,
+		Route:          "/recruit/GetApplicationReportByApplicant/:applicantId",
+		Handler:        controller.GetApplicationReportByApplicant,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Applicant", "Instructor", "Admin"}},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/ConfirmAcceptance",
-		Handler: controller.ConfirmAcceptance,
-		Method:  core.POST,
+		Route:          "/recruit/VerifyApplicationEligibility",
+		Handler:        controller.VerifyApplicationEligibility,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/GetFacultyOptions",
+		Handler:        controller.GetFacultyOptions,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/GetDepartmentOptions",
+		Handler:        controller.GetDepartmentOptions,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/GetProgramTypeOptions",
+		Handler:        controller.GetProgramTypeOptions,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/GetApplicationReportOptions",
+		Handler:        controller.GetApplicationReportOptions,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/TransferConfirmedApplicants",
+		Handler:        controller.TransferConfirmedApplicantsHandler,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/TransferConfirmedApplicantByID",
+		Handler:        controller.TransferConfirmedApplicantByIDHandler,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
+	})
+
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/ConfirmAcceptance",
+		Handler:        controller.ConfirmAcceptance,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 
 	return routeList
@@ -166,13 +193,22 @@ func (controller *ApplicationReportController) CreateApplicationReport(c *fiber.
 
 func (controller *ApplicationReportController) GetAllApplicationReports(c *fiber.Ctx) error {
 	var reports []*model.ApplicationReport
+	userID := c.Locals("userId")
 
-	if err := controller.application.DB.
+	query := controller.application.DB.
 		Preload("Applicant").
 		Preload("ApplicationRound").
 		Preload("Faculty").
-		Preload("Department").
-		Find(&reports).Error; err != nil {
+		Preload("Department")
+
+	if userID != nil {
+		userIDStr := fmt.Sprintf("%v", userID)
+		if controller.isApplicant(userIDStr) {
+			query = query.Where("applicant_id = ?", userIDStr)
+		}
+	}
+
+	if err := query.Find(&reports).Error; err != nil {
 		return core.SendResponse(c, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusInternalServerError, Message: err.Error(),
 		})
@@ -186,6 +222,7 @@ func (controller *ApplicationReportController) GetAllApplicationReports(c *fiber
 func (controller *ApplicationReportController) GetApplicationReportByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 	var report model.ApplicationReport
+	userID := c.Locals("userId")
 
 	if err := controller.application.DB.
 		Preload("Applicant").
@@ -196,6 +233,17 @@ func (controller *ApplicationReportController) GetApplicationReportByID(c *fiber
 		return core.SendResponse(c, core.BaseApiResponse{
 			IsSuccess: false, Status: fiber.StatusNotFound, Message: "ApplicationReport not found",
 		})
+	}
+
+	if userID != nil {
+		userIDStr := fmt.Sprintf("%v", userID)
+		if controller.isApplicant(userIDStr) {
+			if fmt.Sprintf("%d", report.ApplicantID) != userIDStr {
+				return core.SendResponse(c, core.BaseApiResponse{
+					IsSuccess: false, Status: fiber.StatusForbidden, Message: "You can only view your own application reports",
+				})
+			}
+		}
 	}
 
 	return core.SendResponse(c, core.BaseApiResponse{
@@ -306,6 +354,20 @@ func (controller *ApplicationReportController) GetApplicationReportByApplicant(c
 			Status:    fiber.StatusBadRequest,
 			Message:   "Invalid applicantId",
 		})
+	}
+
+	userID := c.Locals("userId")
+	if userID != nil {
+		userIDStr := fmt.Sprintf("%v", userID)
+		if controller.isApplicant(userIDStr) {
+			if fmt.Sprintf("%d", id) != userIDStr {
+				return core.SendResponse(c, core.BaseApiResponse{
+					IsSuccess: false,
+					Status:    fiber.StatusForbidden,
+					Message:   "You can only view your own application reports",
+				})
+			}
+		}
 	}
 
 	var reports []model.ApplicationReport

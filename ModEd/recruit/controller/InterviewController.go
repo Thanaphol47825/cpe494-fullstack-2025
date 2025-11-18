@@ -60,93 +60,106 @@ func (controller *InterviewController) RenderInterviewCreate(context *fiber.Ctx)
 func (controller *InterviewController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
 
+	// Admin and Instructor routes - require Admin or Instructor role
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/interview/create",
-		Handler: controller.RenderInterviewCreate,
-		Method:  core.GET,
+		Route:          "/recruit/interview/create",
+		Handler:        controller.RenderInterviewCreate,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin", "Instructor"}},
 	})
 
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/CreateInterview",
-		Handler: controller.CreateInterview,
-		Method:  core.POST,
+		Route:          "/recruit/CreateInterview",
+		Handler:        controller.CreateInterview,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin", "Instructor"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetInterviews",
-		Handler: controller.GetAllInterviews,
-		Method:  core.GET,
+		Route:          "/recruit/GetInterviews",
+		Handler:        controller.GetAllInterviews,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin", "Instructor"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/GetInterview/:id",
-		Handler: controller.GetInterviewByID,
-		Method:  core.GET,
+		Route:          "/recruit/GetInterview/:id",
+		Handler:        controller.GetInterviewByID,
+		Method:         core.GET,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin", "Instructor"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/UpdateInterview",
-		Handler: controller.UpdateInterview,
-		Method:  core.POST,
-	})
-	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/DeleteInterview",
-		Handler: controller.DeleteInterview,
-		Method:  core.POST,
+		Route:          "/recruit/UpdateInterview",
+		Handler:        controller.UpdateInterview,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Admin", "Instructor"}},
 	})
 
-	// My Interview (authenticated) CRUD
+	// Admin only route - only Admin can delete
+	routeList = append(routeList, &core.RouteItem{
+		Route:          "/recruit/DeleteInterview",
+		Handler:        controller.DeleteInterview,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
+	})
+
+	// My Interview (authenticated) CRUD - require Instructor role
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interviews",
 		Handler:        controller.GetMyInterviews,
 		Method:         core.GET,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interviews/pending",
 		Handler:        controller.GetMyPendingInterviews,
 		Method:         core.GET,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interviews/evaluated",
 		Handler:        controller.GetMyEvaluatedInterviews,
 		Method:         core.GET,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interview",
 		Handler:        controller.CreateMyInterview,
 		Method:         core.POST,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interview/:id",
 		Handler:        controller.GetMyInterviewByID,
 		Method:         core.GET,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interview/:id",
 		Handler:        controller.UpdateMyInterview,
 		Method:         core.POST,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 	routeList = append(routeList, &core.RouteItem{
 		Route:          "/recruit/my/interview/delete/:id",
 		Handler:        controller.DeleteMyInterview,
 		Method:         core.POST,
-		Authentication: core.Authentication{AuthType: core.AuthAny},
+		Authentication: core.Authentication{AuthType: core.AuthRole, Roles: []string{"Instructor", "Admin"}},
 	})
 
+	// Admin only routes - require Admin (is_admin = true)
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/SetupTestData",
-		Handler: controller.SetupTestData,
-		Method:  core.POST,
+		Route:          "/recruit/SetupTestData",
+		Handler:        controller.SetupTestData,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 	routeList = append(routeList, &core.RouteItem{
-		Route:   "/recruit/SetupMockData",
-		Handler: controller.SetupMockData,
-		Method:  core.POST,
+		Route:          "/recruit/SetupMockData",
+		Handler:        controller.SetupMockData,
+		Method:         core.POST,
+		Authentication: core.Authentication{AuthType: core.AuthAdmin},
 	})
 
+	// Public route - no authentication required
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/recruit/GetInstructorOptions",
 		Handler: controller.GetInstructorOptions,
@@ -286,7 +299,7 @@ func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx
 	if userIdInterface == nil {
 		return 0, false
 	}
-	
+
 	// Convert userId to string
 	var userIDStr string
 	switch v := userIdInterface.(type) {
@@ -299,29 +312,125 @@ func (controller *InterviewController) getCurrentInstructorID(context *fiber.Ctx
 	default:
 		return 0, false
 	}
-	
+
 	if userIDStr == "" {
 		return 0, false
 	}
-	
+
+	// First, check if user has Instructor role
+	var roleCount int64
+	controller.application.DB.Table("user_roles").
+		Where("user_id = ? AND role = ?", userIDStr, "Instructor").
+		Count(&roleCount)
+
+	if roleCount == 0 {
+		// User doesn't have Instructor role
+		return 0, false
+	}
+
 	// Query Instructor from User.ID (since Instructor.UserId references User.ID)
 	var instructor commonModel.Instructor
 	if err := controller.application.DB.
 		Where("user_id = ?", userIDStr).
 		First(&instructor).Error; err != nil {
-		// If no instructor found for this user, return false
-		return 0, false
+		// User has Instructor role but no instructor record exists
+		// Try to create a basic instructor record from user data
+		var user struct {
+			ID       uint    `gorm:"column:id"`
+			Username *string `gorm:"column:username"`
+			Email    *string `gorm:"column:email"`
+		}
+		if err := controller.application.DB.Table("users").
+			Select("id, username, email").
+			Where("id = ?", userIDStr).
+			First(&user).Error; err != nil {
+			return 0, false
+		}
+
+		// Create a basic instructor record
+		userIDUint := uint(0)
+		if userIDStr != "" {
+			if parsed, err := fmt.Sscanf(userIDStr, "%d", &userIDUint); err != nil || parsed != 1 {
+				return 0, false
+			}
+		}
+
+		username := "instructor"
+		if user.Username != nil {
+			username = *user.Username
+		}
+		email := "instructor@example.com"
+		if user.Email != nil {
+			email = *user.Email
+		}
+
+		// Generate unique instructor code
+		instructorCode := fmt.Sprintf("INST-%s", userIDStr)
+		// Check if code already exists and append number if needed
+		var existingCount int64
+		controller.application.DB.Model(&commonModel.Instructor{}).
+			Where("instructor_code LIKE ?", instructorCode+"%").
+			Count(&existingCount)
+		if existingCount > 0 {
+			instructorCode = fmt.Sprintf("INST-%s-%d", userIDStr, existingCount+1)
+		}
+
+		newInstructor := commonModel.Instructor{
+			InstructorCode: instructorCode,
+			FirstName:      username,
+			LastName:       "Instructor",
+			Email:          email,
+			UserId:         &userIDUint,
+		}
+
+		if err := controller.application.DB.Create(&newInstructor).Error; err != nil {
+			// Failed to create instructor record, try to find it again in case it was created concurrently
+			if err := controller.application.DB.
+				Where("user_id = ?", userIDStr).
+				First(&instructor).Error; err != nil {
+				return 0, false
+			}
+			return instructor.ID, true
+		}
+
+		return newInstructor.ID, true
 	}
-	
+
 	return instructor.ID, true
 }
 
 func (controller *InterviewController) GetMyInterviews(context *fiber.Ctx) error {
+	userIdInterface := context.Locals("userId")
+	var userIDStr string
+	if userIdInterface != nil {
+		switch v := userIdInterface.(type) {
+		case string:
+			userIDStr = v
+		case uint:
+			userIDStr = fmt.Sprintf("%d", v)
+		case int:
+			userIDStr = fmt.Sprintf("%d", v)
+		}
+	}
+
 	instructorID, ok := controller.getCurrentInstructorID(context)
 	if !ok {
+		// Check if user has Instructor role but no instructor record
+		var roleCount int64
+		controller.application.DB.Table("user_roles").
+			Where("user_id = ? AND role = ?", userIDStr, "Instructor").
+			Count(&roleCount)
+
+		if roleCount > 0 {
+			return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"isSuccess": false,
+				"result":    "unauthorized: user has Instructor role but no instructor record found in database. Please contact administrator to create instructor record.",
+			})
+		}
+
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 
@@ -348,7 +457,7 @@ func (controller *InterviewController) GetMyPendingInterviews(context *fiber.Ctx
 	if !ok {
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 
@@ -376,7 +485,7 @@ func (controller *InterviewController) GetMyEvaluatedInterviews(context *fiber.C
 	if !ok {
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 
@@ -403,7 +512,7 @@ func (controller *InterviewController) CreateMyInterview(context *fiber.Ctx) err
 	if !ok {
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 
@@ -433,7 +542,7 @@ func (controller *InterviewController) GetMyInterviewByID(context *fiber.Ctx) er
 	if !ok {
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 	id := context.Params("id")
@@ -460,7 +569,7 @@ func (controller *InterviewController) UpdateMyInterview(context *fiber.Ctx) err
 	if !ok {
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 	id := context.Params("id")
@@ -534,7 +643,7 @@ func (controller *InterviewController) DeleteMyInterview(context *fiber.Ctx) err
 	if !ok {
 		return context.Status(fiber.StatusForbidden).JSON(fiber.Map{
 			"isSuccess": false,
-			"result":    "unauthorized",
+			"result":    "unauthorized: instructor record not found for this user",
 		})
 	}
 	id := context.Params("id")

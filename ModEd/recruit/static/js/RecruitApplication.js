@@ -18,7 +18,9 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     getFeaturesForRole(role) {
       const allFeatures = {
         "applicant/list": { title: "Manage Applicant", icon: "🗂️", script: "ApplicantTable.js", roles: ["Admin"] },
-        "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js", roles: ["Admin"] },
+        "applicant/create": { title: "Create Applicant", icon: "➕", script: "ApplicantForm.js", roles: ["Admin"] },
+        "applicationreport/list": { title: "Manage Application Report", icon: "📊", script: "ApplicationReportTable.js", roles: ["Instructor", "Admin"] },
+        "applicationreport/create": { title: "Create Application Report", icon: "📝", script: "ApplicationReportForm.js", roles: ["Applicant", "Admin"] },
         "applicationround/list": { title: "Manage Application Round", icon: "📅", script: "ApplicationRoundTable.js", roles: ["Admin"] },
         "interview/list": { title: "Manage Interview", icon: "🎯", script: "InterviewTable.js", roles: ["Admin"] },
         "my/interviews": { title: "My Interview Queue", icon: "📋", script: "MyInterviewList.js", roles: ["Instructor"] },
@@ -156,11 +158,48 @@ if (typeof window !== "undefined" && !window.RecruitApplication) {
     );
   }
 
+  async checkAuthentication() {
+    try {
+      const response = await fetch(`${this.rootURL}/recruit/auth/me`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      
+      const result = await response.json();
+      
+      if (result.isSuccess && result.result) {
+        const user = result.result;
+        // Update user role from server
+        if (user.roles && user.roles.length > 0) {
+          this.userRole = user.roles[0];
+          localStorage.setItem('role', user.roles[0]);
+          this.features = this.getFeaturesForRole(this.userRole);
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('[RecruitApplication] Authentication check failed:', error);
+      return false;
+    }
+  }
+
   async render() {
     if (!this.templateEngine?.mainContainer) {
       console.error("Template engine or main container not found");
       return false;
     }
+
+    // Check authentication before rendering
+    const isAuthenticated = await this.checkAuthentication();
+    
+    if (!isAuthenticated) {
+      // Redirect to login page
+      console.log('[RecruitApplication] User not authenticated, redirecting to login...');
+      window.location.href = `${this.rootURL}/recruit/login`;
+      return false;
+    }
+
     return await this.handleRoute(this.templateEngine.getCurrentPath());
   }
 

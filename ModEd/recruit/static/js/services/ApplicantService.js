@@ -54,7 +54,9 @@ if (typeof window !== 'undefined' && !window.ApplicantService) {
 
     async getAll() {
       try {
-        const resp = await fetch(this.ENDPOINT_LIST);
+        const resp = await fetch(this.ENDPOINT_LIST, {
+          credentials: 'include'
+        });
         const data = await resp.json().catch(() => ({}));
         
         if (!resp.ok || data?.isSuccess === false) {
@@ -74,7 +76,9 @@ if (typeof window !== 'undefined' && !window.ApplicantService) {
       }
 
       try {
-        const resp = await fetch(this.ENDPOINT_GET_ONE(id));
+        const resp = await fetch(this.ENDPOINT_GET_ONE(id), {
+          credentials: 'include'
+        });
         const payload = await resp.json().catch(() => ({}));
         
         if (!resp.ok || payload?.isSuccess === false) {
@@ -95,6 +99,7 @@ if (typeof window !== 'undefined' && !window.ApplicantService) {
         const resp = await fetch(this.ENDPOINT_CREATE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(payload)
         });
 
@@ -131,6 +136,7 @@ if (typeof window !== 'undefined' && !window.ApplicantService) {
         const resp = await fetch(this.ENDPOINT_UPDATE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify(payload)
         });
 
@@ -157,6 +163,7 @@ if (typeof window !== 'undefined' && !window.ApplicantService) {
         const resp = await fetch(this.ENDPOINT_DELETE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ id: Number(id) })
         });
         

@@ -5,8 +5,7 @@ if (typeof window !== 'undefined' && !window.ApplicationReportModalConfig) {
       'application_rounds_id',
       'faculty_id',
       'department_id',
-      'program',
-      'application_statuses'
+      'program'
     ],
 
     resolveAdditionalFields(data, context = {}) {
@@ -19,13 +18,17 @@ if (typeof window !== 'undefined' && !window.ApplicationReportModalConfig) {
       const programTypeMap = context.programTypeMap || {};
       const programLabel = programTypeMap[data.program] || data.program || 'N/A';
       
+      const statusValue = data.application_statuses || data.ApplicationStatuses || 'Pending';
+      const statusLabel = statusValue.charAt(0).toUpperCase() + statusValue.slice(1).toLowerCase();
+      
       return [
         { label: 'Applicant', value: `${applicantName} (ID: ${data.applicant_id || 'N/A'})` },
         { label: 'Email', value: applicant?.email || 'N/A' },
         { label: 'Application Round', value: `${applicationRound?.round_name || applicationRound?.name || 'N/A'} (ID: ${data.application_rounds_id || 'N/A'})` },
         { label: 'Faculty', value: `${faculty?.name || 'N/A'} (ID: ${data.faculty_id || 'N/A'})` },
         { label: 'Department', value: `${department?.name || 'N/A'} (ID: ${data.department_id || 'N/A'})` },
-        { label: 'Program Type', value: `${programLabel} (ID: ${data.program ?? 'N/A'})` }
+        { label: 'Program Type', value: `${programLabel} (ID: ${data.program ?? 'N/A'})` },
+        { label: 'Application Status', value: statusLabel }
       ];
     }
   };

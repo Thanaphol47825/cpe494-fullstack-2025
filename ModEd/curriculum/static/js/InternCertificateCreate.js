@@ -176,6 +176,14 @@ if (typeof window !== 'undefined' && !window.InternCertificateCreate) {
                     Placeholder: "Enter company ID...",
                     Required: true,
                     Disabled: !this.canCreate
+                },
+                {
+                    Id: "certificate_number",
+                    Label: "Certificate Number",
+                    Type: "hidden",
+                    Name: "certificate_number",
+                    Value: this.certificateData?.certificate_number || "",
+                    Required: false
                 }
             ];
 

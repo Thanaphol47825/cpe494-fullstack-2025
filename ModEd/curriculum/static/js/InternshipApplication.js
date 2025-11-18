@@ -7,6 +7,9 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
       this.setupRoutes();
       localStorage.setItem('role', 'Instructor');
       localStorage.setItem('userId', 2);
+      this.template = {
+        RoleManager: null,
+      };
     }
 
     setupRoutes() {
@@ -113,6 +116,11 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.renderInternshipRegistrationEdit.bind(this),
         "InternshipRegistrationEdit.js"
       );
+      this.addRouteWithSubModule(
+  "/internshipannouncement/create",
+  this.renderInternshipAnnouncementCreate.bind(this),
+  "InternshipAnnouncementCreate.js"
+);
 
       this.setDefaultRoute("");
     }
@@ -138,7 +146,9 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         label: "Intern Certificate Create",
         route: "/interncertificate/create",
       },
-      { label:"Internship Registration", route:"/internshipregistration"}
+      { label:"Internship Registration", route:"/internshipregistration"},
+{ label: "Internship Announcement Create", route: "/internshipannouncement/create" },
+
     ];
 
     async renderMainPage() {
@@ -172,6 +182,10 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         this.models,
         this.templateEngine
       );
+      const roleManagerHTML = Mustache.render(this.template.RoleManager);
+      const roleManagerElement = document.createElement('div');
+      roleManagerElement.innerHTML = roleManagerHTML;
+      this.templateEngine.mainContainer.appendChild(roleManagerElement);
       this.templateEngine.mainContainer.appendChild(homeElement);
     }
 
@@ -186,6 +200,36 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
           script.onload = resolve;
           script.onerror = reject;
         });
+      }
+      if (!window.InternRoleManager) {
+        const script = document.createElement("script");
+        script.src = `${RootURL}/curriculum/static/js/util/InternRoleManager.js`;
+        document.head.appendChild(script);
+
+        // Wait for script to load
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
+
+      const templates = {
+        RoleManager: "/curriculum/static/view/RoleManager.tpl",
+      };
+
+      try {
+        await Promise.all(
+          Object.entries(templates).map(async ([key, path]) => {
+            const response = await fetch(path);
+            if (!response.ok) {
+              throw new Error(`Failed to load ${key}: ${response.statusText}`);
+            }
+            this.template[key] = await response.text();
+          })
+        );
+      } catch (err) {
+        console.error("Error loading templates:", err);
+        throw err;
       }
     }
 
@@ -428,6 +472,32 @@ if (typeof window !== "undefined" && !window.InternshipApplication) {
         console.error("InternshipPersonalAttendance class not found");
       }
     }
+
+    async renderInternshipAnnouncementList() {
+  console.log("Rendering Internship Announcement List");
+  if (window.InternshipAnnouncementList) {
+    const page = new window.InternshipAnnouncementList(this.templateEngine);
+    await page.render();
+  } else if (window.InternshipAnnouncementCreate) {
+    // fallback: ถ้ายังไม่มีหน้า List ให้เด้งไปหน้า Create แทน
+    console.warn("InternshipAnnouncementList class not found. Fallback to Create page.");
+    const createPage = new window.InternshipAnnouncementCreate(this.templateEngine);
+    await createPage.render();
+  } else {
+    console.error("InternshipAnnouncementList/Create class not found");
+  }
+}
+
+async renderInternshipAnnouncementCreate() {
+  console.log("Rendering Internship Announcement Create");
+  if (window.InternshipAnnouncementCreate) {
+    const page = new window.InternshipAnnouncementCreate(this.templateEngine);
+    await page.render();
+  } else {
+    console.error("InternshipAnnouncementCreate class not found");
+  }
+}
+
 
     async render() {
       try {

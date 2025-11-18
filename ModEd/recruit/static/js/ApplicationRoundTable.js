@@ -48,7 +48,25 @@ if (typeof window !== 'undefined' && !window.ApplicationRoundTable) {
         modelPath: 'recruit/applicationround',
         data: [],
         targetSelector: '#recruit-table-container',
-        customColumns: await RecruitTableTemplate.getDefaultColumns()
+        customColumns: await RecruitTableTemplate.getDefaultColumns(),
+        
+        enableSearch: true,
+        enableSorting: true,
+        enablePagination: true,
+        pageSize: 10,
+        
+        searchConfig: {
+          placeholder: "Search application rounds...",
+          fields: [
+            { value: "all", label: "All Fields" },
+            { value: "round_name", label: "Round Name" }
+          ]
+        },
+        
+        sortConfig: {
+          defaultField: "id",
+          defaultDirection: "desc"
+        }
       });
 
       await this.table.loadSchema();
@@ -61,7 +79,9 @@ if (typeof window !== 'undefined' && !window.ApplicationRoundTable) {
         if (!btn) return;
         const action = btn.getAttribute('data-action');
         const id = btn.getAttribute('data-id');
-        if (action === 'edit') this.handleEdit(id);
+       
+        if (action === 'view') this.handleView(id);
+        else if (action === 'edit') this.handleEdit(id);
         else if (action === 'delete') this.handleDelete(id);
       });
 
@@ -76,6 +96,37 @@ if (typeof window !== 'undefined' && !window.ApplicationRoundTable) {
         this.table.setData(result.data);
       } else {
         this.ui?.showMessage(`Error loading application rounds: ${result.error}`, 'error');
+      }
+    }
+
+    async formatApplicationRoundForModal(applicationRound) {
+      return await RecruitTableTemplate.formatForModal(
+        applicationRound,
+        'recruit/applicationround',
+        '📅 Application Round Details'
+      );
+    }
+
+    async handleView(id) {
+      if (!id) return;
+      
+      try {
+        this.ui?.showMessage('Loading application round details...', 'info');
+        
+        const result = await this.service.getById(id);
+        
+        if (!result.success) {
+          this.ui?.showMessage(`Error loading application round: ${result.error}`, 'error');
+          return;
+        }
+        
+        const modalData = await this.formatApplicationRoundForModal(result.data);
+        await RecruitTableTemplate.showDetailsModal(modalData);
+        
+        this.ui?.clearMessages();
+      } catch (error) {
+        console.error('[ApplicationRoundTable] Error in handleView:', error);
+        this.ui?.showMessage(`Error displaying modal: ${error.message}`, 'error');
       }
     }
 

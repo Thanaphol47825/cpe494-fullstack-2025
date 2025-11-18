@@ -25,6 +25,15 @@ func (controller *InternCertificateController) RenderMain(context *fiber.Ctx) er
 
 func (controller *InternCertificateController) GetRoute() []*core.RouteItem {
 	routeList := []*core.RouteItem{}
+	
+
+	// ใน controller/InternCertificateController.go
+
+routeList = append(routeList, &core.RouteItem{
+    Route:   "/curriculum/InternCertificate/getByStudentID/:id",
+    Handler: controller.handler.GetByStudentID,
+    Method:  core.GET,
+})
 
 	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/InternCertificateRenderMain",

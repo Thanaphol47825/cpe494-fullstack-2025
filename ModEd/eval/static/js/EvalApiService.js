@@ -7,7 +7,28 @@ class EvalApiService {
 
   async fetchJSON(url, options = {}) {
     try {
-      const res = await fetch(url, options);
+      // Ensure URL is absolute (add protocol if missing)
+      let fullUrl = url;
+      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+        // Check if URL already contains the base (e.g., "localhost:8080/eval/...")
+        const baseUrl = this.rootURL || RootURL || '';
+        if (baseUrl && url.includes(baseUrl)) {
+          // URL already has base, just add protocol
+          fullUrl = `http://${url}`;
+        } else if (baseUrl) {
+          // URL is relative, prepend base with protocol
+          if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
+            fullUrl = `http://${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+          } else {
+            fullUrl = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+          }
+        } else {
+          // Fallback: use current origin
+          fullUrl = `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+        }
+      }
+      
+      const res = await fetch(fullUrl, options);
       if (!res.ok) {
         throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       }
@@ -20,16 +41,46 @@ class EvalApiService {
 
   async uploadFormData(url, formData) {
     try {
-      const res = await fetch(url, {
+      // Ensure URL is absolute - always use window.location.origin for reliability
+      let fullUrl = url;
+      
+      // If URL is already absolute, use it as-is
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        fullUrl = url;
+      } else if (url) {
+        // If URL contains host:port pattern but no protocol, add http://
+        if (url.match(/^[a-zA-Z0-9.-]+:\d+/)) {
+          fullUrl = `http://${url}`;
+        } else {
+          // URL is relative, prepend origin
+          fullUrl = `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+        }
+      }
+      
+      console.log('Uploading to:', fullUrl);
+      console.log('Original URL:', url, 'Origin:', window.location.origin);
+      console.log('FormData entries:', Array.from(formData.entries()).map(([k, v]) => [k, v instanceof File ? v.name : v]));
+      
+      const res = await fetch(fullUrl, {
         method: 'POST',
-        body: formData
+        body: formData,
+        // Don't set Content-Type - browser will set it with boundary for multipart/form-data
+        credentials: 'same-origin' // Include cookies if any
       });
+      
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        const errorText = await res.text();
+        console.error('Server response error:', res.status, res.statusText, errorText);
+        throw new Error(`HTTP ${res.status}: ${res.statusText} - ${errorText}`);
       }
       return await res.json();
     } catch (err) {
       console.error('Upload error:', err);
+      console.error('Error details:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+      });
       return { isSuccess: false, result: err.message };
     }
   }
@@ -48,21 +99,42 @@ class EvalApiService {
     return null;
   }
 
+  // Format date for display in tables: "DD/MM/YYYY HH:MM"
+  formatDateForDisplay(dateString) {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${day}/${month}/${year} ${hours}:${minutes}`;
+    } catch (e) {
+      return dateString;
+    }
+  }
+
   // Assignment API calls
   async createAssignment(assignmentData) {
-    if (assignmentData.files) {
+    // Prepare base payload with all required fields
+    const payload = {
+      courseId: Number(assignmentData.courseId),
+      title: assignmentData.name || assignmentData.title,
+      description: assignmentData.description || '',
+      dueDate: this.formatToRFC3339(assignmentData.dueDate),
+      startDate: this.formatToRFC3339(assignmentData.startDate),
+      maxScore: Number(assignmentData.maxScore),
+    };
+
+    if (assignmentData.files && assignmentData.files.length > 0) {
       // Handle file upload with FormData
       const formData = new FormData();
       
-      // Add assignment data
-      const payload = {
-        title: assignmentData.name || assignmentData.title,
-        description: assignmentData.description,
-        dueDate: this.formatToRFC3339(assignmentData.dueDate),
-        startDate: this.formatToRFC3339(assignmentData.startDate),
-        maxScore: Number(assignmentData.maxScore),
-      };
-      
+      // Add assignment data as JSON string
       formData.append('data', JSON.stringify(payload));
       
       // Append all files
@@ -74,14 +146,6 @@ class EvalApiService {
       return await this.uploadFormData(`${this.baseUrl}/assignment/create`, formData);
     } else {
       // Handle regular assignment creation without files
-      const payload = {
-        title: assignmentData.name || assignmentData.title,
-        description: assignmentData.description,
-        dueDate: this.formatToRFC3339(assignmentData.dueDate),
-        startDate: this.formatToRFC3339(assignmentData.startDate),
-        maxScore: Number(assignmentData.maxScore),
-      };
-
       return await this.fetchJSON(`${this.baseUrl}/assignment/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -179,6 +243,14 @@ class EvalApiService {
     return await this.fetchJSON(`${this.baseUrl}/quiz/submission/getAll`);
   }
 
+  async getQuizSubmissionById(id) {
+    return await this.fetchJSON(`${this.baseUrl}/quiz/submission/get/${id}`);
+  }
+
+  async deleteQuizSubmission(id) {
+    return await this.fetchJSON(`${this.baseUrl}/quiz/submission/delete/${id}`);
+  }
+
   // General Submission API calls
   async createSubmission(submissionData) {
     const payload = {
@@ -212,6 +284,7 @@ class EvalApiService {
   async createQuiz(requestData) {
     const payload = {
       quiz: {
+        courseId: Number(requestData.quiz.courseId),
         title: requestData.quiz.title,
         description: requestData.quiz.description || '',
         startDate: this.formatToRFC3339(new Date(requestData.quiz.startDate)),
@@ -241,6 +314,7 @@ class EvalApiService {
     const payload = {
       quiz: {
         ID: Number(requestData.quiz.ID),
+        courseId: Number(requestData.quiz.courseId),
         title: requestData.quiz.title,
         description: requestData.quiz.description || '',
         startDate: this.formatToRFC3339(new Date(requestData.quiz.startDate)),
@@ -259,7 +333,9 @@ class EvalApiService {
   }
 
   async deleteQuiz(id) {
-    return await this.fetchJSON(`${this.baseUrl}/quiz/delete/${id}`);
+    return await this.fetchJSON(`${this.baseUrl}/quiz/delete/${id}`, {
+      method: "POST"
+    });
   }
 
   // Assignment Progress API calls
@@ -345,6 +421,15 @@ class EvalApiService {
     return await this.fetchJSON(`${this.baseUrl}/assignment/submission/delete/${id}`, {
       method: 'POST'
     });
+  }
+
+  // Curriculum module API calls (for course data)
+  async getAllCourses() {
+    return await this.fetchJSON(`${this.rootURL}/curriculum/Course/getCourses`);
+  }
+
+  async getCurrentUserRole() {
+    return await this.fetchJSON(`${this.baseUrl}/user/role`);
   }
 }
 

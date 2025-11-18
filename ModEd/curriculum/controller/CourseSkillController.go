@@ -33,6 +33,11 @@ func (controller *CourseSkillController) GetRoute() []*core.RouteItem {
 		Method:  core.POST,
 	})
 	routeList = append(routeList, &core.RouteItem{
+		Route:   "/curriculum/CourseSkill/createCourseSkills",
+		Handler: controller.handler.CreateMultipleCourseSkill,
+		Method:  core.POST,
+	})
+	routeList = append(routeList, &core.RouteItem{
 		Route:   "/curriculum/CourseSkill/updateCourseSkill/:id",
 		Handler: controller.handler.UpdateCourseSkill,
 		Method:  core.POST,

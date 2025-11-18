@@ -7,6 +7,7 @@ import (
 
 func InitialRecruit() {
 	application := core.GetApplication()
+	application.AddController(controller.NewAuthController())
 	application.AddController(controller.NewAdminController())
 	application.AddController(controller.NewApplicantController())
 	application.AddController(controller.NewApplicationReportController())

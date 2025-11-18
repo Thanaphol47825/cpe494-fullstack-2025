@@ -78,21 +78,13 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
 
       await this.table.loadSchema();
       
-      this.table.schema = this.table.schema.map(col => {
-        const hideColumns = [
-          'created_at', 'updated_at', 'deleted_at',
-          'tgat1', 'tgat2', 'tgat3',
-          'tpat1', 'tpat2', 'tpat3', 'tpat4', 'tpat5',
-          'portfolio_url', 'family_income',
-          'math_grade', 'science_grade', 'english_grade',
-          'applicant_round_information', 'address'
-        ];
-        
-        if (hideColumns.includes(col.name)) {
-          return { ...col, display: false };
-        }
-        return col;
-      });
+      if (!window.ApplicantModalConfig) {
+        await this.loadConfig();
+      }
+      
+      if (window.ApplicantModalConfig) {
+        this.table.schema = window.ApplicantModalConfig.applyHideColumns(this.table.schema);
+      }
       
       this.table.targetSelector = '#recruit-table-container';
       await this.table.render();
@@ -193,6 +185,19 @@ if (typeof window !== 'undefined' && !window.ApplicantTable) {
         await this.refreshTable();
       } else {
         this.ui?.showMessage(`Import error: ${result.error}`, 'error');
+      }
+    }
+
+    async loadConfig() {
+      if (!window.ApplicantModalConfig) {
+        const script = document.createElement('script');
+        script.src = `${this.rootURL || ''}/recruit/static/js/config/modal/applicantFields.js`;
+        script.async = false;
+        return new Promise((resolve, reject) => {
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load ApplicantModalConfig'));
+          document.head.appendChild(script);
+        });
       }
     }
   }

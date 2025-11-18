@@ -35,34 +35,43 @@ if (!window.CommonFacultyListFeature) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
-        const table = new AdvanceTableRender(this.templateEngine, {
-          modelPath: "common/faculty", // โหลด schema: /api/modelmeta/common/Faculty
-          dataPath: "common/faculties/getall",
-          data: data.result || [], // โหลดข้อมูลจริง
-          targetSelector: "#facultyTable",
+        // Check current user role
+        const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+        const isAdmin = currentRole === 'Admin';
 
-          customColumns: [
-            {
-              name: "actions",
-              label: "Actions",
-              template: `
-                <div class="flex space-x-2">
-                  <button onclick="editFaculty({id})"
-                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                    Edit
-                  </button>
-                  <button onclick="viewFaculty({id})"
-                          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                    View
-                  </button>
-                  <button onclick="deleteFaculty({id})"
-                          class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                    Delete
-                  </button>
-                </div>
-              `,
-            },
-          ],
+        // Build action buttons based on role
+        const customColumns = [];
+
+        // Only Admin can see actions for faculties
+        if (isAdmin) {
+          customColumns.push({
+            name: "actions",
+            label: "Actions",
+            template: `
+              <div class="flex space-x-2">
+                <button onclick="commonFacultyList.viewFaculty('{ID}')"
+                        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                  View
+                </button>
+                <button onclick="commonFacultyList.editFaculty('{ID}')"
+                        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                  Edit
+                </button>
+                <button onclick="commonFacultyList.deleteFaculty('{ID}', '{name}')"
+                        class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                  Delete
+                </button>
+              </div>
+            `
+          });
+        }
+
+        const table = new AdvanceTableRender(this.templateEngine, {
+          modelPath: "common/faculty",
+          dataPath: "common/faculties/getall",
+          data: data.result || [],
+          targetSelector: "#facultyTable",
+          customColumns: customColumns,
         });
 
         await table.render();
@@ -78,20 +87,31 @@ if (!window.CommonFacultyListFeature) {
     }
 
     editFaculty(id) {
-      location.hash = `#common/faculty/create?id=${id}`;
+      location.hash = `#common/faculty/edit/${encodeURIComponent(id)}`;
     }
 
     async viewFaculty(id) {
       try {
-        const res = await fetch(`${this.rootURL}/common/faculty/${id}`);
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch faculty data
+        const res = await fetch(`${this.rootURL}/common/faculties/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        alert(
-          `👁 Faculty Details\n` +
-            `Name: ${result?.name ?? "-"}\n` +
-            `Faculty No: ${result?.facultyNo ?? "-"}\n` +
-            `Dean: ${result?.deanName ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `faculty-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Faculty',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load faculty details.");
@@ -140,13 +160,3 @@ if (!window.CommonFacultyListFeature) {
 
   window.CommonFacultyListFeature = CommonFacultyListFeature;
 }
-
-async function editFaculty(id) {
-  location.hash = `#common/faculty/edit/${encodeURIComponent(id)}`;
-}
-
-async function viewFaculty(id) {
-  alert(`👁 View faculty ID: ${id}`);
-}
-
-async function deleteFaculty(id) {}

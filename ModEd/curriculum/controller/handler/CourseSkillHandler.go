@@ -55,6 +55,24 @@ func (h *CourseSkillHandler) CreateCourseSkill(context *fiber.Ctx) error {
 	})
 }
 
+func (h *CourseSkillHandler) CreateMultipleCourseSkill(context *fiber.Ctx) error {
+	var payload []model.CourseSkill
+	if err := context.BodyParser(&payload); err != nil {
+		return fiber.NewError(http.StatusBadRequest, err.Error())
+	}
+	if err := h.Application.DB.Create(payload).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    "failed to create course skill",
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    "success",
+	})
+}
+
 func (h *CourseSkillHandler) GetCourseSkill(context *fiber.Ctx) error {
 	id, err := context.ParamsInt("id")
 	if err != nil {

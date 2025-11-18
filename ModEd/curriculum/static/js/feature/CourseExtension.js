@@ -5,6 +5,9 @@ if (typeof window !== 'undefined' && !window.CourseExtension) {
             this.host = null;
         }
 
+        async initialize() {
+            // Subclasses will override this to load templates/data
+        }
 
         getCustomColumns() {
             return [];

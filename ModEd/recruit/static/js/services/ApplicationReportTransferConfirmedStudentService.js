@@ -1,5 +1,4 @@
-if (typeof window !== 'undefined' && !window.ApplicationReportTransferConfirmedStudentService) {
-  class ApplicationReportTransferConfirmedStudentService {
+class ApplicationReportTransferConfirmedStudentService {
     constructor(rootURL) {
       this.rootURL = rootURL || window.RootURL || window.__ROOT_URL__ || '';
       this.ENDPOINT_TRANSFER_ALL = `${this.rootURL}/recruit/TransferConfirmedApplicants`;
@@ -38,6 +37,7 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTransferConfirmedS
         const resp = await fetch(this.ENDPOINT_TRANSFER_ONE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ applicant_id: Number(applicantId) }),
         });
 
@@ -59,4 +59,5 @@ if (typeof window !== 'undefined' && !window.ApplicationReportTransferConfirmedS
   }
 
   window.ApplicationReportTransferConfirmedStudentService = ApplicationReportTransferConfirmedStudentService;
-}
+
+

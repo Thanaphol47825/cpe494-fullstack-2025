@@ -5,6 +5,14 @@ class CommonApplication extends BaseModuleApplication {
 
     this.setSubModuleBasePath("/common/static/js/features");
 
+    // Make this instance globally accessible for RoleManager
+    window.commonApplication = this;
+
+    if (!localStorage.getItem("userRole") && !localStorage.getItem("role")) {
+      localStorage.setItem("userRole", "Admin");
+      localStorage.setItem("userId", 1);
+    }
+
     this.features = {
       "student/create": {
         title: "Add Student",
@@ -48,6 +56,11 @@ class CommonApplication extends BaseModuleApplication {
   setupRoutes() {
     this.addRoute("", this.renderMenu.bind(this));
 
+    this.addRouteWithSubModule(
+      "/login",
+      this.renderLogin.bind(this),
+      "LoginForm.js"
+    );
     this.addRouteWithSubModule(
       "/student/create",
       this.renderStudentCreate.bind(this),
@@ -120,38 +133,95 @@ class CommonApplication extends BaseModuleApplication {
     return await this.handleRoute(this.templateEngine.getCurrentPath());
   }
 
-  renderMenu() {
+  async renderMenu() {
     const container = this.templateEngine.mainContainer;
     container.innerHTML = "";
 
-    const html = `
-      <section class="menu-container">
-        <div class="form-container">
-          <h1 class="menu-title">Common Module</h1>
-          <a href='#' class="btn-home">🏠 Back to ModEd</a>
-          <p>Manage Faculty, Department, Instructor, and Student information.</p>
+    try {
+      // Load RoleManager if not available
+      if (!window.CommonRoleManager) {
+        const roleScript = document.createElement("script");
+        roleScript.src = `${this.rootURL}/common/static/js/util/RoleManager.js`;
+        document.head.appendChild(roleScript);
+        await new Promise((resolve, reject) => {
+          roleScript.onload = resolve;
+          roleScript.onerror = reject;
+        });
+      }
 
-          <div class="module-list">
-            ${Object.entries(this.features)
-        .map(
-          ([id, feature]) => `
-                  <a href="#common/${id}" class="module-button" routerLink="common/${id}">
-                    ${feature.icon} ${feature.title}
-                  </a>
-                `
-        )
-        .join("")}
+      // Load CommonHomeTemplate if not available
+      if (!window.CommonHomeTemplate) {
+        const script = document.createElement("script");
+        script.src = `${this.rootURL}/common/static/js/CommonHomeTemplate.js`;
+        document.head.appendChild(script);
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+        });
+      }
+
+      // Ensure templates are loaded in templateEngine
+      if (!this.templateEngine.template) {
+        await this.templateEngine.fetchTemplate();
+      }
+
+      // Use CommonHomeTemplate to render with core templates
+      const homeElement = await CommonHomeTemplate.getTemplate(
+        this.features,
+        this.templateEngine
+      );
+      container.appendChild(homeElement);
+
+      // Initialize role display after rendering
+      if (window.commonRoleManager) {
+        window.commonRoleManager.updateRoleDisplay();
+      }
+    } catch (error) {
+      console.error("Error loading common home template:", error);
+
+      // Fallback to old simple menu
+      const html = `
+        <section class="menu-container">
+          <div class="form-container">
+            <h1 class="menu-title">Common Module</h1>
+            <a href='#' class="btn-home">🏠 Back to ModEd</a>
+            <p>Manage Faculty, Department, Instructor, and Student information.</p>
+
+            <div class="module-list">
+              ${Object.entries(this.features)
+                .map(
+                  ([id, feature]) => `
+                    <a href="#common/${id}" class="module-button" routerLink="common/${id}">
+                      ${feature.icon} ${feature.title}
+                    </a>
+                  `
+                )
+                .join("")}
+            </div>
           </div>
-        </div>
-      </section>
-    `;
+        </section>
+      `;
 
-    const element = this.templateEngine.create(html);
-    container.appendChild(element);
+      const element = this.templateEngine.create(html);
+      container.appendChild(element);
+    }
   }
 
   getIconForFeature(id) {
     return this.features[id]?.icon || "•";
+  }
+
+  async renderLogin() {
+    if (!window.CommonLoginFormFeature) {
+      console.error("CommonLoginFormFeature not available after loading");
+      this.renderError("Failed to load Login Form");
+      return false;
+    }
+    const feature = new window.CommonLoginFormFeature(
+      this.templateEngine,
+      this.rootURL
+    );
+    return await feature.render();
   }
 
   async renderStudentCreate() {
@@ -200,7 +270,7 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
-   async renderInstructorList() {
+  async renderInstructorList() {
     if (!window.CommonInstructorListFeature) {
       console.error("CommonInstructorListFeature not available after loading");
       this.renderError("Failed to load Instructor List");
@@ -213,7 +283,7 @@ class CommonApplication extends BaseModuleApplication {
     return await feature.render();
   }
 
-   async renderFacultyList() {
+  async renderFacultyList() {
     if (!window.CommonFacultyListFeature) {
       console.error("CommonFacultyListFeature not available after loading");
       this.renderError("Failed to load Faculty List");

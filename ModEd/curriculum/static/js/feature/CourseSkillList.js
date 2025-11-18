@@ -9,50 +9,34 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
       window._addSkillToCourse = this.handleAddSkills.bind(this);
     }
 
+    async initialize() {
+      // This ensures the template is loaded before CourseList asks for columns
+      await this.getActionTemplateExtension();
+    }
+
     getCustomColumns() {
       const currentRole = localStorage.getItem('userRole');
       const isStudent = currentRole === 'Student';
 
-      // hide Add Skill  button for Student
       if (isStudent) {
         return [];
       }
 
+      const actionTemplateExtension = CourseSkillList.actionTemplateHtmlExtension || ""
+      console.log("actionTemplateExtension : ", actionTemplateExtension)
       return [
         {
           name: "skill-actions",
           label: "Skill Actions",
-          template: `
-                    <button onclick="_addSkillToCourse({ID})" 
-                            class="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-xl shadow-lg ...">
-                        Add Skill
-                    </button>
-                `
+          template: actionTemplateExtension
         }
       ];
     }
 
     async handleSubmitCreateNew(formData) {
       try {
-        formData.CourseId = parseInt(formData.CourseId);
-
-        // Check if SkillId is array (multiple selection)
-        if (Array.isArray(formData.SkillId)) {
-          if (formData.SkillId.length > 3) {
-            alert("You can select maximum 3 skills only.");
-            return false;
-          }
-          if (formData.SkillId.length === 0) {
-            alert("Please select at least one skill.");
-            return false;
-          }
-          formData.SkillId = formData.SkillId.map(id => parseInt(id));
-        } else {
-          formData.SkillId = parseInt(formData.SkillId);
-        }
-
         const resp = await fetch(
-          RootURL + `/curriculum/CourseSkill/createCourseSkill`,
+          RootURL + `/curriculum/CourseSkill/createCourseSkills`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -87,14 +71,17 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         }
 
         const modalId = `courseskill-create-${courseId}`;
-        const newCourseSkill = {
-          CourseId: courseId
-        }
 
+        const courseData = this.host.rawCourses.find(item => item.ID === courseId);
+        const newCourseSkill = {
+          CourseId: courseId,
+          Name: courseData.Name
+        }
+        const allSkills = await this.getAllSkills()
         await CreateRelatedModalTemplate.createModalWithForm({
           modalType: 'CourseSkill',
           modalId,
-          application: this.application,
+          choiceData: allSkills,
           data: newCourseSkill,
           modelPath: 'curriculum/courseskill',
           submitHandler: async (formData) => {
@@ -107,6 +94,15 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         console.error('Error opening create course skill modal:', err);
         alert('Error opening create course skill modal: ' + (err?.message || err));
       }
+    }
+
+    async getAllSkills() {
+      const res = await fetch(`${RootURL}/curriculum/Skill/getSkills`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json().catch(() => []);
+      return data.result || [];
     }
 
     getCourseSkills = async () => {
@@ -146,6 +142,19 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
         }
       }
       return CourseSkillList.actionTemplateHtml;
+    }
+
+    async getActionTemplateExtension() {
+      if (!CourseSkillList.actionTemplateHtmlExtension) {
+        try {
+          const response = await fetch(`${RootURL}/curriculum/static/view/CourseSkillInCourseActionButton.tpl`);
+          CourseSkillList.actionTemplateHtmlExtension = (await response.text()).trim();
+        } catch (err) {
+          console.warn('Failed to load CourseSkillActionButtons.tpl', err);
+          CourseSkillList.actionTemplateHtmlExtension = null;
+        }
+      }
+      return CourseSkillList.actionTemplateHtmlExtension;
     }
 
     async handleSubmit(formData) {
@@ -277,7 +286,6 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
 
       const [courseSkills, actionTemplate] = await Promise.all([
         this.getAllCourseSkills(),
-        // Student role does not get action template
         isStudent ? Promise.resolve(null) : this.getActionTemplate(),
       ]);
 
@@ -338,4 +346,5 @@ if (typeof window !== 'undefined' && !window.CourseSkillList) {
   if (typeof window !== 'undefined') {
     window.CourseSkillList = CourseSkillList;
   }
+  CourseSkillList.actionTemplateHtml = null;
 }

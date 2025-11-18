@@ -5,6 +5,7 @@ class QuizCreate {
     this.apiService = new EvalApiService();
     this.questions = [];
     this.questionCounter = 0;
+    this.courses = [];
   }
 
   async initialize() {
@@ -19,6 +20,9 @@ class QuizCreate {
 
     // Expose globally for onclick handlers
     window.quizCreate = this;
+
+    // Load courses first
+    await this.loadCourses();
 
     // Add initial question
     this.addQuestion();
@@ -81,6 +85,9 @@ class QuizCreate {
 
     try {
       await this.form.render();
+      
+      // Add course dropdown at the top AFTER form is rendered
+      await this.addCourseDropdown();
       
       // Add questions section after the form
       const form = container.querySelector('form');
@@ -200,8 +207,75 @@ class QuizCreate {
     }
   }
 
+  async loadCourses() {
+    try {
+      const response = await this.apiService.getAllCourses();
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        this.courses = response.result;
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      this.showError('Failed to load courses');
+    }
+  }
+
+  async addCourseDropdown() {
+    // Find the form element
+    const form = document.querySelector('#quiz-form-container form');
+    if (!form) {
+      console.error('Form not found');
+      return;
+    }
+
+    // Create course dropdown wrapper
+    const courseField = document.createElement('div');
+    courseField.className = 'mb-6';
+    courseField.innerHTML = `
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Course <span class="text-red-500">*</span>
+      </label>
+      <select 
+        id="course-select" 
+        name="courseId" 
+        required
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+      >
+        <option value="">-- Select a course --</option>
+        ${this.courses.map(c => 
+          `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+        ).join('')}
+      </select>
+    `;
+
+    // Find the first direct child element of the form
+    let insertBefore = null;
+    const possibleFirstElements = form.querySelectorAll(':scope > div, :scope > label, :scope > fieldset');
+    
+    if (possibleFirstElements.length > 0) {
+      insertBefore = possibleFirstElements[0];
+    } else {
+      insertBefore = form.firstElementChild;
+    }
+
+    // Insert the course dropdown at the top
+    if (insertBefore) {
+      form.insertBefore(courseField, insertBefore);
+    } else {
+      form.appendChild(courseField);
+    }
+  }
+
   async handleSubmit(formData) {
     try {
+      // Get courseId from dropdown
+      const courseSelect = document.getElementById('course-select');
+      if (courseSelect && courseSelect.value) {
+        formData.courseId = Number(courseSelect.value);
+      } else {
+        this.showError('Please select a course');
+        return;
+      }
+
       // Validate questions
       if (this.questions.length === 0) {
         this.showError('Please add at least one question');
@@ -235,6 +309,7 @@ class QuizCreate {
 
       // Prepare quiz data
       const quizData = {
+        courseId: formData.courseId,
         title: formData.title,
         description: formData.description || '',
         startDate: formData.startDate,

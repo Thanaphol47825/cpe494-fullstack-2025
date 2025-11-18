@@ -1,6 +1,6 @@
 if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
     class CurriculumHomeTemplate {
-        
+
         /**
          * Icon configurations สำหรับแต่ละ model
          */
@@ -19,7 +19,7 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
          */
         static MODEL_COLORS = {
             "Curriculum": "from-emerald-500 to-teal-600",
-            "Course": "from-amber-500 to-orange-600", 
+            "Course": "from-amber-500 to-orange-600",
             "Class": "from-purple-500 to-indigo-600",
             "Class Material": "from-rose-500 to-pink-600",
             "Course Plan": "from-cyan-500 to-blue-600",
@@ -33,7 +33,7 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
         static MODEL_BORDER_COLORS = {
             "Curriculum": "emerald",
             "Course": "amber",
-            "Class": "purple", 
+            "Class": "purple",
             "Class Material": "rose",
             "Course Plan": "cyan",
             "Course Skill": "blue",
@@ -56,6 +56,9 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
                     models: models.map(model => ({
                         label: model.label,
                         route: model.route,
+                        createRoute: model.label.trim() === "Course Skill"
+                            ? "curriculum/course"
+                            : `${model.route}/create`,
                         icon: this.MODEL_ICONS[model.label] || this.MODEL_ICONS["Course"],
                         color: this.MODEL_COLORS[model.label] || "from-gray-500 to-gray-600",
                         borderColor: this.MODEL_BORDER_COLORS[model.label] || "gray",
@@ -69,7 +72,7 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
                 // สร้าง DOM element จาก HTML
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = renderedHTML.trim();
-                
+
                 const element = tempDiv.firstChild;
 
                 // Initialize RoleManager after template is added to DOM
@@ -83,7 +86,7 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
 
             } catch (error) {
                 console.error('Error loading curriculum home template:', error);
-                
+
                 // Fallback: สร้าง simple template
                 const fallbackDiv = document.createElement('div');
                 fallbackDiv.className = 'p-8 bg-white rounded-lg shadow-md';
@@ -95,13 +98,14 @@ if (typeof window !== 'undefined' && !window.CurriculumHomeTemplate) {
                                 <h3 class="text-lg font-semibold mb-2">${model.label}</h3>
                                 <div class="space-y-2">
                                     <button routerLink="${model.route}" class="w-full bg-blue-600 text-white py-2 px-4 rounded">Browse</button>
-                                    <button routerLink="${model.route}/create" class="w-full bg-green-600 text-white py-2 px-4 rounded">Create New</button>
+                                    
+                                    <button routerLink="${model.label.trim() === "Course Skill" ? "curriculum/course" : `${model.route}/create`}" class="w-full bg-green-600 text-white py-2 px-4 rounded">Create New</button>
                                 </div>
                             </div>
                         `).join('')}
                     </div>
                 `;
-                
+
                 return fallbackDiv;
             }
         }

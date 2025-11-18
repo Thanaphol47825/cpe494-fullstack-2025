@@ -37,34 +37,43 @@ if (!window.CommonDepartmentListFeature) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
-        const table = new AdvanceTableRender(this.templateEngine, {
-          modelPath: "common/department", // โหลด schema: /api/modelmeta/common/Department
-          dataPath: "common/departments/getall",
-          data: data || [], // โหลดข้อมูลจริง
-          targetSelector: "#departmentTable",
+        // Check current user role
+        const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+        const isAdmin = currentRole === 'Admin';
 
-          customColumns: [
-            {
-              name: "actions",
-              label: "Actions",
-              template: `
-                <div class="flex space-x-2">
-                  <button onclick="commonDepartmentList.editDepartment('{ID}')"
-                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                    Edit
-                  </button>
-                  <button onclick="commonDepartmentList.viewDepartment('{ID}')"
-                          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                    View
-                  </button>
-                  <button onclick="commonDepartmentList.deleteDepartment('{ID}', '{name}')"
-                          class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                    Delete
-                  </button>
-                </div>
-              `,
-            },
-          ],
+        // Build action buttons based on role
+        const customColumns = [];
+
+        // Only Admin can see actions for departments
+        if (isAdmin) {
+          customColumns.push({
+            name: "actions",
+            label: "Actions",
+            template: `
+              <div class="flex space-x-2">
+                <button onclick="commonDepartmentList.viewDepartment('{ID}')"
+                        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                  View
+                </button>
+                <button onclick="commonDepartmentList.editDepartment('{ID}')"
+                        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                  Edit
+                </button>
+                <button onclick="commonDepartmentList.deleteDepartment('{ID}', '{name}')"
+                        class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                  Delete
+                </button>
+              </div>
+            `
+          });
+        }
+
+        const table = new AdvanceTableRender(this.templateEngine, {
+          modelPath: "common/department",
+          dataPath: "common/departments/getall",
+          data: data || [],
+          targetSelector: "#departmentTable",
+          customColumns: customColumns,
         });
 
         await table.render();
@@ -80,19 +89,31 @@ if (!window.CommonDepartmentListFeature) {
     }
 
     editDepartment(id) {
-      location.hash = `#common/department/create?id=${id}`;
+      location.hash = `#common/department/edit/${encodeURIComponent(id)}`;
     }
 
     async viewDepartment(id) {
       try {
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch department data
         const res = await fetch(`${this.rootURL}/common/departments/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        alert(
-          `👁 Department Details\n` +
-            `Name: ${result?.name ?? "-"}\n` +
-            `Faculty: ${result?.faculty ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `department-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Department',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load department details.");
@@ -140,19 +161,4 @@ if (!window.CommonDepartmentListFeature) {
   }
 
   window.CommonDepartmentListFeature = CommonDepartmentListFeature;
-}
-
-async function editDepartment(id) {
-  location.hash = `#common/department/edit/${encodeURIComponent(id)}`;
-}
-
-async function viewDepartment(id) {
-  alert(`👁 View department ID: ${id}`);
-}
-
-async function deleteDepartment(id) {
-  if (confirm(`⚠️ Delete department ID ${id}?`)) {
-    await fetch(`/common/departments/delete/${id}`, { method: "DELETE" });
-    alert("✅ Department deleted!");
-  }
 }

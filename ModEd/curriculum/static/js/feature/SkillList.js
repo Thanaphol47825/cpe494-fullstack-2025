@@ -2,8 +2,17 @@ if (typeof window !== 'undefined' && !window.SkillList) {
   class SkillList {
     constructor(application) {
       this.application = application;
+      this.rawSkills = []; // Store raw data for edit modal
       window._deleteSkill = this.handleDelete.bind(this);
       window._editSkill = this.handleEdit.bind(this);
+    }
+
+    async getActionTemplate() {
+      if (!SkillList.actionTemplateHtml) {
+        const response = await fetch(`${RootURL}/curriculum/static/view/SkillActionButtons.tpl`);
+        SkillList.actionTemplateHtml = (await response.text()).trim();
+      }
+      return SkillList.actionTemplateHtml;
     }
 
     async getAllSkills() {
@@ -12,6 +21,7 @@ if (typeof window !== 'undefined' && !window.SkillList) {
         headers: { "Content-Type": "application/json" },
       });
       const data = await res.json().catch(() => []);
+      this.rawSkills = data.result || []; // Store raw data for edit modal
       return data.result || [];
     }
 
@@ -100,24 +110,53 @@ if (typeof window !== 'undefined' && !window.SkillList) {
 
     async refreshTable() {
       const skills = await this.getAllSkills();
-      this.table.setData(skills);
-      this.render();
+      if (this.table && typeof this.table.setData === 'function') {
+        this.table.setData(skills);
+      }
+      // follow ClassList pattern: re-render the view after updating data
+      await this.render();
     }
 
     async render() {
+      // เคลียร์ main container
       this.application.templateEngine.mainContainer.innerHTML = "";
       const listWrapper = await ListTemplate.getList('SkillList');
       this.application.templateEngine.mainContainer.appendChild(listWrapper);
 
-      const skills = await this.getAllSkills();
-      this.setupTable();
+      // โหลดข้อมูลและ template ของปุ่ม
+      const [skills, actionTemplate] = await Promise.all([
+        this.getAllSkills(),
+        this.getActionTemplate(),
+      ]);
+
+      // Check current user role
+      const currentRole = localStorage.getItem('userRole');
+      const isStudent = currentRole === 'Student';
+
+      this.setupTable(actionTemplate, isStudent);
       this.table.setData(skills);
       await this.table.render();
+
+      // ensure routerLink bindings are applied to newly injected action buttons
+      const routerLinks = this.application?.templateEngine?.routerLinks;
+      if (routerLinks && typeof routerLinks.initializeRouterLinks === 'function') {
+        routerLinks.initializeRouterLinks();
+      }
 
       this.setupForm();
     }
 
-    setupTable() {
+    setupTable(actionTemplate, isStudent) {
+      // Prepare custom columns - only include Actions if not Student
+      const customColumns = [];
+      if (!isStudent) {
+        customColumns.push({
+          name: "actions",
+          label: "Actions",
+          template: actionTemplate
+        });
+      }
+
       this.table = new AdvanceTableRender(this.application.templateEngine, {
         modelPath: "curriculum/skill",
         data: [],
@@ -127,30 +166,26 @@ if (typeof window !== 'undefined' && !window.SkillList) {
           { name: "Name", label: "Name", type: "text" },
           { name: "Description", label: "Description", type: "text" },
         ],
-        customColumns: [
-          {
-            name: "actions",
-            label: "Actions",
-            template: `
-              <div class="flex space-x-2">
-                  <button onclick="_editSkill({ID})" 
-                      class="bg-gradient-to-r from-rose-600 to-pink-700 hover:from-rose-700 hover:to-pink-800 text-white font-semibold py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                      Edit
-                  </button>
-                  <button onclick="_deleteSkill({ID})" 
-                      class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-2 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2 text-sm">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                       Delete
-                   </button>
-              </div>
-            `
-          },
-        ],
+        // คอลัมน์เสริมสำหรับปุ่มแอ็คชัน - แสดงเฉพาะ Admin
+        customColumns: customColumns,
+        // เปิดใช้งาน Search และ Sorting
+        enableSearch: true,
+        searchConfig: {
+          placeholder: "Search skills...",
+          fields: [
+            { value: "all", label: "All" },
+            { value: "Name", label: "Name" },
+            { value: "Description", label: "Description" },
+          ]
+        },
+        enableSorting: true,
+        sortConfig: {
+          defaultField: "ID",
+          defaultDirection: "asc"
+        },
+        // เปิด Pagination (optional)
+        enablePagination: true,
+        pageSize: 10
       });
     }
 
@@ -166,4 +201,5 @@ if (typeof window !== 'undefined' && !window.SkillList) {
   if (typeof window !== 'undefined') {
     window.SkillList = SkillList;
   }
+  SkillList.actionTemplateHtml = null;
 }

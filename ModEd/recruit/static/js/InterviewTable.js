@@ -150,29 +150,34 @@ if (typeof window !== 'undefined' && !window.InterviewTable) {
     async formatInterviewForModal(interview) {
       const data = interview;
       
-      const instructor = data.Instructor || data.instructor;
-      const applicationReport = data.ApplicationReport || data.application_report;
-      const applicant = applicationReport?.applicant || applicationReport?.Applicant;
+      if (!window.InterviewModalConfig) {
+        console.warn('[InterviewTable] InterviewModalConfig not loaded, loading now...');
+        await this.loadConfig();
+      }
       
-      const instructorName = instructor ? `${instructor.first_name || ''} ${instructor.last_name || ''}`.trim() : 'N/A';
-      const applicantName = applicant ? `${applicant.first_name || ''} ${applicant.last_name || ''}`.trim() : 'N/A';
-      
-      const additionalFields = [
-        { label: 'Instructor', value: `${instructorName} (ID: ${data.instructor_id || 'N/A'})` },
-        { label: 'Application Report', value: `Report #${data.application_report_id || 'N/A'}` },
-        { label: 'Applicant', value: `${applicantName} (ID: ${applicationReport?.applicant_id || 'N/A'})` },
-        { label: 'Applicant Email', value: applicant?.email || 'N/A' },
-        { label: 'Scheduled Appointment', value: data.scheduled_appointment ? new Date(data.scheduled_appointment).toLocaleString() : 'N/A' },
-        { label: 'Evaluated At', value: data.evaluated_at ? new Date(data.evaluated_at).toLocaleString() : 'N/A' }
-      ];
+      const config = window.InterviewModalConfig;
+      const additionalFields = config.resolveAdditionalFields(data);
       
       return await RecruitTableTemplate.formatForModal(
         data,
         'recruit/interview',
         '📅 Interview Details',
         additionalFields,
-        ['instructor_id', 'application_report_id', 'scheduled_appointment', 'evaluated_at', 'criteria_scores']
+        config.excludeFields
       );
+    }
+
+    async loadConfig() {
+      if (!window.InterviewModalConfig) {
+        const script = document.createElement('script');
+        script.src = `${this.rootURL || ''}/recruit/static/js/config/modal/interviewFields.js`;
+        script.async = false;
+        return new Promise((resolve, reject) => {
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load InterviewModalConfig'));
+          document.head.appendChild(script);
+        });
+      }
     }
 
     async handleView(id) {

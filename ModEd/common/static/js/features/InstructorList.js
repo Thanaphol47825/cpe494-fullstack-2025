@@ -35,34 +35,43 @@ if (!window.CommonInstructorListFeature) {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
 
-        const table = new AdvanceTableRender(this.templateEngine, {
-          modelPath: "common/instructor", // โหลด schema: /api/modelmeta/common/Instructor
-          dataPath: "common/instructors/getall",
-          data: data.result || [], // โหลดข้อมูลจริง
-          targetSelector: "#instructorTable",
+        // Check current user role
+        const currentRole = localStorage.getItem('userRole') || localStorage.getItem('role');
+        const isAdmin = currentRole === 'Admin';
 
-          customColumns: [
-            {
-              name: "actions",
-              label: "Actions",
-              template: `
-                <div class="flex space-x-2">
-                  <button onclick="commonInstructorList.editInstructor('{ID}')"
-                          class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
-                    Edit
-                  </button>
-                  <button onclick="commonInstructorList.viewInstructor('{ID}')"
-                          class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
-                    View
-                  </button>
-                  <button onclick="commonInstructorList.deleteInstructor('{ID}', '{first_name} {last_name}')"
-                          class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
-                    Delete
-                  </button>
-                </div>
-              `,
-            },
-          ],
+        // Build action buttons based on role
+        const customColumns = [];
+
+        // Only Admin can see actions for instructors
+        if (isAdmin) {
+          customColumns.push({
+            name: "actions",
+            label: "Actions",
+            template: `
+              <div class="flex space-x-2">
+                <button onclick="commonInstructorList.viewInstructor('{ID}')"
+                        class="bg-green-500 text-white px-3 py-1 rounded text-sm hover:bg-green-600">
+                  View
+                </button>
+                <button onclick="commonInstructorList.editInstructor('{ID}')"
+                        class="bg-blue-500 text-white px-3 py-1 rounded text-sm hover:bg-blue-600">
+                  Edit
+                </button>
+                <button onclick="commonInstructorList.deleteInstructor('{ID}', '{first_name} {last_name}')"
+                        class="bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600">
+                  Delete
+                </button>
+              </div>
+            `
+          });
+        }
+
+        const table = new AdvanceTableRender(this.templateEngine, {
+          modelPath: "common/instructor",
+          dataPath: "common/instructors/getall",
+          data: data.result || [],
+          targetSelector: "#instructorTable",
+          customColumns: customColumns,
         });
 
         await table.render();
@@ -83,17 +92,26 @@ if (!window.CommonInstructorListFeature) {
 
     async viewInstructor(id) {
       try {
-        console.log("test1", id);
+        // Load CommonViewDetailModal if not already loaded
+        if (!window.CommonViewDetailModal) {
+          const script = document.createElement('script');
+          script.src = `${this.rootURL}/common/static/js/CommonViewDetailModal.js`;
+          document.head.appendChild(script);
+          await new Promise(resolve => script.onload = resolve);
+        }
+
+        // Fetch instructor data
         const res = await fetch(`${this.rootURL}/common/instructors/${id}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const { result } = await res.json();
-        console.log("test2", result);
-        alert(
-          `Instructor Details\n` +
-            `Name: ${result?.first_name ?? "-"} ${result?.last_name ?? ""}\n` +
-            `Instructor No: ${result?.instructor_code ?? "-"}\n` +
-            `Email: ${result?.email ?? "-"}`
-        );
+
+        // Create and show modal
+        const modalId = `instructor-view-${id}`;
+        await window.CommonViewDetailModal.createModal({
+          modalType: 'Instructor',
+          modalId: modalId,
+          data: result
+        });
       } catch (e) {
         console.error(e);
         alert("Failed to load instructor details.");

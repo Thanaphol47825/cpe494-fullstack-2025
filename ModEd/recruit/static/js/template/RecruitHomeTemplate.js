@@ -117,7 +117,45 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = renderedHTML.trim();
 
-        return tempDiv.firstChild;
+        const menuElement = tempDiv.firstChild;
+        
+        // Helper function to create logout button
+        const createLogoutButton = () => {
+          const logoutButton = document.createElement("button");
+          logoutButton.className = "fixed top-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg hover:shadow-xl font-medium";
+          logoutButton.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span>Logout</span>
+          `;
+          logoutButton.addEventListener("click", async () => {
+            try {
+              const response = await fetch(`${RootURL}/recruit/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+              });
+              const result = await response.json();
+              if (result.isSuccess) {
+                localStorage.removeItem('role');
+                window.location.href = `${RootURL}/recruit/login`;
+              }
+            } catch (error) {
+              console.error('Logout error:', error);
+              localStorage.removeItem('role');
+              window.location.href = `${RootURL}/recruit/login`;
+            }
+          });
+          return logoutButton;
+        };
+        
+        // Add logout button to top right corner
+        if (menuElement) {
+          const logoutButton = createLogoutButton();
+          menuElement.appendChild(logoutButton);
+        }
+
+        return menuElement;
       } catch (error) {
         console.error("Error loading recruit home template:", error);
 
@@ -142,7 +180,43 @@ if (typeof window !== "undefined" && !window.RecruitHomeTemplate) {
               )
               .join("")}
           </div>
+          <div class="mt-6 text-center">
+            <a routerLink="/" class="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-slate-700 to-slate-800 text-white rounded-xl hover:from-slate-800 hover:to-slate-900 transition-all duration-200 shadow-lg hover:shadow-xl font-medium">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+              </svg>
+              Return to ModEd Home
+            </a>
+          </div>
+          <button id="logoutBtn" class="fixed top-4 right-4 z-50 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg hover:shadow-xl font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span>Logout</span>
+          </button>
         `;
+        
+        // Add logout functionality
+        const logoutBtn = fallbackDiv.querySelector('#logoutBtn');
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", async () => {
+            try {
+              const response = await fetch(`${RootURL}/recruit/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+              });
+              const result = await response.json();
+              if (result.isSuccess) {
+                localStorage.removeItem('role');
+                window.location.href = `${RootURL}/recruit/login`;
+              }
+            } catch (error) {
+              console.error('Logout error:', error);
+              localStorage.removeItem('role');
+              window.location.href = `${RootURL}/recruit/login`;
+            }
+          });
+        }
 
         return fallbackDiv;
       }

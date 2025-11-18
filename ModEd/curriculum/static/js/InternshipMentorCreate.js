@@ -4,16 +4,34 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
           this.application = application;
           this.mentors = [];
           this.tbody = null;
+          
+          // Get user role from localStorage
+          this.userRole = localStorage.getItem('role') || 'Student';
+          this.currentUserId = parseInt(localStorage.getItem('userId')) || null;
+          
+          // Only Admin can access
+          this.canAccess = this.userRole === 'Admin';
+          
           this.formFields = [
-              { Id: "mentor_first_name", Label: "First Name", Name: "mentor_first_name", Type: "text" },
-              { Id: "mentor_last_name", Label: "Last Name", Name: "mentor_last_name", Type: "text" },
-              { Id: "mentor_email", Label: "Email", Name: "mentor_email", Type: "email" },
-              { Id: "mentor_phone", Label: "Phone", Name: "mentor_phone", Type: "text" },
-              { Id: "company_id", Label: "Company ID", Name: "company_id", Type: "number" }
+              { Id: "mentor_first_name", Label: "First Name", Name: "mentor_first_name", Type: "text", Required: true },
+              { Id: "mentor_last_name", Label: "Last Name", Name: "mentor_last_name", Type: "text", Required: true },
+              { Id: "mentor_email", Label: "Email", Name: "mentor_email", Type: "email", Required: true },
+              { Id: "mentor_phone", Label: "Phone", Name: "mentor_phone", Type: "text", Required: true },
+              { Id: "company_id", Label: "Company ID", Name: "company_id", Type: "number", Required: true }
           ];
       }
 
       async render() {
+          console.log("Internship Mentor Management");
+          console.log("User Role:", this.userRole);
+          console.log("Can Access:", this.canAccess);
+
+          // Check permission before rendering
+          if (!this.canAccess) {
+              this.showAccessDenied();
+              return;
+          }
+
           // Clear container
           this.application.mainContainer.innerHTML = '';
 
@@ -37,10 +55,16 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                     Internship Mentor Management
                   </h1>
                   <div class="w-24 h-1 bg-gradient-to-r from-amber-500 to-orange-500 mx-auto mb-4 rounded-full"></div>
+                  <div class="flex items-center justify-center space-x-2 mb-2">
+                    <span class="px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      Admin Only
+                    </span>
+                  </div>
                   <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    Manage all internship mentors here.
+                    Manage all internship mentors here. Only administrators can create, edit, and delete mentors.
                   </p>
                 </div>
+                
                 <!-- Form -->
                 <div class="max-w-3xl mx-auto mb-8">
                   <form id="internship-mentor-form" class="form-container bg-white p-6 rounded-2xl shadow-lg">
@@ -55,7 +79,8 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                     </div>
                   </form>
                 </div>
-                  <!-- Table -->
+                
+                <!-- Table -->
                 <div class="max-w-6xl mx-auto">
                   <div class="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/50 overflow-hidden">
                     <div id="mentor-table-container" class="p-6"></div>
@@ -63,15 +88,19 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
                 </div>
               </div>
             </div>
-            `);
+          `);
           this.application.mainContainer.appendChild(formWrapper);
 
           // Render form fields
           const fieldsContainer = document.getElementById('form-fields');
           this.formFields.forEach(f => {
+              const requiredAttr = f.Required ? 'required' : '';
               const fieldHTML = `<div class="mb-4">
-                  <label for="${f.Id}" class="block text-gray-700 mb-1">${f.Label}</label>
-                  <input id="${f.Id}" name="${f.Name}" type="${f.Type}" class="w-full border border-gray-300 rounded-lg px-3 py-2"/>
+                  <label for="${f.Id}" class="block text-gray-700 mb-1 font-medium">
+                      ${f.Label} ${f.Required ? '<span class="text-red-500">*</span>' : ''}
+                  </label>
+                  <input id="${f.Id}" name="${f.Name}" type="${f.Type}" ${requiredAttr} 
+                         class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"/>
               </div>`;
               fieldsContainer.insertAdjacentHTML('beforeend', fieldHTML);
           });
@@ -84,15 +113,60 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
           await this.loadMentors();
       }
 
+      showAccessDenied() {
+          this.application.mainContainer.innerHTML = '';
+          
+          const deniedHTML = `
+              <div class="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
+                  <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8 text-center">
+                      <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                          <svg class="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                          </svg>
+                      </div>
+                      <h2 class="text-2xl font-bold text-gray-900 mb-4">Access Denied</h2>
+                      <p class="text-gray-600 mb-2">You don't have permission to access this page.</p>
+                      <p class="text-sm text-gray-500 mb-6">Only <strong>Administrators</strong> can manage internship mentors.</p>
+                      <div class="space-y-2">
+                          <div class="flex items-center justify-center space-x-2 text-sm">
+                              <span class="text-gray-600">Your current role:</span>
+                              <span class="px-3 py-1 rounded-full text-xs font-medium ${this.getRoleBadgeClass()}">
+                                  ${this.userRole}
+                              </span>
+                          </div>
+                      </div>
+                      <button onclick="window.location.hash='#/internship'" class="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200 font-medium">
+                          Go Back to Dashboard
+                      </button>
+                  </div>
+              </div>
+          `;
+          
+          this.application.mainContainer.innerHTML = deniedHTML;
+      }
+
+      getRoleBadgeClass() {
+          const roleColors = {
+              'Admin': 'bg-purple-100 text-purple-800',
+              'Instructor': 'bg-blue-100 text-blue-800',
+              'Student': 'bg-green-100 text-green-800'
+          };
+          return roleColors[this.userRole] || 'bg-gray-100 text-gray-800';
+      }
+
       async handleSubmit(event) {
           event.preventDefault();
           const form = event.target;
           const formData = new FormData(form);
           const data = {};
+          
           formData.forEach((value, key) => {
               // Convert number fields
-              if (key === 'company_id') value = parseInt(value) || 0;
-              data[key] = value;
+              if (key === 'company_id') {
+                  data[key] = parseInt(value) || 0;
+              } else {
+                  data[key] = value;
+              }
           });
 
           const mentorID = form.querySelector('#mentor_id')?.value;
@@ -103,19 +177,29 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
           try {
               const res = await fetch(url, {
                   method: "POST",
-                  headers: { "Content-Type": "application/json" },
+                  headers: { 
+                      "Content-Type": "application/json",
+                      "X-User-Role": this.userRole,
+                      "X-User-Id": this.currentUserId
+                  },
                   body: JSON.stringify(data),
               });
 
               const result = await res.json();
-              if (!result.isSuccess) throw new Error(result.error || 'Failed');
+              
+              if (!res.ok || !result.isSuccess) {
+                  if (res.status === 403) {
+                      throw new Error('Access denied. Only Admin can manage mentors.');
+                  }
+                  throw new Error(result.error || 'Failed to save mentor');
+              }
 
               this.showSuccessMessage(mentorID ? 'Mentor updated successfully' : 'Mentor created successfully');
               this.resetForm();
               await this.loadMentors();
           } catch (err) {
               console.error(err);
-              alert('Failed to save mentor. ' + (err.message || ''));
+              this.showErrorMessage(err.message || 'Failed to save mentor');
           }
       }
 
@@ -135,82 +219,114 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
       showSuccessMessage(message) {
           const container = this.application.mainContainer;
           const alert = document.createElement('div');
-          alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
-          alert.textContent = message;
+          alert.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2';
+          alert.innerHTML = `
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span>${message}</span>
+          `;
           container.appendChild(alert);
           setTimeout(() => alert.remove(), 3000);
       }
 
+      showErrorMessage(message) {
+          const container = this.application.mainContainer;
+          const alert = document.createElement('div');
+          alert.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center space-x-2';
+          alert.innerHTML = `
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+              <span>${message}</span>
+          `;
+          container.appendChild(alert);
+          setTimeout(() => alert.remove(), 4000);
+      }
+
       async loadMentors() {
           try {
-              const res = await fetch('/curriculum/GetInternshipMentors');
+              const res = await fetch('/curriculum/GetInternshipMentors', {
+                  headers: {
+                      'X-User-Role': this.userRole,
+                      'X-User-Id': this.currentUserId
+                  }
+              });
+              
+              if (!res.ok) {
+                  if (res.status === 403) {
+                      throw new Error('Access denied');
+                  }
+                  throw new Error('Failed to load mentors');
+              }
+              
               const json = await res.json();
               this.mentors = json.isSuccess ? json.result : [];
-          } catch {
+          } catch (error) {
+              console.error('Error loading mentors:', error);
               this.mentors = [];
+              if (error.message === 'Access denied') {
+                  this.showAccessDenied();
+              }
           }
           this.renderTable();
       }
 
       renderTable() {
           const container = document.getElementById('mentor-table-container');
+          if (!container) return;
+          
           container.innerHTML = '';
 
           if (!this.mentors || this.mentors.length === 0) {
-            if (this.application.template && this.application.template.EmptyState) {
-                const emptyHTML = Mustache.render(this.application.template.EmptyState, {
-                    title: "No Mentors Found",
-                    description: "There are currently no mentors in the system. Please create one using the form above."
-                });
-                container.appendChild(this.application.create(emptyHTML));
-            } else {
-                container.innerHTML = `
-                    <div class="text-center text-gray-500 py-10">
-                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                        </svg>
-                        <p class="text-lg font-medium">No mentors found</p>
-                        <p class="text-sm mt-2">Create your first mentor using the form above</p>
-                    </div>
-                `;
-            }
-            return;
-        }
+              container.innerHTML = `
+                  <div class="text-center text-gray-500 py-10">
+                      <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                      </svg>
+                      <p class="text-lg font-medium">No mentors found</p>
+                      <p class="text-sm mt-2">Create your first mentor using the form above</p>
+                  </div>
+              `;
+              return;
+          }
 
           const tableHTML = Mustache.render(this.application.template.Table, { responsive: true, striped: true });
           const tableElement = this.application.create(tableHTML);
           container.appendChild(tableElement);
 
           const headerRow = tableElement.querySelector('[rel="headerRow"]');
-          const columns = ['First Name', 'Last Name', 'Email', 'Phone', 'Company ID', 'Actions'];
+          const columns = ['First Name', 'Last Name', 'Email', 'Phone', 'Company', 'Actions'];
           columns.forEach(col => {
               const colHTML = `<th class='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>${col}</th>`;
               headerRow.insertAdjacentHTML('beforeend', colHTML);
           });
 
           this.tbody = tableElement.querySelector('[rel="tbody"]');
-          console.log(this.mentors.length);
-
-          this.mentors.forEach(m => this.addMentorRow(m, false));
-        }
+          this.mentors.forEach(m => this.addMentorRow(m));
+      }
 
       addMentorRow(mentor) {
           const row = document.createElement('tr');
-          row.className = 'bg-white border-b hover:bg-gray-50';
+          row.className = 'bg-white border-b hover:bg-gray-50 transition-colors';
           row.innerHTML = `
-              <td class="px-6 py-4">${mentor.mentor_first_name}</td>
-              <td class="px-6 py-4">${mentor.mentor_last_name}</td>
-              <td class="px-6 py-4">${mentor.mentor_email}</td>
-              <td class="px-6 py-4">${mentor.mentor_phone}</td>
-              <td class="px-6 py-4">${mentor.company_id}</td>
-              <td class="px-6 py-4 text-right">
-                  <button class="text-blue-600 hover:text-blue-800 mr-2">Edit</button>
-                  <button class="text-red-600 hover:text-red-800">Delete</button>
+              <td class="px-6 py-4 font-medium text-gray-900">${mentor.mentor_first_name || '-'}</td>
+              <td class="px-6 py-4 text-gray-700">${mentor.mentor_last_name || '-'}</td>
+              <td class="px-6 py-4 text-gray-700">${mentor.mentor_email || '-'}</td>
+              <td class="px-6 py-4 text-gray-700">${mentor.mentor_phone || '-'}</td>
+              <td class="px-6 py-4 text-gray-700">${mentor.Company?.company_name || `ID: ${mentor.company_id}`}</td>
+              <td class="px-6 py-4 text-right space-x-2">
+                  <button class="text-blue-600 hover:text-blue-800 font-medium transition-colors" data-action="edit">
+                      Edit
+                  </button>
+                  <button class="text-red-600 hover:text-red-800 font-medium transition-colors" data-action="delete">
+                      Delete
+                  </button>
               </td>
           `;
 
-          const editBtn = row.querySelector('button:nth-child(1)');
-          const deleteBtn = row.querySelector('button:nth-child(2)');
+          const editBtn = row.querySelector('[data-action="edit"]');
+          const deleteBtn = row.querySelector('[data-action="delete"]');
 
           editBtn.addEventListener('click', () => this.editMentor(mentor));
           deleteBtn.addEventListener('click', () => this.deleteMentor(mentor));
@@ -242,24 +358,37 @@ if (typeof window !== 'undefined' && !window.InternshipMentorCreate) {
       }
 
       async deleteMentor(mentor) {
-          if (!confirm('Are you sure you want to delete this mentor?')) return;
+          if (!confirm(`Are you sure you want to delete mentor "${mentor.mentor_first_name} ${mentor.mentor_last_name}"?\n\nThis action cannot be undone.`)) {
+              return;
+          }
 
           try {
               const res = await fetch(`/curriculum/DeleteInternshipMentor/${mentor.ID}`, { 
-                method: "GET" });
+                  method: "POST",
+                  headers: {
+                      'Content-Type': 'application/json',
+                      'X-User-Role': this.userRole,
+                      'X-User-Id': this.currentUserId
+                  }
+              });
                 
               const result = await res.json();
-              if (result.isSuccess) {
-                  this.showSuccessMessage('Mentor deleted successfully');
-                  await this.loadMentors();
-              } else throw new Error(result.error || 'Failed');
+              
+              if (!res.ok || !result.isSuccess) {
+                  if (res.status === 403) {
+                      throw new Error('Access denied. Only Admin can delete mentors.');
+                  }
+                  throw new Error(result.error || 'Failed to delete mentor');
+              }
+              
+              this.showSuccessMessage('Mentor deleted successfully');
+              await this.loadMentors();
           } catch (err) {
               console.error(err);
-              alert('Failed to delete mentor. Please try again.');
+              this.showErrorMessage(err.message || 'Failed to delete mentor');
           }
       }
   }
 
   window.InternshipMentorCreate = InternshipMentorCreate;
 }
-

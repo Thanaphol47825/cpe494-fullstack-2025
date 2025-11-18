@@ -4,6 +4,7 @@ class AssignmentCreate {
     this.application = application;
     this.apiService = new EvalApiService();
     this.form = null;
+    this.courses = [];
   }
 
   async initialize() {
@@ -46,6 +47,9 @@ class AssignmentCreate {
       </div>
     `;
 
+    // Load courses first
+    await this.loadCourses();
+
     // Initialize EvalFormRenderer (filters out system fields like 'model')
     // Note: AdvanceFormRender expects application.template and application.fetchTemplate()
     // We need to pass templateEngine instead
@@ -59,10 +63,16 @@ class AssignmentCreate {
 
     try {
       await this.form.render();
-      // Ensure a file input is present inside the rendered form so users can attach files
+      
+      // Get form element after rendering
       const containerEl = document.querySelector('#assignment-form-container');
       const formEl = containerEl ? containerEl.querySelector('form') : null;
+      
       if (formEl) {
+        // Add course dropdown at the top AFTER form is rendered
+        await this.addCourseDropdown();
+        
+        // Ensure a file input is present inside the rendered form so users can attach files
         if (!formEl.querySelector('input[type="file"]')) {
           // create a label block that matches existing label styling
           const fileLabel = document.createElement('label');
@@ -127,14 +137,85 @@ class AssignmentCreate {
     }
   }
 
+  async loadCourses() {
+    try {
+      const response = await this.apiService.getAllCourses();
+      if (response && response.isSuccess && Array.isArray(response.result)) {
+        this.courses = response.result;
+      }
+    } catch (error) {
+      console.error('Error loading courses:', error);
+      this.showError('Failed to load courses');
+    }
+  }
+
+  async addCourseDropdown() {
+    // Find the form element
+    const form = document.querySelector('#assignment-form-container form');
+    if (!form) {
+      console.error('Form not found');
+      return;
+    }
+
+    // Create course dropdown wrapper
+    const courseField = document.createElement('div');
+    courseField.className = 'mb-6';
+    courseField.innerHTML = `
+      <label class="block text-sm font-medium text-gray-700 mb-2">
+        Course <span class="text-red-500">*</span>
+      </label>
+      <select 
+        id="course-select" 
+        name="courseId" 
+        required
+        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <option value="">-- Select a course --</option>
+        ${this.courses.map(c => 
+          `<option value="${c.ID || c.id || c.Id}">${c.Name || 'Untitled Course'}</option>`
+        ).join('')}
+      </select>
+    `;
+
+    // Find the first direct child element of the form (could be a field wrapper div, label, etc.)
+    // Look for common form field containers
+    let insertBefore = null;
+    const possibleFirstElements = form.querySelectorAll(':scope > div, :scope > label, :scope > fieldset');
+    
+    if (possibleFirstElements.length > 0) {
+      insertBefore = possibleFirstElements[0];
+    } else {
+      // If no direct children found, look for any first element
+      insertBefore = form.firstElementChild;
+    }
+
+    // Insert the course dropdown at the top
+    if (insertBefore) {
+      form.insertBefore(courseField, insertBefore);
+    } else {
+      // If form is empty, just append
+      form.appendChild(courseField);
+    }
+  }
+
   async handleSubmit(formData) {
     try {
+      // Get courseId from dropdown
+      const courseSelect = document.getElementById('course-select');
+      if (courseSelect && courseSelect.value) {
+        formData.courseId = Number(courseSelect.value);
+      } else {
+        this.showError('Please select a course');
+        return;
+      }
+
       // Convert dates to RFC3339 format if needed
+      // Pass the raw string value to formatToRFC3339 - it handles datetime-local format
       if (formData.startDate) {
-        formData.startDate = this.apiService.formatToRFC3339(new Date(formData.startDate));
+        formData.startDate = this.apiService.formatToRFC3339(formData.startDate);
       }
       if (formData.dueDate) {
-        formData.dueDate = this.apiService.formatToRFC3339(new Date(formData.dueDate));
+        formData.dueDate = this.apiService.formatToRFC3339(formData.dueDate);
       }
 
       // Ensure numeric fields
@@ -159,7 +240,9 @@ class AssignmentCreate {
           if (fileNames) fileNames.textContent = 'No files selected';
         }
       } else {
-        throw new Error(result?.message || 'Failed to create assignment');
+        // Show the actual error message from the API
+        const errorMsg = result?.result || result?.message || 'Failed to create assignment';
+        throw new Error(errorMsg);
       }
     } catch (error) {
       console.error('Submit error:', error);

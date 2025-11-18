@@ -8,6 +8,7 @@ import (
 
 type Assignment struct {
 	core.BaseModel
+	CourseId    uint      `json:"courseId" gorm:"not null" form:"label:Course;type:select;required:true"`
 	Title       string    `json:"title" gorm:"type:varchar(255);not null" form:"label:Assignment Title;type:text;placeholder:Enter assignment title;required:true"`
 	Description string    `json:"description" gorm:"type:text" form:"label:Description;type:textarea;placeholder:Describe the assignment"`
 	DueDate     time.Time `json:"dueDate" gorm:"type:timestamptz;not null" form:"label:Due Date;type:datetime-local;required:true"`

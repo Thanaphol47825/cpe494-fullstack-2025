@@ -45,7 +45,7 @@ if (typeof window !== "undefined" && !window.EvalHomeTemplate) {
       "Manage Quiz Submissions": "from-blue-500 to-cyan-600"
     };
 
-    static async getTemplate(models, templateEngine) {
+    static async getTemplate(models, templateEngine, viewType = null) {
       try {
         // Load custom templates
         const homeTemplateResponse = await fetch(`${RootURL}/eval/static/view/EvalHomeTemplate.tpl`);
@@ -58,8 +58,37 @@ if (typeof window !== "undefined" && !window.EvalHomeTemplate) {
         const homeTemplateContent = await homeTemplateResponse.text();
         const cardTemplateContent = await cardTemplateResponse.text();
 
-        // Define the 3 main cards with multiple buttons
-        const evalCards = [
+        // Determine view type: use passed parameter, or try to get from role, or default to instructor
+        let isTeacher = true; // Default to instructor view
+        
+        // Priority 1: Use viewType parameter if provided
+        if (viewType === 'student') {
+          isTeacher = false;
+        } else if (viewType === 'instructor' || viewType === 'teacher') {
+          isTeacher = true; // Support both 'instructor' and 'teacher' for backward compatibility
+        } else {
+          // Priority 2: Try to get user role (if authentication is implemented)
+          const apiService = new EvalApiService();
+          try {
+            const roleResponse = await apiService.getCurrentUserRole();
+            if (roleResponse && roleResponse.isSuccess && roleResponse.result) {
+              isTeacher = roleResponse.result.isTeacher !== undefined 
+                ? roleResponse.result.isTeacher 
+                : true; // Default to teacher if not specified
+            }
+          } catch (error) {
+            console.warn('Role detection not available (auth may not be implemented yet):', error);
+            // Default to instructor view
+            isTeacher = true;
+          }
+        }
+
+        // Define cards based on user role
+        let evalCards = [];
+        
+        if (isTeacher) {
+          // Instructor UI: Create/Manage Assignments, Create/Manage Quizzes, Track Progress
+          evalCards = [
           {
             card_title: "Assignment",
             card_description: "Design, distribute, and track assignments",
@@ -93,8 +122,46 @@ if (typeof window !== "undefined" && !window.EvalHomeTemplate) {
             }
           },
           {
-            card_title: "Assignment Submission",
-            card_description: "Submit and manage assignment submissions",
+            card_title: "Track Progress",
+            card_description: "Track student submissions and quiz attempts",
+            icon_path: "M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
+            icon_color: "from-purple-500 to-indigo-600",
+            box_color: "purple",
+            create_button: {
+              create_link: "eval/track/assignment",
+              create_color: "bg-slate-700 hover:bg-slate-800",
+              create_text: "Track Assignment Submission",
+              create_icon: "M4 6h16M4 10h16M4 14h16M4 18h16"
+            },
+            manage_button: {
+              manage_link: "eval/track/quiz",
+              manage_text: "Track Quiz Submission"
+            }
+          }
+          ];
+        } else {
+          // Student UI: View Assignments/Quizzes, Submit Assignment
+          evalCards = [
+          {
+            card_title: "View Assignments & Quizzes",
+            card_description: "View and access assignments and quizzes for your courses",
+            icon_path: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+            icon_color: "from-blue-500 to-cyan-600",
+            box_color: "blue",
+            create_button: {
+              create_link: "eval/student/assignments",
+              create_color: "bg-slate-700 hover:bg-slate-800",
+              create_text: "View Assignments",
+              create_icon: "M4 6h16M4 10h16M4 14h16M4 18h16"
+            },
+            manage_button: {
+              manage_link: "eval/student/quizzes",
+              manage_text: "View Quizzes"
+            }
+          },
+          {
+            card_title: "Submission",
+            card_description: "Submit your assignments and take quizzes for your courses",
             icon_path: "M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13",
             icon_color: "from-purple-500 to-indigo-600",
             box_color: "purple",
@@ -104,11 +171,14 @@ if (typeof window !== "undefined" && !window.EvalHomeTemplate) {
               create_text: "Submit Assignment"
             },
             manage_button: {
-              manage_link: "eval/submission",
-              manage_text: "Track assignments"
+              manage_link: "eval/student/quizzes",
+              manage_text: "Take Quiz",
+              manage_color: "bg-purple-600 hover:bg-purple-700",
+              manage_icon: "M12 6v6m0 0v6m0-6h6m-6 0H6"
             }
           }
-        ];
+          ];
+        }
 
         // Render individual cards using custom EvalCard template
         const cardsHTML = evalCards

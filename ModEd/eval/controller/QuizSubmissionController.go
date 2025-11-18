@@ -3,6 +3,7 @@ package controller
 import (
 	"ModEd/core"
 	"ModEd/eval/model"
+	"fmt"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -42,6 +43,12 @@ func (controller *QuizSubmissionController) GetRoute() []*core.RouteItem {
 	})
 
 	routeList = append(routeList, &core.RouteItem{
+		Route:   "/eval/quiz/submission/getByQuiz/:quizId",
+		Handler: controller.GetQuizSubmissionsByQuiz,
+		Method:  core.GET,
+	})
+
+	routeList = append(routeList, &core.RouteItem{
 		Route:   "/eval/quiz/submission/get/:id",
 		Handler: controller.GetQuizSubmissionByID,
 		Method:  core.GET,
@@ -73,6 +80,12 @@ func (controller *QuizSubmissionController) CreateQuizSubmission(context *fiber.
 		})
 	}
 
+	// Get user ID from context if available (when auth is implemented)
+	userIDInterface := context.Locals("userId")
+	if userIDInterface != nil {
+		quizSubmission.UserID = fmt.Sprintf("%v", userIDInterface)
+	}
+
 	if err := controller.application.DB.Create(&quizSubmission).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
@@ -90,7 +103,31 @@ func (controller *QuizSubmissionController) CreateQuizSubmission(context *fiber.
 func (controller *QuizSubmissionController) GetAllQuizSubmissions(context *fiber.Ctx) error {
 	var quizSubmissions []model.QuizSubmission
 
-	if err := controller.application.DB.Find(&quizSubmissions).Error; err != nil {
+	// Support filtering by quizId (query parameter)
+	query := controller.application.DB
+	if quizId := context.Query("quizId"); quizId != "" {
+		query = query.Where("quiz_id = ?", quizId)
+	}
+
+	if err := query.Find(&quizSubmissions).Error; err != nil {
+		return context.JSON(fiber.Map{
+			"isSuccess": false,
+			"result":    err.Error(),
+		})
+	}
+
+	return context.JSON(fiber.Map{
+		"isSuccess": true,
+		"result":    quizSubmissions,
+	})
+}
+
+// Get quiz submissions by quiz ID
+func (controller *QuizSubmissionController) GetQuizSubmissionsByQuiz(context *fiber.Ctx) error {
+	quizId := context.Params("quizId")
+	var quizSubmissions []model.QuizSubmission
+
+	if err := controller.application.DB.Where("quiz_id = ?", quizId).Find(&quizSubmissions).Error; err != nil {
 		return context.JSON(fiber.Map{
 			"isSuccess": false,
 			"result":    err.Error(),
